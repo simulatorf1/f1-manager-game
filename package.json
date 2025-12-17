@@ -1,1 +1,16 @@
-
+{
+  "name": "f1-manager-e-strategy",
+  "version": "1.0.0",
+  "description": "Juego de gestión de Fórmula 1 online",
+  "main": "public/index.html",
+  "scripts": {
+    "dev": "npx serve public",
+    "build": "echo 'Build complete'",
+    "deploy": "vercel --prod"
+  },
+  "keywords": ["f1", "formula1", "racing", "game", "management"],
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}
