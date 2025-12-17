@@ -258,3 +258,282 @@ class FabricacionManager {
             `✅ ${areaName} Nivel ${this.currentProduction.nivel} lista para recoger!`,
             'success'
         );
+    }
+    
+    async collectPiece() {
+        if (!this.currentProduction) {
+            window.f1Manager?.showNotification('❌ No hay pieza para recoger', 'error');
+            return false;
+        }
+        
+        // Verificar si realmente está completada
+        const now = new Date();
+        const endTime = new Date(this.currentProduction.fin_fabricacion);
+        
+        if (now < endTime) {
+            window.f1Manager?.showNotification('❌ La pieza aún no está lista', 'error');
+            return false;
+        }
+        
+        try {
+            // 1. Marcar producción como completada en BD
+            const { error: updateError } = await supabase
+                .from('fabricacion_actual')
+                .update({ completada: true })
+                .eq('id', this.currentProduction.id);
+            
+            if (updateError) throw updateError;
+            
+            // 2. Crear pieza en almacén
+            const { error: piezaError } = await supabase
+                .from('piezas_almacen')
+                .insert([
+                    {
+                        escuderia_id: window.f1Manager.escuderia.id,
+                        area: this.currentProduction.area,
+                        nivel: this.currentProduction.nivel,
+                        estado: 'disponible',
+                        puntos_base: CONFIG.POINTS_PER_PIECE,
+                        fabricada_en: new Date().toISOString()
+                    }
+                ]);
+            
+            if (piezaError) throw piezaError;
+            
+            // 3. Actualizar progreso del área del coche
+            await this.updateCarProgress(this.currentProduction.area);
+            
+            // 4. Dar recompensa (dinero por vender la pieza)
+            const reward = 15000; // €15,000 por pieza fabricada
+            window.f1Manager.escuderia.dinero += reward;
+            await window.f1Manager.updateEscuderiaMoney();
+            
+            // 5. Limpiar producción actual
+            const pieceName = CAR_AREAS.find(a => a.id === this.currentProduction.area)?.name || 
+                             this.currentProduction.area;
+            this.currentProduction = null;
+            
+            // 6. Actualizar UI
+            this.updateProductionUI(0, 0);
+            
+            // 7. Mostrar notificación de éxito
+            window.f1Manager?.showNotification(
+                `🎁 ¡Pieza recogida! +${CONFIG.POINTS_PER_PIECE} puntos y €${reward.toLocaleString()}`,
+                'success'
+            );
+            
+            // 8. Actualizar almacén si está visible
+            if (window.tabManager?.currentTab === 'almacen') {
+                window.tabManager.loadAlmacenPiezas();
+            }
+            
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Error recogiendo pieza:', error);
+            window.f1Manager?.showNotification('❌ Error al recoger pieza', 'error');
+            return false;
+        }
+    }
+    
+    async updateCarProgress(areaId) {
+        try {
+            // Obtener estadísticas actuales del coche
+            const { data: carStats, error: fetchError } = await supabase
+                .from('coches_stats')
+                .select('*')
+                .eq('escuderia_id', window.f1Manager.escuderia.id)
+                .single();
+            
+            if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+            
+            let currentStats = carStats || this.createEmptyCarStats();
+            const currentProgress = currentStats[`${areaId}_progreso`] || 0;
+            const currentLevel = currentStats[`${areaId}_nivel`] || 0;
+            
+            let newProgress = currentProgress + 1;
+            let newLevel = currentLevel;
+            
+            // Si se completan 20 piezas, subir de nivel
+            if (newProgress >= CONFIG.PIECES_PER_LEVEL) {
+                newProgress = 0;
+                newLevel = currentLevel + 1;
+                
+                if (newLevel > CONFIG.MAX_LEVEL) {
+                    newLevel = CONFIG.MAX_LEVEL;
+                }
+                
+                // Notificar subida de nivel
+                const areaName = CAR_AREAS.find(a => a.id === areaId)?.name || areaId;
+                window.f1Manager?.showNotification(
+                    `🚀 ¡${areaName} ha subido al Nivel ${newLevel}!`,
+                    'success'
+                );
+            }
+            
+            // Actualizar estadísticas
+            const updates = {
+                [`${areaId}_progreso`]: newProgress,
+                [`${areaId}_nivel`]: newLevel,
+                actualizado_en: new Date().toISOString()
+            };
+            
+            let error;
+            
+            if (carStats) {
+                // Actualizar registro existente
+                const { error: updateError } = await supabase
+                    .from('coches_stats')
+                    .update(updates)
+                    .eq('id', carStats.id);
+                error = updateError;
+            } else {
+                // Crear nuevo registro
+                updates.escuderia_id = window.f1Manager.escuderia.id;
+                const { error: insertError } = await supabase
+                    .from('coches_stats')
+                    .insert([updates]);
+                error = insertError;
+            }
+            
+            if (error) throw error;
+            
+            // Actualizar UI del coche
+            if (window.f1Manager) {
+                await window.f1Manager.loadCarStatus();
+            }
+            
+        } catch (error) {
+            console.error('❌ Error actualizando progreso del coche:', error);
+        }
+    }
+    
+    createEmptyCarStats() {
+        const stats = {
+            escuderia_id: window.f1Manager?.escuderia?.id
+        };
+        
+        CAR_AREAS.forEach(area => {
+            stats[`${area.id}_nivel`] = 0;
+            stats[`${area.id}_progreso`] = 0;
+        });
+        
+        return stats;
+    }
+    
+    async getCarStats() {
+        try {
+            const { data: carStats, error } = await supabase
+                .from('coches_stats')
+                .select('*')
+                .eq('escuderia_id', window.f1Manager?.escuderia?.id)
+                .single();
+            
+            if (error && error.code !== 'PGRST116') throw error;
+            
+            return carStats || this.createEmptyCarStats();
+            
+        } catch (error) {
+            console.error('❌ Error obteniendo estadísticas del coche:', error);
+            return this.createEmptyCarStats();
+        }
+    }
+    
+    // ===== FUNCIONES PÚBLICAS =====
+    
+    async cancelProduction() {
+        if (!this.currentProduction) {
+            return { success: false, message: 'No hay producción en curso' };
+        }
+        
+        if (confirm('¿Estás seguro de cancelar la fabricación? Se perderá el 50% del costo.')) {
+            try {
+                // Devolver 50% del dinero
+                const refund = Math.floor(this.currentProduction.costo * 0.5);
+                window.f1Manager.escuderia.dinero += refund;
+                await window.f1Manager.updateEscuderiaMoney();
+                
+                // Marcar como cancelada
+                const { error } = await supabase
+                    .from('fabricacion_actual')
+                    .update({ 
+                        completada: true,
+                        cancelada: true 
+                    })
+                    .eq('id', this.currentProduction.id);
+                
+                if (error) throw error;
+                
+                // Limpiar timer
+                if (this.productionUpdateInterval) {
+                    clearInterval(this.productionUpdateInterval);
+                    this.productionUpdateInterval = null;
+                }
+                
+                // Limpiar producción actual
+                this.currentProduction = null;
+                
+                // Actualizar UI
+                this.updateProductionUI(0, 0);
+                
+                window.f1Manager?.showNotification(
+                    `🔄 Fabricación cancelada. Recibiste €${refund.toLocaleString()} de reembolso.`,
+                    'info'
+                );
+                
+                return { success: true, refund: refund };
+                
+            } catch (error) {
+                console.error('❌ Error cancelando producción:', error);
+                return { success: false, message: error.message };
+            }
+        }
+        
+        return { success: false, message: 'Cancelado por el usuario' };
+    }
+    
+    getProductionStatus() {
+        if (!this.currentProduction) {
+            return {
+                active: false,
+                message: 'No hay producción en curso'
+            };
+        }
+        
+        const now = new Date();
+        const endTime = new Date(this.currentProduction.fin_fabricacion);
+        const startTime = new Date(this.currentProduction.inicio_fabricacion);
+        
+        const elapsed = now - startTime;
+        const remaining = endTime - now;
+        const totalTime = CONFIG.FABRICATION_TIME;
+        const progress = Math.min(100, (elapsed / totalTime) * 100);
+        
+        const area = CAR_AREAS.find(a => a.id === this.currentProduction.area);
+        
+        return {
+            active: true,
+            piece: area ? area.name : this.currentProduction.area,
+            level: this.currentProduction.nivel,
+            progress: progress,
+            remaining: remaining,
+            ready: remaining <= 0,
+            startTime: startTime,
+            endTime: endTime
+        };
+    }
+}
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', () => {
+    window.fabricacionManager = new FabricacionManager();
+    
+    // Hacer accesible desde otros módulos
+    if (window.f1Manager) {
+        window.f1Manager.iniciarFabricacion = (areaId) => {
+            window.fabricacionManager.startFabrication(areaId);
+        };
+    }
+});
+
+console.log('✅ Sistema de fabricación listo');
