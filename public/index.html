@@ -347,11 +347,26 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+
     <!-- Scripts -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="/src/js/config.js"></script>
     <script src="/src/js/main.js"></script>
     <script src="/src/js/tabs.js"></script>
     <script src="/src/js/fabricacion.js"></script>
+    <!-- Script de emergencia -->
+    <script>
+        setTimeout(function() {
+            const loading = document.getElementById('loading-screen');
+            const app = document.getElementById('app');
+            
+            if (loading && app && loading.style.display !== 'none') {
+                console.log('⚠️ Forzando carga...');
+                loading.style.display = 'none';
+                app.style.display = 'block';
+            }
+        }, 5000);
+    </script>
 </body>
 </html>
