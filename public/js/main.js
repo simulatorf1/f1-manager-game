@@ -15,14 +15,30 @@ var supabase = null;
 function initSupabase() {
     console.log('🔍 Verificando Supabase...');
     
-    // Simplemente devolver lo que ya está en window
-    if (!window.supabase) {
-        console.error('❌ ERROR: window.supabase no existe');
-        return null;
+    // Simplemente devolver lo que YA debería estar en window
+    if (window.supabase && window.supabase.auth) {
+        console.log('✅ Supabase encontrado en window');
+        return window.supabase;
     }
     
-    console.log('✅ Supabase listo (ya estaba en window)');
-    return window.supabase;
+    console.error('❌ CRÍTICO: Supabase no en window');
+    console.error('Estado de window.supabase:', window.supabase);
+    
+    // Intentar crear cliente de emergencia
+    try {
+        if (typeof supabase !== 'undefined') {
+            window.supabase = supabase.createClient(
+                'https://xbnbbmhcveyzrvvmdktg.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg'
+            );
+            console.log('✅ Cliente creado de emergencia');
+            return window.supabase;
+        }
+    } catch (e) {
+        console.error('❌ No se pudo crear cliente:', e);
+    }
+    
+    return null;
 }
     
 
