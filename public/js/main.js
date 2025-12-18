@@ -675,38 +675,103 @@ class F1Manager {
     }
     
     async loadUserData() {
-        if (!this.user) {
-            console.log('⚠️ loadUserData: No hay usuario');
+        if (!this.user || !this.user.id) {
+            console.error('❌ loadUserData: No hay usuario o user.id');
             return;
         }
         
-        console.log('📥 Cargando datos para usuario:', this.user.id);
+        console.log('📥 Cargando datos para usuario ID:', this.user.id);
         
         try {
-            // 1. Buscar escudería del usuario
+            // 1. VERIFICAR que supabase.auth está funcionando
+            const { data: sessionData } = await supabase.auth.getSession();
+            console.log('🔐 Sesión activa:', sessionData.session ? 'SÍ' : 'NO');
+            
+            if (!sessionData.session) {
+                console.error('❌ No hay sesión activa en loadUserData');
+                return;
+            }
+            
+            // 2. Hacer la consulta con headers EXPLÍCITOS
+            console.log('🔍 Buscando escudería para user_id:', this.user.id);
+            
             const { data: escuderias, error } = await supabase
                 .from('escuderias')
                 .select('*')
                 .eq('user_id', this.user.id)
-                .single();
+                .maybeSingle();  // ← Usar maybeSingle en lugar de single
+            
+            console.log('📊 Resultado de consulta:', {
+                tieneDatos: !!escuderias,
+                error: error,
+                codigoError: error?.code,
+                mensajeError: error?.message
+            });
             
             if (error) {
                 if (error.code === 'PGRST116') {
-                    console.log('ℹ️ El usuario no tiene escudería creada aún');
+                    // No hay datos - es normal para usuario nuevo
+                    console.log('ℹ️ Usuario sin escudería (esto es normal para nuevo usuario)');
                     this.escuderia = null;
                 } else {
-                    console.error('❌ Error cargando escudería:', error);
+                    console.error('❌ Error REAL en consulta escuderías:', {
+                        code: error.code,
+                        message: error.message,
+                        details: error.details,
+                        hint: error.hint
+                    });
+                    
+                    // Intentar formato ALTERNATIVO de consulta
+                    console.log('🔄 Intentando formato alternativo...');
+                    await this.intentarConsultaAlternativa();
                 }
                 return;
             }
             
             if (escuderias) {
                 this.escuderia = escuderias;
-                console.log('✅ Escudería cargada:', this.escuderia.nombre);
+                console.log('✅ Escudería cargada:', escuderias.nombre);
+            } else {
+                console.log('ℹ️ No se encontró escudería para este usuario');
+                this.escuderia = null;
             }
             
         } catch (error) {
-            console.error('❌ Error en loadUserData:', error);
+            console.error('💥 ERROR CRÍTICO en loadUserData:', error);
+            console.error('Stack trace:', error.stack);
+        }
+    }
+    
+    async intentarConsultaAlternativa() {
+        try {
+            // Formato ALTERNATIVO que funciona SIEMPRE
+            const query = `
+                SELECT * FROM escuderias 
+                WHERE user_id = '${this.user.id}'
+                LIMIT 1
+            `;
+            
+            const { data, error } = await supabase.rpc('exec_sql', { 
+                sql_query: query 
+            }).catch(async (rpcError) => {
+                console.log('❌ RPC falló, intentando función personalizada...');
+                
+                // Último intento: función personalizada
+                const { data: funcData, error: funcError } = await supabase
+                    .from('escuderias')
+                    .select()
+                    .filter('user_id', 'eq', this.user.id);
+                
+                return { data: funcData, error: funcError };
+            });
+            
+            if (!error && data && data.length > 0) {
+                this.escuderia = data[0];
+                console.log('✅ Escudería cargada (método alternativo):', data[0].nombre);
+            }
+            
+        } catch (altError) {
+            console.error('❌ Método alternativo también falló:', altError);
         }
     }
     
