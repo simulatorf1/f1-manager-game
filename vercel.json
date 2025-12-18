@@ -1,19 +1,10 @@
 {
   "rewrites": [
     {
-      "source": "/src/js/(.*)",
-      "destination": "/src/js/$1"
-    },
-    {
-      "source": "/src/(.*)",
-      "destination": "/src/$1"
-    },
-    {
       "source": "/(.*)",
-      "destination": "/public/index.html"
+      "destination": "/index.html"
     }
   ],
-  "cleanUrls": false,
-  "trailingSlash": false,
-  "outputDirectory": "public"
+  "cleanUrls": true,
+  "trailingSlash": false
 }
