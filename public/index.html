@@ -9,10 +9,31 @@
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-    <!-- CARGAR SUPABASE UNA SOLA VEZ -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- CARGA DIRECTA DE SUPABASE -->
+    <script>
+        // Cargar Supabase SÍNCRONO
+        (function() {
+            console.log('📥 Cargando Supabase...');
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+            script.async = false; // ¡IMPORTANTE! Carga síncrono
+            document.head.appendChild(script);
+            
+            // Esperar a que cargue
+            script.onload = function() {
+                console.log('✅ Supabase CDN cargado');
+                
+                // Inicializar INMEDIATAMENTE
+                window.supabase = supabase.createClient(
+                    'https://xbnbbmhcveyzrvvmdktg.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg'
+                );
+                console.log('🚀 Cliente Supabase creado');
+            };
+        })();
+    </script>
     
-    <!-- NUESTROS SCRIPTS -->
+    <!-- TUS SCRIPTS -->
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script src="js/tabs.js"></script>
