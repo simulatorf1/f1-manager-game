@@ -68,4 +68,4 @@ window.CONFIG = CONFIG;
 window.CAR_AREAS = CAR_AREAS;
 window.initSupabase = initSupabase; // Exportar la función para que otros scripts la usen
 
-console.log('🎯 Configuración exportada correctamente');
+console.log('✅ Supabase asignado a window.supabase');
