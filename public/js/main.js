@@ -1015,7 +1015,7 @@ class F1Manager {
                         <div style="display: flex; gap: 30px;">
                             <div style="text-align: center;">
                                 <p style="color: #aaa; font-size: 0.8rem; margin: 0;">FONDOS</p>
-                                <p style="color: #00d2be; font-size: 1.5rem; font-weight: bold; margin: 5px 0;">€${this.escuderia.dinero.toLocaleString()}</p>
+                                <p style="color: #00d2be; font-size: 1.5rem; font-weight: bold; margin: 5px 0;">€${this.escuderia?.dinero ? this.escuderia.dinero.toLocaleString() : '0'}</p>
                             </div>
                             <div style="text-align: center;">
                                 <p style="color: #aaa; font-size: 0.8rem; margin: 0;">PUNTOS</p>
