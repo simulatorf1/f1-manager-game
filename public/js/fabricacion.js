@@ -573,3 +573,50 @@ console.log('🔧 Sistema de fabricación cargado - ESPERANDO CONFIG');
     console.log('✅ Sistema de fabricación listo y configurado');
     
 })(); // FIN de la función async auto-ejecutable
+// ========================
+// FIX TEMPORAL - Asegurar que f1Manager pueda llamar a fabricacionManager
+// ========================
+
+// 1. Esperar a que exista window.f1Manager antes de asignar la función
+function waitForF1Manager() {
+    let attempts = 0;
+    const maxAttempts = 50; // 5 segundos máximo
+    
+    const checkInterval = setInterval(() => {
+        if (window.f1Manager) {
+            clearInterval(checkInterval);
+            
+            // 2. Asignar la función a f1Manager
+            window.f1Manager.iniciarFabricacion = (areaId) => {
+                if (window.fabricacionManager) {
+                    window.fabricacionManager.startFabrication(areaId);
+                } else {
+                    console.error('❌ fabricacionManager aún no está listo');
+                    window.f1Manager.showNotification('Sistema de fabricación cargando...', 'error');
+                }
+            };
+            
+            console.log('✅ Función iniciarFabricacion asignada a f1Manager');
+            
+        } else if (attempts >= maxAttempts) {
+            clearInterval(checkInterval);
+            console.error('❌ f1Manager nunca apareció');
+        }
+        
+        attempts++;
+    }, 100);
+}
+
+// Iniciar la espera
+if (!window.f1Manager) {
+    waitForF1Manager();
+} else {
+    // Si ya existe, asignar inmediatamente
+    window.f1Manager.iniciarFabricacion = (areaId) => {
+        if (window.fabricacionManager) {
+            window.fabricacionManager.startFabrication(areaId);
+        } else {
+            console.error('❌ fabricacionManager no está listo');
+        }
+    };
+}
