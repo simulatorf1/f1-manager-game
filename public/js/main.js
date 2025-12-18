@@ -9,7 +9,7 @@ console.log('🏎️ F1 Manager - Sistema principal cargado');
 console.log('🔧 Inicializando sistema seguro...');
 
 // Variable global para Supabase
-let supabase = window.supabase || null;
+var supabase = null;
 
 // Función para inicializar Supabase de forma SEGURA
 async function initSupabase() {
