@@ -570,15 +570,18 @@ class F1Manager {
         this.init();
     }
     async esperarSupabase() {
-    console.log('⏳ Esperando Supabase...');
-    let intentos = 0;
-     while (intentos < 50) { // 5 segundos máximo
-         if (window.supabase && window.supabase.auth) {
-             console.log('✅ Supabase listo después de ' + (intentos * 100) + 'ms');
-             return window.supabase;
-         }
-        await new Promise(resolve => setTimeout(resolve, 100));
-         intentos++;
+        console.log('⏳ Esperando Supabase...');
+        let intentos = 0;
+        while (intentos < 50) { // 5 segundos máximo
+            if (window.supabase && window.supabase.auth) {
+                console.log('✅ Supabase listo después de ' + (intentos * 100) + 'ms');
+                return window.supabase;
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+            intentos++;
+        }
+        console.error('❌ Supabase nunca se inicializó');
+        return null;  // ← ESTA LÍNEA FALTA EN TU CÓDIGO
     }
      console.error('❌ Supabase nunca se inicializó');
      return null;
@@ -1335,6 +1338,19 @@ class F1Manager {
     }
     
     async loadProximoGP() {
+        // VERIFICAR primero que window.supabase existe
+        if (!window.supabase || !window.supabase.from) {
+            console.error('❌ window.supabase no está disponible en loadProximoGP');
+            // Crear datos de ejemplo
+            this.proximoGP = {
+                nombre: 'Gran Premio de España',
+                fecha_inicio: new Date(Date.now() + 86400000 * 3).toISOString(),
+                circuito: 'Circuit de Barcelona-Catalunya'
+            };
+            this.updateCountdown();
+            return;
+        }
+        
         try {
             const { data: gp, error } = await window.supabase
                 .from('calendario_gp')
@@ -1345,12 +1361,30 @@ class F1Manager {
                 .limit(1)
                 .single();
             
-            if (gp) {
+            if (error) {
+                console.error('❌ Error en consulta GP:', error.message);
+                // Crear datos de ejemplo
+                this.proximoGP = {
+                    nombre: 'Gran Premio de España',
+                    fecha_inicio: new Date(Date.now() + 86400000 * 3).toISOString(),
+                    circuito: 'Circuit de Barcelona-Catalunya'
+                };
+            } else if (gp) {
                 this.proximoGP = gp;
-                this.updateCountdown();
+                console.log('✅ GP cargado:', gp.nombre);
             }
+            
+            this.updateCountdown();
+            
         } catch (error) {
-            console.error('Error cargando GP:', error);
+            console.error('❌ Error fatal en loadProximoGP:', error);
+            // Crear datos de ejemplo
+            this.proximoGP = {
+                nombre: 'Gran Premio de España',
+                fecha_inicio: new Date(Date.now() + 86400000 * 3).toISOString(),
+                circuito: 'Circuit de Barcelona-Catalunya'
+            };
+            this.updateCountdown();
         }
     }
     
