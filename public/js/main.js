@@ -43,6 +43,7 @@ async function initSupabase() {
     supabase = window.supabase;
     return supabase;
 }
+    
 
 // ========================
 // 2. INICIALIZACIÓN PRINCIPAL
