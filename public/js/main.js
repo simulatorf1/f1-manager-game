@@ -897,125 +897,55 @@ class F1Manager {
             return;
         }
         
-        console.log('🔍 Verificando si el trigger ya creó la escudería...');
-        
-        // ESPERAR 2 segundos para dar tiempo al trigger
-        console.log('⏳ Esperando 2 segundos para que el trigger complete...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        console.log('🏗️ Creando escudería:', nombre);
         
         try {
-            // 1. VERIFICAR si YA existe escudería (trigger la creó)
-            const { data: existingEscuderia, error: escError } = await supabase
+            // 1. Crear escudería SIN verificar primero (evita doble consulta)
+            const { data: escuderia, error } = await supabase
                 .from('escuderias')
-                .select('*')
-                .eq('user_id', this.user.id)
-                .single();
-            
-            if (escError && escError.code === 'PGRST116') {
-                // NO existe escudería → El trigger FALLÓ o está desactivado
-                console.log('❌ Trigger no creó escudería, creando manualmente...');
-                
-                // PRIMERO asegurar usuario en public.users
-                const { error: userError } = await supabase
-                    .from('users')
-                    .insert([
-                        {
-                            id: this.user.id,
-                            username: this.user.user_metadata?.username || nombre,
-                            email: this.user.email,
-                            created_at: new Date().toISOString()
-                        }
-                    ])
-                    .select()
-                    .single();
-                
-                if (userError && !userError.message.includes('duplicate')) {
-                    console.warn('⚠️ Error creando usuario (puede que ya exista):', userError);
-                }
-                
-                // LUEGO crear escudería
-                const { data: escuderia, error: createError } = await supabase
-                    .from('escuderias')
-                    .insert([
-                        {
-                            user_id: this.user.id,
-                            nombre: nombre,
-                            dinero: 5000000,
-                            puntos: 0,
-                            ranking: null,
-                            color_principal: '#e10600',
-                            color_secundario: '#ffffff',
-                            nivel_ingenieria: 1,
-                            creada_en: new Date().toISOString()
-                        }
-                    ])
-                    .select()
-                    .single();
-                
-                if (createError) {
-                    // Si es error de duplicado, buscar la que ya existe
-                    if (createError.code === '23505') {
-                        console.log('🔄 Escudería ya existe, buscando...');
-                        const { data: foundEscuderia } = await supabase
-                            .from('escuderias')
-                            .select('*')
-                            .eq('user_id', this.user.id)
-                            .single();
-                        
-                        this.escuderia = foundEscuderia;
-                    } else {
-                        throw createError;
+                .insert([
+                    {
+                        user_id: this.user.id,
+                        nombre: nombre,
+                        dinero: 5000000,
+                        puntos: 0,
+                        ranking: null,
+                        color_principal: '#e10600',
+                        color_secundario: '#ffffff',
+                        nivel_ingenieria: 1,
+                        creada_en: new Date().toISOString()
                     }
-                } else {
-                    this.escuderia = escuderia;
-                    console.log('✅ Escudería creada manualmente:', escuderia.nombre);
-                    
-                    // Crear stats del coche
-                    await supabase
-                        .from('coches_stats')
-                        .insert([{ escuderia_id: escuderia.id }]);
-                }
-                
-            } else if (escError) {
-                // Otro error
-                console.error('❌ Error verificando escudería:', escError);
-                throw escError;
-            } else {
-                // ¡YA EXISTE! El trigger funcionó
-                console.log('✅ El trigger YA creó la escudería:', existingEscuderia.nombre);
-                this.escuderia = existingEscuderia;
-            }
-            
-            // VERIFICAR stats del coche
-            const { data: carStats, error: statsError } = await supabase
-                .from('coches_stats')
-                .select('id')
-                .eq('escuderia_id', this.escuderia.id)
+                ])
+                .select()
                 .single();
             
-            if (statsError && statsError.code === 'PGRST116') {
-                console.log('➕ Creando stats del coche...');
-                await supabase
-                    .from('coches_stats')
-                    .insert([{ escuderia_id: this.escuderia.id }]);
-            }
+            if (error) throw error;
             
-            // ¡ÉXITO! Recargar para mostrar dashboard
-            console.log('🎉 Todo listo, recargando...');
-            setTimeout(() => location.reload(), 1000);
+            this.escuderia = escuderia;
+            console.log('✅ Escudería creada:', escuderia.nombre);
+            
+            // 2. Crear stats del coche
+            await supabase
+                .from('coches_stats')
+                .insert([{ escuderia_id: escuderia.id }]);
+            
+            // 3. ✅ IMPORTANTE: En lugar de location.reload(), cargar dashboard DIRECTAMENTE
+            console.log('🎉 Cargando dashboard directamente...');
+            await this.loadDashboard(); // ← Esto carga el dashboard SIN recargar página
             
         } catch (error) {
-            console.error('❌ Error en proceso:', error);
+            console.error('❌ Error creando escudería:', error);
             
-            let mensaje = 'Error: ' + (error.message || 'Desconocido');
-            if (error.code === '23503') {
-                mensaje = 'Problema con la base de datos. Por favor, contacta al administrador.';
-            } else if (error.code === '23505') {
-                mensaje = 'La escudería ya existe. Recargando...';
-                setTimeout(() => location.reload(), 2000);
+            let mensaje = 'Error creando escudería';
+            if (error.code === '23505') {
+                mensaje = 'Ya tienes una escudería. Cargando dashboard...';
+                // Si ya existe, cargar datos y dashboard
+                await this.loadUserData();
+                await this.loadDashboard();
+            } else {
+                mensaje = 'Error: ' + (error.message || 'Desconocido');
+                alert(mensaje);
             }
-            
-            alert(mensaje);
         }
     }
     
