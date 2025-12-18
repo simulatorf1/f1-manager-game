@@ -9,51 +9,31 @@
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-    <!-- Todo se cargará por JavaScript -->
+    <!-- Cargar Supabase DIRECTAMENTE -->
+    <script>
+        // Cargar Supabase sincrónicamente
+        (function() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+            script.onload = function() {
+                console.log('✅ Supabase CDN cargado');
+                // Inicializar inmediatamente
+                if (window.supabase && window.supabase.createClient) {
+                    window.supabaseClient = window.supabase.createClient(
+                        'https://xbnbbmhcveyzrvvmdktg.supabase.co',
+                        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg'
+                    );
+                    console.log('🚀 Cliente Supabase creado');
+                }
+            };
+            document.head.appendChild(script);
+        })();
+    </script>
     
-    <!-- IMPORTANTE: Cargar primero Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Luego nuestros scripts en ORDEN CORRECTO -->
+    <!-- Nuestros scripts -->
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script src="js/tabs.js"></script>
     <script src="js/fabricacion.js"></script>
-    
-    <!-- Cargar estilos para notificaciones -->
-    <style>
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #00a35c;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 5px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: slideIn 0.3s ease;
-        }
-        
-        .notification.error {
-            background: #e10600;
-        }
-        
-        .notification.info {
-            background: #209cee;
-        }
-        
-        .notification.warning {
-            background: #ff9800;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-    </style>
 </body>
 </html>
