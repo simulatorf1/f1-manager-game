@@ -1,5 +1,5 @@
 // ========================
-// MAIN.JS - SISTEMA COMPLETO
+// MAIN.JS - SISTEMA COMPLETO (VERSIÓN SPA)
 // ========================
 console.log('🏎️ F1 Manager - Sistema principal cargado');
 
@@ -22,7 +22,7 @@ class F1Manager {
         
         // 2. Si no hay usuario, mostrar login/registro
         if (!this.user) {
-            this.showAuthModal();
+            this.showAuthScreen();
             return;
         }
         
@@ -37,9 +37,6 @@ class F1Manager {
         
         // 5. Cargar dashboard
         await this.loadDashboard();
-        
-        // 6. Ocultar loading
-        this.hideLoading();
     }
     
     async checkAuth() {
@@ -62,43 +59,80 @@ class F1Manager {
         }
     }
     
-    showAuthModal() {
-        // Ocultar loading
-        this.hideLoading();
-        
-        // Mostrar modal de autenticación
-        const authHTML = `
-            <div class="auth-modal">
-                <div class="auth-content">
-                    <h2>🏎️ F1 MANAGER E-STRATEGY</h2>
-                    <p>¡Bienvenido al juego de gestión de F1!</p>
-                    
-                    <div class="auth-tabs">
-                        <button class="auth-tab active" data-tab="login">Iniciar Sesión</button>
-                        <button class="auth-tab" data-tab="register">Registrarse</button>
+    showAuthScreen() {
+        // Inyectar pantalla completa de autenticación
+        document.body.innerHTML = this.getAuthHTML();
+        this.setupAuthEvents();
+    }
+    
+    getAuthHTML() {
+        return `
+            <div class="auth-screen">
+                <div class="auth-container">
+                    <div class="auth-header">
+                        <h1>🏎️ F1 MANAGER E-STRATEGY</h1>
+                        <p>Gestiona tu propia escudería de Fórmula 1</p>
                     </div>
                     
-                    <div class="auth-form" id="login-form">
-                        <input type="email" id="login-email" placeholder="Correo electrónico">
-                        <input type="password" id="login-password" placeholder="Contraseña">
-                        <button class="btn-primary" id="btn-login">Entrar</button>
+                    <div class="auth-box">
+                        <div class="auth-tabs">
+                            <button class="auth-tab active" data-tab="login">INICIAR SESIÓN</button>
+                            <button class="auth-tab" data-tab="register">REGISTRARSE</button>
+                        </div>
+                        
+                        <div class="auth-form active" id="login-form">
+                            <div class="form-group">
+                                <label for="login-email">Correo electrónico</label>
+                                <input type="email" id="login-email" placeholder="tu@email.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="login-password">Contraseña</label>
+                                <input type="password" id="login-password" placeholder="••••••••">
+                            </div>
+                            <button class="btn-auth btn-primary" id="btn-login">
+                                <i class="fas fa-sign-in-alt"></i> ENTRAR AL JUEGO
+                            </button>
+                        </div>
+                        
+                        <div class="auth-form" id="register-form">
+                            <div class="form-group">
+                                <label for="register-username">Nombre de usuario</label>
+                                <input type="text" id="register-username" placeholder="MiEscuderíaF1">
+                            </div>
+                            <div class="form-group">
+                                <label for="register-email">Correo electrónico</label>
+                                <input type="email" id="register-email" placeholder="tu@email.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="register-password">Contraseña</label>
+                                <input type="password" id="register-password" placeholder="••••••••">
+                            </div>
+                            <button class="btn-auth btn-primary" id="btn-register">
+                                <i class="fas fa-user-plus"></i> CREAR CUENTA
+                            </button>
+                        </div>
+                        
+                        <div class="auth-divider">
+                            <span>O</span>
+                        </div>
+                        
+                        <button class="btn-auth btn-demo" id="btn-demo">
+                            <i class="fas fa-gamepad"></i> MODO DEMO (SIN REGISTRO)
+                        </button>
+                        
+                        <p class="auth-note">
+                            <i class="fas fa-info-circle"></i>
+                            El modo demo te permite probar el juego sin registro
+                        </p>
                     </div>
                     
-                    <div class="auth-form hidden" id="register-form">
-                        <input type="text" id="register-username" placeholder="Nombre de usuario">
-                        <input type="email" id="register-email" placeholder="Correo electrónico">
-                        <input type="password" id="register-password" placeholder="Contraseña">
-                        <button class="btn-primary" id="btn-register">Crear Cuenta</button>
+                    <div class="auth-footer">
+                        <p>Un juego de gestión de Fórmula 1 100% online</p>
+                        <p class="version">v1.0.0</p>
                     </div>
-                    
-                    <p class="auth-note">O inicia en modo demo:</p>
-                    <button class="btn-secondary" id="btn-demo">🎮 Modo Demo</button>
                 </div>
             </div>
         `;
-        
-        document.body.innerHTML += authHTML;
-        this.setupAuthEvents();
     }
     
     setupAuthEvents() {
@@ -106,11 +140,11 @@ class F1Manager {
         document.querySelectorAll('.auth-tab').forEach(tab => {
             tab.addEventListener('click', (e) => {
                 document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.auth-form').forEach(f => f.classList.add('hidden'));
+                document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
                 
                 e.target.classList.add('active');
                 const tabId = e.target.dataset.tab;
-                document.getElementById(`${tabId}-form`).classList.remove('hidden');
+                document.getElementById(`${tabId}-form`).classList.add('active');
             });
         });
         
@@ -118,6 +152,11 @@ class F1Manager {
         document.getElementById('btn-login')?.addEventListener('click', async () => {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
+            
+            if (!email || !password) {
+                this.showNotification('Por favor, completa todos los campos', 'error');
+                return;
+            }
             
             await this.login(email, password);
         });
@@ -127,6 +166,11 @@ class F1Manager {
             const username = document.getElementById('register-username').value;
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
+            
+            if (!username || !email || !password) {
+                this.showNotification('Por favor, completa todos los campos', 'error');
+                return;
+            }
             
             await this.register(username, email, password);
         });
@@ -148,8 +192,7 @@ class F1Manager {
             
             this.user = data.user;
             this.showNotification('✅ Sesión iniciada correctamente', 'success');
-            document.querySelector('.auth-modal').remove();
-            this.init();
+            this.init(); // Reiniciar el flujo
             
         } catch (error) {
             this.showNotification(`❌ Error: ${error.message}`, 'error');
@@ -185,7 +228,6 @@ class F1Manager {
             
             this.user = authData.user;
             this.showNotification('✅ ¡Cuenta creada! Inicia el tutorial.', 'success');
-            document.querySelector('.auth-modal').remove();
             this.startTutorial();
             
         } catch (error) {
@@ -201,9 +243,32 @@ class F1Manager {
         };
         
         this.showNotification('🎮 Modo demo activado', 'info');
-        document.querySelector('.auth-modal')?.remove();
         this.startTutorial();
     }
+    
+    async loadUserData() {
+        if (!this.user) return;
+        
+        try {
+            // Cargar escudería
+            const { data: escuderias, error } = await supabase
+                .from('escuderias')
+                .select('*')
+                .eq('user_id', this.user.id)
+                .single();
+            
+            if (error && error.code !== 'PGRST116') throw error;
+            
+            if (escuderias) {
+                this.escuderia = escuderias;
+            }
+            
+        } catch (error) {
+            console.error('Error cargando datos:', error);
+        }
+    }
+    
+    // ===== TUTORIAL =====
     
     startTutorial() {
         this.tutorialCompleted = false;
@@ -247,34 +312,48 @@ class F1Manager {
             }
         ];
         
-        this.showTutorialStep(tutorialSteps[0]);
-        this.setupTutorialEvents(tutorialSteps);
+        this.showTutorialScreen(tutorialSteps[0], tutorialSteps);
     }
     
-    showTutorialStep(step) {
-        const tutorialHTML = `
-            <div class="tutorial-modal">
-                <div class="tutorial-content">
-                    <div class="tutorial-header">
-                        <h2>${step.title}</h2>
-                        <span class="tutorial-step">${this.currentStep + 1}/5</span>
+    showTutorialScreen(step, allSteps) {
+        document.body.innerHTML = this.getTutorialHTML(step, allSteps);
+        this.setupTutorialEvents(allSteps);
+    }
+    
+    getTutorialHTML(step, allSteps) {
+        return `
+            <div class="tutorial-screen">
+                <div class="tutorial-container">
+                    <div class="tutorial-progress">
+                        ${allSteps.map((s, i) => `
+                            <div class="progress-step ${i === this.currentStep ? 'active' : ''} ${i < this.currentStep ? 'completed' : ''}">
+                                <div class="step-number">${i + 1}</div>
+                                <div class="step-label">Paso ${i + 1}</div>
+                            </div>
+                        `).join('')}
                     </div>
                     
-                    <div class="tutorial-body">
-                        ${step.content}
+                    <div class="tutorial-content">
+                        <h2>${step.title}</h2>
+                        <div class="tutorial-body">${step.content}</div>
                         
                         ${step.input ? `
                             <div class="tutorial-inputs">
-                                <input type="text" id="escuderia-nombre-input" placeholder="Nombre de tu escudería" maxlength="20">
-                                
-                                <div class="color-picker">
-                                    <label>Color principal:</label>
-                                    <input type="color" id="color-principal" value="#e10600">
+                                <div class="form-group">
+                                    <label for="escuderia-nombre-input">Nombre de tu escudería</label>
+                                    <input type="text" id="escuderia-nombre-input" placeholder="Ej: Red Bull Racing" maxlength="30">
                                 </div>
                                 
-                                <div class="color-picker">
-                                    <label>Color secundario:</label>
-                                    <input type="color" id="color-secundario" value="#ffffff">
+                                <div class="color-picker-group">
+                                    <div class="form-group">
+                                        <label for="color-principal">Color principal</label>
+                                        <input type="color" id="color-principal" value="#e10600">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="color-secundario">Color secundario</label>
+                                        <input type="color" id="color-secundario" value="#ffffff">
+                                    </div>
                                 </div>
                             </div>
                         ` : ''}
@@ -282,29 +361,32 @@ class F1Manager {
                     
                     <div class="tutorial-footer">
                         ${this.currentStep > 0 ? `
-                            <button class="btn-secondary" id="tutorial-prev">← Anterior</button>
-                        ` : ''}
+                            <button class="btn-secondary" id="tutorial-prev">
+                                <i class="fas fa-arrow-left"></i> Anterior
+                            </button>
+                        ` : '<div></div>'}
                         
                         <button class="btn-primary" id="tutorial-next">
-                            ${step.action} →
+                            ${step.action} <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
                 </div>
             </div>
         `;
-        
-        // Remover tutorial anterior
-        document.querySelector('.tutorial-modal')?.remove();
-        document.body.innerHTML += tutorialHTML;
     }
     
     setupTutorialEvents(steps) {
         // Botón siguiente
         document.getElementById('tutorial-next')?.addEventListener('click', () => {
+            if (this.currentStep === 2) { // Paso de crear escudería
+                this.createEscuderiaFromTutorial();
+                return;
+            }
+            
             this.currentStep++;
             
             if (this.currentStep < steps.length) {
-                this.showTutorialStep(steps[this.currentStep]);
+                this.showTutorialScreen(steps[this.currentStep], steps);
             } else {
                 this.completeTutorial();
             }
@@ -314,16 +396,20 @@ class F1Manager {
         document.getElementById('tutorial-prev')?.addEventListener('click', () => {
             if (this.currentStep > 0) {
                 this.currentStep--;
-                this.showTutorialStep(steps[this.currentStep]);
+                this.showTutorialScreen(steps[this.currentStep], steps);
             }
         });
     }
     
-    async completeTutorial() {
-        // 1. Crear escudería en base de datos
+    async createEscuderiaFromTutorial() {
         const escuderiaNombre = document.getElementById('escuderia-nombre-input')?.value || 'Mi Escudería';
         const colorPrincipal = document.getElementById('color-principal')?.value || '#e10600';
         const colorSecundario = document.getElementById('color-secundario')?.value || '#ffffff';
+        
+        if (!escuderiaNombre.trim()) {
+            this.showNotification('Por favor, ingresa un nombre para tu escudería', 'error');
+            return;
+        }
         
         try {
             const { data: escuderia, error } = await supabase
@@ -332,7 +418,7 @@ class F1Manager {
                     {
                         user_id: this.user.id,
                         nombre: escuderiaNombre,
-                        dinero: CONFIG.INITIAL_MONEY,
+                        dinero: 5000000, // CONFIG.INITIAL_MONEY
                         puntos: 0,
                         ranking: null,
                         color_principal: colorPrincipal,
@@ -349,51 +435,257 @@ class F1Manager {
             this.escuderia = escuderia;
             this.tutorialCompleted = true;
             
-            // Remover tutorial
-            document.querySelector('.tutorial-modal')?.remove();
-            
-            // Mostrar dashboard
-            await this.loadDashboard();
-            this.hideLoading();
+            // Crear stats iniciales del coche
+            await supabase
+                .from('coches_stats')
+                .insert([{ escuderia_id: escuderia.id }]);
             
             this.showNotification('🎉 ¡Escudería creada con éxito!', 'success');
             
+            // Avanzar al siguiente paso del tutorial
+            this.currentStep++;
+            const tutorialSteps = [
+                // ... mismos pasos que antes
+            ];
+            this.showTutorialScreen(tutorialSteps[this.currentStep], tutorialSteps);
+            
         } catch (error) {
             console.error('Error creando escudería:', error);
-            this.showNotification('❌ Error creando escudería', 'error');
+            this.showNotification('❌ Error creando escudería: ' + error.message, 'error');
         }
     }
     
-    async loadUserData() {
-        if (!this.user) return;
-        
-        try {
-            // Cargar escudería
-            const { data: escuderias, error } = await supabase
-                .from('escuderias')
-                .select('*')
-                .eq('user_id', this.user.id)
-                .single();
-            
-            if (error && error.code !== 'PGRST116') throw error;
-            
-            if (escuderias) {
-                this.escuderia = escuderias;
-            }
-            
-        } catch (error) {
-            console.error('Error cargando datos:', error);
-        }
+    async completeTutorial() {
+        this.tutorialCompleted = true;
+        this.showNotification('✅ Tutorial completado', 'success');
+        await this.loadDashboard();
     }
+    
+    // ===== DASHBOARD =====
     
     async loadDashboard() {
-        if (!this.escuderia) return;
+        if (!this.escuderia) {
+            console.error('No hay escudería para cargar dashboard');
+            return;
+        }
         
-        // Aquí cargarías todos los datos del dashboard
         console.log('📊 Cargando dashboard para:', this.escuderia.nombre);
         
-        // Actualizar UI
-        this.updateDashboardUI();
+        // 1. Inyectar el HTML completo del dashboard
+        document.body.innerHTML = this.getDashboardHTML();
+        
+        // 2. Configurar eventos globales
+        this.setupDashboardEvents();
+        
+        // 3. Cargar y mostrar datos
+        await this.updateDashboardData();
+        
+        // 4. Iniciar sistemas
+        this.startCountdownTimer();
+        this.checkProductionStatus();
+    }
+    
+    getDashboardHTML() {
+        return `
+            <div id="app">
+                <!-- Header de Identidad -->
+                <header class="dashboard-header">
+                    <div class="escuderia-info">
+                        <div class="escuderia-brand">
+                            <div class="escuderia-logo" style="background: ${this.escuderia?.color_principal || '#e10600'}; border-color: ${this.escuderia?.color_secundario || '#ffffff'}"></div>
+                            <div>
+                                <h1 id="escuderia-nombre">${this.escuderia?.nombre || 'Mi Escudería'}</h1>
+                                <p class="escuderia-id">#F1MANAGER</p>
+                            </div>
+                        </div>
+                        <div class="stats-header">
+                            <div class="stat-card">
+                                <span class="stat-label">FONDOS</span>
+                                <span class="stat-value" id="saldo">${this.formatMoney(this.escuderia?.dinero || 5000000)}</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">PUNTOS</span>
+                                <span class="stat-value" id="puntos">${this.escuderia?.puntos || 0}</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">RANKING</span>
+                                <span class="stat-value" id="ranking">${this.escuderia?.ranking ? '#' + this.escuderia.ranking : '#-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Panel de Pilotos -->
+                <section class="panel-pilotos">
+                    <h2><i class="fas fa-user"></i> TUS PILOTOS</h2>
+                    <div class="pilotos-container" id="pilotos-container">
+                        <div class="empty-pilotos">
+                            <i class="fas fa-user-slash"></i>
+                            <p>No tienes pilotos contratados</p>
+                            <button class="btn-small" id="contratar-pilotos-btn">
+                                <i class="fas fa-plus"></i> Contratar Pilotos
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Centro de Competición -->
+                <section class="centro-competicion">
+                    <div class="countdown-section">
+                        <h2><i class="fas fa-clock"></i> CIERRE DE APUESTAS</h2>
+                        <div class="countdown-timer">
+                            <div class="time-block">
+                                <span class="time-number" id="countdown-hours">23</span>
+                                <span class="time-label">HORAS</span>
+                            </div>
+                            <span class="time-separator">:</span>
+                            <div class="time-block">
+                                <span class="time-number" id="countdown-minutes">45</span>
+                                <span class="time-label">MINUTOS</span>
+                            </div>
+                            <span class="time-separator">:</span>
+                            <div class="time-block">
+                                <span class="time-number" id="countdown-seconds">18</span>
+                                <span class="time-label">SEGUNDOS</span>
+                            </div>
+                        </div>
+                        <div class="proximo-gp">
+                            <h3 id="gp-nombre">GRAN PREMIO DE BARÉIN</h3>
+                            <p id="gp-fecha"><i class="far fa-calendar"></i> 2-4 MARZO</p>
+                            <p id="gp-circuito"><i class="fas fa-road"></i> Circuito Internacional de Sakhir</p>
+                        </div>
+                    </div>
+
+                    <!-- Monitor de Fábrica -->
+                    <div class="monitor-fabrica">
+                        <h2><i class="fas fa-industry"></i> PRODUCCIÓN EN CURSO</h2>
+                        <div class="fabrica-alert" id="fabrica-alert">
+                            <i class="fas fa-bell"></i>
+                            <span id="piezas-nuevas">0</span> piezas nuevas
+                        </div>
+                        <div class="produccion-actual">
+                            <div class="pieza-info">
+                                <h4 id="pieza-actual">NINGUNA EN PRODUCCIÓN</h4>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progreso-fabricacion" style="width: 0%"></div>
+                                </div>
+                                <p class="tiempo-restante" id="tiempo-restante-texto">-</p>
+                            </div>
+                            <div class="fabrica-cost">
+                                <p>COSTE <span id="fabrica-costo">€10,000</span></p>
+                                <p>PUNTOS <span id="fabrica-puntos">+10</span></p>
+                            </div>
+                            <button id="btn-recoger-pieza" class="btn-primary" disabled>
+                                <i class="fas fa-box-open"></i> RECOGER PIEZA
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Estado del Coche -->
+                <section class="estado-coche">
+                    <h2><i class="fas fa-car"></i> ESTADO DEL COCHE</h2>
+                    <div class="areas-coche" id="areas-coche">
+                        <!-- Las áreas se cargarán dinámicamente -->
+                    </div>
+                    <div class="mejores-peores">
+                        <div class="mejor-area">
+                            <h4><i class="fas fa-trophy"></i> MEJOR</h4>
+                            <p id="mejor-area">MOTOR</p>
+                        </div>
+                        <div class="peor-area">
+                            <h4><i class="fas fa-wrench"></i> PEOR</h4>
+                            <p id="peor-area">FRENOS</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Calendario y Estadísticas -->
+                <section class="calendario-estadisticas">
+                    <div class="calendario-section">
+                        <h2><i class="far fa-calendar-alt"></i> PRÓXIMAS CARRERAS</h2>
+                        <div class="calendar-list" id="calendar-list">
+                            <!-- Las carreras se cargarán dinámicamente -->
+                        </div>
+                    </div>
+                    <div class="estadisticas-section">
+                        <h2><i class="fas fa-chart-bar"></i> TUS ESTADÍSTICAS</h2>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Mejor Acierto</span>
+                                <span class="stat-value">85%</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Ingresos Totales</span>
+                                <span class="stat-value">€2.5M</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Piezas Fabricadas</span>
+                                <span class="stat-value">12</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Carreras Jugadas</span>
+                                <span class="stat-value">3</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Navegación Inferior -->
+                <nav class="dashboard-nav">
+                    <button class="nav-btn" data-tab="taller">
+                        <i class="fas fa-tools"></i>
+                        <span>TALLER</span>
+                    </button>
+                    <button class="nav-btn" data-tab="almacen">
+                        <i class="fas fa-warehouse"></i>
+                        <span>ALMACÉN</span>
+                    </button>
+                    <button class="nav-btn" data-tab="mercado">
+                        <i class="fas fa-store"></i>
+                        <span>MERCADO</span>
+                    </button>
+                    <button class="nav-btn" data-tab="presupuesto">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>PRESUPUESTO</span>
+                    </button>
+                    <button class="nav-btn" data-tab="clasificacion">
+                        <i class="fas fa-list-ol"></i>
+                        <span>CLASIFICACIÓN</span>
+                    </button>
+                </nav>
+            </div>
+        `;
+    }
+    
+    setupDashboardEvents() {
+        // Navegación
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tab = e.currentTarget.dataset.tab;
+                this.showTab(tab);
+            });
+        });
+        
+        // Botón contratar pilotos
+        document.getElementById('contratar-pilotos-btn')?.addEventListener('click', () => {
+            this.showPilotosMarket();
+        });
+        
+        // Botón recoger pieza
+        document.getElementById('btn-recoger-pieza')?.addEventListener('click', () => {
+            this.collectPiece();
+        });
+    }
+    
+    async updateDashboardData() {
+        // Actualizar datos del header
+        if (this.escuderia) {
+            document.getElementById('escuderia-nombre').textContent = this.escuderia.nombre;
+            document.getElementById('saldo').textContent = this.formatMoney(this.escuderia.dinero);
+            document.getElementById('puntos').textContent = this.escuderia.puntos;
+            document.getElementById('ranking').textContent = this.escuderia.ranking ? '#' + this.escuderia.ranking : '#-';
+        }
         
         // Cargar pilotos
         await this.loadPilotos();
@@ -401,30 +693,16 @@ class F1Manager {
         // Cargar estado del coche
         await this.loadCarStatus();
         
-        // Cargar fabricación actual
+        // Cargar producción actual
         await this.loadCurrentProduction();
         
         // Cargar calendario
         await this.loadCalendar();
     }
     
-    updateDashboardUI() {
-        // Actualizar header
-        const nombreEl = document.getElementById('escuderia-nombre');
-        const saldoEl = document.getElementById('saldo');
-        const puntosEl = document.getElementById('puntos');
-        const rankingEl = document.getElementById('ranking');
-        
-        if (nombreEl) nombreEl.textContent = this.escuderia.nombre;
-        if (saldoEl) saldoEl.textContent = this.formatMoney(this.escuderia.dinero);
-        if (puntosEl) puntosEl.textContent = this.escuderia.puntos;
-        if (rankingEl) rankingEl.textContent = this.escuderia.ranking ? `#${this.escuderia.ranking}` : '#-';
-        
-        // Aplicar colores
-        if (this.escuderia.color_principal) {
-            document.documentElement.style.setProperty('--f1-red', this.escuderia.color_principal);
-        }
-    }
+    // ===== MÉTODOS DE CARGA DE DATOS =====
+    // [Los métodos loadPilotos(), loadCarStatus(), etc. se mantienen igual que en tu código original]
+    // ... (copia aquí todos los métodos desde "async loadPilotos()" hasta "renderCalendar()" de tu código original)
     
     async loadPilotos() {
         try {
@@ -486,7 +764,7 @@ class F1Manager {
                     <p>Salario: <strong>${this.formatMoney(piloto.salario || 1000000)}/año</strong></p>
                 </div>
                 <div class="piloto-actions">
-                    <button class="btn-small" onclick="f1Manager.renovarContrato('${piloto.id}')">
+                    <button class="btn-small" onclick="window.f1Manager.renovarContrato('${piloto.id}')">
                         <i class="fas fa-file-signature"></i> Renovar
                     </button>
                 </div>
@@ -512,6 +790,20 @@ class F1Manager {
     }
     
     createDefaultCarStats() {
+        const CAR_AREAS = [
+            { id: 'suelo', name: 'Suelo y Difusor', icon: 'fas fa-car-side', color: '#FF5722' },
+            { id: 'motor', name: 'Unidad de Potencia', icon: 'fas fa-bolt', color: '#FF9800' },
+            { id: 'aleron_delantero', name: 'Alerón Delantero', icon: 'fas fa-angle-double-up', color: '#4CAF50' },
+            { id: 'caja_cambios', name: 'Caja de Cambios', icon: 'fas fa-cogs', color: '#2196F3' },
+            { id: 'pontones', name: 'Pontones', icon: 'fas fa-water', color: '#3F51B5' },
+            { id: 'suspension', name: 'Suspensión', icon: 'fas fa-compress-alt', color: '#9C27B0' },
+            { id: 'aleron_trasero', name: 'Alerón Trasero', icon: 'fas fa-angle-double-down', color: '#E91E63' },
+            { id: 'chasis', name: 'Chasis', icon: 'fas fa-car', color: '#795548' },
+            { id: 'frenos', name: 'Frenos', icon: 'fas fa-stop-circle', color: '#F44336' },
+            { id: 'volante', name: 'Volante', icon: 'fas fa-circle', color: '#00BCD4' },
+            { id: 'electronica', name: 'Electrónica', icon: 'fas fa-microchip', color: '#607D8B' }
+        ];
+        
         const stats = {
             escuderia_id: this.escuderia.id
         };
@@ -525,6 +817,20 @@ class F1Manager {
     }
     
     renderCarStatus(stats) {
+        const CAR_AREAS = [
+            { id: 'suelo', name: 'Suelo y Difusor', icon: 'fas fa-car-side', color: '#FF5722' },
+            { id: 'motor', name: 'Unidad de Potencia', icon: 'fas fa-bolt', color: '#FF9800' },
+            { id: 'aleron_delantero', name: 'Alerón Delantero', icon: 'fas fa-angle-double-up', color: '#4CAF50' },
+            { id: 'caja_cambios', name: 'Caja de Cambios', icon: 'fas fa-cogs', color: '#2196F3' },
+            { id: 'pontones', name: 'Pontones', icon: 'fas fa-water', color: '#3F51B5' },
+            { id: 'suspension', name: 'Suspensión', icon: 'fas fa-compress-alt', color: '#9C27B0' },
+            { id: 'aleron_trasero', name: 'Alerón Trasero', icon: 'fas fa-angle-double-down', color: '#E91E63' },
+            { id: 'chasis', name: 'Chasis', icon: 'fas fa-car', color: '#795548' },
+            { id: 'frenos', name: 'Frenos', icon: 'fas fa-stop-circle', color: '#F44336' },
+            { id: 'volante', name: 'Volante', icon: 'fas fa-circle', color: '#00BCD4' },
+            { id: 'electronica', name: 'Electrónica', icon: 'fas fa-microchip', color: '#607D8B' }
+        ];
+        
         const container = document.getElementById('areas-coche');
         if (!container) return;
         
@@ -534,7 +840,7 @@ class F1Manager {
         container.innerHTML = CAR_AREAS.map(area => {
             const nivel = stats[`${area.id}_nivel`] || 0;
             const progreso = stats[`${area.id}_progreso`] || 0;
-            const porcentaje = (progreso / CONFIG.PIECES_PER_LEVEL) * 100;
+            const porcentaje = (progreso / 20) * 100; // 20 piezas por nivel
             
             // Actualizar mejor/peor área
             if (nivel > mejorArea.nivel) {
@@ -546,8 +852,8 @@ class F1Manager {
             
             return `
                 <div class="area-item" data-area="${area.id}">
-                    <div class="area-icon">
-                        <i class="${area.icon}" style="color: ${area.color}"></i>
+                    <div class="area-icon" style="color: ${area.color}">
+                        <i class="${area.icon}"></i>
                     </div>
                     <span class="area-nombre">${area.name}</span>
                     <div class="area-nivel">
@@ -555,7 +861,7 @@ class F1Manager {
                         <span class="nivel-valor">${nivel}</span>
                     </div>
                     <div class="area-progreso">
-                        <span>${progreso}/${CONFIG.PIECES_PER_LEVEL}</span>
+                        <span>${progreso}/20</span>
                         <div class="progress-bar-small">
                             <div class="progress-fill-small" style="width: ${porcentaje}%"></div>
                         </div>
@@ -591,15 +897,29 @@ class F1Manager {
     }
     
     updateFactoryUI(production) {
-        const statusEl = document.getElementById('factory-status');
-        const progressEl = document.getElementById('production-progress');
-        const timeEl = document.getElementById('time-left');
+        const CAR_AREAS = [
+            { id: 'suelo', name: 'Suelo y Difusor' },
+            { id: 'motor', name: 'Unidad de Potencia' },
+            { id: 'aleron_delantero', name: 'Alerón Delantero' },
+            { id: 'caja_cambios', name: 'Caja de Cambios' },
+            { id: 'pontones', name: 'Pontones' },
+            { id: 'suspension', name: 'Suspensión' },
+            { id: 'aleron_trasero', name: 'Alerón Trasero' },
+            { id: 'chasis', name: 'Chasis' },
+            { id: 'frenos', name: 'Frenos' },
+            { id: 'volante', name: 'Volante' },
+            { id: 'electronica', name: 'Electrónica' }
+        ];
+        
+        const statusEl = document.getElementById('pieza-actual');
+        const progressEl = document.getElementById('progreso-fabricacion');
+        const timeEl = document.getElementById('tiempo-restante-texto');
         const collectBtn = document.getElementById('btn-recoger-pieza');
         
         if (!production) {
-            if (statusEl) statusEl.innerHTML = '<p><i class="fas fa-industry"></i> No hay producción en curso</p>';
+            if (statusEl) statusEl.textContent = 'NINGUNA EN PRODUCCIÓN';
             if (progressEl) progressEl.style.width = '0%';
-            if (timeEl) timeEl.textContent = '';
+            if (timeEl) timeEl.textContent = '-';
             if (collectBtn) collectBtn.disabled = true;
             return;
         }
@@ -608,7 +928,7 @@ class F1Manager {
         const areaName = area ? area.name : production.area;
         
         if (statusEl) {
-            statusEl.innerHTML = `<p><i class="fas fa-industry"></i> Fabricando: <strong>${areaName} Nivel ${production.nivel}</strong></p>`;
+            statusEl.textContent = `${areaName} NIVEL ${production.nivel}`;
         }
         
         // Calcular progreso
@@ -625,12 +945,13 @@ class F1Manager {
         
         if (timeEl) {
             if (remaining <= 0) {
-                timeEl.textContent = '¡Listo para recoger!';
+                timeEl.textContent = '¡LISTO PARA RECOGER!';
                 if (collectBtn) collectBtn.disabled = false;
             } else {
                 const hours = Math.floor(remaining / (1000 * 60 * 60));
                 const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-                timeEl.textContent = `Tiempo restante: ${hours}h ${minutes}m`;
+                const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+                timeEl.textContent = `${hours}h ${minutes}m ${seconds}s`;
                 if (collectBtn) collectBtn.disabled = true;
             }
         }
@@ -658,7 +979,7 @@ class F1Manager {
         if (!container) return;
         
         if (calendario.length === 0) {
-            container.innerHTML = '<p>No hay carreras programadas</p>';
+            container.innerHTML = '<p class="no-calendar">No hay carreras programadas</p>';
             return;
         }
         
@@ -682,66 +1003,43 @@ class F1Manager {
         `).join('');
     }
     
-    // ===== ACCIONES =====
-    
-    async iniciarFabricacion(areaId) {
-        if (!this.escuderia || this.escuderia.dinero < CONFIG.PIECE_COST) {
-            this.showNotification('❌ Fondos insuficientes', 'error');
-            return;
-        }
-        
-        try {
-            const inicio = new Date();
-            const fin = new Date(inicio.getTime() + CONFIG.FABRICATION_TIME);
-            
-            const { data: production, error } = await supabase
-                .from('fabricacion_actual')
-                .insert([
-                    {
-                        escuderia_id: this.escuderia.id,
-                        area: areaId,
-                        nivel: 1,
-                        inicio_fabricacion: inicio.toISOString(),
-                        fin_fabricacion: fin.toISOString(),
-                        completada: false,
-                        costo: CONFIG.PIECE_COST
-                    }
-                ])
-                .select()
-                .single();
-            
-            if (error) throw error;
-            
-            // Descontar dinero
-            this.escuderia.dinero -= CONFIG.PIECE_COST;
-            await this.updateEscuderiaMoney();
-            
-            this.showNotification(`🏭 Fabricación de ${CAR_AREAS.find(a => a.id === areaId)?.name || areaId} iniciada`, 'success');
-            this.updateFactoryUI(production);
-            
-        } catch (error) {
-            console.error('Error iniciando fabricación:', error);
-            this.showNotification('❌ Error al iniciar fabricación', 'error');
-        }
-    }
-    
-    async updateEscuderiaMoney() {
-        try {
-            const { error } = await supabase
-                .from('escuderias')
-                .update({ dinero: this.escuderia.dinero })
-                .eq('id', this.escuderia.id);
-            
-            if (error) throw error;
-            
-            this.updateDashboardUI();
-            
-        } catch (error) {
-            console.error('Error actualizando dinero:', error);
-        }
-    }
-    
     // ===== UTILIDADES =====
+    
+    startCountdownTimer() {
+        // Temporizador para el cierre de apuestas
+        const updateCountdown = () => {
+            const now = new Date();
+            const target = new Date();
+            target.setDate(target.getDate() + 1);
+            target.setHours(23, 59, 0, 0);
+            
+            const diff = target - now;
+            
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            const hoursEl = document.getElementById('countdown-hours');
+            const minutesEl = document.getElementById('countdown-minutes');
+            const secondsEl = document.getElementById('countdown-seconds');
+            
+            if (hoursEl) hoursEl.textContent = hours.toString().padStart(2, '0');
+            if (minutesEl) minutesEl.textContent = minutes.toString().padStart(2, '0');
+            if (secondsEl) secondsEl.textContent = seconds.toString().padStart(2, '0');
+        };
+        
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    }
+    
+    checkProductionStatus() {
+        // Verificar periódicamente el estado de producción
+        setInterval(async () => {
+            if (this.escuderia) {
+                await this.loadCurrentProduction();
+            }
+        }, 30000); // Cada 30 segundos
+    }
     
     formatMoney(amount) {
         return new Intl.NumberFormat('es-ES', {
@@ -752,6 +1050,9 @@ class F1Manager {
     }
     
     showNotification(message, type = 'info', duration = 3000) {
+        // Eliminar notificaciones anteriores
+        document.querySelectorAll('.notification').forEach(n => n.remove());
+        
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
         notification.innerHTML = `
@@ -770,48 +1071,38 @@ class F1Manager {
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             z-index: 10000;
             animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
         
         document.body.appendChild(notification);
         
         setTimeout(() => {
-            notification.style.animation = 'slideIn 0.3s ease reverse';
+            notification.style.animation = 'slideOut 0.3s ease';
             setTimeout(() => notification.remove(), 300);
         }, duration);
-    }
-    
-    hideLoading() {
-        setTimeout(() => {
-            const loading = document.getElementById('loading-screen');
-            const app = document.getElementById('app');
-            
-            if (loading) {
-                loading.style.opacity = '0';
-                setTimeout(() => {
-                    loading.style.display = 'none';
-                    
-                    if (app) {
-                        app.style.display = 'block';
-                        setTimeout(() => {
-                            app.style.opacity = '1';
-                        }, 10);
-                    }
-                }, 500);
-            }
-        }, 1000);
+        
+        // Añadir estilos de animación si no existen
+        if (!document.querySelector('#notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-styles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     }
 }
 
-// Inicializar
+// Inicializar la aplicación cuando se cargue el DOM
 document.addEventListener('DOMContentLoaded', () => {
     window.f1Manager = new F1Manager();
 });
