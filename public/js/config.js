@@ -1,37 +1,26 @@
 // ========================
-// CONFIG.JS COMPLETO
+// CONFIG.JS CORREGIDO
 // ========================
 console.log('✅ F1 Manager - Configuración cargada');
 
-// Tus credenciales
+// Crear cliente de Supabase correctamente
 const SUPABASE_URL = 'https://xbnbbmhcveyzrvvmdktg.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg';
 
-// Crear cliente
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// IMPORTANTE: Usar window.supabase.createClient en lugar de import
+const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 // Configuración del juego
 const CONFIG = {
     VERSION: '1.0.0',
     DEBUG: true,
-    
-    // Tiempos
-    FABRICATION_TIME: 4 * 60 * 60 * 1000, // 4 horas
-    
-    // Economía
+    FABRICATION_TIME: 4 * 60 * 60 * 1000,
     INITIAL_MONEY: 5000000,
     PIECE_COST: 10000,
     PILOT_SALARY_BASE: 500000,
-    
-    // Juego
     MAX_LEVEL: 10,
     PIECES_PER_LEVEL: 20,
-    POINTS_PER_PIECE: 10,
-    
-    // Apuestas
-    BETTING_CLOSE_DAY: 4, // Jueves (0=Domingo, 4=Jueves)
-    BETTING_CLOSE_HOUR: 23,
-    BETTING_CLOSE_MINUTE: 59
+    POINTS_PER_PIECE: 10
 };
 
 // Áreas del coche
@@ -49,9 +38,10 @@ const CAR_AREAS = [
     { id: 'electronica', name: 'Electrónica', icon: 'fas fa-microchip', color: '#43AA8B' }
 ];
 
-// Exportar
+// Exportar al scope global
 window.CONFIG = CONFIG;
 window.supabase = supabase;
 window.CAR_AREAS = CAR_AREAS;
 
 console.log('🚀 Sistema configurado para:', SUPABASE_URL);
+if (!supabase) console.error('❌ ERROR: Supabase no se pudo inicializar');
