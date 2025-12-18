@@ -1,54 +1,82 @@
 // ========================
-// MAIN.JS - FLUJO SIMPLE Y CORREGIDO
+// F1 MANAGER - MAIN.JS COMPLETO
 // ========================
 console.log('🏎️ F1 Manager - Sistema principal cargado');
 
-// Esperar a que se cargue y se inicialice Supabase
-async function waitForSupabase(maxAttempts = 15) {
-    console.log('⏳ Esperando inicialización de Supabase...');
-    for (let i = 0; i < maxAttempts; i++) {
-        if (window.supabase && window.supabase.auth) {
-            console.log('✅ Supabase disponible después de', i * 100, 'ms');
-            return window.supabase;
-        }
-        await new Promise(resolve => setTimeout(resolve, 100));
+// ========================
+// 1. SISTEMA DE CARGA SEGURA DE SUPABASE
+// ========================
+console.log('🔧 Inicializando sistema seguro...');
+
+// Variable global para Supabase
+let supabase = null;
+
+// Función para inicializar Supabase de forma SEGURA
+async function initSupabase() {
+    console.log('🔄 Inicializando Supabase...');
+    
+    // Si ya está inicializado, devolverlo
+    if (window.supabase && window.supabase.auth) {
+        console.log('✅ Supabase ya está inicializado');
+        supabase = window.supabase;
+        return supabase;
     }
-    console.error('❌ Supabase no se cargó después de', maxAttempts * 100, 'ms');
-    return null;
+    
+    // Si no está en window, cargarlo desde config.js
+    if (!window.supabase) {
+        console.log('⚠️ window.supabase no existe, esperando configuración...');
+        
+        // Esperar a que config.js cargue
+        for (let i = 0; i < 30; i++) {
+            if (window.supabase && window.supabase.auth) {
+                console.log(`✅ Supabase cargado después de ${i * 100}ms`);
+                supabase = window.supabase;
+                return supabase;
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        console.error('❌ Supabase no se cargó en 3 segundos');
+        return null;
+    }
+    
+    supabase = window.supabase;
+    return supabase;
 }
 
-// Iniciar la aplicación cuando Supabase esté listo
-waitForSupabase().then(async (supabaseClient) => {
-    if (!supabaseClient) {
-        console.error('❌ No se pudo cargar Supabase');
-        mostrarErrorGlobal('Error de conexión con la base de datos');
+// ========================
+// 2. INICIALIZACIÓN PRINCIPAL
+// ========================
+async function iniciarAplicacion() {
+    console.log('🚀 Iniciando aplicación F1 Manager...');
+    
+    // Inicializar Supabase
+    supabase = await initSupabase();
+    
+    if (!supabase) {
+        mostrarErrorCritico('No se pudo conectar con la base de datos');
         return;
     }
     
-    console.log('🚀 Iniciando aplicación F1 Manager');
-    await iniciarAplicacion();
-});
-
-async function iniciarAplicacion() {
-    console.log('🔍 Verificando sesión...');
+    console.log('✅ Supabase inicializado correctamente');
     
-    // 1. Verificar si ya está logueado
+    // Verificar sesión
     const { data: { session } } = await supabase.auth.getSession();
     
-    console.log('📊 Estado de sesión:', session ? 'ACTIVA' : 'INACTIVA');
-    
     if (session) {
-        // Si YA tiene sesión, cargar el juego directamente
-        console.log('✅ Usuario ya autenticado:', session.user.email);
-        window.f1Manager = new F1Manager();
+        console.log('✅ Usuario autenticado:', session.user.email);
+        // Iniciar el juego
+        window.f1Manager = new F1Manager(session.user);
     } else {
-        // Si NO tiene sesión, mostrar pantalla de login
         console.log('👤 No hay sesión, mostrar login');
         mostrarPantallaLogin();
     }
 }
 
-function mostrarErrorGlobal(mensaje) {
+// ========================
+// 3. PANTALLAS DE AUTENTICACIÓN
+// ========================
+function mostrarErrorCritico(mensaje) {
     document.body.innerHTML = `
         <div style="
             min-height: 100vh;
@@ -61,7 +89,7 @@ function mostrarErrorGlobal(mensaje) {
             padding: 20px;
         ">
             <div>
-                <h1 style="color: #e10600; margin-bottom: 20px;">❌ ERROR</h1>
+                <h1 style="color: #e10600; margin-bottom: 20px;">❌ ERROR CRÍTICO</h1>
                 <p>${mensaje}</p>
                 <button onclick="location.reload()" style="
                     margin-top: 20px;
@@ -81,6 +109,45 @@ function mostrarErrorGlobal(mensaje) {
 
 function mostrarPantallaLogin() {
     document.body.innerHTML = `
+        <div class="login-screen">
+            <div class="login-container">
+                <div class="login-header">
+                    <h1>F1 MANAGER E-STRATEGY</h1>
+                    <p>Gestiona tu escudería de Fórmula 1</p>
+                </div>
+                
+                <div id="login-error" class="error-message"></div>
+                <div id="login-success" class="success-message"></div>
+                
+                <div class="login-form">
+                    <div class="form-group">
+                        <label for="login-email">Correo electrónico</label>
+                        <input type="email" id="login-email" placeholder="tu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Contraseña</label>
+                        <input type="password" id="login-password" placeholder="••••••••">
+                    </div>
+                </div>
+                
+                <div class="login-buttons">
+                    <button class="btn-login" id="btn-login">
+                        <i class="fas fa-sign-in-alt"></i>
+                        INICIAR SESIÓN
+                    </button>
+                    <button class="btn-register" id="btn-register">
+                        <i class="fas fa-user-plus"></i>
+                        CREAR CUENTA
+                    </button>
+                </div>
+                
+                <div class="login-footer">
+                    <p>Un juego de gestión 100% online</p>
+                    <p>v1.0.0</p>
+                </div>
+            </div>
+        </div>
+        
         <style>
             .login-screen {
                 min-height: 100vh;
@@ -230,50 +297,11 @@ function mostrarPantallaLogin() {
                 display: block;
             }
         </style>
-        
-        <div class="login-screen">
-            <div class="login-container">
-                <div class="login-header">
-                    <h1>F1 MANAGER E-STRATEGY</h1>
-                    <p>Gestiona tu escudería de Fórmula 1</p>
-                </div>
-                
-                <div id="login-error" class="error-message"></div>
-                <div id="login-success" class="success-message"></div>
-                
-                <div class="login-form">
-                    <div class="form-group">
-                        <label for="login-email">Correo electrónico</label>
-                        <input type="email" id="login-email" placeholder="tu@email.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="login-password">Contraseña</label>
-                        <input type="password" id="login-password" placeholder="••••••••">
-                    </div>
-                </div>
-                
-                <div class="login-buttons">
-                    <button class="btn-login" id="btn-login">
-                        <i class="fas fa-sign-in-alt"></i>
-                        INICIAR SESIÓN
-                    </button>
-                    <button class="btn-register" id="btn-register">
-                        <i class="fas fa-user-plus"></i>
-                        CREAR CUENTA NUEVA
-                    </button>
-                </div>
-                
-                <div class="login-footer">
-                    <p>Un juego de gestión 100% online</p>
-                    <p>v${window.CONFIG ? window.CONFIG.VERSION : '1.0.0'}</p>
-                </div>
-            </div>
-        </div>
     `;
     
     // Configurar eventos
     document.getElementById('btn-login').addEventListener('click', manejarLogin);
-    document.getElementById('btn-register').addEventListener('click', mostrarRegistro);
+    document.getElementById('btn-register').addEventListener('click', mostrarPantallaRegistro);
     
     // Permitir Enter para login
     document.getElementById('login-password').addEventListener('keypress', (e) => {
@@ -281,8 +309,49 @@ function mostrarPantallaLogin() {
     });
 }
 
-function mostrarRegistro() {
+function mostrarPantallaRegistro() {
     document.body.innerHTML = `
+        <div class="register-screen">
+            <div class="register-container">
+                <button class="back-button" id="btn-back">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver al login
+                </button>
+                
+                <div class="register-header">
+                    <h1>CREAR CUENTA</h1>
+                    <p>Comienza tu aventura en la F1</p>
+                </div>
+                
+                <div id="register-error" class="error-message"></div>
+                <div id="register-success" class="success-message"></div>
+                
+                <div class="register-form">
+                    <div class="form-group">
+                        <label for="register-username">Nombre de usuario</label>
+                        <input type="text" id="register-username" placeholder="Ej: RedBullManager" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Correo electrónico</label>
+                        <input type="email" id="register-email" placeholder="tu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Contraseña</label>
+                        <input type="password" id="register-password" placeholder="•••••••• (mínimo 6 caracteres)">
+                    </div>
+                </div>
+                
+                <button class="register-button" id="btn-register-submit">
+                    <i class="fas fa-check-circle"></i>
+                    CREAR CUENTA
+                </button>
+                
+                <div class="register-footer">
+                    <p>Recibirás 5,000,000€ para empezar</p>
+                </div>
+            </div>
+        </div>
+        
         <style>
             .register-screen {
                 min-height: 100vh;
@@ -401,76 +470,7 @@ function mostrarRegistro() {
                 color: #666;
                 font-size: 0.9rem;
             }
-            
-            .error-message {
-                background: rgba(255, 56, 96, 0.2);
-                color: #ff3860;
-                padding: 10px;
-                border-radius: 5px;
-                margin-bottom: 15px;
-                display: none;
-                border: 1px solid #ff3860;
-            }
-            
-            .error-message.show {
-                display: block;
-            }
-            
-            .success-message {
-                background: rgba(0, 163, 92, 0.2);
-                color: #00a35c;
-                padding: 10px;
-                border-radius: 5px;
-                margin-bottom: 15px;
-                display: none;
-                border: 1px solid #00a35c;
-            }
-            
-            .success-message.show {
-                display: block;
-            }
         </style>
-        
-        <div class="register-screen">
-            <div class="register-container">
-                <button class="back-button" id="btn-back">
-                    <i class="fas fa-arrow-left"></i>
-                    Volver al login
-                </button>
-                
-                <div class="register-header">
-                    <h1>CREAR CUENTA</h1>
-                    <p>Comienza tu aventura en la F1</p>
-                </div>
-                
-                <div id="register-error" class="error-message"></div>
-                <div id="register-success" class="success-message"></div>
-                
-                <div class="register-form">
-                    <div class="form-group">
-                        <label for="register-username">Nombre de usuario</label>
-                        <input type="text" id="register-username" placeholder="Ej: RedBullManager" maxlength="20">
-                    </div>
-                    <div class="form-group">
-                        <label for="register-email">Correo electrónico</label>
-                        <input type="email" id="register-email" placeholder="tu@email.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="register-password">Contraseña</label>
-                        <input type="password" id="register-password" placeholder="•••••••• (mínimo 6 caracteres)">
-                    </div>
-                </div>
-                
-                <button class="register-button" id="btn-register-submit">
-                    <i class="fas fa-check-circle"></i>
-                    CREAR CUENTA
-                </button>
-                
-                <div class="register-footer">
-                    <p>Recibirás 5,000,000€ para empezar</p>
-                </div>
-            </div>
-        </div>
     `;
     
     // Configurar eventos
@@ -484,19 +484,12 @@ async function manejarLogin() {
     const errorDiv = document.getElementById('login-error');
     const successDiv = document.getElementById('login-success');
     
-    // Ocultar mensajes anteriores
-    if (errorDiv) errorDiv.classList.remove('show');
-    if (successDiv) successDiv.classList.remove('show');
-    
     if (!email || !password) {
-        mostrarError('Por favor, completa todos los campos', errorDiv);
+        mostrarMensaje('Por favor, completa todos los campos', errorDiv);
         return;
     }
     
-    mostrarCargando();
-    
     try {
-        console.log('🔐 Intentando login para:', email);
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
@@ -504,18 +497,14 @@ async function manejarLogin() {
         
         if (error) throw error;
         
-        console.log('✅ Login exitoso:', data.user.email);
-        mostrarExito('✅ Sesión iniciada correctamente', successDiv);
+        mostrarMensaje('✅ Sesión iniciada correctamente', successDiv);
         
-        // Pequeña pausa para mostrar el mensaje
-        setTimeout(() => {
-            location.reload();
-        }, 1000);
+        // Recargar la aplicación
+        setTimeout(() => location.reload(), 1000);
         
     } catch (error) {
-        console.error('❌ Error en login:', error);
-        mostrarError('Usuario o contraseña incorrectos', errorDiv);
-        ocultarCargando();
+        console.error('Error en login:', error);
+        mostrarMensaje('Usuario o contraseña incorrectos', errorDiv);
     }
 }
 
@@ -526,26 +515,18 @@ async function manejarRegistro() {
     const errorDiv = document.getElementById('register-error');
     const successDiv = document.getElementById('register-success');
     
-    // Ocultar mensajes anteriores
-    if (errorDiv) errorDiv.classList.remove('show');
-    if (successDiv) successDiv.classList.remove('show');
-    
     if (!username || !email || !password) {
-        mostrarError('Por favor, completa todos los campos', errorDiv);
+        mostrarMensaje('Por favor, completa todos los campos', errorDiv);
         return;
     }
     
     if (password.length < 6) {
-        mostrarError('La contraseña debe tener al menos 6 caracteres', errorDiv);
+        mostrarMensaje('La contraseña debe tener al menos 6 caracteres', errorDiv);
         return;
     }
     
-    mostrarCargando();
-    
     try {
-        console.log('📝 Registrando nuevo usuario:', email);
-        
-        // SOLO registrar usuario en Auth - NADA MÁS
+        // SOLO registrar en Auth - El trigger creará el perfil automáticamente
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email,
             password,
@@ -557,218 +538,74 @@ async function manejarRegistro() {
         
         if (authError) throw authError;
         
-        console.log('✅ Registro en Auth exitoso');
+        mostrarMensaje('✅ ¡Cuenta creada! Revisa tu correo para confirmarla.', successDiv);
         
-        // MOSTRAR MENSAJE DE ÉXITO
-        const mensajeExito = authData.user && authData.user.identities && authData.user.identities.length > 0
-            ? '✅ ¡Cuenta creada! Revisa tu correo para confirmarla.'
-            : '✅ ¡Cuenta creada exitosamente!';
-        
-        mostrarExito(mensajeExito, successDiv);
-        
-        // Redirigir a login después de 3 segundos
-        setTimeout(() => {
-            mostrarPantallaLogin();
-        }, 3000);
+        // Volver a login después de 3 segundos
+        setTimeout(() => mostrarPantallaLogin(), 3000);
         
     } catch (error) {
-        console.error('❌ Error en registro:', error);
-        
-        // Mensaje de error amigable
-        let mensajeError = 'Error creando la cuenta';
-        if (error.message.includes('already registered') || error.code === '23505') {
-            mensajeError = 'Este email ya está registrado';
-        } else if (error.message.includes('User already registered')) {
-            mensajeError = 'Este usuario ya existe';
-        }
-        
-        mostrarError(mensajeError, errorDiv);
-        ocultarCargando();
+        console.error('Error en registro:', error);
+        mostrarMensaje(error.message || 'Error creando la cuenta', errorDiv);
     }
 }
 
-function mostrarError(mensaje, elemento) {
+function mostrarMensaje(mensaje, elemento) {
     if (elemento) {
         elemento.textContent = mensaje;
         elemento.classList.add('show');
+        setTimeout(() => elemento.classList.remove('show'), 5000);
     }
 }
 
-function mostrarExito(mensaje, elemento) {
-    if (elemento) {
-        elemento.textContent = mensaje;
-        elemento.classList.add('show');
-    }
-}
-
-function mostrarCargando() {
-    // Puedes implementar un spinner si quieres
-}
-
-function ocultarCargando() {
-    // Puedes implementar un spinner si quieres
-}
-
-// ================================================
-// CLASE F1Manager (SIMPLIFICADA PARA PRUEBAS)
-// ================================================
-
+// ========================
+// 4. CLASE F1Manager PRINCIPAL
+// ========================
 class F1Manager {
-    constructor() {
-        console.log('🚗 Creando nueva instancia de F1Manager');
-        this.user = null;
+    constructor(user) {
+        console.log('🚗 Creando F1Manager para:', user.email);
+        this.user = user;
         this.escuderia = null;
-        this.isLoading = true;
+        this.pilotos = [];
+        this.carStats = null;
         
         this.init();
     }
-
-
-        async saltarTutorial() {
-        console.log('⏭️ Saltando tutorial...');
-        
-        // Verificar si ya tiene escudería
-        await this.loadUserData();
-        
-        if (!this.escuderia) {
-            // Si no tiene escudería, crear una automáticamente
-            console.log('🏗️ Creando escudería automática para salto...');
-            try {
-                const { data: escuderia, error } = await supabase
-                    .from('escuderias')
-                    .insert([
-                        {
-                            user_id: this.user.id,
-                            nombre: 'Escudería Rápida',
-                            dinero: 5000000,
-                            puntos: 0,
-                            ranking: null,
-                            color_principal: '#e10600',
-                            color_secundario: '#ffffff',
-                            nivel_ingenieria: 1,
-                            creada_en: new Date().toISOString()
-                        }
-                    ])
-                    .select()
-                    .single();
-                
-                if (error) throw error;
-                this.escuderia = escuderia;
-                
-                // Crear stats del coche
-                await supabase
-                    .from('coches_stats')
-                    .insert([{ escuderia_id: escuderia.id }]);
-                    
-            } catch (error) {
-                console.error('❌ Error creando escudería automática:', error);
-            }
-        }
-        
-        // Cargar dashboard directamente
-        await this.loadDashboard();
-    }
+    
     async init() {
-        console.log('🔧 F1Manager inicializando...');
+        console.log('🔧 Inicializando juego...');
         
-        // 1. Verificar autenticación
-        const authOk = await this.checkAuth();
-        if (!authOk) {
-            console.log('❌ F1Manager: No autenticado, mostrando login');
-            mostrarPantallaLogin();
-            return;
-        }
-        
-        // 2. Cargar datos del usuario
+        // 1. Cargar datos del usuario
         await this.loadUserData();
         
-        // 3. Si no tiene escudería, mostrar tutorial
+        // 2. Si no tiene escudería, mostrar tutorial
         if (!this.escuderia) {
             console.log('📝 Usuario sin escudería, mostrando tutorial');
-            this.startTutorial();
+            this.mostrarTutorialInicial();
             return;
         }
         
-        // 4. Cargar dashboard
-        console.log('📊 Cargando dashboard para:', this.escuderia.nombre);
-        await this.loadDashboard();
-    }
-    
-    async checkAuth() {
-        try {
-            console.log('🔍 F1Manager verificando autenticación...');
-            const { data: { user }, error } = await supabase.auth.getUser();
-            
-            if (error) {
-                console.warn('⚠️ Error en checkAuth:', error.message);
-                return false;
-            }
-            
-            if (user) {
-                this.user = user;
-                console.log('👤 F1Manager: Usuario autenticado:', user.email);
-                return true;
-            }
-            
-            console.log('👤 F1Manager: No hay usuario autenticado');
-            return false;
-            
-        } catch (error) {
-            console.error('❌ Error crítico en checkAuth:', error);
-            return false;
-        }
+        // 3. Si tiene escudería, cargar dashboard completo
+        console.log('📊 Usuario con escudería, cargando dashboard');
+        await this.cargarDashboardCompleto();
     }
     
     async loadUserData() {
-        if (!this.user || !this.user.id) {
-            console.error('❌ loadUserData: No hay usuario o user.id');
-            return;
-        }
-        
-        console.log('📥 Cargando datos para usuario ID:', this.user.id);
+        console.log('📥 Cargando datos del usuario...');
         
         try {
-            // 1. VERIFICAR que supabase.auth está funcionando
-            const { data: sessionData } = await supabase.auth.getSession();
-            console.log('🔐 Sesión activa:', sessionData.session ? 'SÍ' : 'NO');
-            
-            if (!sessionData.session) {
-                console.error('❌ No hay sesión activa en loadUserData');
-                return;
-            }
-            
-            // 2. Hacer la consulta con headers EXPLÍCITOS
-            console.log('🔍 Buscando escudería para user_id:', this.user.id);
-            
+            // Buscar escudería del usuario
             const { data: escuderias, error } = await supabase
                 .from('escuderias')
                 .select('*')
                 .eq('user_id', this.user.id)
-                .maybeSingle();  // ← Usar maybeSingle en lugar de single
-            
-            console.log('📊 Resultado de consulta:', {
-                tieneDatos: !!escuderias,
-                error: error,
-                codigoError: error?.code,
-                mensajeError: error?.message
-            });
+                .maybeSingle();
             
             if (error) {
                 if (error.code === 'PGRST116') {
-                    // No hay datos - es normal para usuario nuevo
-                    console.log('ℹ️ Usuario sin escudería (esto es normal para nuevo usuario)');
+                    console.log('ℹ️ Usuario sin escudería (normal para nuevo usuario)');
                     this.escuderia = null;
                 } else {
-                    console.error('❌ Error REAL en consulta escuderías:', {
-                        code: error.code,
-                        message: error.message,
-                        details: error.details,
-                        hint: error.hint
-                    });
-                    
-                    // Intentar formato ALTERNATIVO de consulta
-                    console.log('🔄 Intentando formato alternativo...');
-                    await this.intentarConsultaAlternativa();
+                    console.error('Error cargando escudería:', error);
                 }
                 return;
             }
@@ -776,179 +613,208 @@ class F1Manager {
             if (escuderias) {
                 this.escuderia = escuderias;
                 console.log('✅ Escudería cargada:', escuderias.nombre);
-            } else {
-                console.log('ℹ️ No se encontró escudería para este usuario');
-                this.escuderia = null;
+                
+                // Cargar stats del coche
+                await this.cargarCarStats();
             }
             
         } catch (error) {
-            console.error('💥 ERROR CRÍTICO en loadUserData:', error);
-            console.error('Stack trace:', error.stack);
+            console.error('Error en loadUserData:', error);
         }
     }
     
-    async intentarConsultaAlternativa() {
+    async cargarCarStats() {
+        if (!this.escuderia) return;
+        
         try {
-            // Formato ALTERNATIVO que funciona SIEMPRE
-            const query = `
-                SELECT * FROM escuderias 
-                WHERE user_id = '${this.user.id}'
-                LIMIT 1
-            `;
+            const { data: stats, error } = await supabase
+                .from('coches_stats')
+                .select('*')
+                .eq('escuderia_id', this.escuderia.id)
+                .maybeSingle();
             
-            const { data, error } = await supabase.rpc('exec_sql', { 
-                sql_query: query 
-            }).catch(async (rpcError) => {
-                console.log('❌ RPC falló, intentando función personalizada...');
-                
-                // Último intento: función personalizada
-                const { data: funcData, error: funcError } = await supabase
-                    .from('escuderias')
-                    .select()
-                    .filter('user_id', 'eq', this.user.id);
-                
-                return { data: funcData, error: funcError };
-            });
-            
-            if (!error && data && data.length > 0) {
-                this.escuderia = data[0];
-                console.log('✅ Escudería cargada (método alternativo):', data[0].nombre);
+            if (!error && stats) {
+                this.carStats = stats;
             }
-            
-        } catch (altError) {
-            console.error('❌ Método alternativo también falló:', altError);
+        } catch (error) {
+            console.error('Error cargando car stats:', error);
         }
     }
     
-    async loadDashboard() {
-        if (!this.escuderia) {
-            console.error('❌ No hay escudería para cargar dashboard');
-            this.startTutorial();
-            return;
-        }
-        
-        console.log('🏁 Cargando dashboard completo');
-        
-        // Mostrar un dashboard simple para prueba
+    mostrarTutorialInicial() {
         document.body.innerHTML = `
-            <div style="
-                min-height: 100vh;
-                background: #15151e;
-                color: white;
-                padding: 20px;
-            ">
-                <h1 style="color: #e10600;">🏎️ F1 MANAGER - DASHBOARD</h1>
-                <h2>Escudería: ${this.escuderia.nombre}</h2>
-                <p>Dinero: ${this.formatMoney(this.escuderia.dinero)}</p>
-                <p>Puntos: ${this.escuderia.puntos || 0}</p>
-                
-                <div style="margin-top: 30px;">
-                    <button onclick="location.reload()" style="
-                        padding: 10px 20px;
-                        background: #e10600;
-                        color: white;
-                        border: none;
-                        border-radius: 5px;
-                        margin-right: 10px;
-                    ">
-                        Recargar
-                    </button>
-                    <button onclick="supabase.auth.signOut().then(() => location.reload())" style="
-                        padding: 10px 20px;
-                        background: #666;
-                        color: white;
-                        border: none;
-                        border-radius: 5px;
-                    ">
-                        Cerrar Sesión
-                    </button>
-                </div>
-                
-                <div style="margin-top: 40px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;">
-                    <h3>Próximos pasos:</h3>
-                    <ul>
-                        <li>Implementar tutorial completo</li>
-                        <li>Cargar pilotos desde base de datos</li>
-                        <li>Mostrar estado del coche</li>
-                        <li>Implementar sistema de fabricación</li>
-                    </ul>
-                </div>
-            </div>
-        `;
-    }
-    
-    startTutorial() {
-        console.log('🎮 Iniciando tutorial');
-        
-        // Tutorial simple para empezar
-        document.body.innerHTML = `
-            <div style="
-                min-height: 100vh;
-                background: linear-gradient(135deg, #15151e, #1a1a2e);
-                color: white;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                padding: 20px;
-            ">
-                <div style="
-                    background: rgba(42, 42, 56, 0.9);
-                    padding: 40px;
-                    border-radius: 15px;
-                    border: 2px solid #00d2be;
-                    max-width: 500px;
-                    text-align: center;
-                ">
-                    <h1 style="color: #00d2be;">🎮 TUTORIAL</h1>
-                    <p style="margin: 20px 0;">¡Bienvenido a F1 Manager! Vamos a crear tu escudería.</p>
-                    
-                    <div style="margin: 30px 0;">
-                        <input type="text" id="tutorial-escuderia-nombre" placeholder="Nombre de tu escudería" style="
-                            width: 100%;
-                            padding: 12px;
-                            background: rgba(255,255,255,0.1);
-                            border: 1px solid rgba(255,255,255,0.2);
-                            border-radius: 5px;
-                            color: white;
-                            margin-bottom: 15px;
-                        ">
+            <div class="tutorial-screen">
+                <div class="tutorial-container">
+                    <div class="tutorial-header">
+                        <h1>🏁 ¡BIENVENIDO A F1 MANAGER!</h1>
+                        <p>Crea tu escudería de Fórmula 1</p>
                     </div>
                     
-                    <button onclick="window.f1Manager.crearEscuderiaDesdeTutorial()" style="
-                        padding: 15px 30px;
-                        background: linear-gradient(135deg, #00d2be, #00a35c);
-                        color: white;
-                        border: none;
-                        border-radius: 5px;
-                        font-weight: bold;
-                        cursor: pointer;
-                        width: 100%;
-                    ">
-                        CREAR MI ESCUDERÍA
-                    // En la función que genera el HTML del tutorial (showTutorialScreen o similar),
-                    // añade esto dentro del contenedor del formulario:
-
-                    <button onclick="window.f1Manager.saltarTutorial()" 
-                        style="margin-top: 10px; padding: 10px; background: #666; color: white; border: none; border-radius: 5px; width: 100%; cursor: pointer;">
-                        ⏭️ Saltar Tutorial e Ir al Juego
-                    </button>
+                    <div class="tutorial-content">
+                        <div class="tutorial-step">
+                            <h2>🏎️ PASO 1: NOMBRE DE TU ESCUDERÍA</h2>
+                            <p>Elige un nombre único para tu equipo. Este será tu identidad en el juego.</p>
+                            
+                            <div class="tutorial-form">
+                                <input type="text" id="escuderia-nombre" 
+                                       placeholder="Ej: McLaren Racing, Ferrari, etc." 
+                                       maxlength="30"
+                                       style="width: 100%; padding: 12px; margin: 20px 0; border-radius: 5px; border: 2px solid #00d2be; background: rgba(255,255,255,0.1); color: white;">
+                            </div>
+                        </div>
+                        
+                        <div class="tutorial-actions">
+                            <button class="btn-crear-escuderia" id="btn-crear-escuderia">
+                                <i class="fas fa-flag-checkered"></i>
+                                CREAR MI ESCUDERÍA
+                            </button>
+                            
+                            <button class="btn-saltar-tutorial" id="btn-saltar-tutorial">
+                                <i class="fas fa-forward"></i>
+                                SALTAR TUTORIAL E IR AL JUEGO
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="tutorial-footer">
+                        <p><i class="fas fa-info-circle"></i> Recibirás 5,000,000€ para empezar tu aventura</p>
+                    </div>
                 </div>
             </div>
+            
+            <style>
+                .tutorial-screen {
+                    min-height: 100vh;
+                    background: linear-gradient(135deg, #15151e 0%, #1a1a2e 100%);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 20px;
+                }
+                
+                .tutorial-container {
+                    background: rgba(42, 42, 56, 0.95);
+                    border-radius: 20px;
+                    padding: 40px;
+                    width: 100%;
+                    max-width: 600px;
+                    border: 3px solid #00d2be;
+                    box-shadow: 0 15px 40px rgba(0, 210, 190, 0.3);
+                }
+                
+                .tutorial-header {
+                    text-align: center;
+                    margin-bottom: 40px;
+                    padding-bottom: 20px;
+                    border-bottom: 2px solid rgba(0, 210, 190, 0.3);
+                }
+                
+                .tutorial-header h1 {
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 2.5rem;
+                    background: linear-gradient(90deg, #00d2be, #e10600);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    margin-bottom: 10px;
+                }
+                
+                .tutorial-header p {
+                    color: #aaa;
+                    font-size: 1.1rem;
+                }
+                
+                .tutorial-step {
+                    margin-bottom: 40px;
+                }
+                
+                .tutorial-step h2 {
+                    color: #00d2be;
+                    margin-bottom: 15px;
+                    font-size: 1.5rem;
+                }
+                
+                .tutorial-step p {
+                    color: #ccc;
+                    line-height: 1.6;
+                    margin-bottom: 20px;
+                }
+                
+                .tutorial-actions {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 15px;
+                    margin-top: 30px;
+                }
+                
+                .btn-crear-escuderia, .btn-saltar-tutorial {
+                    padding: 18px;
+                    border: none;
+                    border-radius: 10px;
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 1.1rem;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                }
+                
+                .btn-crear-escuderia {
+                    background: linear-gradient(135deg, #00d2be, #009688);
+                    color: white;
+                }
+                
+                .btn-saltar-tutorial {
+                    background: transparent;
+                    border: 2px solid #e10600;
+                    color: #e10600;
+                }
+                
+                .btn-crear-escuderia:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 8px 20px rgba(0, 210, 190, 0.4);
+                }
+                
+                .btn-saltar-tutorial:hover {
+                    background: rgba(225, 6, 0, 0.1);
+                    transform: translateY(-3px);
+                }
+                
+                .tutorial-footer {
+                    text-align: center;
+                    margin-top: 40px;
+                    padding-top: 20px;
+                    border-top: 1px solid rgba(255,255,255,0.1);
+                    color: #888;
+                    font-size: 0.9rem;
+                }
+                
+                .tutorial-footer i {
+                    color: #00d2be;
+                    margin-right: 8px;
+                }
+            </style>
         `;
+        
+        // Configurar eventos
+        document.getElementById('btn-crear-escuderia').addEventListener('click', () => this.crearEscuderiaDesdeTutorial());
+        document.getElementById('btn-saltar-tutorial').addEventListener('click', () => this.saltarTutorial());
     }
     
     async crearEscuderiaDesdeTutorial() {
-        const nombre = document.getElementById('tutorial-escuderia-nombre')?.value || 'Mi Escudería';
+        const nombre = document.getElementById('escuderia-nombre').value.trim();
         
-        if (!nombre.trim()) {
-            alert('Por favor, ingresa un nombre para tu escudería');
+        if (!nombre) {
+            alert('⚠️ Por favor, ingresa un nombre para tu escudería');
             return;
         }
         
         console.log('🏗️ Creando escudería:', nombre);
         
         try {
-            // 1. Crear escudería SIN verificar primero (evita doble consulta)
+            // 1. Crear escudería
             const { data: escuderia, error } = await supabase
                 .from('escuderias')
                 .insert([
@@ -977,35 +843,236 @@ class F1Manager {
                 .from('coches_stats')
                 .insert([{ escuderia_id: escuderia.id }]);
             
-            // 3. ✅ IMPORTANTE: En lugar de location.reload(), cargar dashboard DIRECTAMENTE
-            console.log('🎉 Cargando dashboard directamente...');
-            await this.loadDashboard(); // ← Esto carga el dashboard SIN recargar página
+            // 3. Cargar dashboard COMPLETO
+            await this.cargarDashboardCompleto();
             
         } catch (error) {
             console.error('❌ Error creando escudería:', error);
             
-            let mensaje = 'Error creando escudería';
             if (error.code === '23505') {
-                mensaje = 'Ya tienes una escudería. Cargando dashboard...';
-                // Si ya existe, cargar datos y dashboard
+                // Escudería ya existe
+                alert('✅ Ya tienes una escudería. Cargando juego...');
                 await this.loadUserData();
-                await this.loadDashboard();
+                await this.cargarDashboardCompleto();
             } else {
-                mensaje = 'Error: ' + (error.message || 'Desconocido');
-                alert(mensaje);
+                alert('❌ Error: ' + (error.message || 'No se pudo crear la escudería'));
             }
         }
     }
     
-    formatMoney(amount) {
-        return new Intl.NumberFormat('es-ES', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 0
-        }).format(amount);
+    async saltarTutorial() {
+        console.log('⏭️ Saltando tutorial...');
+        
+        // Verificar si ya tiene escudería
+        await this.loadUserData();
+        
+        if (!this.escuderia) {
+            // Crear escudería automáticamente
+            try {
+                const { data: escuderia, error } = await supabase
+                    .from('escuderias')
+                    .insert([
+                        {
+                            user_id: this.user.id,
+                            nombre: 'Mi Escudería Rápida',
+                            dinero: 5000000,
+                            puntos: 0,
+                            ranking: null,
+                            color_principal: '#e10600',
+                            color_secundario: '#ffffff',
+                            nivel_ingenieria: 1,
+                            creada_en: new Date().toISOString()
+                        }
+                    ])
+                    .select()
+                    .single();
+                
+                if (!error) {
+                    this.escuderia = escuderia;
+                    await supabase
+                        .from('coches_stats')
+                        .insert([{ escuderia_id: escuderia.id }]);
+                }
+            } catch (error) {
+                console.error('Error creando escudería automática:', error);
+            }
+        }
+        
+        // Cargar dashboard
+        await this.cargarDashboardCompleto();
+    }
+    
+    async cargarDashboardCompleto() {
+        console.log('📊 Cargando dashboard COMPLETO...');
+        
+        if (!this.escuderia) {
+            console.error('❌ No hay escudería para cargar dashboard');
+            return;
+        }
+        
+        // Aquí va el HTML COMPLETO del dashboard
+        // Por ahora, mostramos una versión básica funcional
+        document.body.innerHTML = `
+            <div id="app">
+                <!-- Header -->
+                <header style="background: rgba(21, 21, 30, 0.95); padding: 20px; border-bottom: 3px solid #e10600;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto;">
+                        <div>
+                            <h1 style="color: #e10600; font-family: 'Orbitron', sans-serif;">${this.escuderia.nombre}</h1>
+                            <p style="color: #888; font-size: 0.9rem;">#F1MANAGER</p>
+                        </div>
+                        <div style="display: flex; gap: 30px;">
+                            <div style="text-align: center;">
+                                <p style="color: #aaa; font-size: 0.8rem; margin: 0;">FONDOS</p>
+                                <p style="color: #00d2be; font-size: 1.5rem; font-weight: bold; margin: 5px 0;">€${this.escuderia.dinero.toLocaleString()}</p>
+                            </div>
+                            <div style="text-align: center;">
+                                <p style="color: #aaa; font-size: 0.8rem; margin: 0;">PUNTOS</p>
+                                <p style="color: #ffd700; font-size: 1.5rem; font-weight: bold; margin: 5px 0;">${this.escuderia.puntos || 0}</p>
+                            </div>
+                            <div style="text-align: center;">
+                                <p style="color: #aaa; font-size: 0.8rem; margin: 0;">RANKING</p>
+                                <p style="color: #9000ff; font-size: 1.5rem; font-weight: bold; margin: 5px 0;">#${this.escuderia.ranking || '-'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                
+                <!-- Contenido Principal -->
+                <main style="max-width: 1400px; margin: 30px auto; padding: 0 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+                        <!-- Panel Izquierdo -->
+                        <div style="background: rgba(42, 42, 56, 0.7); border-radius: 10px; padding: 25px; border: 1px solid rgba(255,255,255,0.1);">
+                            <h2 style="color: #00d2be; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-user"></i> TUS PILOTOS
+                            </h2>
+                            <div id="pilotos-container" style="min-height: 200px; display: flex; align-items: center; justify-content: center; color: #888;">
+                                <div style="text-align: center;">
+                                    <i class="fas fa-user-slash" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                                    <p>No tienes pilotos contratados</p>
+                                    <button style="margin-top: 15px; padding: 10px 20px; background: #e10600; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                        <i class="fas fa-plus"></i> Contratar Pilotos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Panel Derecho -->
+                        <div style="background: rgba(42, 42, 56, 0.7); border-radius: 10px; padding: 25px; border: 1px solid rgba(255,255,255,0.1);">
+                            <h2 style="color: #00d2be; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-industry"></i> PRODUCCIÓN EN CURSO
+                            </h2>
+                            <div style="text-align: center; padding: 40px 20px; color: #888;">
+                                <i class="fas fa-industry" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                                <p>No hay producción en curso</p>
+                                <button style="margin-top: 15px; padding: 10px 20px; background: #00d2be; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                    <i class="fas fa-hammer"></i> Iniciar Fabricación
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Estado del Coche -->
+                    <div style="background: rgba(42, 42, 56, 0.7); border-radius: 10px; padding: 25px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 30px;">
+                        <h2 style="color: #00d2be; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-car"></i> ESTADO DEL COCHE
+                        </h2>
+                        <div id="areas-coche" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                            ${this.generarAreasCoche()}
+                        </div>
+                    </div>
+                    
+                    <!-- Acciones -->
+                    <div style="display: flex; gap: 20px; margin-top: 40px;">
+                        <button onclick="window.f1Manager.irAlTaller()" style="flex: 1; padding: 15px; background: #e10600; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
+                            <i class="fas fa-tools"></i> IR AL TALLER
+                        </button>
+                        <button onclick="window.f1Manager.irAlMercado()" style="flex: 1; padding: 15px; background: #9000ff; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
+                            <i class="fas fa-store"></i> IR AL MERCADO
+                        </button>
+                        <button onclick="supabase.auth.signOut().then(() => location.reload())" style="flex: 1; padding: 15px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
+                            <i class="fas fa-sign-out-alt"></i> CERRAR SESIÓN
+                        </button>
+                    </div>
+                </main>
+                
+                <!-- Footer -->
+                <footer style="text-align: center; padding: 20px; color: #666; font-size: 0.9rem; margin-top: 50px;">
+                    <p>F1 Manager E-Strategy v1.0.0 | Un juego de gestión 100% online</p>
+                </footer>
+            </div>
+            
+            <style>
+                body {
+                    background: linear-gradient(135deg, #15151e 0%, #1a1a2e 100%);
+                    color: white;
+                    font-family: 'Roboto', sans-serif;
+                    margin: 0;
+                    min-height: 100vh;
+                }
+                
+                #app {
+                    min-height: 100vh;
+                }
+                
+                button {
+                    transition: all 0.3s;
+                }
+                
+                button:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                }
+            </style>
+        `;
+        
+        console.log('✅ Dashboard COMPLETO cargado');
+    }
+    
+    generarAreasCoche() {
+        const areas = [
+            { nombre: 'Motor', nivel: this.carStats?.motor_nivel || 0, color: '#4ECDC4' },
+            { nombre: 'Frenos', nivel: this.carStats?.frenos_nivel || 0, color: '#FF6B6B' },
+            { nombre: 'Aerodinámica', nivel: this.carStats?.aleron_delantero_nivel || 0, color: '#FFD166' },
+            { nombre: 'Suspensión', nivel: this.carStats?.suspension_nivel || 0, color: '#06D6A0' },
+            { nombre: 'Caja Cambios', nivel: this.carStats?.caja_cambios_nivel || 0, color: '#118AB2' }
+        ];
+        
+        return areas.map(area => `
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border-left: 4px solid ${area.color};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="margin: 0; color: ${area.color};">${area.nombre}</h3>
+                    <span style="background: ${area.color}; color: black; padding: 2px 8px; border-radius: 10px; font-weight: bold;">Nivel ${area.nivel}</span>
+                </div>
+                <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                    <div style="height: 100%; width: ${(area.nivel / 10) * 100}%; background: ${area.color}; border-radius: 4px;"></div>
+                </div>
+                <button style="width: 100%; margin-top: 10px; padding: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid ${area.color}; border-radius: 5px; cursor: pointer;">
+                    <i class="fas fa-hammer"></i> Mejorar (€10,000)
+                </button>
+            </div>
+        `).join('');
+    }
+    
+    // Métodos de navegación (placeholders)
+    irAlTaller() {
+        alert('🏭 Taller - Próximamente');
+    }
+    
+    irAlMercado() {
+        alert('🛒 Mercado - Próximamente');
     }
 }
 
-// ================================================
-// FIN DEL ARCHIVO
-// ================================================
+// ========================
+// 5. INICIALIZACIÓN FINAL
+// ========================
+// Esperar a que todo esté listo
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('📄 DOM cargado, iniciando aplicación...');
+    
+    // Pequeña pausa para asegurar que todo está listo
+    setTimeout(async () => {
+        await iniciarAplicacion();
+    }, 100);
+});
