@@ -8,34 +8,34 @@ console.log('🏎️ F1 Manager - Sistema principal cargado');
 // ========================
 console.log('🔧 Inicializando sistema seguro...');
 
-// Variable global para Supabase
-var supabase = null;
+
 
 // Función para inicializar Supabase de forma SEGURA
 function initSupabase() {
     console.log('🔍 Verificando Supabase...');
     
-    // Simplemente devolver lo que YA debería estar en window
+    // 1. Si ya existe window.supabase (del index.html), usarlo
     if (window.supabase && window.supabase.auth) {
-        console.log('✅ Supabase encontrado en window');
+        console.log('✅ Supabase YA inicializado (del index.html)');
         return window.supabase;
     }
     
-    console.error('❌ CRÍTICO: Supabase no en window');
-    console.error('Estado de window.supabase:', window.supabase);
+    console.error('❌ ERROR: window.supabase NO existe');
+    console.error('window.supabase:', window.supabase);
     
-    // Intentar crear cliente de emergencia
-    try {
-        if (typeof supabase !== 'undefined') {
+    // 2. Intentar crear cliente de emergencia
+    if (typeof supabase !== 'undefined' && supabase.createClient) {
+        try {
+            console.log('⚠️ Creando cliente de emergencia...');
             window.supabase = supabase.createClient(
                 'https://xbnbbmhcveyzrvvmdktg.supabase.co',
                 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg'
             );
             console.log('✅ Cliente creado de emergencia');
             return window.supabase;
+        } catch (e) {
+            console.error('❌ No se pudo crear cliente:', e);
         }
-    } catch (e) {
-        console.error('❌ No se pudo crear cliente:', e);
     }
     
     return null;
@@ -49,7 +49,7 @@ async function iniciarAplicacion() {
     console.log('🚀 Iniciando aplicación F1 Manager...');
     
     // Inicializar Supabase
-    supabase = await initSupabase();
+    supabase = initSupabase();
     
     if (!supabase) {
         mostrarErrorCritico('No se pudo conectar con la base de datos');
