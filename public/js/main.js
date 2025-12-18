@@ -15,33 +15,40 @@ var supabase = null;
 async function initSupabase() {
     console.log('🔄 Inicializando Supabase...');
     
-    // Verificar si Supabase CDN cargó
-    if (typeof supabase === 'undefined') {
-        console.error('❌ Error: Supabase CDN no se cargó');
-        return null;
+    // Si ya está inicializado, devolverlo
+    if (window.supabase && window.supabase.auth) {
+        console.log('✅ Supabase ya inicializado');
+        return window.supabase;
     }
     
     try {
-        // Usar las variables de window que config.js configuró
-        const supabaseUrl = window.SUPABASE_URL;
-        const supabaseKey = window.SUPABASE_ANON_KEY;
+        console.log('🔧 Creando cliente Supabase...');
         
-        if (!supabaseUrl || !supabaseKey) {
-            throw new Error('Faltan URL o API Key en window');
+        // CARGAR SUPABASE DESDE CDN SI NO EXISTE
+        if (typeof supabase === 'undefined') {
+            console.log('📥 Cargando Supabase CDN...');
+            await new Promise(resolve => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+                script.onload = resolve;
+                document.head.appendChild(script);
+            });
         }
         
-        // Inicializar cliente
+        // Ahora supabase debería existir
         const { createClient } = supabase;
-        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = createClient(
+            window.SUPABASE_URL,
+            window.SUPABASE_ANON_KEY
+        );
         
-        // Asignar a window para uso global
         window.supabase = supabaseClient;
-        
-        console.log('✅ Supabase inicializado:', supabaseUrl);
+        console.log('✅ Supabase inicializado correctamente');
         return supabaseClient;
         
     } catch (error) {
-        console.error('❌ Error en initSupabase:', error.message);
+        console.error('❌ Error FATAL en initSupabase:', error);
+        alert('Error crítico: No se pudo conectar con la base de datos. Recarga la página.');
         return null;
     }
 }
