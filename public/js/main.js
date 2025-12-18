@@ -570,7 +570,102 @@ class F1Manager {
         
         this.init();
     }
+
+        async loadCarStatus() {
+        if (!this.escuderia) return;
+        
+        try {
+            const { data: stats } = await supabase
+                .from('coches_stats')
+                .select('*')
+                .eq('escuderia_id', this.escuderia.id)
+                .single();
+            
+            if (stats) {
+                this.carStats = stats;
+                this.updateCarAreasUI();
+            }
+        } catch (error) {
+            console.error('Error cargando stats:', error);
+        }
+    }
     
+    async loadPilotos() {
+        if (!this.escuderia) return;
+        
+        try {
+            const { data: pilotos } = await supabase
+                .from('pilotos_contratados')
+                .select('*')
+                .eq('escuderia_id', this.escuderia.id)
+                .eq('activo', true);
+            
+            if (pilotos && pilotos.length > 0) {
+                this.pilotos = pilotos;
+                this.updatePilotosUI();
+            }
+        } catch (error) {
+            console.error('Error cargando pilotos:', error);
+        }
+    }
+    
+    async loadProximoGP() {
+        try {
+            const { data: gp } = await supabase
+                .from('calendario_gp')
+                .select('*')
+                .eq('cerrado_apuestas', false)
+                .gt('fecha_inicio', new Date().toISOString())
+                .order('fecha_inicio', { ascending: true })
+                .limit(1)
+                .single();
+            
+            if (gp) {
+                this.proximoGP = gp;
+                this.updateCountdown();
+            }
+        } catch (error) {
+            console.error('Error cargando GP:', error);
+        }
+    }
+    
+    updateCarAreasUI() {
+        const container = document.getElementById('areas-coche');
+        if (!container || !this.carStats) return;
+        
+        container.innerHTML = window.CAR_AREAS.map(area => {
+            const nivel = this.carStats[`${area.id}_nivel`] || 0;
+            const progreso = this.carStats[`${area.id}_progreso`] || 0;
+            const porcentaje = (progreso / CONFIG.PIECES_PER_LEVEL) * 100;
+            
+            return `
+                <div class="area-item" style="border-left-color: ${area.color}">
+                    <span class="area-nombre">${area.name}</span>
+                    <div class="area-nivel">
+                        <span>Nivel</span>
+                        <span class="nivel-valor">${nivel}</span>
+                    </div>
+                    <div class="area-progreso">
+                        Progreso: <span class="progreso-valor">${progreso}/20</span>
+                    </div>
+                    <div class="progress-bar-small">
+                        <div class="progress-fill-small" style="width: ${porcentaje}%"></div>
+                    </div>
+                    <button class="btn-fabricar" data-area="${area.id}">
+                        <i class="fas fa-hammer"></i> Fabricar (€${CONFIG.PIECE_COST.toLocaleString()})
+                    </button>
+                </div>
+            `;
+        }).join('');
+        
+        // Configurar eventos de botones de fabricación
+        document.querySelectorAll('.btn-fabricar').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const areaId = e.target.closest('.btn-fabricar').dataset.area;
+                this.iniciarFabricacion(areaId);
+            });
+        });
+    }
     async init() {
         console.log('🔧 Inicializando juego...');
         
@@ -994,130 +1089,355 @@ class F1Manager {
     }
     
     async cargarDashboardCompleto() {
-        console.log('📊 Cargando dashboard COMPLETO...');
+        console.log('📊 Cargando dashboard COMPLETO con CSS...');
         
         if (!this.escuderia) {
             console.error('❌ No hay escudería para cargar dashboard');
             return;
         }
         
-        // Aquí va el HTML COMPLETO del dashboard
-        // Por ahora, mostramos una versión básica funcional
+        // Cargar datos adicionales
+        await this.loadCarStatus();
+        await this.loadPilotos();
+        await this.loadProximoGP();
+        
+        // Crear el HTML del dashboard con las clases CSS correctas
         document.body.innerHTML = `
             <div id="app">
-                <!-- Header -->
-                <header style="background: rgba(21, 21, 30, 0.95); padding: 20px; border-bottom: 3px solid #e10600;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto;">
-                        <div>
-                            <h1 style="color: #e10600; font-family: 'Orbitron', sans-serif;">${this.escuderia.nombre}</h1>
-                            <p style="color: #888; font-size: 0.9rem;">#F1MANAGER</p>
+                <!-- Loading Screen -->
+                <div id="loading-screen">
+                    <div class="loading-content">
+                        <div class="f1-logo">
+                            <i class="fas fa-flag-checkered"></i>
                         </div>
-                        <div style="display: flex; gap: 30px;">
-                            <div style="text-align: center;">
-                                <p style="color: #aaa; font-size: 0.8rem; margin: 0;">FONDOS</p>
-                                <p style="color: #00d2be; font-size: 1.5rem; font-weight: bold; margin: 5px 0;">€${this.escuderia?.dinero ? this.escuderia.dinero.toLocaleString() : '0'}</p>
-                            </div>
-                            <div style="text-align: center;">
-                                <p style="color: #aaa; font-size: 0.8rem; margin: 0;">PUNTOS</p>
-                                <p style="color: #ffd700; font-size: 1.5rem; font-weight: bold; margin: 5px 0;">${this.escuderia.puntos || 0}</p>
-                            </div>
-                            <div style="text-align: center;">
-                                <p style="color: #aaa; font-size: 0.8rem; margin: 0;">RANKING</p>
-                                <p style="color: #9000ff; font-size: 1.5rem; font-weight: bold; margin: 5px 0;">#${this.escuderia.ranking || '-'}</p>
-                            </div>
+                        <h1>F1 MANAGER E-STRATEGY</h1>
+                        <div class="loading-bar">
+                            <div class="loading-progress"></div>
                         </div>
+                        <p class="loading-text">Cargando tu escudería...</p>
                     </div>
-                </header>
+                </div>
                 
-                <!-- Contenido Principal -->
-                <main style="max-width: 1400px; margin: 30px auto; padding: 0 20px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
-                        <!-- Panel Izquierdo -->
-                        <div style="background: rgba(42, 42, 56, 0.7); border-radius: 10px; padding: 25px; border: 1px solid rgba(255,255,255,0.1);">
-                            <h2 style="color: #00d2be; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                                <i class="fas fa-user"></i> TUS PILOTOS
-                            </h2>
-                            <div id="pilotos-container" style="min-height: 200px; display: flex; align-items: center; justify-content: center; color: #888;">
-                                <div style="text-align: center;">
-                                    <i class="fas fa-user-slash" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i>
-                                    <p>No tienes pilotos contratados</p>
-                                    <button style="margin-top: 15px; padding: 10px 20px; background: #e10600; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                                        <i class="fas fa-plus"></i> Contratar Pilotos
-                                    </button>
+                <!-- Header -->
+                <header class="dashboard-header">
+                    <div class="header-top">
+                        <div class="logo-section">
+                            <div class="logo">
+                                <i class="fas fa-flag-checkered"></i>
+                                <span id="escuderia-nombre">${this.escuderia.nombre}</span>
+                            </div>
+                            <span class="team-tag">#F1MANAGER</span>
+                        </div>
+                        
+                        <div class="stats-header">
+                            <div class="stat-card money">
+                                <i class="fas fa-coins"></i>
+                                <div>
+                                    <span class="stat-label">FONDOS</span>
+                                    <span class="stat-value" id="money-value">€${this.escuderia?.dinero?.toLocaleString() || '0'}</span>
+                                </div>
+                            </div>
+                            <div class="stat-card points">
+                                <i class="fas fa-trophy"></i>
+                                <div>
+                                    <span class="stat-label">PUNTOS</span>
+                                    <span class="stat-value" id="points-value">${this.escuderia.puntos || 0}</span>
+                                </div>
+                            </div>
+                            <div class="stat-card ranking">
+                                <i class="fas fa-medal"></i>
+                                <div>
+                                    <span class="stat-label">RANKING</span>
+                                    <span class="stat-value" id="ranking-value">#${this.escuderia.ranking || '-'}</span>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Panel Derecho -->
-                        <div style="background: rgba(42, 42, 56, 0.7); border-radius: 10px; padding: 25px; border: 1px solid rgba(255,255,255,0.1);">
-                            <h2 style="color: #00d2be; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                                <i class="fas fa-industry"></i> PRODUCCIÓN EN CURSO
-                            </h2>
-                            <div style="text-align: center; padding: 40px 20px; color: #888;">
-                                <i class="fas fa-industry" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
-                                <p>No hay producción en curso</p>
-                                <button style="margin-top: 15px; padding: 10px 20px; background: #00d2be; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                                    <i class="fas fa-hammer"></i> Iniciar Fabricación
-                                </button>
+                        <div class="user-menu">
+                            <button class="user-btn" id="user-menu-btn">
+                                <i class="fas fa-user"></i>
+                                <span>${this.user.email?.split('@')[0] || 'Usuario'}</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <div class="user-dropdown" id="user-dropdown">
+                                <a href="#" id="refresh-btn"><i class="fas fa-sync-alt"></i> Actualizar</a>
+                                <a href="#" id="settings-btn"><i class="fas fa-cog"></i> Configuración</a>
+                                <a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Estado del Coche -->
-                    <div style="background: rgba(42, 42, 56, 0.7); border-radius: 10px; padding: 25px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 30px;">
-                        <h2 style="color: #00d2be; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-car"></i> ESTADO DEL COCHE
-                        </h2>
-                        <div id="areas-coche" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
-                            ${this.generarAreasCoche()}
+                    <!-- Tabs Navigation -->
+                    <nav class="tabs-navigation">
+                        <button class="tab-btn active" data-tab="principal">
+                            <i class="fas fa-home"></i> Principal
+                        </button>
+                        <button class="tab-btn" data-tab="taller">
+                            <i class="fas fa-tools"></i> Taller
+                        </button>
+                        <button class="tab-btn" data-tab="almacen">
+                            <i class="fas fa-warehouse"></i> Almacén
+                        </button>
+                        <button class="tab-btn" data-tab="mercado">
+                            <i class="fas fa-shopping-cart"></i> Mercado
+                        </button>
+                        <button class="tab-btn" data-tab="presupuesto">
+                            <i class="fas fa-chart-pie"></i> Presupuesto
+                        </button>
+                        <button class="tab-btn" data-tab="clasificacion">
+                            <i class="fas fa-medal"></i> Clasificación
+                        </button>
+                    </nav>
+                </header>
+                
+                <!-- Main Content -->
+                <main class="dashboard-content">
+                    <!-- Tab Principal -->
+                    <div id="tab-principal" class="tab-content active">
+                        <!-- Panel de Pilotos -->
+                        <section class="panel-pilotos">
+                            <div class="section-header">
+                                <h2><i class="fas fa-user"></i> TUS PILOTOS</h2>
+                                <button class="btn-primary" id="contratar-pilotos-btn">
+                                    <i class="fas fa-plus"></i> Contratar Pilotos
+                                </button>
+                            </div>
+                            <div id="pilotos-container" class="pilotos-container">
+                                <!-- Los pilotos se cargarán dinámicamente -->
+                                <div class="empty-state">
+                                    <i class="fas fa-user-slash"></i>
+                                    <p>No tienes pilotos contratados</p>
+                                    <button class="btn-primary" id="contratar-primer-piloto">
+                                        <i class="fas fa-user-plus"></i> Contratar mi primer piloto
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+                        
+                        <!-- Two Columns Layout -->
+                        <div class="two-columns">
+                            <!-- Columna 1: Countdown y GP -->
+                            <div class="countdown-section">
+                                <div class="section-header">
+                                    <h2><i class="fas fa-clock"></i> PRÓXIMA CARRERA</h2>
+                                    <span class="tag upcoming">EN VIVO</span>
+                                </div>
+                                <div id="countdown-container">
+                                    <div class="countdown-timer">
+                                        <div class="time-block">
+                                            <span class="time-number" id="hours">00</span>
+                                            <span class="time-label">Horas</span>
+                                        </div>
+                                        <div class="time-separator">:</div>
+                                        <div class="time-block">
+                                            <span class="time-number" id="minutes">00</span>
+                                            <span class="time-label">Minutos</span>
+                                        </div>
+                                        <div class="time-separator">:</div>
+                                        <div class="time-block">
+                                            <span class="time-number" id="seconds">00</span>
+                                            <span class="time-label">Segundos</span>
+                                        </div>
+                                    </div>
+                                    <div class="proximo-gp">
+                                        <h3 id="gp-nombre">Cargando próximo GP...</h3>
+                                        <div class="gp-info">
+                                            <div class="gp-date">
+                                                <i class="far fa-calendar"></i>
+                                                <span id="gp-fecha">Fecha por confirmar</span>
+                                            </div>
+                                            <div class="gp-circuit">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                <span id="gp-circuito">Circuito por confirmar</span>
+                                            </div>
+                                        </div>
+                                        <button class="btn-primary" id="btn-apostar">
+                                            <i class="fas fa-coins"></i> HACER APUESTA
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Columna 2: Monitor de Fábrica -->
+                            <div class="monitor-fabrica">
+                                <div class="section-header">
+                                    <h2><i class="fas fa-industry"></i> PRODUCCIÓN</h2>
+                                    <div id="alerta-almacen" class="alerta-almacen" style="display: none;">
+                                        <i class="fas fa-bell"></i>
+                                        <span>¡Piezas nuevas en almacén!</span>
+                                    </div>
+                                </div>
+                                <div id="produccion-actual" class="produccion-actual">
+                                    <div class="empty-state">
+                                        <i class="fas fa-industry"></i>
+                                        <p>No hay producción en curso</p>
+                                        <button class="btn-primary" id="iniciar-fabricacion-btn">
+                                            <i class="fas fa-hammer"></i> Iniciar primera fabricación
+                                        </button>
+                                    </div>
+                                    <!-- Cuando haya producción, se mostrará esto:
+                                    <div class="pieza-header">
+                                        <h3 id="pieza-nombre">Motor Nivel 1</h3>
+                                        <span class="pieza-tag">FABRICANDO</span>
+                                    </div>
+                                    <div class="progress-container">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="production-progress"></div>
+                                        </div>
+                                        <div class="progress-time">
+                                            <i class="far fa-clock"></i>
+                                            <span id="time-left">Tiempo restante: 3h 59m</span>
+                                        </div>
+                                    </div>
+                                    <div class="pieza-stats">
+                                        <div class="stat-mini">
+                                            <span>Costo</span>
+                                            <strong>€10,000</strong>
+                                        </div>
+                                        <div class="stat-mini">
+                                            <span>Puntos</span>
+                                            <strong>+10</strong>
+                                        </div>
+                                    </div>
+                                    <div class="produccion-actions">
+                                        <button class="btn-secondary" id="btn-cancelar">Cancelar</button>
+                                        <button class="btn-primary" id="btn-recoger-pieza">Recoger Pieza</button>
+                                    </div>
+                                    -->
+                                </div>
+                            </div>
                         </div>
+                        
+                        <!-- Análisis de Rendimiento -->
+                        <section class="analisis-rendimiento">
+                            <div class="section-header">
+                                <h2><i class="fas fa-tachometer-alt"></i> ESTADO DEL COCHE</h2>
+                                <div class="performance-summary">
+                                    <div class="perf-best">
+                                        <i class="fas fa-caret-up"></i>
+                                        <span id="best-area">Mejor: Motor</span>
+                                    </div>
+                                    <div class="perf-worst">
+                                        <i class="fas fa-caret-down"></i>
+                                        <span id="worst-area">Peor: Frenos</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="areas-coche" class="areas-coche">
+                                <!-- Las áreas se cargarán dinámicamente -->
+                            </div>
+                        </section>
+                        
+                        <!-- Estadísticas y Calendario -->
+                        <section class="panel-estadisticas">
+                            <div class="section-header">
+                                <h2><i class="fas fa-chart-bar"></i> ESTADÍSTICAS Y CALENDARIO</h2>
+                            </div>
+                            <div class="stats-calendar-grid">
+                                <div class="mini-calendar">
+                                    <h3><i class="far fa-calendar"></i> Próximas Carreras</h3>
+                                    <div id="calendario-lista" class="calendar-list">
+                                        <div class="calendar-item">
+                                            <h4>Gran Premio de España</h4>
+                                            <div class="calendar-date">
+                                                <i class="far fa-clock"></i>
+                                                <span>21-23 Junio 2024</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="quick-stats">
+                                    <h3><i class="fas fa-chart-line"></i> Tus Estadísticas</h3>
+                                    <div class="stats-grid">
+                                        <div class="stat-item">
+                                            <i class="fas fa-check-circle"></i>
+                                            <div>
+                                                <span class="stat-title">Mejor acierto</span>
+                                                <span class="stat-number" id="mejor-acierto">0 pts</span>
+                                            </div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-history"></i>
+                                            <div>
+                                                <span class="stat-title">Piezas fabricadas</span>
+                                                <span class="stat-number" id="piezas-fabricadas">0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
                     </div>
                     
-                    <!-- Acciones -->
-                    <div style="display: flex; gap: 20px; margin-top: 40px;">
-                        <button onclick="window.f1Manager.irAlTaller()" style="flex: 1; padding: 15px; background: #e10600; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
-                            <i class="fas fa-tools"></i> IR AL TALLER
-                        </button>
-                        <button onclick="window.f1Manager.irAlMercado()" style="flex: 1; padding: 15px; background: #9000ff; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
-                            <i class="fas fa-store"></i> IR AL MERCADO
-                        </button>
-                        <button onclick="supabase.auth.signOut().then(() => location.reload())" style="flex: 1; padding: 15px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
-                            <i class="fas fa-sign-out-alt"></i> CERRAR SESIÓN
-                        </button>
-                    </div>
+                    <!-- Otras pestañas (se cargan dinámicamente) -->
+                    <div id="tab-taller" class="tab-content"></div>
+                    <div id="tab-almacen" class="tab-content"></div>
+                    <div id="tab-mercado" class="tab-content"></div>
+                    <div id="tab-presupuesto" class="tab-content"></div>
+                    <div id="tab-clasificacion" class="tab-content"></div>
                 </main>
                 
                 <!-- Footer -->
-                <footer style="text-align: center; padding: 20px; color: #666; font-size: 0.9rem; margin-top: 50px;">
-                    <p>F1 Manager E-Strategy v1.0.0 | Un juego de gestión 100% online</p>
+                <footer class="dashboard-footer">
+                    <div class="footer-content">
+                        <div class="footer-logo">
+                            <i class="fas fa-flag-checkered"></i>
+                            <span>F1 Manager E-Strategy</span>
+                        </div>
+                        <div class="footer-links">
+                            <a href="#"><i class="fas fa-question-circle"></i> Ayuda</a>
+                            <a href="#"><i class="fas fa-book"></i> Reglas</a>
+                            <a href="#"><i class="fas fa-users"></i> Comunidad</a>
+                        </div>
+                        <div class="footer-status">
+                            <i class="fas fa-circle" style="color: #00a35c;"></i>
+                            <span>Conectado</span>
+                        </div>
+                    </div>
                 </footer>
             </div>
             
-            <style>
-                body {
-                    background: linear-gradient(135deg, #15151e 0%, #1a1a2e 100%);
-                    color: white;
-                    font-family: 'Roboto', sans-serif;
-                    margin: 0;
-                    min-height: 100vh;
-                }
+            <!-- Scripts -->
+            <script>
+                // Ocultar loading screen después de 1 segundo
+                setTimeout(() => {
+                    document.getElementById('loading-screen').style.display = 'none';
+                }, 1000);
                 
-                #app {
-                    min-height: 100vh;
-                }
+                // Configurar eventos del usuario
+                document.getElementById('user-menu-btn').addEventListener('click', () => {
+                    document.getElementById('user-dropdown').classList.toggle('show');
+                });
                 
-                button {
-                    transition: all 0.3s;
-                }
+                document.getElementById('logout-btn').addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await supabase.auth.signOut();
+                    location.reload();
+                });
                 
-                button:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                }
-            </style>
+                document.getElementById('refresh-btn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    location.reload();
+                });
+                
+                // Cerrar dropdown al hacer clic fuera
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.user-menu')) {
+                        document.getElementById('user-dropdown').classList.remove('show');
+                    }
+                });
+            </script>
         `;
         
-        console.log('✅ Dashboard COMPLETO cargado');
+        // Inicializar sistema de pestañas
+        if (window.tabManager) {
+            window.tabManager.setup();
+        }
+        
+        // Cargar datos dinámicos
+        await this.cargarDatosDashboard();
+        
+        console.log('✅ Dashboard cargado correctamente con CSS');
     }
     
     generarAreasCoche() {
