@@ -5,15 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>F1 Manager E-Strategy</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-    <!-- Este body estará COMPLETAMENTE controlado por JavaScript -->
-    <!-- No añadas nada más aquí -->
+    <!-- Todo se cargará por JavaScript -->
     
+    <!-- IMPORTANTE: Cargar primero Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Luego nuestros scripts en ORDEN CORRECTO -->
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script src="js/tabs.js"></script>
     <script src="js/fabricacion.js"></script>
+    
+    <!-- Cargar estilos para notificaciones -->
+    <style>
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #00a35c;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .notification.error {
+            background: #e10600;
+        }
+        
+        .notification.info {
+            background: #209cee;
+        }
+        
+        .notification.warning {
+            background: #ff9800;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
 </body>
 </html>
