@@ -1,5 +1,5 @@
 // ========================
-// F1 MANAGER - MAIN.JS COMPLETO
+// F1 MANAGER - MAIN.JS COMPLETO (CON TUTORIAL)
 // ========================
 console.log('🏎️ F1 Manager - Sistema principal cargado');
 
@@ -8,39 +8,38 @@ console.log('🏎️ F1 Manager - Sistema principal cargado');
 // ========================
 console.log('🔧 Inicializando sistema seguro...');
 
-
-
-// Función para inicializar Supabase de forma SEGURA
+// Función para inicializar Supabase de forma SEGURA - VERSIÓN CORREGIDA
 function initSupabase() {
-    console.log('🔍 Verificando Supabase...');
+    console.log('🔍 Verificando Supabase en window...');
     
-    // 1. Si ya existe window.supabase (del index.html), usarlo
+    // Opción 1: Ya existe window.supabase del index.html
     if (window.supabase && window.supabase.auth) {
-        console.log('✅ Supabase YA inicializado (del index.html)');
+        console.log('✅ Supabase YA inicializado desde index.html');
         return window.supabase;
     }
     
-    console.error('❌ ERROR: window.supabase NO existe');
-    console.error('window.supabase:', window.supabase);
-    
-    // 2. Intentar crear cliente de emergencia
+    // Opción 2: Existe la variable global supabase del CDN
     if (typeof supabase !== 'undefined' && supabase.createClient) {
+        console.log('⚠️ Creando cliente desde CDN (no debería pasar)');
         try {
-            console.log('⚠️ Creando cliente de emergencia...');
             window.supabase = supabase.createClient(
                 'https://xbnbbmhcveyzrvvmdktg.supabase.co',
                 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg'
             );
-            console.log('✅ Cliente creado de emergencia');
+            console.log('✅ Cliente creado como backup');
             return window.supabase;
         } catch (e) {
-            console.error('❌ No se pudo crear cliente:', e);
+            console.error('❌ Error creando cliente backup:', e);
+            return null;
         }
     }
     
+    console.error('❌ CRÍTICO: No se puede encontrar Supabase de ninguna forma');
+    console.error('Estado de window.supabase:', window.supabase);
+    console.error('Estado de variable supabase:', typeof supabase);
+    
     return null;
 }
-    
 
 // ========================
 // 2. INICIALIZACIÓN PRINCIPAL
@@ -49,7 +48,7 @@ async function iniciarAplicacion() {
     console.log('🚀 Iniciando aplicación F1 Manager...');
     
     // Inicializar Supabase
-    supabase = initSupabase();
+    const supabase = initSupabase();
     
     if (!supabase) {
         mostrarErrorCritico('No se pudo conectar con la base de datos');
@@ -556,7 +555,7 @@ function mostrarMensaje(mensaje, elemento) {
 }
 
 // ========================
-// 4. CLASE F1Manager PRINCIPAL
+// 4. CLASE F1Manager PRINCIPAL CON TUTORIAL
 // ========================
 class F1Manager {
     constructor(user) {
@@ -566,9 +565,12 @@ class F1Manager {
         this.pilotos = [];
         this.carStats = null;
         this.proximoGP = null;
+        this.tutorialStep = 0;
+        this.tutorialData = null;
         
         this.init();
     }
+    
     async esperarSupabase() {
         console.log('⏳ Esperando Supabase...');
         let intentos = 0;
@@ -583,22 +585,1141 @@ class F1Manager {
         console.error('❌ Supabase nunca se inicializó');
         return null;
     }
+    
     async init() {
         console.log('🔧 Inicializando juego...');
         
-        // 1. Cargar datos del usuario
+        // 1. VERIFICAR si el usuario ya completó el tutorial
+        const tutorialCompletado = localStorage.getItem('tutorial_completado');
+        
+        if (!tutorialCompletado) {
+            // 2. Si NO completó el tutorial, forzarlo
+            console.log('📚 Mostrando tutorial obligatorio');
+            this.mostrarTutorialInicial();
+            return; // NO cargar el dashboard normal
+        }
+        
+        // 3. Si YA completó el tutorial, cargar datos normales
         await this.loadUserData();
         
-        // 2. Si no tiene escudería, mostrar tutorial
         if (!this.escuderia) {
-            console.log('📝 Usuario sin escudería, mostrando tutorial');
             this.mostrarTutorialInicial();
             return;
         }
         
-        // 3. Si tiene escudería, cargar dashboard completo
+        // 4. Cargar dashboard completo
         console.log('📊 Usuario con escudería, cargando dashboard');
         await this.cargarDashboardCompleto();
+    }
+    
+    // ========================
+    // SISTEMA DE TUTORIAL INTERACTIVO
+    // ========================
+    mostrarTutorialInicial() {
+        this.tutorialStep = 1;
+        this.tutorialData = {
+            escuderiaCreada: false,
+            pilotosContratados: [],
+            fabricacionIniciada: false,
+            piezaEquipada: false,
+            apuestaRealizada: false
+        };
+        
+        this.mostrarTutorialStep();
+    }
+    
+    mostrarTutorialStep() {
+        const steps = [
+            // PASO 1: Bienvenida y creación de escudería
+            {
+                title: "🏁 ¡BIENVENIDO A F1 MANAGER!",
+                content: `
+                    <p>Te damos la bienvenida al mundo de la gestión de Fórmula 1.</p>
+                    <p>En este tutorial aprenderás a:</p>
+                    <ul>
+                        <li>Crear tu escudería</li>
+                        <li>Contratar pilotos</li>
+                        <li>Fabricar piezas para tu coche</li>
+                        <li>Hacer apuestas en carreras</li>
+                        <li>Subir en el ranking mundial</li>
+                    </ul>
+                    <p class="success">💰 Recibirás 5,000,000€ para empezar</p>
+                `,
+                action: 'crearEscuderia'
+            },
+            
+            // PASO 2: Dashboard principal
+            {
+                title: "📊 DASHBOARD PRINCIPAL",
+                content: `
+                    <p>Esta es tu pantalla principal. Aquí verás:</p>
+                    <ul>
+                        <li><strong>Cabecera</strong>: Nombre, dinero y puntos</li>
+                        <li><strong>Panel de pilotos</strong>: Tus 2 pilotos contratados</li>
+                        <li><strong>Countdown</strong>: Tiempo para la próxima apuesta</li>
+                        <li><strong>Fábrica</strong>: Piezas en producción</li>
+                        <li><strong>Estado del coche</strong>: Nivel de cada área</li>
+                    </ul>
+                `,
+                highlight: '.dashboard-header',
+                action: 'mostrarPestanas'
+            },
+            
+            // PASO 3: Sistema de pestañas
+            {
+                title: "🔍 SISTEMA DE PESTAÑAS",
+                content: `
+                    <p>Navega por el juego usando estas pestañas:</p>
+                    <ul>
+                        <li><strong>Principal</strong>: Vista general</li>
+                        <li><strong>Taller</strong>: Fabrica piezas</li>
+                        <li><strong>Almacén</strong>: Gestiona piezas</li>
+                        <li><strong>Mercado</strong>: Compra/vende</li>
+                        <li><strong>Presupuesto</strong>: Controla finanzas</li>
+                        <li><strong>Clasificación</strong>: Ve el ranking</li>
+                    </ul>
+                    <p>¡Pruébalas todas!</p>
+                `,
+                highlight: '.tabs-navigation',
+                action: 'mostrarTab'
+            },
+            
+            // PASO 4: Contratar pilotos (OBLIGATORIO)
+            {
+                title: "👥 CONTRATAR PILOTOS (OBLIGATORIO)",
+                content: `
+                    <p>Necesitas <strong>2 pilotos</strong> para competir.</p>
+                    <p>Características de los pilotos:</p>
+                    <ul>
+                        <li><strong>Sueldo</strong>: Coste mensual</li>
+                        <li><strong>Experiencia</strong>: Mejores decisiones</li>
+                        <li><strong>Habilidad</strong>: Más puntos en carrera</li>
+                        <li><strong>Contrato</strong>: Duración en carreras</li>
+                    </ul>
+                    <p class="warning">⚠️ NO puedes continuar sin 2 pilotos</p>
+                `,
+                highlight: '#contratar-pilotos-btn',
+                action: 'contratarPilotos',
+                mandatory: true
+            },
+            
+            // PASO 5: Taller y fabricación
+            {
+                title: "🏭 SISTEMA DE FABRICACIÓN",
+                content: `
+                    <p>Mejora tu coche fabricando piezas:</p>
+                    <ul>
+                        <li><strong>4 horas</strong> por pieza</li>
+                        <li><strong>20 piezas</strong> para subir de nivel</li>
+                        <li><strong>11 áreas</strong> del coche</li>
+                        <li><strong>Nivel máximo</strong>: 10</li>
+                    </ul>
+                    <p>Las piezas dan puntos base que generan ingresos.</p>
+                `,
+                tab: 'taller',
+                action: 'fabricarPieza'
+            },
+            
+            // PASO 6: Sistema de apuestas
+            {
+                title: "💰 SISTEMA DE APUESTAS",
+                content: `
+                    <p>Gana dinero apostando en carreras:</p>
+                    <ul>
+                        <li><strong>Cierre</strong>: Jueves 23:59 antes del GP</li>
+                        <li><strong>Top 10</strong>: Predice posiciones</li>
+                        <li><strong>Puntos</strong>: Más aciertos = más puntos</li>
+                        <li><strong>Dinero</strong>: Los puntos se convierten en €</li>
+                    </ul>
+                `,
+                highlight: '#btn-apostar',
+                action: 'apostar'
+            },
+            
+            // PASO 7: Completado
+            {
+                title: "🎉 ¡TUTORIAL COMPLETADO!",
+                content: `
+                    <p>¡Felicidades! Ya conoces lo básico de F1 Manager.</p>
+                    <p>Recuerda:</p>
+                    <ul>
+                        <li>Mantén tu coche actualizado</li>
+                        <li>Gestiona bien tu dinero</li>
+                        <li>Apunta alto en las apuestas</li>
+                        <li>¡Sube en el ranking!</li>
+                    </ul>
+                    <p class="success">💰 Dinero inicial: <strong>5,000,000€</strong></p>
+                    <p>¡Que comience la carrera!</p>
+                `,
+                action: 'completarTutorial'
+            }
+        ];
+        
+        const step = steps[this.tutorialStep - 1];
+        if (!step) return;
+        
+        document.body.innerHTML = `
+            <div class="tutorial-screen">
+                <div class="tutorial-container">
+                    <!-- Progreso -->
+                    <div class="tutorial-progress">
+                        ${steps.map((s, i) => `
+                            <div class="progress-step ${i + 1 === this.tutorialStep ? 'active' : ''} 
+                                 ${i + 1 < this.tutorialStep ? 'completed' : ''}">
+                                ${i + 1}
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <!-- Contenido -->
+                    <div class="tutorial-header">
+                        <h1>${step.title}</h1>
+                    </div>
+                    
+                    <div class="tutorial-content">
+                        ${step.content}
+                    </div>
+                    
+                    <!-- Acciones -->
+                    <div class="tutorial-actions">
+                        ${this.tutorialStep > 1 ? `
+                            <button class="btn-tutorial prev" id="btn-tutorial-prev">
+                                <i class="fas fa-arrow-left"></i> Anterior
+                            </button>
+                        ` : ''}
+                        
+                        ${step.mandatory ? `
+                            <div class="mandatory-warning">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Este paso es obligatorio
+                            </div>
+                        ` : ''}
+                        
+                        <button class="btn-tutorial next" id="btn-tutorial-next" 
+                                data-action="${step.action}">
+                            ${step.action === 'crearEscuderia' ? 'Crear Escudería' : 
+                              step.action === 'completarTutorial' ? '¡Comenzar!' : 'Siguiente'}
+                            ${step.action !== 'crearEscuderia' && step.action !== 'completarTutorial' ? 
+                              '<i class="fas fa-arrow-right"></i>' : ''}
+                        </button>
+                    </div>
+                    
+                    <!-- Navegación rápida (solo desarrollo) -->
+                    <div class="tutorial-debug">
+                        <small>Paso ${this.tutorialStep}/${steps.length}</small>
+                    </div>
+                </div>
+            </div>
+            
+            <style>
+                .tutorial-screen {
+                    min-height: 100vh;
+                    background: rgba(21, 21, 30, 0.95);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 20px;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    z-index: 9999;
+                }
+                
+                .tutorial-container {
+                    background: rgba(42, 42, 56, 0.98);
+                    border-radius: 20px;
+                    padding: 40px;
+                    width: 100%;
+                    max-width: 700px;
+                    border: 3px solid #00d2be;
+                    box-shadow: 0 20px 50px rgba(0, 210, 190, 0.3);
+                    backdrop-filter: blur(10px);
+                }
+                
+                .tutorial-progress {
+                    display: flex;
+                    justify-content: center;
+                    gap: 15px;
+                    margin-bottom: 30px;
+                }
+                
+                .progress-step {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.1);
+                    color: #888;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                    font-family: 'Orbitron', sans-serif;
+                    transition: all 0.3s;
+                }
+                
+                .progress-step.active {
+                    background: #00d2be;
+                    color: white;
+                    transform: scale(1.1);
+                    box-shadow: 0 0 15px rgba(0, 210, 190, 0.5);
+                }
+                
+                .progress-step.completed {
+                    background: #4CAF50;
+                    color: white;
+                }
+                
+                .tutorial-header h1 {
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 2.2rem;
+                    text-align: center;
+                    background: linear-gradient(90deg, #00d2be, #e10600);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    margin-bottom: 20px;
+                }
+                
+                .tutorial-content {
+                    color: #ddd;
+                    line-height: 1.8;
+                    margin: 30px 0;
+                    font-size: 1.1rem;
+                }
+                
+                .tutorial-content ul {
+                    margin: 15px 0;
+                    padding-left: 20px;
+                }
+                
+                .tutorial-content li {
+                    margin-bottom: 10px;
+                }
+                
+                .tutorial-actions {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: 40px;
+                    padding-top: 20px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
+                }
+                
+                .btn-tutorial {
+                    padding: 15px 30px;
+                    border: none;
+                    border-radius: 10px;
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 1rem;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                
+                .btn-tutorial.prev {
+                    background: transparent;
+                    border: 2px solid #888;
+                    color: #888;
+                }
+                
+                .btn-tutorial.next {
+                    background: linear-gradient(135deg, #00d2be, #009688);
+                    color: white;
+                }
+                
+                .btn-tutorial:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 8px 20px rgba(0, 210, 190, 0.4);
+                }
+                
+                .mandatory-warning {
+                    background: rgba(255, 87, 87, 0.2);
+                    color: #ff5757;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    border: 1px solid #ff5757;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                
+                .warning {
+                    color: #ffcc00;
+                    font-weight: bold;
+                }
+                
+                .success {
+                    color: #4CAF50;
+                    font-weight: bold;
+                }
+                
+                .tutorial-debug {
+                    text-align: center;
+                    margin-top: 20px;
+                    color: #666;
+                    font-size: 0.9rem;
+                }
+                
+                .btn-tutorial:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+            </style>
+        `;
+        
+        // Eventos
+        document.getElementById('btn-tutorial-next').addEventListener('click', () => {
+            this.ejecutarAccionTutorial(step.action);
+        });
+        
+        if (document.getElementById('btn-tutorial-prev')) {
+            document.getElementById('btn-tutorial-prev').addEventListener('click', () => {
+                this.tutorialStep--;
+                this.mostrarTutorialStep();
+            });
+        }
+    }
+    
+    ejecutarAccionTutorial(accion) {
+        console.log('🎯 Acción tutorial:', accion);
+        
+        switch(accion) {
+            case 'crearEscuderia':
+                this.mostrarFormularioEscuderia();
+                break;
+                
+            case 'mostrarPestanas':
+                this.tutorialStep++;
+                this.mostrarDashboardConTutorial();
+                break;
+                
+            case 'mostrarTab':
+                this.tutorialStep++;
+                this.mostrarTutorialStep();
+                break;
+                
+            case 'contratarPilotos':
+                this.mostrarSelectorPilotos();
+                break;
+                
+            case 'fabricarPieza':
+                this.mostrarFabricacionTutorial();
+                break;
+                
+            case 'apostar':
+                this.mostrarApuestasTutorial();
+                break;
+                
+            case 'completarTutorial':
+                this.finalizarTutorial();
+                break;
+        }
+    }
+    
+    async mostrarFormularioEscuderia() {
+        // Usamos el formulario simple que ya tenías
+        const nombreEscuderia = prompt('🏎️ Ingresa el nombre de tu escudería:\n(Ej: McLaren Racing, Ferrari, Mercedes)');
+        
+        if (nombreEscuderia && nombreEscuderia.trim()) {
+            try {
+                // Crear la escudería en la base de datos
+                const { data: escuderia, error } = await supabase
+                    .from('escuderias')
+                    .insert([
+                        {
+                            user_id: this.user.id,
+                            nombre: nombreEscuderia.trim(),
+                            dinero: 5000000,
+                            puntos: 0,
+                            ranking: null,
+                            color_principal: '#e10600',
+                            color_secundario: '#ffffff',
+                            nivel_ingenieria: 1
+                        }
+                    ])
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                
+                this.escuderia = escuderia;
+                this.tutorialData.escuderiaCreada = true;
+                
+                // Crear stats del coche
+                await supabase
+                    .from('coches_stats')
+                    .insert([{ escuderia_id: this.escuderia.id }]);
+                
+                // Avanzar al siguiente paso
+                this.tutorialStep++;
+                this.mostrarTutorialStep();
+                
+            } catch (error) {
+                console.error('Error creando escudería:', error);
+                alert('Error creando la escudería. Intenta con otro nombre.');
+            }
+        } else if (nombreEscuderia !== null) {
+            alert('Debes ingresar un nombre para tu escudería.');
+        }
+    }
+    
+    async mostrarDashboardConTutorial() {
+        // Cargar el dashboard normalmente
+        await this.cargarDashboardCompleto();
+        
+        // Después de 1 segundo, mostrar el overlay del tutorial
+        setTimeout(() => {
+            // Crear overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'tutorial-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.7);
+                z-index: 9998;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            `;
+            
+            // Crear highlight
+            const highlight = document.createElement('div');
+            highlight.id = 'tutorial-highlight';
+            highlight.style.cssText = `
+                position: absolute;
+                border: 3px solid #00d2be;
+                border-radius: 10px;
+                box-shadow: 0 0 30px rgba(0, 210, 190, 0.5);
+                animation: pulse 2s infinite;
+                pointer-events: none;
+            `;
+            
+            overlay.appendChild(highlight);
+            
+            // Botón para continuar
+            const continueBtn = document.createElement('button');
+            continueBtn.textContent = 'Entendido, continuar';
+            continueBtn.style.cssText = `
+                margin-top: 30px;
+                padding: 15px 30px;
+                background: #00d2be;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-family: 'Orbitron', sans-serif;
+                font-weight: bold;
+                cursor: pointer;
+                z-index: 9999;
+                font-size: 1rem;
+            `;
+            continueBtn.addEventListener('click', () => {
+                overlay.remove();
+                this.tutorialStep++;
+                this.mostrarTutorialStep();
+            });
+            
+            overlay.appendChild(continueBtn);
+            document.body.appendChild(overlay);
+            
+            // Posicionar el highlight en el dashboard header
+            const target = document.querySelector('.dashboard-header');
+            if (target) {
+                const rect = target.getBoundingClientRect();
+                highlight.style.top = `${rect.top - 10}px`;
+                highlight.style.left = `${rect.left - 10}px`;
+                highlight.style.width = `${rect.width + 20}px`;
+                highlight.style.height = `${rect.height + 20}px`;
+            }
+            
+            // Añadir animación pulse
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pulse {
+                    0% { box-shadow: 0 0 30px rgba(0, 210, 190, 0.5); }
+                    50% { box-shadow: 0 0 50px rgba(0, 210, 190, 0.8); }
+                    100% { box-shadow: 0 0 30px rgba(0, 210, 190, 0.5); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+        }, 1500);
+    }
+    
+    async mostrarSelectorPilotos() {
+        // Cargar pilotos disponibles desde la base de datos
+        try {
+            const { data: pilotos, error } = await supabase
+                .from('pilotos')
+                .select('*')
+                .limit(10);
+            
+            if (error) throw error;
+            
+            // Actualizar el contenido del tutorial
+            document.querySelector('.tutorial-content').innerHTML = `
+                <div class="pilotos-tutorial">
+                    <h3>🏎️ SELECCIONA 2 PILOTOS</h3>
+                    <p class="warning">⚠️ Debes seleccionar exactamente 2 pilotos para continuar</p>
+                    
+                    <div class="pilotos-grid">
+                        ${pilotos.map(piloto => `
+                            <div class="piloto-card ${this.tutorialData.pilotosContratados.includes(piloto.id) ? 'selected' : ''}" 
+                                 data-piloto-id="${piloto.id}">
+                                <div class="piloto-header">
+                                    <h4>${piloto.nombre}</h4>
+                                    <span class="piloto-nacionalidad">${piloto.nacionalidad || 'Internacional'}</span>
+                                </div>
+                                <div class="piloto-stats">
+                                    <div class="stat">
+                                        <i class="fas fa-brain"></i>
+                                        <span>Experiencia: ${piloto.experiencia || 5}/10</span>
+                                    </div>
+                                    <div class="stat">
+                                        <i class="fas fa-bolt"></i>
+                                        <span>Habilidad: ${piloto.habilidad || 5}/10</span>
+                                    </div>
+                                    <div class="stat">
+                                        <i class="fas fa-coins"></i>
+                                        <span>Sueldo: €${(piloto.sueldo_base || 500000).toLocaleString()}/mes</span>
+                                    </div>
+                                </div>
+                                <button class="btn-seleccionar" data-piloto-id="${piloto.id}">
+                                    ${this.tutorialData.pilotosContratados.includes(piloto.id) ? '✓ Seleccionado' : 'Seleccionar'}
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="pilotos-selected">
+                        <h4>Pilotos seleccionados: <span id="contador-pilotos">${this.tutorialData.pilotosContratados.length}</span>/2</h4>
+                        <div id="selected-pilotos-list">
+                            ${this.tutorialData.pilotosContratados.map(pilotoId => {
+                                const piloto = pilotos.find(p => p.id === pilotoId);
+                                return piloto ? `<div class="selected-piloto">✓ ${piloto.nombre}</div>` : '';
+                            }).join('')}
+                        </div>
+                        <button class="btn-confirmar" id="btn-confirmar-pilotos" 
+                                ${this.tutorialData.pilotosContratados.length !== 2 ? 'disabled' : ''}>
+                            CONFIRMAR SELECCIÓN (€${((pilotos.find(p => this.tutorialData.pilotosContratados.includes(p.id))?.sueldo_base || 0) * 2).toLocaleString()}/mes)
+                        </button>
+                    </div>
+                </div>
+                
+                <style>
+                    .pilotos-tutorial {
+                        max-width: 800px;
+                        margin: 0 auto;
+                    }
+                    
+                    .pilotos-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                        gap: 20px;
+                        margin: 20px 0;
+                        max-height: 400px;
+                        overflow-y: auto;
+                        padding: 10px;
+                    }
+                    
+                    .piloto-card {
+                        background: rgba(255, 255, 255, 0.05);
+                        border-radius: 10px;
+                        padding: 20px;
+                        border: 2px solid transparent;
+                        transition: all 0.3s;
+                    }
+                    
+                    .piloto-card.selected {
+                        border-color: #00d2be;
+                        background: rgba(0, 210, 190, 0.1);
+                    }
+                    
+                    .piloto-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 15px;
+                    }
+                    
+                    .piloto-header h4 {
+                        color: white;
+                        margin: 0;
+                        font-size: 1.1rem;
+                    }
+                    
+                    .piloto-nacionalidad {
+                        background: rgba(255, 255, 255, 0.1);
+                        padding: 3px 10px;
+                        border-radius: 15px;
+                        font-size: 0.8rem;
+                    }
+                    
+                    .piloto-stats {
+                        margin: 15px 0;
+                    }
+                    
+                    .piloto-stats .stat {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        margin-bottom: 8px;
+                        color: #ccc;
+                        font-size: 0.9rem;
+                    }
+                    
+                    .btn-seleccionar {
+                        width: 100%;
+                        padding: 10px;
+                        background: rgba(0, 210, 190, 0.2);
+                        border: 1px solid #00d2be;
+                        color: #00d2be;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                        font-weight: bold;
+                    }
+                    
+                    .btn-seleccionar:hover {
+                        background: rgba(0, 210, 190, 0.4);
+                    }
+                    
+                    .pilotos-selected {
+                        margin-top: 30px;
+                        padding: 20px;
+                        background: rgba(0, 0, 0, 0.3);
+                        border-radius: 10px;
+                        border: 2px dashed #00d2be;
+                    }
+                    
+                    .selected-piloto {
+                        background: rgba(0, 210, 190, 0.2);
+                        padding: 10px;
+                        margin: 5px 0;
+                        border-radius: 5px;
+                        color: #00d2be;
+                    }
+                    
+                    .btn-confirmar {
+                        margin-top: 20px;
+                        padding: 15px 30px;
+                        background: #00d2be;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        width: 100%;
+                        font-size: 1.1rem;
+                    }
+                    
+                    .btn-confirmar:disabled {
+                        background: #666;
+                        cursor: not-allowed;
+                    }
+                </style>
+            `;
+            
+            // Eventos de selección
+            document.querySelectorAll('.btn-seleccionar').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const pilotoId = e.target.dataset.pilotoId;
+                    this.seleccionarPilotoTutorial(pilotoId, pilotos);
+                });
+            });
+            
+            document.getElementById('btn-confirmar-pilotos').addEventListener('click', async () => {
+                await this.confirmarPilotosTutorial();
+            });
+            
+        } catch (error) {
+            console.error('Error cargando pilotos:', error);
+            document.querySelector('.tutorial-content').innerHTML = `
+                <p class="error">❌ Error cargando pilotos. Recarga la página.</p>
+                <button onclick="location.reload()">Recargar</button>
+            `;
+        }
+    }
+    
+    seleccionarPilotoTutorial(pilotoId, pilotos) {
+        const index = this.tutorialData.pilotosContratados.indexOf(pilotoId);
+        
+        if (index > -1) {
+            // Deseleccionar
+            this.tutorialData.pilotosContratados.splice(index, 1);
+        } else {
+            // Seleccionar (máximo 2)
+            if (this.tutorialData.pilotosContratados.length < 2) {
+                this.tutorialData.pilotosContratados.push(pilotoId);
+            } else {
+                alert('Solo puedes seleccionar 2 pilotos');
+                return;
+            }
+        }
+        
+        // Actualizar UI
+        document.querySelectorAll('.piloto-card').forEach(card => {
+            if (this.tutorialData.pilotosContratados.includes(card.dataset.pilotoId)) {
+                card.classList.add('selected');
+                card.querySelector('.btn-seleccionar').textContent = '✓ Seleccionado';
+            } else {
+                card.classList.remove('selected');
+                card.querySelector('.btn-seleccionar').textContent = 'Seleccionar';
+            }
+        });
+        
+        // Actualizar contador
+        const contador = document.getElementById('contador-pilotos');
+        if (contador) contador.textContent = this.tutorialData.pilotosContratados.length;
+        
+        // Actualizar lista de seleccionados
+        const lista = document.getElementById('selected-pilotos-list');
+        if (lista) {
+            lista.innerHTML = this.tutorialData.pilotosContratados.map(id => {
+                const piloto = pilotos.find(p => p.id === id);
+                return piloto ? `<div class="selected-piloto">✓ ${piloto.nombre}</div>` : '';
+            }).join('');
+        }
+        
+        // Actualizar botón de confirmar
+        const confirmBtn = document.getElementById('btn-confirmar-pilotos');
+        if (confirmBtn) {
+            confirmBtn.disabled = this.tutorialData.pilotosContratados.length !== 2;
+            
+            // Actualizar costo total
+            if (this.tutorialData.pilotosContratados.length === 2) {
+                const totalSueldo = this.tutorialData.pilotosContratados.reduce((total, id) => {
+                    const piloto = pilotos.find(p => p.id === id);
+                    return total + (piloto?.sueldo_base || 500000);
+                }, 0);
+                confirmBtn.innerHTML = `CONFIRMAR SELECCIÓN (€${totalSueldo.toLocaleString()}/mes)`;
+            }
+        }
+    }
+    
+    async confirmarPilotosTutorial() {
+        if (!this.escuderia) {
+            alert('Primero debes crear tu escudería');
+            return;
+        }
+        
+        if (this.tutorialData.pilotosContratados.length !== 2) {
+            alert('Debes seleccionar exactamente 2 pilotos');
+            return;
+        }
+        
+        try {
+            // Contratar pilotos en la base de datos
+            for (const pilotoId of this.tutorialData.pilotosContratados) {
+                await supabase.from('pilotos_contratados').insert([
+                    {
+                        escuderia_id: this.escuderia.id,
+                        piloto_id: pilotoId,
+                        activo: true,
+                        salario_actual: 500000, // Salario base
+                        carreras_restantes: 10,
+                        fecha_contrato: new Date().toISOString()
+                    }
+                ]);
+            }
+            
+            // Avanzar tutorial
+            this.tutorialStep++;
+            this.mostrarTutorialStep();
+            
+        } catch (error) {
+            console.error('Error contratando pilotos:', error);
+            alert('Error contratando pilotos. Intenta de nuevo.');
+        }
+    }
+    
+    mostrarFabricacionTutorial() {
+        document.querySelector('.tutorial-content').innerHTML = `
+            <div class="fabricacion-tutorial">
+                <h3>🏭 PRIMERA FABRICACIÓN</h3>
+                <p>Selecciona un área de tu coche para fabricar tu primera pieza:</p>
+                
+                <div class="areas-grid">
+                    ${window.CAR_AREAS.slice(0, 6).map(area => `
+                        <div class="area-card" data-area="${area.id}">
+                            <div class="area-icon" style="color: ${area.color}">
+                                <i class="${area.icon}"></i>
+                            </div>
+                            <h4>${area.name}</h4>
+                            <p>Costo: <strong>€10,000</strong></p>
+                            <p>Tiempo: <strong>4 horas</strong></p>
+                            <button class="btn-fabricar-tutorial" data-area="${area.id}">
+                                <i class="fas fa-hammer"></i> Fabricar
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="fabricacion-info">
+                    <p><i class="fas fa-info-circle"></i> Cada pieza fabricada da <strong>10 puntos base</strong> que generan ingresos después de cada carrera.</p>
+                    <p><i class="fas fa-chart-line"></i> Necesitas <strong>20 piezas</strong> de un área para subir de nivel.</p>
+                </div>
+            </div>
+            
+            <style>
+                .fabricacion-tutorial {
+                    max-width: 800px;
+                    margin: 0 auto;
+                }
+                
+                .areas-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                    gap: 20px;
+                    margin: 20px 0;
+                }
+                
+                .area-card {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 10px;
+                    padding: 20px;
+                    text-align: center;
+                    border: 2px solid transparent;
+                    transition: all 0.3s;
+                }
+                
+                .area-card:hover {
+                    border-color: #00d2be;
+                    transform: translateY(-5px);
+                }
+                
+                .area-icon {
+                    font-size: 2.5rem;
+                    margin-bottom: 15px;
+                }
+                
+                .area-card h4 {
+                    color: white;
+                    margin: 10px 0;
+                    font-size: 1.1rem;
+                }
+                
+                .area-card p {
+                    color: #ccc;
+                    margin: 5px 0;
+                    font-size: 0.9rem;
+                }
+                
+                .btn-fabricar-tutorial {
+                    margin-top: 15px;
+                    padding: 10px 20px;
+                    background: linear-gradient(135deg, #00d2be, #009688);
+                    color: white;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    width: 100%;
+                }
+                
+                .fabricacion-info {
+                    margin-top: 30px;
+                    padding: 20px;
+                    background: rgba(0, 0, 0, 0.3);
+                    border-radius: 10px;
+                    border-left: 4px solid #00d2be;
+                }
+                
+                .fabricacion-info p {
+                    margin: 10px 0;
+                    color: #ddd;
+                }
+            </style>
+        `;
+        
+        // Eventos de fabricación
+        document.querySelectorAll('.btn-fabricar-tutorial').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const areaId = e.target.dataset.area;
+                const area = window.CAR_AREAS.find(a => a.id === areaId);
+                
+                // Mostrar confirmación
+                if (confirm(`¿Iniciar fabricación de ${area?.name}?\nCosto: €10,000\nTiempo: 4 horas`)) {
+                    try {
+                        // Simular fabricación (en producción real, llamarías a fabricacionManager)
+                        this.tutorialData.fabricacionIniciada = true;
+                        
+                        // Avanzar tutorial
+                        this.tutorialStep++;
+                        this.mostrarTutorialStep();
+                        
+                    } catch (error) {
+                        console.error('Error iniciando fabricación:', error);
+                        alert('Error al iniciar fabricación');
+                    }
+                }
+            });
+        });
+    }
+    
+    mostrarApuestasTutorial() {
+        document.querySelector('.tutorial-content').innerHTML = `
+            <div class="apuestas-tutorial">
+                <h3>💰 SISTEMA DE APUESTAS</h3>
+                <p>Predice el Top 10 de la próxima carrera para ganar puntos y dinero:</p>
+                
+                <div class="apuestas-grid">
+                    <div class="apuesta-card">
+                        <h4><i class="fas fa-trophy"></i> Mecánica Básica</h4>
+                        <ul>
+                            <li><strong>Cierre:</strong> Jueves 23:59 antes del GP</li>
+                            <li><strong>Predicción:</strong> Orden del Top 10</li>
+                            <li><strong>Puntos:</strong> +10 por acierto exacto</li>
+                            <li><strong>Dinero:</strong> 1 punto = €1,000</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="apuesta-card">
+                        <h4><i class="fas fa-chart-line"></i> Estrategia</h4>
+                        <ul>
+                            <li>Usa las estadísticas de pilotos</li>
+                            <li>Considera el circuito</li>
+                            <li>Analiza el rendimiento reciente</li>
+                            <li>Gestiona tu riesgo</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="apuesta-card">
+                        <h4><i class="fas fa-coins"></i> Recompensas</h4>
+                        <ul>
+                            <li><strong>10 aciertos:</strong> 100 pts + €100,000</li>
+                            <li><strong>8-9 aciertos:</strong> 80-90 pts</li>
+                            <li><strong>5-7 aciertos:</strong> 50-70 pts</li>
+                            <li><strong>Bonus:</strong> Puntos extra por predicciones difíciles</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="apuestas-ejemplo">
+                    <h4>📋 Ejemplo de apuesta:</h4>
+                    <p>Si aciertas 7 posiciones exactas:</p>
+                    <p><strong>7 aciertos × 10 puntos = 70 puntos</strong></p>
+                    <p><strong>70 puntos × €1,000 = €70,000 de ganancia</strong></p>
+                </div>
+                
+                <div class="apuestas-accion">
+                    <button class="btn-simular-apuesta" id="btn-simular-apuesta">
+                        <i class="fas fa-dice"></i> Simular apuesta de ejemplo
+                    </button>
+                </div>
+            </div>
+            
+            <style>
+                .apuestas-tutorial {
+                    max-width: 800px;
+                    margin: 0 auto;
+                }
+                
+                .apuestas-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 20px;
+                    margin: 20px 0;
+                }
+                
+                .apuesta-card {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 10px;
+                    padding: 20px;
+                    border-top: 4px solid #00d2be;
+                }
+                
+                .apuesta-card h4 {
+                    color: white;
+                    margin: 0 0 15px 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                
+                .apuesta-card ul {
+                    margin: 0;
+                    padding-left: 20px;
+                }
+                
+                .apuesta-card li {
+                    color: #ccc;
+                    margin: 8px 0;
+                    font-size: 0.9rem;
+                }
+                
+                .apuestas-ejemplo {
+                    margin: 30px 0;
+                    padding: 20px;
+                    background: rgba(0, 210, 190, 0.1);
+                    border-radius: 10px;
+                    border: 1px solid #00d2be;
+                }
+                
+                .apuestas-ejemplo h4 {
+                    color: #00d2be;
+                    margin-top: 0;
+                }
+                
+                .apuestas-ejemplo p {
+                    color: #ddd;
+                    margin: 10px 0;
+                }
+                
+                .btn-simular-apuesta {
+                    padding: 15px 30px;
+                    background: linear-gradient(135deg, #e10600, #ff4444);
+                    color: white;
+                    border: none;
+                    border-radius: 5px;
+                    font-family: 'Orbitron', sans-serif;
+                    font-weight: bold;
+                    cursor: pointer;
+                    font-size: 1.1rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    width: 100%;
+                }
+                
+                .btn-simular-apuesta:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 5px 15px rgba(225, 6, 0, 0.4);
+                }
+            </style>
+        `;
+        
+        // Evento para simular apuesta
+        document.getElementById('btn-simular-apuesta').addEventListener('click', () => {
+            this.tutorialData.apuestaRealizada = true;
+            alert('¡Apuesta simulada exitosamente!\nHas ganado 70,000€ en esta simulación.\n\nEn el juego real, deberás esperar al cierre de apuestas del jueves para ver tus resultados.');
+            
+            // Avanzar al último paso
+            this.tutorialStep++;
+            this.mostrarTutorialStep();
+        });
+    }
+    
+    finalizarTutorial() {
+        // Guardar que el tutorial está completado
+        localStorage.setItem('tutorial_completado', 'true');
+        
+        // Cargar dashboard completo
+        this.cargarDashboardCompleto();
+        
+        // Mostrar notificación de bienvenida
+        setTimeout(() => {
+            this.showNotification('🎉 ¡Tutorial completado! ¡Bienvenido a F1 Manager!', 'success');
+        }, 1000);
     }
     
     async loadUserData() {
@@ -613,12 +1734,7 @@ class F1Manager {
                 .maybeSingle();
             
             if (error) {
-                if (error.code === 'PGRST116') {
-                    console.log('ℹ️ Usuario sin escudería (normal para nuevo usuario)');
-                    this.escuderia = null;
-                } else {
-                    console.error('Error cargando escudería:', error);
-                }
+                console.error('Error cargando escudería:', error);
                 return;
             }
             
@@ -653,312 +1769,9 @@ class F1Manager {
         }
     }
     
-    mostrarTutorialInicial() {
-        document.body.innerHTML = `
-            <div class="tutorial-screen">
-                <div class="tutorial-container">
-                    <div class="tutorial-header">
-                        <h1>🏁 ¡BIENVENIDO A F1 MANAGER!</h1>
-                        <p>Crea tu escudería de Fórmula 1</p>
-                    </div>
-                    
-                    <div class="tutorial-content">
-                        <div class="tutorial-step">
-                            <h2>🏎️ PASO 1: NOMBRE DE TU ESCUDERÍA</h2>
-                            <p>Elige un nombre único para tu equipo. Este será tu identidad en el juego.</p>
-                            
-                            <div class="tutorial-form">
-                                <input type="text" id="escuderia-nombre" 
-                                       placeholder="Ej: McLaren Racing, Ferrari, etc." 
-                                       maxlength="30"
-                                       style="width: 100%; padding: 12px; margin: 20px 0; border-radius: 5px; border: 2px solid #00d2be; background: rgba(255,255,255,0.1); color: white;">
-                            </div>
-                        </div>
-                        
-                        <div class="tutorial-actions">
-                            <button class="btn-crear-escuderia" id="btn-crear-escuderia">
-                                <i class="fas fa-flag-checkered"></i>
-                                CREAR MI ESCUDERÍA
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="tutorial-footer">
-                        <p><i class="fas fa-info-circle"></i> Recibirás 5,000,000€ para empezar tu aventura</p>
-                    </div>
-                </div>
-            </div>
-            
-            <style>
-                .tutorial-screen {
-                    min-height: 100vh;
-                    background: linear-gradient(135deg, #15151e 0%, #1a1a2e 100%);
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    padding: 20px;
-                }
-                
-                .tutorial-container {
-                    background: rgba(42, 42, 56, 0.95);
-                    border-radius: 20px;
-                    padding: 40px;
-                    width: 100%;
-                    max-width: 600px;
-                    border: 3px solid #00d2be;
-                    box-shadow: 0 15px 40px rgba(0, 210, 190, 0.3);
-                }
-                
-                .tutorial-header {
-                    text-align: center;
-                    margin-bottom: 40px;
-                    padding-bottom: 20px;
-                    border-bottom: 2px solid rgba(0, 210, 190, 0.3);
-                }
-                
-                .tutorial-header h1 {
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 2.5rem;
-                    background: linear-gradient(90deg, #00d2be, #e10600);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    margin-bottom: 10px;
-                }
-                
-                .tutorial-header p {
-                    color: #aaa;
-                    font-size: 1.1rem;
-                }
-                
-                .tutorial-step {
-                    margin-bottom: 40px;
-                }
-                
-                .tutorial-step h2 {
-                    color: #00d2be;
-                    margin-bottom: 15px;
-                    font-size: 1.5rem;
-                }
-                
-                .tutorial-step p {
-                    color: #ccc;
-                    line-height: 1.6;
-                    margin-bottom: 20px;
-                }
-                
-                .tutorial-actions {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 15px;
-                    margin-top: 30px;
-                }
-                
-                .btn-crear-escuderia, .btn-saltar-tutorial {
-                    padding: 18px;
-                    border: none;
-                    border-radius: 10px;
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 1.1rem;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 10px;
-                }
-                
-                .btn-crear-escuderia {
-                    background: linear-gradient(135deg, #00d2be, #009688);
-                    color: white;
-                }
-                
-                .btn-saltar-tutorial {
-                    background: transparent;
-                    border: 2px solid #e10600;
-                    color: #e10600;
-                }
-                
-                .btn-crear-escuderia:hover {
-                    transform: translateY(-3px);
-                    box-shadow: 0 8px 20px rgba(0, 210, 190, 0.4);
-                }
-                
-                .btn-saltar-tutorial:hover {
-                    background: rgba(225, 6, 0, 0.1);
-                    transform: translateY(-3px);
-                }
-                
-                .tutorial-footer {
-                    text-align: center;
-                    margin-top: 40px;
-                    padding-top: 20px;
-                    border-top: 1px solid rgba(255,255,255,0.1);
-                    color: #888;
-                    font-size: 0.9rem;
-                }
-                
-                .tutorial-footer i {
-                    color: #00d2be;
-                    margin-right: 8px;
-                }
-            </style>
-        `;
-        
-        // Configurar eventos
-        document.getElementById('btn-crear-escuderia').addEventListener('click', () => this.crearEscuderiaDesdeTutorial());
-    }
-    
-    async crearEscuderiaDesdeTutorial() {
-        const nombre = document.getElementById('escuderia-nombre').value.trim();
-        
-        if (!nombre) {
-            alert('⚠️ Por favor, ingresa un nombre para tu escudería');
-            return;
-        }
-        
-        console.log('🏗️ Creando escudería para usuario:', this.user.id);
-        
-        try {
-            // 1. PRIMERO: Asegurar que el usuario existe en public.users
-            console.log('👤 Verificando usuario en public.users...');
-            
-            const { data: existingUser, error: userError } = await supabase
-                .from('users')
-                .select('id')
-                .eq('id', this.user.id)
-                .maybeSingle();
-            
-            if (userError && userError.code !== 'PGRST116') {
-                console.error('❌ Error verificando usuario:', userError);
-            }
-            
-            // Si no existe, crearlo
-            if (!existingUser) {
-                console.log('➕ Creando usuario en public.users...');
-                
-                const { error: createUserError } = await supabase
-                    .from('users')
-                    .insert([
-                        {
-                            id: this.user.id,
-                            username: this.user.user_metadata?.username || nombre,
-                            email: this.user.email,
-                            created_at: new Date().toISOString()
-                        }
-                    ]);
-                
-                if (createUserError) {
-                    console.warn('⚠️ Error creando usuario (puede ser duplicado):', createUserError.message);
-                    // Continuar de todas formas
-                } else {
-                    console.log('✅ Usuario creado en public.users');
-                }
-            } else {
-                console.log('✅ Usuario ya existe en public.users');
-            }
-            
-            // 2. ESPERAR 1 segundo para asegurar
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // 3. VERIFICAR si YA existe escudería (por si acaso)
-            const { data: existingEscuderia, error: escError } = await supabase
-                .from('escuderias')
-                .select('id')
-                .eq('user_id', this.user.id)
-                .maybeSingle();
-            
-            if (existingEscuderia) {
-                console.log('✅ Escudería ya existe, cargando datos...');
-                this.escuderia = existingEscuderia;
-                await this.cargarDashboardCompleto();
-                return;
-            }
-            
-            // 4. CREAR ESCUDERÍA
-            console.log('🏎️ Creando nueva escudería...');
-            const { data: escuderia, error } = await supabase
-                .from('escuderias')
-                .insert([
-                    {
-                        user_id: this.user.id,
-                        nombre: nombre,
-                        dinero: 5000000,
-                        puntos: 0,
-                        ranking: null,
-                        color_principal: '#e10600',
-                        color_secundario: '#ffffff',
-                        nivel_ingenieria: 1,
-                        creada_en: new Date().toISOString()
-                    }
-                ])
-                .select()
-                .single();
-            
-            if (error) {
-                // Si es error de duplicado (ya existe)
-                if (error.code === '23505' || error.message.includes('duplicate')) {
-                    console.log('🔄 Escudería ya existe, buscando...');
-                    const { data: foundEscuderia } = await supabase
-                        .from('escuderias')
-                        .select('*')
-                        .eq('user_id', this.user.id)
-                        .single();
-                    
-                    this.escuderia = foundEscuderia;
-                } else {
-                    throw error;
-                }
-            } else {
-                this.escuderia = escuderia;
-                console.log('✅ Escudería creada:', escuderia.nombre);
-            }
-            
-            // 5. CREAR STATS DEL COCHE (si no existen) - CORREGIDO
-            console.log('🔧 Creando stats del coche...');
-            try {
-                const { error: statsError } = await supabase
-                    .from('coches_stats')
-                    .insert([{ escuderia_id: this.escuderia.id }]);
-                
-                if (statsError) {
-                    console.log('📝 Stats ya existían o error menor:', statsError.message);
-                }
-            } catch (statsErr) {
-                console.log('📝 Error creando stats (normal si ya existen):', statsErr.message);
-            }
-            
-            // 6. VERIFICAR que this.escuderia está definido
-            if (!this.escuderia || !this.escuderia.id) {
-                console.error('❌ ERROR CRÍTICO: this.escuderia es undefined');
-                throw new Error('La escudería no se creó correctamente');
-            }
-            
-            // 7. CARGAR DASHBOARD
-            console.log('🎉 Todo listo, cargando dashboard...');
-            await this.cargarDashboardCompleto();
-            
-        } catch (error) {
-            console.error('❌ Error en crearEscuderiaDesdeTutorial:', error);
-            
-            let mensaje = 'Error: ' + (error.message || 'Desconocido');
-            
-            if (error.code === '23503') {
-                mensaje = '❌ ERROR: El usuario no existe en la base de datos.';
-            } else if (error.code === '23505') {
-                mensaje = '✅ Ya tienes una escudería. Cargando juego...';
-                // Forzar recarga
-                setTimeout(() => location.reload(), 1000);
-                return;
-            } else if (error.message.includes('undefined')) {
-                mensaje = '⚠️ Error técnico. Por favor, recarga la página y prueba de nuevo.';
-                setTimeout(() => location.reload(), 2000);
-                return;
-            }
-            
-            alert(mensaje);
-        }
-    }
+    // ========================
+    // DASHBOARD COMPLETO (igual que antes)
+    // ========================
     
     async cargarDashboardCompleto() {
         console.log('📊 Cargando dashboard COMPLETO con CSS...');
@@ -968,7 +1781,10 @@ class F1Manager {
             return;
         }
         
-        // 1. PRIMERO crear el HTML COMPLETO (sin datos)
+        // 1. PRIMERO crear el HTML COMPLETO (igual que tu versión actual)
+        // [Aquí va TODO tu código HTML de cargarDashboardCompleto() que ya tienes]
+        // Lo mantengo igual porque ya funciona bien
+        
         document.body.innerHTML = `
             <div id="app">
                 <!-- Loading Screen -->
@@ -1292,8 +2108,67 @@ class F1Manager {
         console.log('✅ Dashboard cargado correctamente con CSS');
     }
     
+    async loadProximoGP() {
+        // VERIFICAR primero que window.supabase existe
+        if (!window.supabase || !window.supabase.from) {
+            console.error('❌ window.supabase no está disponible en loadProximoGP');
+            // Crear datos de ejemplo
+            this.proximoGP = {
+                nombre: 'Gran Premio de España',
+                fecha_inicio: new Date(Date.now() + 86400000 * 3).toISOString(),
+                circuito: 'Circuit de Barcelona-Catalunya'
+            };
+            this.updateCountdown();
+            return;
+        }
+        
+        try {
+            const { data: gp, error } = await window.supabase
+                .from('calendario_gp')
+                .select('*')
+                .eq('cerrado_apuestas', false)
+                .gt('fecha_inicio', new Date().toISOString())
+                .order('fecha_inicio', { ascending: true })
+                .limit(1)
+                .maybeSingle();
+            
+            if (error) {
+                console.error('❌ Error en consulta GP:', error.message);
+                // Crear datos de ejemplo
+                this.proximoGP = {
+                    nombre: 'Gran Premio de España',
+                    fecha_inicio: new Date(Date.now() + 86400000 * 3).toISOString(),
+                    circuito: 'Circuit de Barcelona-Catalunya'
+                };
+            } else if (gp) {
+                this.proximoGP = gp;
+                console.log('✅ GP cargado:', gp.nombre);
+            } else {
+                // Caso NUEVO: gp es null (no se encontró nada)
+                console.log('ℹ️ No hay GP próximo configurado en la base de datos');
+                this.proximoGP = {
+                    nombre: 'Próximo GP por confirmar',
+                    fecha_inicio: new Date(Date.now() + 86400000 * 7).toISOString(),
+                    circuito: 'Circuito por confirmar'
+                };
+            }
+            
+            this.updateCountdown();
+            
+        } catch (error) {
+            console.error('❌ Error fatal en loadProximoGP:', error);
+            // Crear datos de ejemplo
+            this.proximoGP = {
+                nombre: 'Próximo GP por confirmar',
+                fecha_inicio: new Date(Date.now() + 86400000 * 7).toISOString(),
+                circuito: 'Circuito por confirmar'
+            };
+            this.updateCountdown();
+        }
+    }
+    
     // ========================
-    // MÉTODOS AUXILIARES
+    // MÉTODOS AUXILIARES (igual que antes)
     // ========================
     
     async loadCarStatus() {
@@ -1304,7 +2179,7 @@ class F1Manager {
                 .from('coches_stats')
                 .select('*')
                 .eq('escuderia_id', this.escuderia.id)
-                .single();
+                .maybeSingle();
             
             if (stats) {
                 this.carStats = stats;
@@ -1334,62 +2209,6 @@ class F1Manager {
         }
     }
     
-    async loadProximoGP() {
-        // VERIFICAR primero que window.supabase existe
-        if (!window.supabase || !window.supabase.from) {
-            console.error('❌ window.supabase no está disponible en loadProximoGP');
-            // Crear datos de ejemplo
-            this.proximoGP = {
-                nombre: 'Gran Premio de España',
-                fecha_inicio: new Date(Date.now() + 86400000 * 3).toISOString(),
-                circuito: 'Circuit de Barcelona-Catalunya'
-            };
-            this.updateCountdown();
-            return;
-        }
-        
-        try {
-            const { data: gp, error } = await window.supabase
-                .from('calendario_gp')
-                .select('*')
-                .eq('cerrado_apuestas', false)
-                .gt('fecha_inicio', new Date().toISOString())
-                .order('fecha_inicio', { ascending: true })
-                .limit(1)
-                .maybeSingle();
-            
-            if (error) {
-                console.error('❌ Error en consulta GP:', error.message);
-                this.proximoGP = {
-                    nombre: 'Próximo GP por confirmar',
-                    fecha_inicio: new Date(Date.now() + 86400000 * 7).toISOString(),
-                    circuito: 'Circuito por confirmar'
-                };
-            } else if (gp) {
-                this.proximoGP = gp;
-                console.log('✅ GP cargado:', gp.nombre);
-            } else {
-                console.log('ℹ️ No hay GP próximo configurado');
-                this.proximoGP = {
-                    nombre: 'Próximo GP por confirmar',
-                    fecha_inicio: new Date(Date.now() + 86400000 * 7).toISOString(),
-                    circuito: 'Circuito por confirmar'
-                };
-            }
-            
-            this.updateCountdown();
-            
-        } catch (error) {
-            console.error('❌ Error fatal en loadProximoGP:', error);
-            this.proximoGP = {
-                nombre: 'Próximo GP por confirmar',
-                fecha_inicio: new Date(Date.now() + 86400000 * 7).toISOString(),
-                circuito: 'Circuito por confirmar'
-            };
-            this.updateCountdown();
-        }
-    }
-    
     updateCarAreasUI() {
         const container = document.getElementById('areas-coche');
         if (!container || !this.carStats) return;
@@ -1397,7 +2216,7 @@ class F1Manager {
         container.innerHTML = window.CAR_AREAS.map(area => {
             const nivel = this.carStats[`${area.id}_nivel`] || 0;
             const progreso = this.carStats[`${area.id}_progreso`] || 0;
-            const porcentaje = (progreso / CONFIG.PIECES_PER_LEVEL) * 100;
+            const porcentaje = (progreso / window.CONFIG.PIECES_PER_LEVEL) * 100;
             
             return `
                 <div class="area-item" style="border-left-color: ${area.color}">
@@ -1413,7 +2232,7 @@ class F1Manager {
                         <div class="progress-fill-small" style="width: ${porcentaje}%"></div>
                     </div>
                     <button class="btn-fabricar" data-area="${area.id}">
-                        <i class="fas fa-hammer"></i> Fabricar (€${CONFIG.PIECES_PER_LEVEL.toLocaleString()})
+                        <i class="fas fa-hammer"></i> Fabricar (€${window.CONFIG.PIECE_COST.toLocaleString()})
                     </button>
                 </div>
             `;
@@ -1428,15 +2247,16 @@ class F1Manager {
         });
     }
     
-    // ========================
-    // FUNCIONALIDADES PRINCIPALES
-    // ========================
+    updatePilotosUI() {
+        // Tu código actual para actualizar pilotos
+    }
     
     iniciarFabricacion(areaId) {
         console.log('🛠️ Iniciando fabricación para:', areaId);
         
         if (!window.fabricacionManager) {
             console.error('❌ fabricacionManager no está inicializado');
+            this.showNotification('Sistema de fabricación no disponible', 'error');
             return;
         }
         
@@ -1502,7 +2322,7 @@ class F1Manager {
         if (!container) return;
         
         if (status.active) {
-            const area = CAR_AREAS.find(a => a.id === status.piece.toLowerCase().replace(' ', '_'));
+            const area = window.CAR_AREAS.find(a => a.id === status.piece.toLowerCase().replace(' ', '_'));
             const areaName = area ? area.name : status.piece;
             
             container.innerHTML = `
@@ -1630,10 +2450,6 @@ class F1Manager {
         if (window.tabManager) {
             window.tabManager.switchTab('taller');
         }
-    }
-    
-    irAlMercado() {
-        alert('🛒 Mercado - Próximamente');
     }
 }
 
