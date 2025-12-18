@@ -13,30 +13,16 @@ var supabase = null;
 
 // Función para inicializar Supabase de forma SEGURA
 function initSupabase() {
-    console.log('🔄 Inicializando Supabase SIMPLE...');
+    console.log('🔍 Verificando Supabase...');
     
-    // El CDN YA debería estar cargado del index.html
-    if (typeof supabase === 'undefined') {
-        console.error('❌ ERROR CRÍTICO: El CDN de Supabase no se cargó');
-        alert('Error: No se pudo cargar la base de datos. Recarga la página.');
+    // Simplemente devolver lo que ya está en window
+    if (!window.supabase) {
+        console.error('❌ ERROR: window.supabase no existe');
         return null;
     }
     
-    try {
-        // Crear cliente directamente
-        const supabaseClient = supabase.createClient(
-            'https://xbnbbmhcveyzrvvmdktg.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg'
-        );
-        
-        window.supabase = supabaseClient;
-        console.log('✅ Supabase inicializado');
-        return supabaseClient;
-        
-    } catch (error) {
-        console.error('❌ Error en initSupabase:', error);
-        return null;
-    }
+    console.log('✅ Supabase listo (ya estaba en window)');
+    return window.supabase;
 }
     
 
