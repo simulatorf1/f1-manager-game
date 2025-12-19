@@ -1413,9 +1413,9 @@ class F1Manager {
             if (this.tutorialData.pilotosContratados.length === 2) {
                 const totalSueldo = this.tutorialData.pilotosContratados.reduce((total, id) => {
                     const piloto = pilotos.find(p => p.id === id);
-                    return total + (piloto?.sueldo_base || 500000);
+                    return total + (parseFloat(piloto?.salario_base) || 500000);
                 }, 0);
-                confirmBtn.innerHTML = `CONFIRMAR SELECCIÓN (€${totalSueldo.toLocaleString()}/mes)`;
+                confirmBtn.innerHTML = `CONFIRMAR SELECCIÓN (€${(totalSueldo || 0).toLocaleString()}/mes)`;
             }
         }
     }
