@@ -1438,10 +1438,11 @@ class F1Manager {
                     {
                         escuderia_id: this.escuderia.id,
                         piloto_id: pilotoId,
+                        nombre: piloto.nombre, 
                         activo: true,
-                        salario_actual: parseFloat(piloto.salario_base),
+                        salario: parseFloat(piloto.salario_base),
                         carreras_restantes: 10,
-                        fecha_contrato: new Date().toISOString()
+                        contratado_en: new Date().toISOString()
                     }
                 ]);
             }
