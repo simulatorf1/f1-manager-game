@@ -1425,7 +1425,7 @@ class F1Manager {
             if (this.tutorialData.pilotosContratados.length === 2) {
                 const totalSueldo = this.tutorialData.pilotosContratados.reduce((total, id) => {
                     const piloto = pilotos.find(p => p.id === id);
-                    return total + (piloto?.sueldo_base || 500000);
+                    return total + (piloto?.salario_base || 500000);
                 }, 0);
                 confirmBtn.innerHTML = `CONFIRMAR SELECCIÓN (€${totalSueldo.toLocaleString()}/mes)`;
             }
@@ -1444,14 +1444,28 @@ class F1Manager {
         }
         
         try {
-            // Contratar pilotos en la base de datos
+            // PRIMERO: Cargar los pilotos seleccionados para obtener sus salarios
+            const { data: pilotosCatalogo, error: catalogoError } = await supabase
+                .from('pilotos_catalogo')
+                .select('id, salario_base')
+                .in('id', this.tutorialData.pilotosContratados);
+            
+            if (catalogoError) throw catalogoError;
+            
+            // Crear un mapa de salarios por piloto
+            const salariosMap = {};
+            pilotosCatalogo.forEach(piloto => {
+                salariosMap[piloto.id] = piloto.salario_base;
+            });
+            
+            // SEGUNDO: Contratar pilotos usando el salario correcto
             for (const pilotoId of this.tutorialData.pilotosContratados) {
                 await supabase.from('pilotos_contratados').insert([
                     {
                         escuderia_id: this.escuderia.id,
                         piloto_id: pilotoId,
                         activo: true,
-                        salario_base: 500000, // Salario base
+                        salario: salariosMap[pilotoId] || 500000, // ← "salario" en lugar de "salario_base"
                         fecha_contrato: new Date().toISOString()
                     }
                 ]);
