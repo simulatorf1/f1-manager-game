@@ -578,6 +578,7 @@ console.log('🔧 Sistema de fabricación cargado - ESPERANDO CONFIG');
 // ========================
 
 // 1. Esperar a que exista window.f1Manager antes de asignar la función
+// COMENTA o ELIMINA ESTA FUNCIÓN COMPLETA:
 function waitForF1Manager() {
     let attempts = 0;
     const maxAttempts = 50; // 5 segundos máximo
@@ -600,23 +601,23 @@ function waitForF1Manager() {
             
         } else if (attempts >= maxAttempts) {
             clearInterval(checkInterval);
-            console.error('❌ f1Manager nunca apareció');
+            console.error('❌ f1Manager nunca apareció'); // ← ESTA LÍNEA DA ERROR
         }
         
         attempts++;
     }, 100);
 }
 
-// Iniciar la espera
-if (!window.f1Manager) {
-    waitForF1Manager();
-} else {
-    // Si ya existe, asignar inmediatamente
-    window.f1Manager.iniciarFabricacion = (areaId) => {
-        if (window.fabricacionManager) {
-            window.fabricacionManager.startFabrication(areaId);
-        } else {
-            console.error('❌ fabricacionManager no está listo');
-        }
-    };
-}
+// Y TAMBIÉN COMENTA ESTA LLAMADA (línea ~612):
+// if (!window.f1Manager) {
+//     waitForF1Manager();
+// } else {
+//     // Si ya existe, asignar inmediatamente
+//     window.f1Manager.iniciarFabricacion = (areaId) => {
+//         if (window.fabricacionManager) {
+//             window.fabricacionManager.startFabrication(areaId);
+//         } else {
+//             console.error('❌ fabricacionManager no está listo');
+//         }
+//     };
+// }
