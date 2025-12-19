@@ -629,10 +629,6 @@ class F1Manager {
     }
     
     mostrarTutorialStep() {
-        if (this.tutorialStep >= 2 && this.tutorialStep <= 6) {
-            this.mostrarPasoSuperpuesto();
-            return;
-        }
         const steps = [
             // PASO 1: Bienvenida y creación de escudería
             {
@@ -1438,11 +1434,10 @@ class F1Manager {
                     {
                         escuderia_id: this.escuderia.id,
                         piloto_id: pilotoId,
-                        nombre: piloto.nombre, 
                         activo: true,
-                        salario: parseFloat(piloto.salario_base),
+                        salario_actual: 500000, // Salario base
                         carreras_restantes: 10,
-                        contratado_en: new Date().toISOString()
+                        fecha_contrato: new Date().toISOString()
                     }
                 ]);
             }
