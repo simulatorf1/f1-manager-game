@@ -1432,28 +1432,40 @@ class F1Manager {
         }
         
         try {
-            // Contratar pilotos en la base de datos
-            for (const pilotoId of this.tutorialData.pilotosContratados) {
-                await supabase.from('pilotos_contratados').insert([
-                    {
-                        escuderia_id: this.escuderia.id,
-                        piloto_id: pilotoId,
-                        nombre: piloto.nombre, 
-                        activo: true,
-                        salario: parseFloat(piloto.salario_base),
-                        carreras_restantes: 10,
-                        contratado_en: new Date().toISOString()
-                    }
-                ]);
+            // 1. PRIMERO obtener los datos COMPLETOS de los pilotos seleccionados
+            const { data: pilotosSeleccionados, error: errorPilotos } = await supabase
+                .from('pilotos_catalogo')
+                .select('id, nombre, salario_base')
+                .in('id', this.tutorialData.pilotosContratados);
+            
+            if (errorPilotos) throw errorPilotos;
+            
+            // 2. AHORA insertar con los datos CORRECTOS
+            for (const piloto of pilotosSeleccionados) {
+                const { error } = await supabase
+                    .from('pilotos_contratados')
+                    .insert([
+                        {
+                            escuderia_id: this.escuderia.id,
+                            piloto_id: piloto.id,
+                            nombre: piloto.nombre,                    // ← COLUMNA EXISTENTE
+                            salario: parseFloat(piloto.salario_base), // ← 'salario' (NO 'salario_actual')
+                            carreras_restantes: 10,
+                            activo: true,
+                            contratado_en: new Date().toISOString()   // ← 'contratado_en' (NO 'fecha_contrato')
+                        }
+                    ]);
+                
+                if (error) throw error;
             }
             
-            // Avanzar tutorial
+            // 3. Avanzar tutorial
             this.tutorialStep++;
             this.mostrarTutorialStep();
             
         } catch (error) {
-            console.error('Error contratando pilotos:', error);
-            alert('Error contratando pilotos. Intenta de nuevo.');
+            console.error('❌ Error contratando pilotos:', error);
+            alert(`Error contratando pilotos: ${error.message}`);
         }
     }
     
