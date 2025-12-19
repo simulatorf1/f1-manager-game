@@ -1158,8 +1158,10 @@ class F1Manager {
         // Cargar pilotos disponibles desde la base de datos
         try {
             const { data: pilotos, error } = await supabase
-                .from('pilotos')
-                .select('*')
+                .from('pilotos_catalogo')  // ← NOMBRE CORRECTO
+                .select('id, nombre, nacionalidad, experiencia, habilidad, salario_base')
+                .eq('disponible', true)    // ← Solo pilotos disponibles
+                .order('habilidad', { ascending: false })  // ← Mejores primero
                 .limit(10);
             
             if (error) throw error;
@@ -1189,7 +1191,7 @@ class F1Manager {
                                     </div>
                                     <div class="stat">
                                         <i class="fas fa-coins"></i>
-                                        <span>Sueldo: €${(piloto.sueldo_base || 500000).toLocaleString()}/mes</span>
+                                        <span>Sueldo: €${(parseFloat(piloto.salario_base) || 500000).toLocaleString()}/mes</span>
                                     </div>
                                 </div>
                                 <button class="btn-seleccionar" data-piloto-id="${piloto.id}">
