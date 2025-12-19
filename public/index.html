@@ -15,11 +15,10 @@
     <!-- INICIALIZACIÓN INMEDIATA -->
     <script>
         console.log('🔧 Inicializando Supabase...');
-        
-        // Esperar 2 segundos para asegurar carga
+    
         setTimeout(function() {
             if (typeof supabase === 'undefined') {
-                console.error('❌ Supabase CDN no cargó después de 2 segundos');
+                console.error('❌ Supabase CDN no cargó');
                 alert('Error crítico: Recarga la página (F5)');
                 return;
             }
@@ -29,30 +28,47 @@
                     'https://xbnbbmhcveyzrvvmdktg.supabase.co',
                     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg'
                 );
-                console.log('✅ Supabase inicializado en window');
-                
-                // Ahora cargar el resto de scripts
+                console.log('✅ Supabase inicializado');
+            
+                // Cargar scripts en orden
                 cargarScripts();
-                
+            
             } catch (error) {
                 console.error('❌ Error creando cliente:', error);
             }
         }, 2000);
-        
+    
         function cargarScripts() {
             const scripts = [
                 'js/config.js',
-                'js/main.js', 
+                'js/auth.js',      // NUEVO: Primero auth
+                'js/main.js',      // Luego main
                 'js/tabs.js',
                 'js/fabricacion.js'
             ];
-            
-            scripts.forEach(function(src) {
-                const script = document.createElement('script');
-                script.src = src;
-                document.body.appendChild(script);
-                console.log('📥 Cargado:', src);
-            });
+        
+            // Cargar secuencialmente
+            cargarScriptSecuencial(scripts, 0);
+        }
+    
+        function cargarScriptSecuencial(scripts, index) {
+            if (index >= scripts.length) {
+                console.log('✅ Todos los scripts cargados');
+                return;
+            }
+        
+            const script = document.createElement('script');
+            script.src = scripts[index];
+            script.onload = () => {
+                console.log('📥 Cargado:', scripts[index]);
+                cargarScriptSecuencial(scripts, index + 1);
+            };
+            script.onerror = () => {
+                console.error('❌ Error cargando:', scripts[index]);
+                cargarScriptSecuencial(scripts, index + 1);
+            };
+        
+            document.body.appendChild(script);
         }
     </script>
 </body>
