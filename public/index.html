@@ -41,10 +41,10 @@
         function cargarScripts() {
             const scripts = [
                 'js/config.js',
-                'js/auth.js',      // NUEVO: Primero auth
-                'js/main.js',      // Luego main
-                'js/tabs.js',
-                'js/fabricacion.js'
+                'js/auth.js',      
+                'js/fabricacion.js', // ← fabricacion.js carga ANTES
+                'js/main.js',      // ← main.js carga DESPUÉS  
+                'js/tabs.js'
             ];
         
             // Cargar secuencialmente
