@@ -110,74 +110,69 @@ class FabricacionManager {
         }
     }
     
-    async startFabrication(areaId, nivel = 1) {
-        console.log(`🏭 Iniciando fabricación: ${areaId} Nivel ${nivel}`);
-        
+    async startFabrication(areaId) {
         if (!this.escuderiaId) {
-            this.showNotificationGlobal('❌ No tienes escudería', 'error');
+            console.error('❌ No hay escudería inicializada');
             return false;
         }
-        
-        if (this.currentProduction) {
-            this.showNotificationGlobal('❌ Ya hay fabricación en curso', 'error');
-            return false;
-        }
-        
-        // Obtener datos de f1Manager si existe
-        const f1Manager = window.f1Manager;
-        if (f1Manager && f1Manager.escuderia) {
-            if (f1Manager.escuderia.dinero < window.CONFIG.PIECE_COST) {
-                this.showNotificationGlobal('❌ Fondos insuficientes', 'error');
-                return false;
-            }
-        }
-        
-        const areaName = window.CAR_AREAS?.find(a => a.id === areaId)?.name || areaId;
         
         try {
-            const inicio = new Date();
-            const fin = new Date(inicio.getTime() + window.CONFIG.FABRICATION_TIME);
-            
-            const { data: production, error } = await supabase
+            // PRIMERO verifica si ya hay una fabricación en curso
+            const { data: existing, error: checkError } = await supabase
                 .from('fabricacion_actual')
-                .insert([
-                    {
-                        escuderia_id: this.escuderiaId,
-                        area: areaId,
-                        nivel: nivel,
-                        inicio_fabricacion: inicio.toISOString(),
-                        fin_fabricacion: fin.toISOString(),
-                        completada: false,
-                        costo: window.CONFIG.PIECE_COST
-                    }
-                ])
+                .select('id')
+                .eq('escuderia_id', this.escuderiaId)
+                .eq('completada', false)
+                .maybeSingle();
+            
+            if (checkError) {
+                console.error('❌ Error verificando fabricación existente:', checkError);
+                return false;
+            }
+            
+            if (existing) {
+                console.log('⚠️ Ya hay una fabricación en curso');
+                return false;
+            }
+            
+            // Crea NUEVA fabricación
+            const area = window.CAR_AREAS.find(a => a.id === areaId);
+            if (!area) {
+                console.error('❌ Área no encontrada:', areaId);
+                return false;
+            }
+            
+            const tiempoFin = new Date();
+            tiempoFin.setHours(tiempoFin.getHours() + 4); // 4 horas después
+            
+            const { data: newFabricacion, error: insertError } = await supabase
+                .from('fabricacion_actual')
+                .insert([{
+                    escuderia_id: this.escuderiaId,
+                    area: area.name,
+                    nivel: 1,
+                    tiempo_inicio: new Date().toISOString(),
+                    tiempo_fin: tiempoFin.toISOString(),
+                    completada: false,
+                    costo: 10000.00,
+                    pieza_id: null,
+                    creada_en: new Date().toISOString()
+                }])
                 .select()
                 .single();
             
-            if (error) throw error;
-            
-            // Actualizar dinero si f1Manager existe
-            if (f1Manager && f1Manager.escuderia) {
-                f1Manager.escuderia.dinero -= window.CONFIG.PIECE_COST;
-                if (f1Manager.updateEscuderiaMoney) {
-                    await f1Manager.updateEscuderiaMoney();
-                }
+            if (insertError) {
+                console.error('❌ Error creando fabricación:', insertError);
+                return false;
             }
             
-            this.currentProduction = production;
-            this.startProductionTimer();
-            this.updateProductionUI();
-            
-            this.showNotificationGlobal(
-                `🏭 ${areaName} Nivel ${nivel} iniciada (4h)`,
-                'success'
-            );
+            console.log('✅ Fabricación iniciada:', newFabricacion);
+            this.produccionActual = newFabricacion;
             
             return true;
             
         } catch (error) {
-            console.error('❌ Error:', error);
-            this.showNotificationGlobal('❌ Error al iniciar', 'error');
+            console.error('❌ Error en startFabrication:', error);
             return false;
         }
     }
