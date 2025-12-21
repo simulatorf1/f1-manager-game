@@ -2307,25 +2307,57 @@ class F1Manager {
     }
     
     iniciarFabricacion(areaId) {
-        console.log('🔧 [DEBUG] Llamando a iniciarFabricacion para:', areaId);
-        console.log('🔧 [DEBUG] window.FabricacionManager:', window.FabricacionManager);
+        console.log('🔧 [DEBUG] === INICIAR FABRICACION ===');
+        console.log('1. window.fabricacionManager:', window.fabricacionManager);
+        console.log('2. window.FabricacionManager:', window.FabricacionManager);
+        console.log('3. this.escuderia:', this.escuderia);
         
         // SI fabricacionManager no existe, CREARLO
         if (!window.fabricacionManager) {
-            console.log('⚠️ [DEBUG] fabricacionManager es undefined, intentando crear...');
+            console.log('⚠️ [DEBUG] fabricacionManager es undefined...');
             
-            // Opción 1: Si la clase existe, crear instancia
             if (window.FabricacionManager) {
-                console.log('🔧 [DEBUG] Creando nueva instancia de FabricacionManager');
+                console.log('✅ [DEBUG] Clase existe, creando instancia...');
                 window.fabricacionManager = new window.FabricacionManager();
-            } 
-            // Opción 2: Intentar cargar el script
-            else {
-                console.error('❌ [DEBUG] Clase FabricacionManager no definida');
-                this.showNotification('Error crítico: Recarga la página (F5)', 'error');
+                console.log('✅ [DEBUG] Instancia creada:', window.fabricacionManager);
+            } else {
+                console.error('❌ [DEBUG] Clase NO existe - Error fatal');
+                // Ver qué scripts se cargaron
+                console.log('Scripts cargados:');
+                console.log('- config.js:', typeof CONFIG !== 'undefined');
+                console.log('- auth.js:', typeof authManager !== 'undefined');
+                console.log('- main.js:', typeof f1Manager !== 'undefined');
+                console.log('- fabricacion.js:', typeof FabricacionManager !== 'undefined');
+                this.showNotification('Error: Sistema de fabricación no cargado', 'error');
                 return false;
             }
         }
+        
+        // Verificar escudería
+        if (!this.escuderia) {
+            console.error('❌ No tienes escudería');
+            this.showNotification('❌ No tienes escudería', 'error');
+            return false;
+        }
+        
+        // Inicializar si es necesario
+        if (window.fabricacionManager && !window.fabricacionManager.escuderiaId && this.escuderia) {
+            console.log('🔧 [DEBUG] Inicializando fabricacionManager con escudería:', this.escuderia.id);
+            window.fabricacionManager.inicializar(this.escuderia.id);
+        }
+        
+        console.log('🔧 [DEBUG] Llamando a startFabrication...');
+        
+        // Verificar que el método existe
+        if (!window.fabricacionManager.startFabrication) {
+            console.error('❌ [DEBUG] startFabrication no existe en fabricacionManager');
+            console.log('Métodos disponibles:', Object.keys(window.fabricacionManager));
+            this.showNotification('Error: Método de fabricación no disponible', 'error');
+            return false;
+        }
+        
+        return window.fabricacionManager.startFabrication(areaId);
+    }
         
         // Verificar escudería
         if (!this.escuderia) {
