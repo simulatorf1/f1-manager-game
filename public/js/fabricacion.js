@@ -143,7 +143,7 @@ class FabricacionManager {
             }
             
             const tiempoFin = new Date();
-            tiempoFin.setHours(tiempoFin.getHours() + 4); // 4 horas después
+            tiempoFin.setSeconds(tiempoFin.getSeconds() + 30); // 30 segundos después
             
             const { data: newFabricacion, error: insertError } = await supabase
                 .from('fabricacion_actual')
