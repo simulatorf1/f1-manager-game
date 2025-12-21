@@ -607,6 +607,7 @@ class F1Manager {
         // 2. INICIALIZAR FABRICACIÓN si existe escudería
         if (this.escuderia && window.fabricacionManager) {
             console.log('🔧 Inicializando sistema de fabricación...');
+            console.log('ID de escudería:', this.escuderia.id); // ← Añade esto
             await window.fabricacionManager.inicializar(this.escuderia.id);
         }
         
