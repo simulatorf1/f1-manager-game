@@ -273,6 +273,7 @@ class FabricacionManager {
         }
         
         try {
+            // 1. Marcar fabricación como completada
             const { error: updateError } = await supabase
                 .from('fabricacion_actual')
                 .update({ completada: true })
@@ -280,6 +281,7 @@ class FabricacionManager {
             
             if (updateError) throw updateError;
             
+            // 2. Crear pieza en almacén
             const { error: piezaError } = await supabase
                 .from('piezas_almacen')
                 .insert([
@@ -296,8 +298,10 @@ class FabricacionManager {
             
             if (piezaError) throw piezaError;
             
+            // 3. Añadir puntos base al coche
             await this.updateCarProgress(this.currentProduction.area);
             
+            // 4. Dar recompensa en dinero
             const reward = 15000;
             const f1Manager = window.f1Manager;
             if (f1Manager && f1Manager.escuderia) {
@@ -307,18 +311,26 @@ class FabricacionManager {
                 }
             }
             
-            const areaObj = window.CAR_AREAS?.find(a => a.id === this.currentProduction.area);
+            // 5. Actualizar variables internas
             this.currentProduction = null;
             
+            // 6. Actualizar UI
             this.updateProductionUI(0, 0);
             
+            // 7. Mostrar notificación
             this.showNotificationGlobal(
                 `🎁 ¡Pieza recogida! +10 puntos y €${reward.toLocaleString()}`,
                 'success'
             );
             
+            // 8. Si estamos en la pestaña almacén, recargar
             if (window.tabManager?.currentTab === 'almacen') {
                 window.tabManager.loadAlmacenPiezas();
+            }
+            
+            // 9. ACTUALIZACIÓN NUEVA: Cargar stats del coche en main.js
+            if (window.f1Manager && window.f1Manager.loadCarStatus) {
+                await window.f1Manager.loadCarStatus();
             }
             
             return true;
