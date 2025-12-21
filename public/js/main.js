@@ -2509,4 +2509,6 @@ class F1Manager {
         }
     }
 }
-
+// Iniciar aplicación
+console.log('🚀 Iniciando aplicación desde el final del archivo...');
+iniciarAplicacion();
