@@ -2,6 +2,9 @@
 // SISTEMA DE FABRICACIÓN CORREGIDO
 // ========================
 console.log('🔧 Sistema de fabricación cargado');
+console.log('=== FABRICACION.JS CARGADO ===');
+console.log('1. Ubicación:', window.location.href);
+console.log('2. FabricacionManager definido:', typeof FabricacionManager);
 
 class FabricacionManager {
     constructor() {
@@ -500,8 +503,41 @@ class FabricacionManager {
     }
 }
 
-// Crear instancia global pero NO autoiniciar
+// Crear instancia global con verificación
+function inicializarFabricacionManager() {
+    console.log('🔧 [DEBUG] Creando fabricacionManager...');
+    
+    if (window.fabricacionManager) {
+        console.log('⚠️ [DEBUG] fabricacionManager ya existe');
+        return window.fabricacionManager;
+    }
+    
+    try {
+        window.fabricacionManager = new FabricacionManager();
+        console.log('✅ [DEBUG] fabricacionManager creado:', window.fabricacionManager);
+        
+        // Añadir al objeto window para depuración
+        window.debugFabricacion = {
+            manager: window.fabricacionManager,
+            creado: new Date(),
+            version: '1.0'
+        };
+        
+        return window.fabricacionManager;
+    } catch (error) {
+        console.error('❌ [DEBUG] Error creando fabricacionManager:', error);
+        return null;
+    }
+}
+
+// Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-    window.fabricacionManager = new FabricacionManager();
-    console.log('✅ FabricacionManager listo (modo pasivo - esperando inicialización)');
+    console.log('🔧 [DEBUG] DOM listo, inicializando fabricacionManager...');
+    inicializarFabricacionManager();
 });
+
+// También inicializar si ya está listo
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    console.log('🔧 [DEBUG] DOM ya listo, inicializando ahora...');
+    setTimeout(() => inicializarFabricacionManager(), 100);
+}
