@@ -477,30 +477,41 @@ class FabricacionManager {
     }
     
     getProductionStatus() {
-        if (!this.currentProduction) {
-            return { active: false, message: 'No hay producción' };
+        if (!this.produccionActual) {
+            return { active: false };
         }
         
-        const now = new Date();
-        const endTime = new Date(this.currentProduction.fin_fabricacion);
-        const startTime = new Date(this.currentProduction.inicio_fabricacion);
+        const ahora = new Date();
+        const inicio = new Date(this.produccionActual.tiempo_inicio);
+        const fin = new Date(this.produccionActual.tiempo_fin);
         
-        const elapsed = now - startTime;
-        const remaining = endTime - now;
-        const totalTime = window.CONFIG.FABRICATION_TIME;
-        const progress = Math.min(100, (elapsed / totalTime) * 100);
+        // Verificar si ya pasó el tiempo
+        if (ahora >= fin) {
+            return {
+                active: true,
+                piece: this.produccionActual.area,
+                level: this.produccionActual.nivel,
+                progress: 100,
+                remaining: 0,
+                ready: true,
+                id: this.produccionActual.id
+            };
+        }
         
-        const area = window.CAR_AREAS?.find(a => a.id === this.currentProduction.area);
+        // Calcular progreso
+        const tiempoTotal = fin - inicio;
+        const tiempoTranscurrido = ahora - inicio;
+        const progreso = Math.min(100, (tiempoTranscurrido / tiempoTotal) * 100);
+        const tiempoRestante = fin - ahora;
         
         return {
             active: true,
-            piece: area ? area.name : this.currentProduction.area,
-            level: this.currentProduction.nivel,
-            progress: progress,
-            remaining: remaining,
-            ready: remaining <= 0,
-            startTime: startTime,
-            endTime: endTime
+            piece: this.produccionActual.area,
+            level: this.produccionActual.nivel,
+            progress: Math.round(progreso),
+            remaining: tiempoRestante,
+            ready: false,
+            id: this.produccionActual.id
         };
     }
     
