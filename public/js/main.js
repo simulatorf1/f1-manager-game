@@ -2308,35 +2308,39 @@ class F1Manager {
     
     iniciarFabricacion(areaId) {
         console.log('🔧 [DEBUG] Llamando a iniciarFabricacion para:', areaId);
-        console.log('🔧 [DEBUG] window.fabricacionManager:', window.fabricacionManager);
-        console.log('🔧 [DEBUG] this.escuderia:', this.escuderia);
-    
+        console.log('🔧 [DEBUG] window.FabricacionManager:', window.FabricacionManager);
+        
+        // SI fabricacionManager no existe, CREARLO
         if (!window.fabricacionManager) {
-            console.error('❌ fabricacionManager no disponible - Objeto:', window.fabricacionManager);
-            this.showNotification('Sistema de fabricación no disponible', 'error');
-            return false;
+            console.log('⚠️ [DEBUG] fabricacionManager es undefined, intentando crear...');
+            
+            // Opción 1: Si la clase existe, crear instancia
+            if (window.FabricacionManager) {
+                console.log('🔧 [DEBUG] Creando nueva instancia de FabricacionManager');
+                window.fabricacionManager = new window.FabricacionManager();
+            } 
+            // Opción 2: Intentar cargar el script
+            else {
+                console.error('❌ [DEBUG] Clase FabricacionManager no definida');
+                this.showNotification('Error crítico: Recarga la página (F5)', 'error');
+                return false;
+            }
         }
-    
+        
+        // Verificar escudería
         if (!this.escuderia) {
             console.error('❌ No tienes escudería');
             this.showNotification('❌ No tienes escudería', 'error');
             return false;
         }
-    
-        console.log('🔧 [DEBUG] Llamando a startFabrication...');
-        return window.fabricacionManager.startFabrication(areaId);
         
-        if (!window.fabricacionManager) {
-            console.error('❌ fabricacionManager no disponible');
-            this.showNotification('Sistema de fabricación no disponible', 'error');
-            return false;
+        // Inicializar si es necesario
+        if (!window.fabricacionManager.escuderiaId && this.escuderia) {
+            console.log('🔧 [DEBUG] Inicializando fabricacionManager con escudería:', this.escuderia.id);
+            window.fabricacionManager.inicializar(this.escuderia.id);
         }
-    
-        if (!this.escuderia) {
-            this.showNotification('❌ No tienes escudería', 'error');
-            return false;
-        }
-    
+        
+        console.log('🔧 [DEBUG] Llamando a startFabrication...');
         return window.fabricacionManager.startFabrication(areaId);
     }
     
