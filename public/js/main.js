@@ -2368,7 +2368,41 @@ class F1Manager {
             return false;
         }
         
-        return window.fabricacionManager.startFabrication(areaId);
+        // Ejecutar la fabricación y CAPTURAR el resultado
+        const resultado = window.fabricacionManager.startFabrication(areaId);
+        
+        // SI fue exitoso, ACTUALIZAR LA UI
+        if (resultado) {
+            console.log('✅ Fabricación iniciada exitosamente');
+            
+            // 1. Mostrar notificación
+            const area = window.CAR_AREAS.find(a => a.id === areaId);
+            if (area) {
+                this.showNotification(`✅ Fabricación de ${area.name} iniciada (4 horas)`, 'success');
+            }
+            
+            // 2. Actualizar el monitor de producción INMEDIATAMENTE
+            setTimeout(() => {
+                this.updateProductionMonitor();
+            }, 1000);
+            
+            // 3. Deshabilitar temporalmente el botón
+            const boton = document.querySelector(`[data-area="${areaId}"]`);
+            if (boton) {
+                boton.disabled = true;
+                boton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fabricando...';
+            }
+            
+            // 4. Actualizar dinero si hubo costo
+            if (this.escuderia.dinero !== null) {
+                this.escuderia.dinero -= window.CONFIG.PIECE_COST || 10000;
+                this.updateEscuderiaMoney();
+            }
+        } else {
+            this.showNotification('❌ No se pudo iniciar la fabricación', 'error');
+        }
+        
+        return resultado;
     }
     showNotification(mensaje, tipo = 'success') {
         const notification = document.createElement('div');
@@ -2410,23 +2444,56 @@ class F1Manager {
     async cargarDatosDashboard() {
         console.log('📊 Cargando datos del dashboard...');
         
-        // Actualizar producción en tiempo real
+        // Actualizar producción en tiempo real INMEDIATAMENTE
         this.updateProductionMonitor();
         
         // Configurar eventos de botones
         this.setupDashboardEvents();
         
-        // Iniciar temporizadores
+        // Iniciar temporizadores para actualización automática
         this.startTimers();
+        
+        console.log('✅ Dashboard configurado con timers');
+    }
+    
+    startTimers() {
+        // Timer de producción (actualizar cada 5 segundos)
+        if (this.productionTimer) {
+            clearInterval(this.productionTimer);
+        }
+        
+        this.productionTimer = setInterval(() => {
+            this.updateProductionMonitor();
+        }, 5000);
+        
+        // Timer de countdown
+        if (this.countdownTimer) {
+            clearInterval(this.countdownTimer);
+        }
+        
+        this.countdownTimer = setInterval(() => {
+            this.updateCountdown();
+        }, 1000);
+        
+        console.log('⏱️ Timers iniciados');
     }
     
     updateProductionMonitor() {
-        if (!window.fabricacionManager) return;
+        console.log('🔄 Actualizando monitor de producción...');
+        
+        if (!window.fabricacionManager) {
+            console.log('❌ No hay fabricacionManager');
+            return;
+        }
         
         const status = window.fabricacionManager.getProductionStatus();
-        const container = document.getElementById('produccion-actual');
+        console.log('📊 Estado de producción:', status);
         
-        if (!container) return;
+        const container = document.getElementById('produccion-actual');
+        if (!container) {
+            console.log('❌ No se encontró #produccion-actual');
+            return;
+        }
         
         if (status.active) {
             const area = window.CAR_AREAS.find(a => a.id === status.piece.toLowerCase().replace(' ', '_'));
@@ -2449,7 +2516,7 @@ class F1Manager {
                 <div class="pieza-stats">
                     <div class="stat-mini">
                         <span>Costo</span>
-                        <strong>€10,000</strong>
+                        <strong>€${window.CONFIG.PIECE_COST.toLocaleString() || '10,000'}</strong>
                     </div>
                     <div class="stat-mini">
                         <span>Puntos</span>
@@ -2467,10 +2534,32 @@ class F1Manager {
             // Configurar eventos
             document.getElementById('btn-recoger-pieza')?.addEventListener('click', () => {
                 window.fabricacionManager.collectPiece();
+                this.updateProductionMonitor(); // Actualizar después de recoger
             });
             
             document.getElementById('btn-cancelar')?.addEventListener('click', () => {
-                window.fabricacionManager.cancelProduction();
+                if (confirm('¿Seguro que quieres cancelar esta fabricación?')) {
+                    window.fabricacionManager.cancelProduction();
+                    this.updateProductionMonitor(); // Actualizar después de cancelar
+                }
+            });
+            
+            console.log('✅ UI de producción actualizada');
+        } else {
+            // Mostrar estado vacío
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-industry"></i>
+                    <p>No hay producción en curso</p>
+                    <button class="btn-primary" id="iniciar-fabricacion-btn">
+                        <i class="fas fa-hammer"></i> Iniciar fabricación
+                    </button>
+                </div>
+            `;
+            
+            // Re-configurar evento del botón
+            document.getElementById('iniciar-fabricacion-btn')?.addEventListener('click', () => {
+                this.irAlTaller();
             });
         }
     }
