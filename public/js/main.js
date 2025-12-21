@@ -609,6 +609,12 @@ class F1Manager {
             return;
         }
         
+         // 4. INICIALIZAR ALMACÉN si existe escudería
+        if (this.escuderia && window.almacenManager) {
+            console.log('📦 Inicializando sistema de almacén...');
+            await window.almacenManager.inicializar(this.escuderia.id);
+        }
+        
         // 5. Verificar si ya completó tutorial
         const tutorialCompletado = localStorage.getItem('tutorial_completado');
         
