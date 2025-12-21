@@ -2307,6 +2307,25 @@ class F1Manager {
     }
     
     iniciarFabricacion(areaId) {
+        console.log('🔧 [DEBUG] Llamando a iniciarFabricacion para:', areaId);
+        console.log('🔧 [DEBUG] window.fabricacionManager:', window.fabricacionManager);
+        console.log('🔧 [DEBUG] this.escuderia:', this.escuderia);
+    
+        if (!window.fabricacionManager) {
+            console.error('❌ fabricacionManager no disponible - Objeto:', window.fabricacionManager);
+            this.showNotification('Sistema de fabricación no disponible', 'error');
+            return false;
+        }
+    
+        if (!this.escuderia) {
+            console.error('❌ No tienes escudería');
+            this.showNotification('❌ No tienes escudería', 'error');
+            return false;
+        }
+    
+        console.log('🔧 [DEBUG] Llamando a startFabrication...');
+        return window.fabricacionManager.startFabrication(areaId);
+        
         if (!window.fabricacionManager) {
             console.error('❌ fabricacionManager no disponible');
             this.showNotification('Sistema de fabricación no disponible', 'error');
