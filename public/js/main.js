@@ -65,6 +65,7 @@ async function iniciarAplicacion() {
         console.log('✅ Usuario autenticado:', session.user.email);
         // Iniciar el juego
         window.f1Manager = new F1Manager(session.user);
+        window.f1Manager.init(); // ← ¡AÑADE ESTA LÍNEA!
     } else {
         console.log('👤 No hay sesión, mostrar login');
         mostrarPantallaLogin();
