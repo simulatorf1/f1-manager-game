@@ -2,9 +2,7 @@
 // SISTEMA DE FABRICACIÓN CORREGIDO
 // ========================
 console.log('🔧 Sistema de fabricación cargado');
-console.log('=== FABRICACION.JS CARGADO ===');
-console.log('1. Ubicación:', window.location.href);
-console.log('2. FabricacionManager definido:', typeof FabricacionManager);
+
 
 class FabricacionManager {
     constructor() {
@@ -502,6 +500,12 @@ class FabricacionManager {
         }, 3000);
     }
 }
+// ========================
+// LOGS DE DIAGNÓSTICO (AL FINAL)
+// ========================
+console.log('=== FABRICACION.JS CARGADO ===');
+console.log('1. FabricacionManager definido:', typeof FabricacionManager);
+console.log('2. Ubicación:', window.location.href);
 
 // Crear instancia global con verificación
 function inicializarFabricacionManager() {
