@@ -1827,3 +1827,90 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #ff4444;
 }
+/* Estilos para piezas del almacén */
+.pieza-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s;
+}
+
+.pieza-card.disponible {
+    border-color: #00d2be;
+}
+
+.pieza-card.equipada {
+    border-color: #4CAF50;
+}
+
+.pieza-card.vendida {
+    border-color: #888;
+    opacity: 0.7;
+}
+
+.pieza-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.pieza-nivel {
+    background: rgba(0, 210, 190, 0.2);
+    color: #00d2be;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+}
+
+.pieza-info {
+    margin: 15px 0;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.pieza-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.btn-equipar, .btn-vender, .btn-desequipar {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.btn-equipar {
+    background: rgba(0, 210, 190, 0.2);
+    color: #00d2be;
+    border: 1px solid #00d2be;
+}
+
+.btn-vender {
+    background: rgba(225, 6, 0, 0.2);
+    color: #e10600;
+    border: 1px solid #e10600;
+}
+
+.btn-desequipar {
+    background: rgba(255, 152, 0, 0.2);
+    color: #ff9800;
+    border: 1px solid #ff9800;
+}
+
+.btn-equipar:hover, .btn-vender:hover, .btn-desequipar:hover {
+    opacity: 0.8;
+}
