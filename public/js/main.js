@@ -2370,24 +2370,6 @@ class F1Manager {
         
         return window.fabricacionManager.startFabrication(areaId);
     }
-        
-        // Verificar escudería
-        if (!this.escuderia) {
-            console.error('❌ No tienes escudería');
-            this.showNotification('❌ No tienes escudería', 'error');
-            return false;
-        }
-        
-        // Inicializar si es necesario
-        if (!window.fabricacionManager.escuderiaId && this.escuderia) {
-            console.log('🔧 [DEBUG] Inicializando fabricacionManager con escudería:', this.escuderia.id);
-            window.fabricacionManager.inicializar(this.escuderia.id);
-        }
-        
-        console.log('🔧 [DEBUG] Llamando a startFabrication...');
-        return window.fabricacionManager.startFabrication(areaId);
-    }
-    
     showNotification(mensaje, tipo = 'success') {
         const notification = document.createElement('div');
         notification.className = `notification ${tipo}`;
