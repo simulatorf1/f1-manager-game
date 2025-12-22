@@ -79,7 +79,7 @@ class FabricacionManager {
         }
     }
 
-    async iniciarFabricacion(areaId) {
+    async iniciarFabricacion(areaId) {  // <-- NOMBRE CORRECTO
         console.log('🔨 Iniciando fabricación para área:', areaId);
         
         if (!this.escuderiaId) {
@@ -135,7 +135,6 @@ class FabricacionManager {
             return false;
         }
     }
-
     async recogerPieza(fabricacionId) {
         try {
             // 1. Buscar la fabricación
