@@ -88,18 +88,53 @@ class FabricacionManager {
         }
 
         try {
-            // 1. Verificar si ya hay fabricación para esta área
+            // 1. Verificar fondos disponibles
+            const costoFabricacion = 10000; // €10,000
+            
+            // Obtener escudería actual
+            const { data: escuderia, error: escError } = await supabase
+                .from('escuderias')
+                .select('dinero')
+                .eq('id', this.escuderiaId)
+                .single();
+                
+            if (escError) throw escError;
+            
+            if (escuderia.dinero < costoFabricacion) {
+                alert(`❌ Fondos insuficientes. Necesitas €${costoFabricacion.toLocaleString()}, tienes €${escuderia.dinero.toLocaleString()}`);
+                return false;
+            }
+            
+            // 2. Descontar dinero
+            const nuevoDinero = escuderia.dinero - costoFabricacion;
+            const { error: updateError } = await supabase
+                .from('escuderias')
+                .update({ dinero: nuevoDinero })
+                .eq('id', this.escuderiaId);
+                
+            if (updateError) throw updateError;
+            
+            // 3. Actualizar en main.js si está disponible
+            if (window.f1Manager && window.f1Manager.escuderia) {
+                window.f1Manager.escuderia.dinero = nuevoDinero;
+                window.f1Manager.updateEscuderiaMoney();
+            }
+            
+            console.log(`💰 Descontados €${costoFabricacion.toLocaleString()}. Nuevo saldo: €${nuevoDinero.toLocaleString()}`);
+            
+            // 4. Continuar con la fabricación (tu código actual)
             const area = window.CAR_AREAS.find(a => a.id === areaId);
             if (!area) {
                 console.error('❌ Área no encontrada');
+                // Reembolsar el dinero (opcional)
                 return false;
             }
 
-            // 2. Crear nueva fabricación (30 segundos para pruebas)
             const tiempoInicio = new Date();
             const tiempoFin = new Date();
-            tiempoFin.setSeconds(tiempoFin.getSeconds() + 120); // 120 segundos = 2 minutos
-
+            tiempoFin.setSeconds(tiempoFin.getSeconds() + 120); // 2 minutos
+            
+            // 5. Crear nueva fabricación
             const { data: nuevaFabricacion, error: insertError } = await supabase
                 .from('fabricacion_actual')
                 .insert([{
@@ -109,7 +144,7 @@ class FabricacionManager {
                     tiempo_inicio: tiempoInicio.toISOString(),
                     tiempo_fin: tiempoFin.toISOString(),
                     completada: false,
-                    costo: 10000.00,
+                    costo: costoFabricacion,
                     creada_en: new Date().toISOString()
                 }])
                 .select()
@@ -119,15 +154,20 @@ class FabricacionManager {
 
             console.log('✅ Fabricación creada:', nuevaFabricacion);
 
-            // 3. Añadir a lista local
+            // 6. Añadir a lista local
             this.produccionesActivas.push(nuevaFabricacion);
 
-            // 4. Iniciar timer
+            // 7. Iniciar timer
             this.iniciarTimerProduccion(nuevaFabricacion.id);
 
-            // 5. Actualizar UI
+            // 8. Actualizar UI
             this.actualizarUIProduccion();
 
+            // 9. Mostrar notificación de costo
+            if (window.f1Manager && window.f1Manager.showNotification) {
+                window.f1Manager.showNotification(`💰 -€${costoFabricacion.toLocaleString()} por fabricación de ${area.name}`, 'info');
+            }
+            
             return true;
 
         } catch (error) {
