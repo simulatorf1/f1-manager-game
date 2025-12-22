@@ -62,7 +62,12 @@ class FabricacionManager {
 
             const ahora = new Date();
             const fin = new Date(produccion.tiempo_fin);
-
+            
+            console.log('🕒 Verificando producción:', produccionId);
+            console.log('Ahora:', ahora.toISOString());
+            console.log('Fin programado:', fin.toISOString());
+            console.log('¿Ya pasó?', ahora >= fin);
+            
             if (ahora >= fin) {
                 console.log(`✅ Producción ${produccionId} completada`);
                 
@@ -72,6 +77,11 @@ class FabricacionManager {
 
                 // Actualizar UI
                 this.actualizarUIProduccion();
+                
+                // Opcional: Mostrar notificación
+                if (window.f1Manager && window.f1Manager.showNotification) {
+                    window.f1Manager.showNotification(`✅ Pieza de ${produccion.area} lista para recoger!`, 'success');
+                }
             }
 
         } catch (error) {
