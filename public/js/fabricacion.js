@@ -50,7 +50,10 @@ class FabricacionManager {
             clearInterval(this.timers[produccionId]);
         }
 
+        console.log(`⏱️ Iniciando timer para producción ${produccionId}`);
+        
         this.timers[produccionId] = setInterval(() => {
+            console.log(`🔄 Timer tick para ${produccionId} - ${new Date().toISOString()}`);
             this.verificarProduccion(produccionId);
         }, 1000);
     }
