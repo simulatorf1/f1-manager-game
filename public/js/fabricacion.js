@@ -63,29 +63,20 @@ class FabricacionManager {
             if (!produccion) return;
 
             const ahora = new Date();
-            const fin = new Date(produccion.tiempo_fin);
+            const creadaEn = new Date(produccion.creada_en);
             
-            // DEBUG DETALLADO
-            console.log(`🔍 VERIFICACIÓN DETALLADA ${produccionId}:`);
-            console.log('tiempo_fin (string):', produccion.tiempo_fin);
-            console.log('fin (parsed):', fin.toString());
-            console.log('fin (ISO):', fin.toISOString());
-            console.log('ahora:', ahora.toISOString());
-            console.log('fin.getTime():', fin.getTime());
-            console.log('ahora.getTime():', ahora.getTime());
-            console.log('Diferencia (ms):', fin - ahora);
-            console.log('Diferencia (seg):', (fin - ahora) / 1000);
+            // Calcular tiempo transcurrido desde creación
+            const tiempoTranscurrido = (ahora - creadaEn) / 1000; // en segundos
+            const duracionTotal = 120; // 2 minutos en segundos
             
-            if (isNaN(fin.getTime())) {
-                console.error(`❌ Fecha inválida: ${produccion.tiempo_fin}`);
-                return;
-            }
+            console.log(`⏱️ ${produccionId}:`);
+            console.log('Creada en:', creadaEn.toISOString());
+            console.log('Ahora:', ahora.toISOString());
+            console.log('Transcurrido:', tiempoTranscurrido.toFixed(1), 'segundos');
+            console.log('Faltan:', (duracionTotal - tiempoTranscurrido).toFixed(1), 'segundos');
             
-            const tiempoRestante = fin - ahora;
-            console.log(`⏱️ Tiempo restante: ${tiempoRestante/1000} segundos`);
-            
-            if (ahora >= fin) {
-                console.log(`✅ Producción ${produccionId} COMPLETADA (realmente)`);
+            if (tiempoTranscurrido >= duracionTotal) {
+                console.log(`✅ Producción ${produccionId} COMPLETADA`);
                 
                 clearInterval(this.timers[produccionId]);
                 delete this.timers[produccionId];
@@ -162,13 +153,7 @@ class FabricacionManager {
             console.log('Hora fin calculada:', tiempoFin.toISOString());
             console.log('Diferencia con ahora:', (tiempoFin - tiempoInicio) / 1000, 'segundos');
             
-            // Obtener hora del servidor para comparar
-            const { data: serverTime, error: timeError } = await supabase
-                .rpc('get_server_time');
-            
-            if (!timeError && serverTime) {
-                console.log('🕒 Hora del servidor Supabase:', serverTime);
-            }
+
 
             // 6. Crear nueva fabricación en BD
             const { data: nuevaFabricacion, error: insertError } = await supabase
@@ -181,7 +166,6 @@ class FabricacionManager {
                     tiempo_fin: tiempoFin.toISOString(),
                     completada: false,
                     costo: costoFabricacion,
-                    duracion_segundos: duracionSegundos, // ← NUEVO: guardar duración
                     creada_en: new Date().toISOString()
                 }])
                 .select()
@@ -408,14 +392,15 @@ class FabricacionManager {
 
         this.produccionesActivas.forEach(fab => {
             const ahora = new Date();
-            const fin = new Date(fab.tiempo_fin);
-            const inicio = new Date(fab.tiempo_inicio);
-            
-            const tiempoTotal = fin - inicio;
-            const tiempoTranscurrido = ahora - inicio;
-            const progreso = Math.min(100, (tiempoTranscurrido / tiempoTotal) * 100);
-            const tiempoRestante = Math.max(0, fin - ahora);
-            const lista = ahora >= fin;
+            const creadaEn = new Date(fab.creada_en || fab.tiempo_inicio);
+            const duracionTotal = 120 * 1000; // 2 minutos en ms
+        
+            const tiempoTranscurrido = ahora - creadaEn;
+            const progreso = Math.min(100, (tiempoTranscurrido / duracionTotal) * 100);
+            const tiempoRestante = Math.max(0, duracionTotal - tiempoTranscurrido);
+            const lista = tiempoTranscurrido >= duracionTotal;
+        
+            console.log(`📊 ${fab.id}: ${tiempoTranscurrido/1000}s / ${duracionTotal/1000}s = ${progreso.toFixed(1)}%`);
             
             const minutosRestantes = Math.floor(tiempoRestante / 60000);
             const segundosRestantes = Math.floor((tiempoRestante % 60000) / 1000);
