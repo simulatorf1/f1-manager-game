@@ -140,11 +140,79 @@
             `;
         }
         
+        // Script de arranque rápido (OPCIONAL - descomentar para auto-login)
+        /*
+        async function quickStart() {
+            console.log('🚀 Inicio rápido del juego');
+            
+            // Verificar que Supabase está listo
+            if (!window.supabase || !window.supabase.auth) {
+                console.error('❌ Supabase no está disponible');
+                return;
+            }
+            
+            // Verificar si ya hay sesión
+            const { data: { session } } = await window.supabase.auth.getSession();
+            if (session) {
+                console.log('✅ Ya hay sesión activa');
+                return;
+            }
+            
+            try {
+                // 1. Intentar iniciar sesión con demo
+                const { data: signInData, error: signInError } = await window.supabase.auth.signInWithPassword({
+                    email: 'demo@f1manager.com',
+                    password: 'demo123'
+                });
+                
+                if (!signInError) {
+                    console.log('✅ Sesión demo iniciada');
+                    location.reload();
+                    return;
+                }
+                
+                // 2. Si no existe, crear usuario demo
+                console.log('📝 Creando usuario demo...');
+                const { data: user, error: signUpError } = await window.supabase.auth.signUp({
+                    email: 'demo@f1manager.com',
+                    password: 'demo123',
+                    options: {
+                        data: { username: 'Demo Manager' },
+                        emailRedirectTo: window.location.origin
+                    }
+                });
+                
+                if (signUpError) {
+                    console.error('❌ Error creando demo:', signUpError.message);
+                    return;
+                }
+                
+                console.log('✅ Usuario demo creado:', user);
+                alert('Usuario demo creado. Usa: demo@f1manager.com / demo123');
+                
+            } catch (error) {
+                console.error('❌ Error en quickStart:', error);
+            }
+        }
+        
+        // Ejecutar después de que todo esté cargado
+        window.addEventListener('DOMContentLoaded', () => {
+            // Esperar a que Supabase esté listo
+            const checkSupabase = setInterval(() => {
+                if (window.supabase && window.supabase.auth) {
+                    clearInterval(checkSupabase);
+                    // Descomentar para auto-login con demo
+                    // quickStart();
+                }
+            }, 500);
+        });
+        */
+        
         // Debug helper
         window.debugF1 = {
             resetDemo: async () => {
                 localStorage.clear();
-                await supabase.auth.signOut();
+                await window.supabase?.auth?.signOut();
                 location.reload();
             },
             checkTables: async () => {
@@ -152,19 +220,40 @@
                 const tables = ['escuderias', 'piezas_almacen', 'fabricacion_actual', 'coches_stats'];
                 for (let table of tables) {
                     try {
-                        const { data, error } = await supabase
+                        const { data, error } = await window.supabase
                             .from(table)
                             .select('count', { count: 'exact', head: true });
-                        console.log(`${table}:`, error ? '❌ Error' : `✅ ${data} registros`);
+                        if (error) {
+                            console.log(`${table}: ❌ Error - ${error.message}`);
+                        } else {
+                            console.log(`${table}: ✅ ${data} registros`);
+                        }
                     } catch (e) {
                         console.log(`${table}: ❌ No existe`);
                     }
                 }
             },
-            createTestData: async () => {
+            createDemo: async () => {
+                if (!window.supabase || !window.supabase.auth) {
+                    console.error('❌ Supabase no disponible');
+                    return;
+                }
+                
                 try {
-                    // Crear usuario demo
-                    const { data: user, error: signUpError } = await supabase.auth.signUp({
+                    // Intentar iniciar sesión
+                    const { error: signInError } = await window.supabase.auth.signInWithPassword({
+                        email: 'demo@f1manager.com',
+                        password: 'demo123'
+                    });
+                    
+                    if (!signInError) {
+                        console.log('✅ Sesión iniciada');
+                        location.reload();
+                        return;
+                    }
+                    
+                    // Crear usuario
+                    const { error: signUpError } = await window.supabase.auth.signUp({
                         email: 'demo@f1manager.com',
                         password: 'demo123',
                         options: {
@@ -172,26 +261,16 @@
                         }
                     });
                     
-                    if (signUpError && signUpError.message.includes('already registered')) {
-                        // Iniciar sesión si ya existe
-                        const { data: signInData } = await supabase.auth.signInWithPassword({
-                            email: 'demo@f1manager.com',
-                            password: 'demo123'
-                        });
-                        console.log('✅ Sesión iniciada:', signInData.user.email);
-                        location.reload();
-                    } else if (user) {
-                        console.log('✅ Usuario creado:', user.user.email);
-                        location.reload();
+                    if (signUpError) {
+                        console.error('❌ Error:', signUpError.message);
+                    } else {
+                        console.log('✅ Usuario creado. Usa: demo@f1manager.com / demo123');
                     }
                 } catch (error) {
-                    console.error('Error:', error);
+                    console.error('❌ Error:', error);
                 }
             }
         };
     </script>
-    
-    <!-- Script de arranque rápido (opcional) -->
-    <script src="js/quick-start.js" defer></script>
 </body>
 </html>
