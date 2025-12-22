@@ -636,11 +636,11 @@ class TabManager {
         if (!container || !window.f1Manager?.escuderia?.id) return;
 
         try {
-            // Usar la tabla correcta: piezas_almacen
             const { data: piezas, error } = await supabase
                 .from('piezas_almacen')
                 .select('*')
                 .eq('escuderia_id', window.f1Manager.escuderia.id)
+                // .eq('estado', 'disponible')  // ← Filtra por estado si quieres
                 .order('fabricada_en', { ascending: false });
             
             if (error) throw error;
