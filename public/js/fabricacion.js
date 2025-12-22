@@ -174,6 +174,23 @@ class FabricacionManager {
 
             console.log('✅ Fabricación creada:', nuevaFabricacion);
 
+            // Después de crear la fabricación, verifícala
+            const { data: fabricacionVerificada, error: verError } = await supabase
+                .from('fabricacion_actual')
+                .select('tiempo_inicio, tiempo_fin')
+                .eq('id', nuevaFabricacion.id)
+                .single();
+    
+            if (!verError && fabricacionVerificada) {
+                console.log('📋 BD dice:');
+                console.log('Inicio en BD:', fabricacionVerificada.tiempo_inicio);
+                console.log('Fin en BD:', fabricacionVerificada.tiempo_fin);
+        
+                const inicioBD = new Date(fabricacionVerificada.tiempo_inicio);
+                const finBD = new Date(fabricacionVerificada.tiempo_fin);
+                console.log('Diferencia BD (segundos):', (finBD - inicioBD) / 1000);
+            }    
+
             // 7. Añadir a lista local
             this.produccionesActivas.push(nuevaFabricacion);
 
@@ -378,10 +395,15 @@ class FabricacionManager {
     }
 
     actualizarUIProduccion() {
+        console.log('🔄 Actualizando UI de producción');
         const container = document.getElementById('produccion-actual');
-        if (!container) return;
+        if (!container) {
+            console.log('❌ No se encontró #produccion-actual');
+            return;
+        }
 
         if (this.produccionesActivas.length === 0) {
+            console.log('ℹ️ No hay producciones activas');
             container.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-industry"></i>
@@ -392,6 +414,8 @@ class FabricacionManager {
             return;
         }
 
+        console.log(`📋 ${this.produccionesActivas.length} producciones activas:`);
+        
         let html = `
             <div class="produccion-header">
                 <h3><i class="fas fa-industry"></i> Producción en curso</h3>
@@ -405,11 +429,23 @@ class FabricacionManager {
             const fin = new Date(fab.tiempo_fin);
             const inicio = new Date(fab.tiempo_inicio);
             
+            console.log(`📦 Fabricación ${fab.id}:`, {
+                area: fab.area,
+                tiempo_inicio: fab.tiempo_inicio,
+                tiempo_fin: fab.tiempo_fin,
+                inicio_parsed: inicio.toString(),
+                fin_parsed: fin.toString(),
+                ahora: ahora.toString()
+            });
+            
             const tiempoTotal = fin - inicio;
             const tiempoTranscurrido = ahora - inicio;
             const progreso = Math.min(100, (tiempoTranscurrido / tiempoTotal) * 100);
             const tiempoRestante = fin - ahora;
             const lista = ahora >= fin;
+            
+            console.log(`   Tiempo restante: ${tiempoRestante}ms, lista: ${lista}`);
+
             const minutosRestantes = Math.max(0, Math.floor(tiempoRestante / 60000));
             const segundosRestantes = Math.max(0, Math.floor((tiempoRestante % 60000) / 1000));
 
@@ -448,11 +484,9 @@ class FabricacionManager {
             `;
         });
 
-        html += `</div>`; // Cerrar fabricaciones-lista
-
+        html += `</div>`;
         container.innerHTML = html;
     }
-
     formatearTiempo(milisegundos) {
         const segundos = Math.floor(milisegundos / 1000);
         const minutos = Math.floor(segundos / 60);
