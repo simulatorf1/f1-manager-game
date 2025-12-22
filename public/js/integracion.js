@@ -27,13 +27,16 @@ class IntegracionManager {
 
     async verificarYNotificarPiezasListas() {
         try {
-            // Solo verificar fabricaciones completadas
-            // NO usamos 'procesada_almacen' porque esa columna NO EXISTE
+            // Verificar SOLO fabricaciones completadas en los últimos 2 minutos
+            const dosMinutosAtras = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+            
             const { data: fabricacionesListas, error } = await supabase
                 .from('fabricacion_actual')
                 .select('*')
-                .eq('completada', true)  // ÚNICA condición válida
-                .limit(5);
+                .eq('completada', true)
+                .gte('creada_en', dosMinutosAtras)  // ← SOLO recientes
+                .order('creada_en', { ascending: false })
+                .limit(3);
 
             if (error) {
                 console.log('⚠️ Error en verificación:', error.message);
@@ -41,7 +44,7 @@ class IntegracionManager {
             }
 
             if (fabricacionesListas && fabricacionesListas.length > 0) {
-                console.log(`🔔 ${fabricacionesListas.length} fabricación(es) completada(s)`);
+                console.log(`🔔 ${fabricacionesListas.length} fabricación(es) recientemente completada(s)`);
                 
                 // Filtrar solo las que no hemos notificado recientemente
                 const nuevas = fabricacionesListas.filter(fab => {
