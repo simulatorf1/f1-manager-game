@@ -415,3 +415,51 @@ window.crearFabricacionManager = function() {
 };
 
 console.log('✅ Clase FabricacionManager registrada');
+
+// ========================
+// GARANTIZAR QUE EL MANAGER EXISTE
+// ========================
+
+// 1. Función para obtener o crear el manager
+window.getFabricacionManager = function() {
+    if (!window.fabricacionManager) {
+        console.log('🔧 Creando fabricacionManager...');
+        window.fabricacionManager = new FabricacionManager();
+        
+        // Si ya tenemos escudería, inicializamos
+        if (window.f1Manager && window.f1Manager.escuderia) {
+            window.fabricacionManager.inicializar(window.f1Manager.escuderia.id);
+        }
+    }
+    return window.fabricacionManager;
+};
+
+// 2. Crear alias para compatibilidad con los botones existentes
+window.ensureFabricacionManager = function() {
+    const manager = window.getFabricacionManager();
+    
+    // Crear alias para los botones que usan nombres incorrectos
+    if (!manager.collectPiece) {
+        manager.collectPiece = manager.recogerPieza.bind(manager);
+        console.log('✅ Alias creado: collectPiece -> recogerPieza');
+    }
+    
+    if (!manager.recogerPieza) {
+        console.error('❌ ERROR CRÍTICO: recogerPieza no existe en el manager');
+        console.log('Métodos disponibles:', Object.keys(manager));
+    }
+    
+    return manager;
+};
+
+// 3. Verificar periódicamente que el manager está listo
+setInterval(() => {
+    if (window.fabricacionManager && window.fabricacionManager.recogerPieza) {
+        console.log('✅ fabricacionManager listo');
+    } else if (window.FabricacionManager) {
+        // Si la clase existe pero no la instancia, crearla
+        window.ensureFabricacionManager();
+    }
+}, 2000);
+
+console.log('🛡️ Sistema de garantía de fabricacionManager activado');
