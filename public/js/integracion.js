@@ -1,86 +1,111 @@
 // ========================
-// INTEGRACION.JS - Conexión entre sistemas
+// INTEGRACION.JS - Conexión entre sistemas (VERSIÓN CORREGIDA)
 // ========================
 
 class IntegracionManager {
     constructor() {
         this.integrationTimers = {};
+        this.ultimasNotificaciones = {}; // Para evitar notificaciones duplicadas
     }
 
     async inicializar(escuderiaId) {
-        console.log('🔗 Inicializando integración entre sistemas...');
+        console.log('🔗 Inicializando integración entre sistemas (modo seguro)...');
         
-        // 1. Sincronizar fabricación con almacén
-        this.integrationTimers.fabricacion = setInterval(() => {
-            this.sincronizarFabricacionAlmacen();
-        }, 5000); // Cada 5 segundos
+        // 1. Sistema de notificaciones para piezas listas (cada 10 segundos)
+        this.integrationTimers.notificaciones = setInterval(() => {
+            this.verificarYNotificarPiezasListas();
+        }, 10000);
 
-        // 2. Sincronizar estadísticas del coche
+        // 2. Sincronizar estadísticas del coche (cada 30 segundos)
         this.integrationTimers.stats = setInterval(() => {
             this.sincronizarEstadisticas();
-        }, 10000); // Cada 10 segundos
+        }, 30000);
 
+        console.log('✅ Integración inicializada en modo seguro');
         return true;
     }
 
-    async sincronizarFabricacionAlmacen() {
+    async verificarYNotificarPiezasListas() {
         try {
-            // Verificar si hay piezas listas para recoger
+            // Solo verificar fabricaciones completadas
+            // NO usamos 'procesada_almacen' porque esa columna NO EXISTE
             const { data: fabricacionesListas, error } = await supabase
                 .from('fabricacion_actual')
                 .select('*')
-                .eq('completada', true)
-                .eq('procesada_almacen', false) // Necesitarías añadir este campo
+                .eq('completada', true)  // ÚNICA condición válida
                 .limit(5);
 
-            if (error) throw error;
+            if (error) {
+                console.log('⚠️ Error en verificación:', error.message);
+                return;
+            }
 
             if (fabricacionesListas && fabricacionesListas.length > 0) {
-                console.log(`📦 ${fabricacionesListas.length} piezas listas para procesar en almacén`);
+                console.log(`🔔 ${fabricacionesListas.length} fabricación(es) completada(s)`);
                 
-                // Procesar cada fabricación
-                for (const fabricacion of fabricacionesListas) {
-                    await this.procesarPiezaParaAlmacen(fabricacion);
+                // Filtrar solo las que no hemos notificado recientemente
+                const nuevas = fabricacionesListas.filter(fab => {
+                    const key = `fab_${fab.id}`;
+                    const yaNotificada = this.ultimasNotificaciones[key];
+                    return !yaNotificada;
+                });
+
+                // Notificar cada nueva fabricación lista
+                for (const fabricacion of nuevas) {
+                    await this.notificarPiezaLista(fabricacion);
+                    
+                    // Marcar como notificada (por 5 minutos)
+                    const key = `fab_${fabricacion.id}`;
+                    this.ultimasNotificaciones[key] = true;
+                    
+                    // Limpiar después de 5 minutos
+                    setTimeout(() => {
+                        delete this.ultimasNotificaciones[key];
+                    }, 300000);
                 }
             }
 
         } catch (error) {
-            console.error('❌ Error sincronizando fabricación-almacén:', error);
+            console.error('❌ Error verificando piezas:', error);
         }
     }
 
-    async procesarPiezaParaAlmacen(fabricacion) {
+    async notificarPiezaLista(fabricacion) {
         try {
-            // 1. Crear pieza en almacén
-            const { error: createError } = await supabase
-                .from('piezas_almacen')
-                .insert([{
-                    escuderia_id: fabricacion.escuderia_id,
-                    area: fabricacion.area,
-                    nivel: fabricacion.nivel,
-                    estado: 'disponible',
-                    puntos_base: 10,
-                    fabricada_en: new Date().toISOString(),
-                    origen_fabricacion_id: fabricacion.id
-                }]);
+            console.log(`📢 Notificando: ${fabricacion.area} está lista para recoger`);
+            
+            // 1. Mostrar notificación en pantalla
+            if (window.f1Manager && window.f1Manager.showNotification) {
+                window.f1Manager.showNotification(
+                    `✅ ¡Pieza de ${fabricacion.area} lista! Ve a "Producción" para recogerla.`,
+                    'success'
+                );
+            }
 
-            if (createError) throw createError;
+            // 2. Actualizar alerta en dashboard (si existe)
+            const alerta = document.getElementById('alerta-almacen');
+            if (alerta) {
+                alerta.style.display = 'flex';
+                alerta.innerHTML = `
+                    <i class="fas fa-bell"></i>
+                    <span>¡Pieza de ${fabricacion.area} lista para recoger!</span>
+                `;
+                
+                // Ocultar después de 15 segundos
+                setTimeout(() => {
+                    if (alerta) alerta.style.display = 'none';
+                }, 15000);
+            }
 
-            // 2. Marcar fabricación como procesada
-            const { error: updateError } = await supabase
-                .from('fabricacion_actual')
-                .update({ procesada_almacen: true })
-                .eq('id', fabricacion.id);
-
-            if (updateError) throw updateError;
-
-            console.log(`✅ Pieza ${fabricacion.area} procesada para almacén`);
-
-            // 3. Notificar al usuario
-            this.notificarPiezaLista(fabricacion.area);
+            // 3. Forzar actualización del monitor de producción
+            if (window.f1Manager && window.f1Manager.updateProductionMonitor) {
+                setTimeout(() => {
+                    window.f1Manager.updateProductionMonitor();
+                }, 1000);
+            }
 
         } catch (error) {
-            console.error('❌ Error procesando pieza:', error);
+            console.error('❌ Error en notificación:', error);
         }
     }
 
@@ -93,25 +118,26 @@ class IntegracionManager {
                 .order('actualizado_en', { ascending: false })
                 .limit(1);
 
-            if (error) throw error;
+            if (error) {
+                console.log('⚠️ Error chequeando estadísticas:', error.message);
+                return;
+            }
 
             if (cambios && cambios.length > 0) {
                 const ultimoCambio = new Date(cambios[0].actualizado_en);
                 const ahora = new Date();
                 const diferencia = ahora - ultimoCambio;
 
-                // Si hay cambios recientes (últimos 30 segundos)
-                if (diferencia < 30000) {
-                    console.log('📊 Actualizando estadísticas del coche...');
+                // Si hay cambios recientes (últimos 45 segundos)
+                if (diferencia < 45000) {
+                    console.log('📊 Sincronizando estadísticas del coche...');
                     
                     // Actualizar en main.js si existe
                     if (window.f1Manager && window.f1Manager.loadCarStatus) {
-                        await window.f1Manager.loadCarStatus();
-                    }
-
-                    // Actualizar en taller si está activo
-                    if (window.tabManager && window.tabManager.currentTab === 'taller') {
-                        this.actualizarTaller();
+                        // Pequeño delay para no saturar
+                        setTimeout(() => {
+                            window.f1Manager.loadCarStatus();
+                        }, 2000);
                     }
                 }
             }
@@ -121,54 +147,47 @@ class IntegracionManager {
         }
     }
 
-    notificarPiezaLista(area) {
-        // Mostrar notificación
-        if (window.f1Manager && window.f1Manager.showNotification) {
-            window.f1Manager.showNotification(`✅ Pieza de ${area} lista en almacén`, 'success');
-        }
-
-        // Actualizar almacén si está activo
-        if (window.tabManager && window.tabManager.currentTab === 'almacen') {
-            if (window.tabManager.loadAlmacenPiezas) {
-                window.tabManager.loadAlmacenPiezas();
+    // Función auxiliar para actualizar el taller cuando sea necesario
+    actualizarTallerSiEsNecesario() {
+        // Solo actualizar si la pestaña del taller está activa
+        if (window.tabManager && window.tabManager.currentTab === 'taller') {
+            if (window.tabManager.loadTallerAreas) {
+                setTimeout(() => {
+                    window.tabManager.loadTallerAreas();
+                }, 1500);
             }
-        }
-
-        // Mostrar alerta en dashboard
-        const alerta = document.getElementById('alerta-almacen');
-        if (alerta) {
-            alerta.style.display = 'flex';
-            alerta.innerHTML = `
-                <i class="fas fa-bell"></i>
-                <span>¡Nueva pieza de ${area} disponible en almacén!</span>
-            `;
-        }
-    }
-
-    actualizarTaller() {
-        // Actualizar áreas del taller
-        const container = document.getElementById('taller-areas');
-        if (!container || !window.f1Manager || !window.f1Manager.carStats) return;
-
-        // Esta función debería ser llamada desde tabManager
-        if (window.tabManager && window.tabManager.loadTallerAreas) {
-            window.tabManager.loadTallerAreas();
         }
     }
 
     detener() {
-        // Detener todos los timers
-        Object.values(this.integrationTimers).forEach(timer => {
-            clearInterval(timer);
+        // Detener todos los timers de forma segura
+        Object.keys(this.integrationTimers).forEach(key => {
+            if (this.integrationTimers[key]) {
+                clearInterval(this.integrationTimers[key]);
+                console.log(`⏹️ Timer ${key} detenido`);
+            }
         });
         this.integrationTimers = {};
+        this.ultimasNotificaciones = {};
+        console.log('🛑 Sistema de integración completamente detenido');
     }
 }
 
 // Inicializar globalmente
 window.IntegracionManager = IntegracionManager;
 
+// Inicializar cuando el DOM esté listo Y Supabase esté disponible
 document.addEventListener('DOMContentLoaded', () => {
-    window.integracionManager = new IntegracionManager();
-    console.log('✅ IntegracionManager inicializado');
+    // Esperar a que Supabase esté listo
+    const esperarSupabase = setInterval(() => {
+        if (window.supabase && window.supabase.from) {
+            clearInterval(esperarSupabase);
+            window.integracionManager = new IntegracionManager();
+            console.log('✅ IntegracionManager inicializado correctamente');
+            
+            // No llamamos a inicializar aquí, main.js lo hará cuando tenga la escudería
+        }
+    }, 100);
 });
+
+console.log('✅ Clase IntegracionManager registrada');
