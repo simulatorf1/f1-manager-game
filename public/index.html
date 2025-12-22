@@ -44,7 +44,10 @@
                 'js/auth.js',      
                 'js/main.js',       
                 'js/fabricacion.js', 
-                'js/tabs.js'
+                'js/tabs.js',
+                'js/almacen.js',
+                'js/integracion.js',
+                'js/init-db.js'
             ];
         
             // Cargar secuencialmente
@@ -54,6 +57,7 @@
         function cargarScriptSecuencial(scripts, index) {
             if (index >= scripts.length) {
                 console.log('✅ Todos los scripts cargados');
+                iniciarAplicacion();
                 return;
             }
         
@@ -70,6 +74,124 @@
         
             document.body.appendChild(script);
         }
+        
+        // Función principal de inicio
+        async function iniciarAplicacion() {
+            console.log('🚀 Iniciando aplicación F1 Manager...');
+            
+            // Verificar que Supabase está cargado
+            if (!window.supabase) {
+                console.error('❌ Supabase no está disponible');
+                mostrarErrorCritico('No se pudo conectar con la base de datos');
+                return;
+            }
+            
+            console.log('✅ Supabase listo para usar');
+            
+            // Verificar sesión
+            const { data: { session } } = await window.supabase.auth.getSession();
+            
+            if (session) {
+                console.log('✅ Usuario autenticado:', session.user.email);
+                
+                // Esperar a que main.js se cargue
+                const checkF1Manager = setInterval(() => {
+                    if (window.F1Manager) {
+                        clearInterval(checkF1Manager);
+                        window.f1Manager = new F1Manager(session.user);
+                        window.f1Manager.init();
+                    }
+                }, 100);
+                
+            } else {
+                console.log('👤 No hay sesión, mostrar login');
+                // auth.js se encargará del login
+            }
+        }
+        
+        function mostrarErrorCritico(mensaje) {
+            document.body.innerHTML = `
+                <div style="
+                    min-height: 100vh;
+                    background: #15151e;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    color: white;
+                    text-align: center;
+                    padding: 20px;
+                ">
+                    <div>
+                        <h1 style="color: #e10600; margin-bottom: 20px;">❌ ERROR CRÍTICO</h1>
+                        <p>${mensaje}</p>
+                        <button onclick="location.reload()" style="
+                            margin-top: 20px;
+                            padding: 10px 20px;
+                            background: #e10600;
+                            color: white;
+                            border: none;
+                            border-radius: 5px;
+                            cursor: pointer;
+                        ">
+                            Reintentar
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Debug helper
+        window.debugF1 = {
+            resetDemo: async () => {
+                localStorage.clear();
+                await supabase.auth.signOut();
+                location.reload();
+            },
+            checkTables: async () => {
+                console.log('📊 Verificando tablas...');
+                const tables = ['escuderias', 'piezas_almacen', 'fabricacion_actual', 'coches_stats'];
+                for (let table of tables) {
+                    try {
+                        const { data, error } = await supabase
+                            .from(table)
+                            .select('count', { count: 'exact', head: true });
+                        console.log(`${table}:`, error ? '❌ Error' : `✅ ${data} registros`);
+                    } catch (e) {
+                        console.log(`${table}: ❌ No existe`);
+                    }
+                }
+            },
+            createTestData: async () => {
+                try {
+                    // Crear usuario demo
+                    const { data: user, error: signUpError } = await supabase.auth.signUp({
+                        email: 'demo@f1manager.com',
+                        password: 'demo123',
+                        options: {
+                            data: { username: 'Demo Manager' }
+                        }
+                    });
+                    
+                    if (signUpError && signUpError.message.includes('already registered')) {
+                        // Iniciar sesión si ya existe
+                        const { data: signInData } = await supabase.auth.signInWithPassword({
+                            email: 'demo@f1manager.com',
+                            password: 'demo123'
+                        });
+                        console.log('✅ Sesión iniciada:', signInData.user.email);
+                        location.reload();
+                    } else if (user) {
+                        console.log('✅ Usuario creado:', user.user.email);
+                        location.reload();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+        };
     </script>
+    
+    <!-- Script de arranque rápido (opcional) -->
+    <script src="js/quick-start.js" defer></script>
 </body>
 </html>
