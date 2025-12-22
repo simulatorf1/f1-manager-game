@@ -18,10 +18,10 @@ class AlmacenManager {
     async cargarPiezas() {
         try {
             const { data, error } = await supabase
-                .from('piezas_almacen')  // ← TABLA CORRECTA
+                .from('piezas_almacen')
                 .select('*')
                 .eq('escuderia_id', this.escuderiaId)
-                .eq('equipada', false)
+                .eq('estado', 'disponible')  // ← CAMBIA 'equipada' por 'estado'
                 .order('creada_en', { ascending: false });
 
             if (error) throw error;
