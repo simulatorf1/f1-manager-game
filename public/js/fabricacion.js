@@ -153,21 +153,56 @@ class FabricacionManager {
                 return false;
             }
 
-            // 3. Crear pieza en almacén
+            // 3. CONVERTIR el nombre del área al ID correcto
+            let areaId = null;
+            
+            // Buscar en CAR_AREAS qué ID corresponde a este nombre
+            const areaConfig = window.CAR_AREAS.find(a => a.name === fabricacion.area);
+            
+            if (areaConfig) {
+                areaId = areaConfig.id; // Ej: 'suelo', 'motor', etc.
+                console.log(`🗺️ Conversión área: "${fabricacion.area}" -> "${areaId}"`);
+            } else {
+                // Fallback: intentar extraer el ID del nombre
+                console.warn(`⚠️ Área no encontrada en CAR_AREAS: "${fabricacion.area}"`);
+                
+                // Mapeo manual de emergencia
+                const mapeoEmergencia = {
+                    'Suelo y Difusor': 'suelo',
+                    'Motor': 'motor',
+                    'Alerón Delantero': 'aleron_delantero',
+                    'Caja de Cambios': 'caja_cambios',
+                    'Pontones': 'pontones',
+                    'Suspensión': 'suspension',
+                    'Alerón Trasero': 'aleron_trasero',
+                    'Chasis': 'chasis',
+                    'Frenos': 'frenos',
+                    'Volante': 'volante',
+                    'Electrónica': 'electronica'
+                };
+                
+                areaId = mapeoEmergencia[fabricacion.area] || 'motor';
+                console.log(`🔄 Usando mapeo de emergencia: "${fabricacion.area}" -> "${areaId}"`);
+            }
+
+            // 4. Crear pieza en almacén con el ID CORRECTO
             const { error: piezaError } = await supabase
                 .from('piezas_almacen')
                 .insert([{
                     escuderia_id: fabricacion.escuderia_id,
-                    area: fabricacion.area,
+                    area: areaId,  // <-- ¡USAR EL ID, NO EL NOMBRE!
                     nivel: fabricacion.nivel,
                     estado: 'disponible',
                     puntos_base: 10,
                     fabricada_en: new Date().toISOString()
                 }]);
 
-            if (piezaError) throw piezaError;
+            if (piezaError) {
+                console.error('❌ Error insertando pieza:', piezaError);
+                throw piezaError;
+            }
 
-            // 4. Marcar fabricación como completada
+            // 5. Marcar fabricación como completada
             const { error: updateError } = await supabase
                 .from('fabricacion_actual')
                 .update({ completada: true })
@@ -175,26 +210,38 @@ class FabricacionManager {
 
             if (updateError) throw updateError;
 
-            // 5. Actualizar progreso del coche
+            // 6. Actualizar progreso del coche (pasar el NOMBRE, no el ID)
             await this.actualizarProgresoCoche(fabricacion.area);
 
-            // 6. Remover de lista local
+            // 7. Remover de lista local
             this.produccionesActivas = this.produccionesActivas.filter(f => f.id !== fabricacionId);
 
-            // 7. Limpiar timer
+            // 8. Limpiar timer
             if (this.timers[fabricacionId]) {
                 clearInterval(this.timers[fabricacionId]);
                 delete this.timers[fabricacionId];
             }
 
-            // 8. Actualizar UI
+            // 9. Actualizar UI
             this.actualizarUIProduccion();
 
-            console.log('✅ Pieza recogida y almacenada');
+            console.log(`✅ Pieza "${areaId}" recogida y almacenada`);
+            
+            // 10. Mostrar notificación
+            if (window.f1Manager && window.f1Manager.showNotification) {
+                window.f1Manager.showNotification(`✅ Pieza de ${fabricacion.area} recogida`, 'success');
+            }
+            
             return true;
 
         } catch (error) {
             console.error('❌ Error recogiendo pieza:', error);
+            
+            // Mostrar error al usuario
+            if (window.f1Manager && window.f1Manager.showNotification) {
+                window.f1Manager.showNotification('❌ Error al recoger la pieza', 'error');
+            }
+            
             return false;
         }
     }
