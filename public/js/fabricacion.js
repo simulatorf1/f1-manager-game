@@ -132,7 +132,8 @@ class FabricacionManager {
 
             const tiempoInicio = new Date();
             const tiempoFin = new Date();
-            tiempoFin.setSeconds(tiempoFin.getSeconds() + 120); // 2 minutos
+            const ahora = new Date();
+            const tiempoFin = new Date(ahora.getTime() + (120 * 1000)); // 120 segundos
             
             // 5. Crear nueva fabricación
             const { data: nuevaFabricacion, error: insertError } = await supabase
