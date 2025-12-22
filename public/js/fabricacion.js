@@ -139,62 +139,64 @@ class FabricacionManager {
     async recogerPieza(fabricacionId) {
         try {
             // 1. Buscar la fabricación
-            const fabricacion = this.produccionesActivas.find(f => f.id === fabricacionId);
-            if (!fabricacion) {
-                console.error('❌ Fabricación no encontrada');
-                return false;
-            }
-
-            // 2. Verificar que está lista
-            const ahora = new Date();
-            const fin = new Date(fabricacion.tiempo_fin);
-            if (ahora < fin) {
-                console.error('❌ La pieza aún no está lista');
-                return false;
-            }
-
-            // 3. Marcar como completada
-            const { error: updateError } = await supabase
+            const { data: fabricacion, error: fabError } = await supabase
                 .from('fabricacion_actual')
-                .update({ completada: true })
-                .eq('id', fabricacionId);
+                .select('*')
+                .eq('id', fabricacionId)
+                .single();
+            
+            if (fabError || !fabricacion) throw new Error('Fabricación no encontrada');
 
-            if (updateError) throw updateError;
-
-            // 4. Crear pieza en almacén
-            const { error: piezaError } = await supabase
-                .from('piezas_almacen')
+            // 2. Crear pieza en almacén (usando la tabla correcta)
+            const { data: nuevaPieza, error: piezaError } = await supabase
+                .from('piezas_almacen')  // ← TABLA CORRECTA
                 .insert([{
-                    escuderia_id: this.escuderiaId,
+                    escuderia_id: fabricacion.escuderia_id,
                     area: fabricacion.area,
                     nivel: fabricacion.nivel,
                     estado: 'disponible',
                     puntos_base: 10,
                     fabricada_en: new Date().toISOString()
-                }]);
+                }])
+                .select()
+                .single();
 
             if (piezaError) throw piezaError;
 
-            // 5. Actualizar progreso del coche
-            await this.actualizarProgresoCoche(fabricacion.area);
+            // 3. Marcar fabricación como completada
+            const { error: updateError } = await supabase
+                .from('fabricacion_actual')
+                .update({ 
+                    completada: true,
+                    pieza_id: nuevaPieza.id 
+                })
+                .eq('id', fabricacionId);
 
-            // 6. Remover de lista local
+            if (updateError) throw updateError;
+
+            // 4. Actualizar lista local
             this.produccionesActivas = this.produccionesActivas.filter(f => f.id !== fabricacionId);
 
-            // 7. Limpiar timer
-            if (this.timers[fabricacionId]) {
-                clearInterval(this.timers[fabricacionId]);
-                delete this.timers[fabricacionId];
+            // 5. Mostrar notificación
+            if (window.f1Manager && window.f1Manager.showNotification) {
+                window.f1Manager.showNotification(`✅ Pieza de ${fabricacion.area} recogida`, 'success');
             }
 
-            // 8. Actualizar UI
+            // 6. Actualizar almacén si está activo
+            if (window.tabManager && window.tabManager.currentTab === 'almacen') {
+                window.tabManager.loadAlmacenPiezas();
+            }
+
+            // 7. Actualizar UI
             this.actualizarUIProduccion();
 
-            console.log('✅ Pieza recogida y almacenada');
             return true;
 
         } catch (error) {
             console.error('❌ Error recogiendo pieza:', error);
+            if (window.f1Manager && window.f1Manager.showNotification) {
+                window.f1Manager.showNotification('❌ Error al recoger pieza', 'error');
+            }
             return false;
         }
     }
