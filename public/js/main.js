@@ -611,28 +611,55 @@ class F1Manager {
     async inicializarSistemasIntegrados() {
         console.log('🔗 Inicializando sistemas integrados...');
         
-        if (!this.escuderia) return;
+        if (!this.escuderia) {
+            console.error('❌ No hay escudería para inicializar sistemas');
+            return;
+        }
+        
+        // 1. Crear instancia de fabricacionManager si no existe
+        if (window.FabricacionManager && !window.fabricacionManager) {
+            console.log('🔧 Creando fabricacionManager...');
+            window.fabricacionManager = new window.FabricacionManager();
+        }
         
         if (window.fabricacionManager && typeof window.fabricacionManager.inicializar === 'function') {
             await window.fabricacionManager.inicializar(this.escuderia.id);
             console.log('✅ Sistema de fabricación inicializado');
         } else {
-            console.error('❌ fabricacionManager no disponible');
+            console.error('❌ fabricacionManager no disponible - creando nueva instancia');
+            // Intentar crear de nuevo
+            if (window.FabricacionManager) {
+                window.fabricacionManager = new window.FabricacionManager();
+                await window.fabricacionManager.inicializar(this.escuderia.id);
+                console.log('✅ Sistema de fabricación inicializado (segundo intento)');
+            }
+        }
+        
+        // 2. Crear instancia de almacenManager si no existe
+        if (window.AlmacenManager && !window.almacenManager) {
+            console.log('🔧 Creando almacenManager...');
+            window.almacenManager = new window.AlmacenManager();
         }
         
         if (window.almacenManager && typeof window.almacenManager.inicializar === 'function') {
             await window.almacenManager.inicializar(this.escuderia.id);
             console.log('✅ Sistema de almacén inicializado');
         } else {
-            console.error('❌ almacenManager no disponible');
+            console.error('❌ almacenManager no disponible - creando nueva instancia');
+            if (window.AlmacenManager) {
+                window.almacenManager = new window.AlmacenManager();
+                await window.almacenManager.inicializar(this.escuderia.id);
+                console.log('✅ Sistema de almacén inicializado (segundo intento)');
+            }
         }
         
+        // 3. Integración (opcional)
         if (window.IntegracionManager) {
             window.integracionManager = new window.IntegracionManager();
             await window.integracionManager.inicializar(this.escuderia.id);
             console.log('✅ Sistema de integración inicializado');
         } else {
-            console.warn('⚠️ IntegracionManager no cargado');
+            console.warn('⚠️ IntegracionManager no cargado - continuando sin integración');
         }
         
         this.iniciarTimersAutomaticos();
