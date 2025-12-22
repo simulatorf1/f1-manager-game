@@ -98,7 +98,7 @@ class FabricacionManager {
             // 2. Crear nueva fabricación (30 segundos para pruebas)
             const tiempoInicio = new Date();
             const tiempoFin = new Date();
-            tiempoFin.setSeconds(tiempoFin.getSeconds() + 30); // 30 segundos para pruebas
+            tiempoFin.setSeconds(tiempoFin.getSeconds() + 120); // 120 segundos = 2 minutos
 
             const { data: nuevaFabricacion, error: insertError } = await supabase
                 .from('fabricacion_actual')
@@ -326,9 +326,7 @@ class FabricacionManager {
                 <div class="empty-state">
                     <i class="fas fa-industry"></i>
                     <p>No hay producción en curso</p>
-                    <button class="btn-primary" id="iniciar-fabricacion-btn">
-                        <i class="fas fa-hammer"></i> Iniciar primera fabricación
-                    </button>
+                    <p class="small-text">Ve al Taller para iniciar fabricaciones</p>
                 </div>
             `;
             return;
@@ -336,8 +334,8 @@ class FabricacionManager {
 
         let html = `
             <div class="produccion-header">
-                <h3><i class="fas fa-industry"></i> Fabricaciones en curso</h3>
-                <span class="badge">${this.produccionesActivas.length} activas</span>
+                <h3><i class="fas fa-industry"></i> Producción en curso</h3>
+                <span class="badge">${this.produccionesActivas.length} activa(s)</span>
             </div>
             <div class="fabricaciones-lista">
         `;
@@ -352,17 +350,19 @@ class FabricacionManager {
             const progreso = Math.min(100, (tiempoTranscurrido / tiempoTotal) * 100);
             const tiempoRestante = fin - ahora;
             const lista = ahora >= fin;
+            const minutosRestantes = Math.max(0, Math.floor(tiempoRestante / 60000));
+            const segundosRestantes = Math.max(0, Math.floor((tiempoRestante % 60000) / 1000));
 
             html += `
-                <div class="fabricacion-item ${lista ? 'lista' : ''}">
+                <div class="fabricacion-item ${lista ? 'lista' : 'fabricando'}">
                     <div class="fabricacion-info">
                         <div class="fab-area">
                             <i class="fas fa-cog"></i>
-                            <span>${fab.area} Nivel ${fab.nivel}</span>
+                            <span>${fab.area} • Nivel ${fab.nivel}</span>
                         </div>
                         <div class="fab-estado">
                             <span class="estado-badge ${lista ? 'lista' : 'fabricando'}">
-                                ${lista ? '✅ LISTA' : '🔄 FABRICANDO'}
+                                ${lista ? '✅ LISTA' : '⏳ ' + minutosRestantes.toString().padStart(2, '0') + ':' + segundosRestantes.toString().padStart(2, '0')}
                             </span>
                         </div>
                     </div>
@@ -373,27 +373,22 @@ class FabricacionManager {
                         </div>
                         <div class="fab-tiempo">
                             <i class="far fa-clock"></i>
-                            <span>${lista ? '¡Lista para recoger!' : `Tiempo restante: ${this.formatearTiempo(tiempoRestante)}`}</span>
+                            <span>${lista ? '¡Lista para recoger!' : `Listo en: ${minutosRestantes}m ${segundosRestantes}s`}</span>
                         </div>
                     </div>
                     
+                    ${lista ? `
                     <div class="fab-acciones">
-                        <button class="btn-small btn-success" onclick="window.fabricacionManager.recogerPieza('${fab.id}')" ${!lista ? 'disabled' : ''}>
+                        <button class="btn-recoger-pieza" onclick="window.fabricacionManager.recogerPieza('${fab.id}')">
                             <i class="fas fa-box-open"></i> Recoger Pieza
                         </button>
                     </div>
+                    ` : ''}
                 </div>
             `;
         });
 
-        html += `
-            </div>
-            <div class="fabricacion-footer">
-                <button class="btn-secondary" onclick="window.f1Manager.irAlTaller()">
-                    <i class="fas fa-plus"></i> Iniciar nueva fabricación
-                </button>
-            </div>
-        `;
+        html += `</div>`; // Cerrar fabricaciones-lista
 
         container.innerHTML = html;
     }
