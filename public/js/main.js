@@ -2430,9 +2430,7 @@ class F1Manager {
                                     <div class="empty-state">
                                         <i class="fas fa-industry"></i>
                                         <p>No hay producción en curso</p>
-                                        <button class="btn-primary" id="iniciar-fabricacion-btn">
-                                            <i class="fas fa-hammer"></i> Iniciar primera fabricación
-                                        </button>
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -3000,9 +2998,7 @@ class F1Manager {
                 <div class="empty-state">
                     <i class="fas fa-industry"></i>
                     <p>No hay producción en curso</p>
-                    <button class="btn-primary" id="iniciar-fabricacion-btn">
-                        <i class="fas fa-hammer"></i> Iniciar fabricación
-                    </button>
+
                 </div>
             `;
             
