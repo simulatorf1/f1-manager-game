@@ -596,15 +596,55 @@ class F1Manager {
         // Cargar datos del usuario
         await this.loadUserData();
         
-        // Si no tiene escudería, mostrar tutorial simple
+        // Si no tiene escudería, mostrar formulario simple
         if (!this.escuderia) {
-            await this.mostrarTutorialSimple();
+            await this.mostrarFormularioEscuderiaSimple();  // ← NUEVO MÉTODO
         } else {
             // Si ya tiene escudería, cargar dashboard
             await this.cargarDashboardCompleto();
             
             // Inicializar sistemas
             await this.inicializarSistemasIntegrados();
+        }
+    }
+    
+    // Añade este método después del init():
+    async mostrarFormularioEscuderiaSimple() {
+        const nombre = prompt('🏎️ Ingresa el nombre de tu escudería:');
+        
+        if (nombre && nombre.trim()) {
+            try {
+                const { data: escuderia, error } = await this.supabase
+                    .from('escuderias')
+                    .insert([{
+                        user_id: this.user.id,
+                        nombre: nombre.trim(),
+                        dinero: 5000000,
+                        puntos: 0,
+                        ranking: null,
+                        color_principal: '#e10600',
+                        color_secundario: '#ffffff',
+                        nivel_ingenieria: 1
+                    }])
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                
+                this.escuderia = escuderia;
+                
+                // Crear stats del coche
+                await this.supabase
+                    .from('coches_stats')
+                    .insert([{ escuderia_id: this.escuderia.id }]);
+                
+                // Recargar para mostrar dashboard
+                location.reload();
+                
+            } catch (error) {
+                console.error('Error creando escudería:', error);
+                alert('Error creando la escudería. Intenta con otro nombre.');
+            }
         }
     }
     
