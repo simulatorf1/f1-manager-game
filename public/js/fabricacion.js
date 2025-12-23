@@ -63,9 +63,9 @@ class FabricacionManager {
             if (!produccion) return;
 
             const ahora = new Date();
-            const tiempoInicio = new Date(produccion.tiempo_inicio);
-            const tiempoFin = new Date(new Date(produccion.tiempo_fin).getTime() + 3600000);
-            
+            const tiempoInicio = new Date(fab.tiempo_inicio);
+            const tiempoFin = new Date(new Date(fab.tiempo_fin).getTime() + 3600000);
+            const progreso = Math.min(100, (tiempoTranscurrido / duracionTotal) * 100);
             const duracionTotal = tiempoFin - tiempoInicio;
             const tiempoTranscurrido = ahora - tiempoInicio;
 
