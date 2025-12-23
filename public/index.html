@@ -23,6 +23,9 @@
                     'https://xbnbbmhcveyzrvvmdktg.supabase.co',
                     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg'
                 );
+                console.log('Supabase URL:', supabaseClient.supabaseUrl);
+                console.log('Supabase Key existe:', !!supabaseClient.supabaseKey);
+                console.log('Cliente creado:', supabaseClient);
                 
                 window.supabase = supabaseClient;
                 console.log('✅ Supabase inicializado correctamente');
