@@ -2833,6 +2833,12 @@ class F1Manager {
             clearInterval(this.productionTimer);
         }
         
+        // PRIMERA ejecución con retraso para que el DOM esté listo
+        setTimeout(() => {
+            this.updateProductionMonitor();
+        }, 300); // 300ms es suficiente para que el HTML se renderice
+        
+        // Luego iniciar el intervalo normal cada 5 segundos
         this.productionTimer = setInterval(() => {
             this.updateProductionMonitor();
         }, 5000);
