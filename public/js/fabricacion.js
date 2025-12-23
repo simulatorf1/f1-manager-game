@@ -426,7 +426,7 @@ class FabricacionManager {
         this.produccionesActivas.forEach(fab => {
             const ahora = new Date();
             const tiempoInicio = new Date(fab.tiempo_inicio);
-            const tiempoFin = new Date(fab.tiempo_fin);
+            const tiempoFin = new Date(new Date(fab.tiempo_fin).getTime() + 3600000);
             const duracionTotal = tiempoFin - tiempoInicio;
         
             const tiempoTranscurrido = ahora - tiempoInicio;
