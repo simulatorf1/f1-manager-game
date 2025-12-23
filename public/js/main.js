@@ -571,9 +571,14 @@ async function manejarRegistro() {
         if (escuderiaCheck) {
             console.log('✅ Escudería creada automáticamente:', escuderiaCheck.id);
         } else {
-            console.log('⚠️ Usuario sin escudería. Mostrando tutorial...');
-            this.mostrarTutorialInicial(); // O this.mostrarFormularioEscuderiaSimple();
-            return; // Salimos de la función para no continuar cargando el dashboard
+            console.log('✅ Registro exitoso. Usuario debe confirmar email.');
+            // En lugar de llamar al tutorial aquí, simplemente recarga o redirige
+            setTimeout(() => {
+                // Opción 1: Recargar la página (lo más simple)
+                location.reload();
+                // Opción 2: Redirigir a la página principal
+                // window.location.href = '/';
+            }, 1500); // Pequeño delay para mostrar el mensaje de éxito
             
             const { data: nuevaEscuderia, error: escError } = await supabase
                 .from('escuderias')
