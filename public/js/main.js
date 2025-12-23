@@ -1292,8 +1292,23 @@ class F1Manager {
                 break;
                 
             case 'mostrarPestanas':
-                this.tutorialStep++;
-                this.mostrarDashboardConTutorial();
+                // 1. PRIMERO, cargar la escudería si no está en memoria
+                if (!this.escuderia || !this.escuderia.id) {
+                    console.log('🔄 [Tutorial] Cargando escudería...');
+                    // Llama a la función que carga la escudería desde la BD
+                    await this.loadUserData(); // Esta función debería cargar this.escuderia
+                }
+                
+                // 2. SI tenemos escudería, avanzar y mostrar
+                if (this.escuderia && this.escuderia.id) {
+                    console.log('✅ [Tutorial] Escudería cargada:', this.escuderia.nombre);
+                    this.tutorialStep++;
+                    this.mostrarDashboardConTutorial();
+                } else {
+                    // 3. SI NO, mostrar error
+                    console.error('❌ [Tutorial] No se pudo cargar la escudería.');
+                    this.showNotification('Error: No se encontró tu equipo. Recarga la página.', 'error');
+                }
                 break;
                 
             case 'mostrarTab':
