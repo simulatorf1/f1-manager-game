@@ -936,15 +936,15 @@ class F1Manager {
                     <p>Te damos la bienvenida al mundo de la gestión de Fórmula 1.</p>
                     <p>En este tutorial aprenderás a:</p>
                     <ul>
-                        <li>Crear tu escudería</li>
+                        <li>Gestionar tu escudería</li>
                         <li>Contratar pilotos</li>
                         <li>Fabricar piezas para tu coche</li>
                         <li>Hacer apuestas en carreras</li>
                         <li>Subir en el ranking mundial</li>
                     </ul>
-                    <p class="success">💰 Recibirás 5,000,000€ para empezar</p>
+                    <p class="success">💰 Tu escudería ya está creada y tiene 5,000,000€ para empezar</p> <!-- Texto actualizado -->
                 `,
-                action: 'crearEscuderia'
+                action: 'mostrarPestanas' // CAMBIA 'crearEscuderia' por el nombre del SEGUNDO paso real (ej: 'mostrarPestanas' o 'contratarPilotos')
             },
             
             // PASO 2: Dashboard principal
