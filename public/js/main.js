@@ -1283,7 +1283,7 @@ class F1Manager {
         }
     }
     
-    ejecutarAccionTutorial(accion) {
+    async ejecutarAccionTutorial(accion) {
         console.log('🎯 Acción tutorial:', accion);
         
         switch(accion) {
