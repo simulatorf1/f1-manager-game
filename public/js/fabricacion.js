@@ -63,7 +63,7 @@ class FabricacionManager {
             if (!produccion) return;
 
             const ahora = new Date();
-            const tiempoInicio = new Date(produccion.tiempo_inicio); // ← USAR tiempo_inicio
+            const tiempoInicio = new Date(produccion.tiempo_inicio);
             const tiempoFin = new Date(produccion.tiempo_fin);
             
             const duracionTotal = tiempoFin - tiempoInicio;
@@ -75,7 +75,6 @@ class FabricacionManager {
                 clearInterval(this.timers[produccionId]);
                 delete this.timers[produccionId];
                 
-                // Marcar como completada
                 const { error } = await supabase
                     .from('fabricacion_actual')
                     .update({ completada: true })
@@ -83,13 +82,10 @@ class FabricacionManager {
                 
                 if (error) console.error('Error marcando como completada:', error);
                 
-                // ELIMINAR de la lista local
                 this.produccionesActivas = this.produccionesActivas.filter(p => p.id !== produccionId);
                 
-                // Crear pieza en almacén automáticamente
                 await this.crearPiezaEnAlmacen(produccion);
                 
-                // Actualizar UI solo una vez
                 setTimeout(() => this.actualizarUIProduccion(), 1000);
             }
 
@@ -396,7 +392,7 @@ class FabricacionManager {
         }
     }
 
-    async actualizarUIProduccion() {
+    actualizarUIProduccion() {
         const container = document.getElementById('produccion-actual');
         if (!container) return;
 
@@ -421,7 +417,7 @@ class FabricacionManager {
 
         this.produccionesActivas.forEach(fab => {
             const ahora = new Date();
-            const tiempoInicio = new Date(fab.tiempo_inicio); // ← CAMBIADO
+            const tiempoInicio = new Date(fab.tiempo_inicio);
             const tiempoFin = new Date(fab.tiempo_fin);
             const duracionTotal = tiempoFin - tiempoInicio;
         
