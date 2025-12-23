@@ -610,42 +610,118 @@ class F1Manager {
     
     // Añade este método después del init():
     async mostrarFormularioEscuderiaSimple() {
-        const nombre = prompt('🏎️ Ingresa el nombre de tu escudería:');
+        // Crear un modal HTML en lugar de usar prompt()
+        const modalHTML = `
+            <div id="escuderia-modal" style="
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.9);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            ">
+                <div style="
+                    background: #1a1a2e;
+                    padding: 30px;
+                    border-radius: 10px;
+                    border: 2px solid #e10600;
+                    text-align: center;
+                    max-width: 400px;
+                    width: 90%;
+                ">
+                    <h2 style="color: #e10600; margin-bottom: 20px;">🏎️ Crear tu Escudería</h2>
+                    <p style="color: #ccc; margin-bottom: 20px;">¡Bienvenido a F1 Manager! Necesitas un nombre para tu equipo.</p>
+                    <input type="text" id="nombre-escuderia" placeholder="Ej: McLaren Racing" style="
+                        width: 100%;
+                        padding: 12px;
+                        margin-bottom: 20px;
+                        background: rgba(255,255,255,0.1);
+                        border: 1px solid #444;
+                        border-radius: 5px;
+                        color: white;
+                        font-size: 16px;
+                    ">
+                    <div style="display: flex; gap: 10px;">
+                        <button id="btn-crear-escuderia" style="
+                            flex: 1;
+                            padding: 12px;
+                            background: #e10600;
+                            color: white;
+                            border: none;
+                            border-radius: 5px;
+                            font-weight: bold;
+                            cursor: pointer;
+                        ">Crear Escudería</button>
+                        <button id="btn-cancelar" style="
+                            flex: 1;
+                            padding: 12px;
+                            background: transparent;
+                            border: 1px solid #666;
+                            color: #ccc;
+                            border-radius: 5px;
+                            cursor: pointer;
+                        ">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        `;
         
-        if (nombre && nombre.trim()) {
-            try {
-                const { data: escuderia, error } = await this.supabase
-                    .from('escuderias')
-                    .insert([{
-                        user_id: this.user.id,
-                        nombre: nombre.trim(),
-                        dinero: 5000000,
-                        puntos: 0,
-                        ranking: null,
-                        color_principal: '#e10600',
-                        color_secundario: '#ffffff',
-                        nivel_ingenieria: 1
-                    }])
-                    .select()
-                    .single();
+        // Insertar modal en el DOM
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Esperar a que el usuario interactúe
+        return new Promise((resolve) => {
+            document.getElementById('btn-crear-escuderia').addEventListener('click', async () => {
+                const nombre = document.getElementById('nombre-escuderia').value.trim();
                 
-                if (error) throw error;
+                if (!nombre) {
+                    alert('Por favor, ingresa un nombre para tu escudería.');
+                    return;
+                }
                 
-                this.escuderia = escuderia;
-                
-                // Crear stats del coche
-                await this.supabase
-                    .from('coches_stats')
-                    .insert([{ escuderia_id: this.escuderia.id }]);
-                
-                // Recargar para mostrar dashboard
-                location.reload();
-                
-            } catch (error) {
-                console.error('Error creando escudería:', error);
-                alert('Error creando la escudería. Intenta con otro nombre.');
-            }
-        }
+                try {
+                    // Crear escudería
+                    const { data: escuderia, error } = await this.supabase
+                        .from('escuderias')
+                        .insert([{
+                            user_id: this.user.id,
+                            nombre: nombre,
+                            dinero: 5000000,
+                            puntos: 0,
+                            ranking: null,
+                            nivel_ingenieria: 1
+                        }])
+                        .select()
+                        .single();
+                    
+                    if (error) throw error;
+                    
+                    this.escuderia = escuderia;
+                    
+                    // Crear stats del coche
+                    await this.supabase
+                        .from('coches_stats')
+                        .insert([{ escuderia_id: this.escuderia.id }]);
+                    
+                    // Remover modal
+                    document.getElementById('escuderia-modal').remove();
+                    
+                    // Recargar página
+                    location.reload();
+                    
+                } catch (error) {
+                    console.error('Error creando escudería:', error);
+                    alert('Error: ' + error.message);
+                }
+            });
+            
+            // Botón cancelar
+            document.getElementById('btn-cancelar').addEventListener('click', () => {
+                document.getElementById('escuderia-modal').remove();
+                location.reload(); // Recargar para intentar de nuevo
+            });
+        });
     }
     
     async inicializarSistemasIntegrados() {
