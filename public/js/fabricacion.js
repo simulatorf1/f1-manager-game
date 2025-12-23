@@ -63,19 +63,19 @@ class FabricacionManager {
             if (!produccion) return;
 
             const ahora = new Date();
-            const creadaEn = new Date(produccion.creada_en || produccion.tiempo_inicio);
-            const duracionTotal = 120 * 1000;
+            const tiempoInicio = new Date(produccion.tiempo_inicio); // ← USAR tiempo_inicio
+            const tiempoFin = new Date(produccion.tiempo_fin);
             
-            const tiempoTranscurrido = ahora - creadaEn;
+            const duracionTotal = tiempoFin - tiempoInicio;
+            const tiempoTranscurrido = ahora - tiempoInicio;
             
             if (tiempoTranscurrido >= duracionTotal) {
-                console.log(`✅ Producción ${produccionId} COMPLETADA - Eliminando de lista`);
+                console.log(`✅ Producción ${produccionId} COMPLETADA`);
                 
-                // 1. Detener timer
                 clearInterval(this.timers[produccionId]);
                 delete this.timers[produccionId];
                 
-                // 2. Marcar como completada en BD (IMPORTANTE)
+                // Marcar como completada
                 const { error } = await supabase
                     .from('fabricacion_actual')
                     .update({ completada: true })
@@ -83,13 +83,13 @@ class FabricacionManager {
                 
                 if (error) console.error('Error marcando como completada:', error);
                 
-                // 3. ELIMINAR de la lista local INMEDIATAMENTE
+                // ELIMINAR de la lista local
                 this.produccionesActivas = this.produccionesActivas.filter(p => p.id !== produccionId);
                 
-                // 4. Crear pieza en almacén automáticamente
+                // Crear pieza en almacén automáticamente
                 await this.crearPiezaEnAlmacen(produccion);
                 
-                // 5. Actualizar UI solo una vez
+                // Actualizar UI solo una vez
                 setTimeout(() => this.actualizarUIProduccion(), 1000);
             }
 
@@ -97,7 +97,6 @@ class FabricacionManager {
             console.error('❌ Error verificando producción:', error);
         }
     }
-
     // Añade este método a la clase:
     async crearPiezaEnAlmacen(fabricacion) {
         try {
@@ -175,7 +174,7 @@ class FabricacionManager {
                 return false;
             }
 
-            // 5. **SOLUCIÓN: Usar tiempo relativo en segundos**
+            // 5. Calcular tiempos
             const duracionSegundos = 120; // 2 minutos para pruebas
             const tiempoInicio = new Date();
             const tiempoFin = new Date(tiempoInicio.getTime() + (duracionSegundos * 1000));
@@ -185,8 +184,6 @@ class FabricacionManager {
             console.log('Hora local (navegador):', tiempoInicio.toISOString());
             console.log('Hora fin calculada:', tiempoFin.toISOString());
             console.log('Diferencia con ahora:', (tiempoFin - tiempoInicio) / 1000, 'segundos');
-            
-
 
             // 6. Crear nueva fabricación en BD
             const { data: nuevaFabricacion, error: insertError } = await supabase
@@ -208,7 +205,7 @@ class FabricacionManager {
 
             console.log('✅ Fabricación creada en BD:', nuevaFabricacion.id);
 
-            // 7. **VERIFICACIÓN CRÍTICA: Comparar horas**
+            // 7. VERIFICACIÓN CRÍTICA: Comparar horas
             console.log('🔍 VERIFICACIÓN CRÍTICA:');
             console.log('Hora inicio guardada:', nuevaFabricacion.tiempo_inicio);
             console.log('Hora fin guardada:', nuevaFabricacion.tiempo_fin);
@@ -242,7 +239,6 @@ class FabricacionManager {
             return false;
         }
     }
-
     async recogerPieza(fabricacionId) {
         try {
             // 1. Buscar la fabricación
@@ -400,7 +396,7 @@ class FabricacionManager {
         }
     }
 
-    actualizarUIProduccion() {
+    async actualizarUIProduccion() {
         const container = document.getElementById('produccion-actual');
         if (!container) return;
 
@@ -425,10 +421,11 @@ class FabricacionManager {
 
         this.produccionesActivas.forEach(fab => {
             const ahora = new Date();
-            const creadaEn = new Date(fab.creada_en || fab.tiempo_inicio);
-            const duracionTotal = 120 * 1000; // 2 minutos en ms
+            const tiempoInicio = new Date(fab.tiempo_inicio); // ← CAMBIADO
+            const tiempoFin = new Date(fab.tiempo_fin);
+            const duracionTotal = tiempoFin - tiempoInicio;
         
-            const tiempoTranscurrido = ahora - creadaEn;
+            const tiempoTranscurrido = ahora - tiempoInicio;
             const progreso = Math.min(100, (tiempoTranscurrido / duracionTotal) * 100);
             const tiempoRestante = Math.max(0, duracionTotal - tiempoTranscurrido);
             const lista = tiempoTranscurrido >= duracionTotal;
