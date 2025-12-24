@@ -197,8 +197,8 @@ class FabricacionManager {
                     escuderia_id: this.escuderiaId,
                     area: area.name,
                     nivel: 1,
-                    tiempo_inicio: tiempoInicio.getTime(),
-                    tiempo_fin: tiempoFin.getTime(),
+                    tiempo_inicio: tiempoInicio.toISOString().slice(0, -1),
+                    tiempo_fin: tiempoFin.toISOString().slice(0, -1),
                     completada: false,
                     costo: costoFabricacion,
                     creada_en: new Date().toISOString()
