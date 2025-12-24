@@ -17,7 +17,21 @@ class TabManager {
     }
     
     setup() {
-        console.log('🔴 setup() ejecutado');
+        console.log('🔴 [DEBUG] setup() INICIADO');
+    
+        // Configurar botones de pestañas
+        console.log('🔴 [DEBUG] Configurando botones de pestañas...');
+        this.setupTabButtons();
+    
+        // Cargar contenido de pestañas
+        console.log('🔴 [DEBUG] Cargando contenidos...');
+        this.loadTabContents();
+    
+        // Mostrar pestaña principal
+        console.log('🔴 [DEBUG] Mostrando pestaña principal...');
+        this.switchTab('principal');
+    
+        console.log('🔴 [DEBUG] setup() COMPLETADO');
         // Configurar botones de pestañas
         this.setupTabButtons();
         
@@ -31,15 +45,20 @@ class TabManager {
     }
     
     setupTabButtons() {
+        console.log('🔴 [DEBUG] setupTabButtons() INICIADO');
         const tabButtons = document.querySelectorAll('[data-tab]');
-        
+        console.log('🔴 [DEBUG] Encontrados', tabButtons.length, 'botones');
+    
         tabButtons.forEach(button => {
+            console.log('🔴 [DEBUG] Botón:', button.dataset.tab);
             button.addEventListener('click', (e) => {
+                console.log('🔴 [DEBUG] Click en pestaña:', e.currentTarget.dataset.tab);
                 e.preventDefault();
                 const tabId = e.currentTarget.getAttribute('data-tab');
                 this.switchTab(tabId);
             });
         });
+        console.log('🔴 [DEBUG] setupTabButtons() COMPLETADO');
     }
     
     switchTab(tabId) {
