@@ -868,19 +868,7 @@ class F1Manager {
             });
         }
         
-        this.timersAutomaticos = {
-            produccion: setInterval(() => {
-                if (window.fabricacionManager && window.fabricacionManager.actualizarUIProduccion) {
-                    window.fabricacionManager.actualizarUIProduccion();
-                }
-            }, 2000),
-            
-            almacen: setInterval(() => {
-                const activo = window.tabManager && window.tabManager.currentTab === 'almacen';
-                if (activo && window.tabManager && window.tabManager.loadAlmacenPiezas) {
-                    window.tabManager.loadAlmacenPiezas();
-                }
-            }, 10000),
+
             
             dashboard: setInterval(() => {
                 this.updateProductionMonitor();
