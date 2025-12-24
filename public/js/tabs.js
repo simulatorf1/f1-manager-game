@@ -786,7 +786,131 @@ class TabManager {
                 <p class="empty-subtitle">Sé el primero en vender una pieza</p>
             </div>
         `;
-    }    // ===== FUNCIONES PARA MANEJAR PIEZAS =====
+    }    
+       async equiparTodasPiezasArea(areaId) {
+        console.log(`🔧 Equipando todas las piezas del área: ${areaId}`);
+        
+        try {
+            // 1. Buscar piezas disponibles del área
+            const { data: piezas, error } = await supabase
+                .from('piezas_almacen')
+                .select('*')
+                .eq('escuderia_id', window.f1Manager.escuderia.id)
+                .eq('area', areaId)
+                .eq('estado', 'disponible');
+            
+            if (error) throw error;
+            
+            if (!piezas || piezas.length === 0) {
+                if (window.f1Manager?.showNotification) {
+                    window.f1Manager.showNotification('No hay piezas disponibles en esta área', 'info');
+                }
+                return;
+            }
+            
+            // 2. Equipar cada pieza
+            for (const pieza of piezas) {
+                await supabase
+                    .from('piezas_almacen')
+                    .update({ 
+                        estado: 'equipada',
+                        equipada_en: new Date().toISOString()
+                    })
+                    .eq('id', pieza.id);
+                
+                // 3. Sumar puntos del coche
+                await this.sumarPuntosAlCoche(pieza.area, pieza.puntos_base);
+            }
+            
+            // 4. Actualizar UI
+            this.loadAlmacenPiezas();
+            
+            // 5. Actualizar UI principal
+            if (window.f1Manager?.loadCarStatus) {
+                setTimeout(() => {
+                    window.f1Manager.loadCarStatus();
+                    window.f1Manager.updateCarAreasUI();
+                }, 500);
+            }
+            
+            // 6. Mostrar notificación
+            if (window.f1Manager?.showNotification) {
+                window.f1Manager.showNotification(`✅ ${piezas.length} piezas equipadas`, 'success');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error equipando todas las piezas:', error);
+            if (window.f1Manager?.showNotification) {
+                window.f1Manager.showNotification('❌ Error al equipar las piezas', 'error');
+            }
+        }
+    }
+    
+    async desequiparTodasPiezasArea(areaId) {
+        console.log(`🔧 Desequipando todas las piezas del área: ${areaId}`);
+        
+        try {
+            // 1. Buscar piezas equipadas del área
+            const { data: piezas, error } = await supabase
+                .from('piezas_almacen')
+                .select('*')
+                .eq('escuderia_id', window.f1Manager.escuderia.id)
+                .eq('area', areaId)
+                .eq('estado', 'equipada');
+            
+            if (error) throw error;
+            
+            if (!piezas || piezas.length === 0) {
+                if (window.f1Manager?.showNotification) {
+                    window.f1Manager.showNotification('No hay piezas equipadas en esta área', 'info');
+                }
+                return;
+            }
+            
+            // 2. Desequipar cada pieza
+            for (const pieza of piezas) {
+                await supabase
+                    .from('piezas_almacen')
+                    .update({ 
+                        estado: 'disponible',
+                        equipada_en: null
+                    })
+                    .eq('id', pieza.id);
+                
+                // 3. Restar puntos del coche
+                await this.restarPuntosDelCoche(pieza.area, pieza.puntos_base);
+            }
+            
+            // 4. Actualizar UI
+            this.loadAlmacenPiezas();
+            
+            // 5. Actualizar UI principal
+            if (window.f1Manager?.loadCarStatus) {
+                setTimeout(() => {
+                    window.f1Manager.loadCarStatus();
+                    window.f1Manager.updateCarAreasUI();
+                }, 500);
+            }
+            
+            // 6. Mostrar notificación
+            if (window.f1Manager?.showNotification) {
+                window.f1Manager.showNotification(`✅ ${piezas.length} piezas desequipadas`, 'success');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error desequipando todas las piezas:', error);
+            if (window.f1Manager?.showNotification) {
+                window.f1Manager.showNotification('❌ Error al desequipar las piezas', 'error');
+            }
+        }
+    }
+    
+    // ===== FUNCIONES PARA MANEJAR PIEZAS =====
+    // ... el resto de tu código sigue aquí ... 
+    
+    
+    
+    // ===== FUNCIONES PARA MANEJAR PIEZAS =====
     
     async equiparPieza(piezaId) {
         console.log(`🔧 Equipando pieza: ${piezaId}`);
