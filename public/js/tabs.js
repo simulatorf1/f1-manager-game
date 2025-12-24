@@ -651,139 +651,123 @@ class TabManager {
         if (!container || !window.f1Manager?.escuderia?.id) return;
 
         try {
-            console.log('🔍 [ALMACÉN] Buscando piezas para escudería:', window.f1Manager.escuderia.id);
-            
-            const { data: piezas, error } = await supabase
+            // 1. Obtener todas las piezas del usuario
+            const { data: todasLasPiezas, error } = await supabase
                 .from('piezas_almacen')
                 .select('*')
-                .eq('escuderia_id', window.f1Manager.escuderia.id)
-                .order('fabricada_en', { ascending: false });
+                .eq('escuderia_id', window.f1Manager.escuderia.id);
             
             if (error) throw error;
-            
-            console.log(`📦 [ALMACÉN] Encontradas: ${piezas?.length || 0} piezas`);
-            
-            // 1. Actualizar contadores
-            const totalEl = document.getElementById('total-piezas');
-            const disponiblesEl = document.getElementById('piezas-disponibles');
-            const equipadasEl = document.getElementById('piezas-equipadas');
-            
-            if (totalEl) totalEl.textContent = piezas?.length || 0;
-            if (disponiblesEl) {
-                const disponibles = piezas?.filter(p => p.estado === 'disponible').length || 0;
-                disponiblesEl.textContent = disponibles;
-            }
-            if (equipadasEl) {
-                const equipadas = piezas?.filter(p => p.estado === 'equipada').length || 0;
-                equipadasEl.textContent = equipadas;
-            }
-            
-            // 2. Agrupar piezas por área
-            const piezasPorArea = {};
+
+            // 2. Actualizar contadores superiores
+            const totalPiezas = todasLasPiezas?.length || 0;
+            const disponibles = todasLasPiezas?.filter(p => p.estado === 'disponible').length || 0;
+            const equipadas = todasLasPiezas?.filter(p => p.estado === 'equipada').length || 0;
+
+            document.getElementById('total-piezas').textContent = totalPiezas;
+            document.getElementById('piezas-disponibles').textContent = disponibles;
+            document.getElementById('piezas-equipadas').textContent = equipadas;
+
+            // 3. CREAR REJILLA SIMPLE Y CLARA
+            let html = '<div class="almacen-rejilla-simple">';
+
             window.CAR_AREAS.forEach(area => {
-                piezasPorArea[area.id] = [];
-            });
-            
-            if (piezas) {
-                piezas.forEach(pieza => {
-                    if (piezasPorArea[pieza.area]) {
-                        piezasPorArea[pieza.area].push(pieza);
-                    }
-                });
-            }
-            
-            // 3. Generar HTML con rejilla por áreas
-            let html = '<div class="almacen-rejilla">';
-            
-            window.CAR_AREAS.forEach(area => {
-                const piezasArea = piezasPorArea[area.id] || [];
+                // Filtrar piezas de esta área
+                const piezasArea = todasLasPiezas?.filter(p => p.area === area.id) || [];
                 const piezasDisponibles = piezasArea.filter(p => p.estado === 'disponible');
                 const piezasEquipadas = piezasArea.filter(p => p.estado === 'equipada');
                 
-                html += `
-                    <div class="area-almacen" style="border-left-color: ${area.color}">
-                        <div class="area-header">
-                            <div class="area-icon" style="color: ${area.color}">
-                                <i class="${area.icon}"></i>
-                            </div>
-                            <h3>${area.name}</h3>
-                            <div class="area-stats">
-                                <span class="stat-mini">${piezasDisponibles.length} disp.</span>
-                                <span class="stat-mini">${piezasEquipadas.length} equip.</span>
-                            </div>
-                        </div>
-                        
-                        <div class="piezas-grid">
-                `;
+                // Determinar color de fondo según estado
+                let cardClass = 'area-card';
+                let statusText = 'SIN PIEZAS';
+                let statusColor = '#666';
                 
-                // Mostrar hasta 4 piezas por área (o huecos vacíos)
-                for (let i = 0; i < 4; i++) {
-                    if (i < piezasArea.length) {
-                        const pieza = piezasArea[i];
-                        const estadoClass = pieza.estado === 'equipada' ? 'equipada' : 
-                                          pieza.estado === 'vendida' ? 'vendida' : 'disponible';
-                        
-                        html += `
-                            <div class="pieza-slot ${estadoClass}" data-pieza-id="${pieza.id}">
-                                <div class="pieza-mini">
-                                    <span class="pieza-nivel">N${pieza.nivel}</span>
-                                    <span class="pieza-puntos">${pieza.puntos_base}pts</span>
-                                </div>
-                                ${pieza.estado === 'disponible' ? `
-                                    <div class="pieza-acciones-mini">
-                                        <button class="btn-equipar-mini" onclick="window.tabManager.equiparPieza('${pieza.id}')">
-                                            <i class="fas fa-bolt"></i>
-                                        </button>
-                                        <button class="btn-vender-mini" onclick="window.tabManager.venderPieza('${pieza.id}')">
-                                            <i class="fas fa-tag"></i>
-                                        </button>
-                                    </div>
-                                ` : pieza.estado === 'equipada' ? `
-                                    <div class="pieza-acciones-mini">
-                                        <button class="btn-desequipar-mini" onclick="window.tabManager.desequiparPieza('${pieza.id}')">
-                                            <i class="fas fa-ban"></i>
-                                        </button>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        `;
-                    } else {
-                        // Hueco vacío
-                        html += `
-                            <div class="pieza-slot vacio">
-                                <div class="pieza-mini vacio">
-                                    <i class="fas fa-plus"></i>
-                                    <span>Vacío</span>
-                                </div>
-                            </div>
-                        `;
-                    }
+                if (piezasEquipadas.length > 0) {
+                    cardClass += ' equipada';
+                    statusText = `${piezasEquipadas.length} EQUIPADA(S)`;
+                    statusColor = '#4CAF50'; // Verde
+                } else if (piezasDisponibles.length > 0) {
+                    cardClass += ' disponible';
+                    statusText = `${piezasDisponibles.length} DISPONIBLE(S)`;
+                    statusColor = '#00d2be'; // Azul F1
                 }
-                
+
                 html += `
-                        </div>
-                        ${piezasDisponibles.length > 0 ? `
-                            <div class="area-acciones">
-                                <button class="btn-equipar-todas" onclick="window.tabManager.equiparTodasPiezasArea('${area.id}')">
-                                    <i class="fas fa-bolt"></i> Equipar todas
-                                </button>
+                    <div class="${cardClass}" style="border-color: ${area.color}">
+                        <!-- CABECERA CON ICONO Y NOMBRE -->
+                        <div class="area-card-header">
+                            <div class="area-card-icon" style="color: ${area.color}">
+                                <i class="${area.icon} fa-2x"></i>
                             </div>
-                        ` : ''}
+                            <div class="area-card-info">
+                                <h3>${area.name}</h3>
+                                <div class="area-card-stats">
+                                    <span class="stat-total">${piezasArea.length} piezas</span>
+                                    <span class="stat-status" style="color: ${statusColor}">${statusText}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DETALLES DE PIEZAS -->
+                        <div class="area-card-details">
+                            ${piezasArea.length > 0 ? 
+                                `<div class="piezas-lista-mini">
+                                    ${piezasArea.slice(0, 3).map(pieza => `
+                                        <div class="pieza-mini-item ${pieza.estado}">
+                                            <span>N${pieza.nivel}</span>
+                                            <small>${pieza.puntos_base}pts</small>
+                                        </div>
+                                    `).join('')}
+                                    ${piezasArea.length > 3 ? `<div class="pieza-mini-item mas">+${piezasArea.length - 3}</div>` : ''}
+                                </div>`
+                                : 
+                                `<div class="sin-piezas">
+                                    <i class="fas fa-box-open"></i>
+                                    <p>No hay piezas</p>
+                                </div>`
+                            }
+                        </div>
+
+                        <!-- BOTONES DE ACCIÓN GRANDES Y CLAROS -->
+                        <div class="area-card-actions">
+                            ${piezasDisponibles.length > 0 ? `
+                                <button class="btn-accion-grande btn-equipar" 
+                                        onclick="window.tabManager.equiparTodasPiezasArea('${area.id}')">
+                                    <i class="fas fa-bolt"></i>
+                                    EQUIPAR TODAS (${piezasDisponibles.length})
+                                </button>
+                            ` : ''}
+                            
+                            ${piezasEquipadas.length > 0 ? `
+                                <button class="btn-accion-grande btn-desequipar"
+                                        onclick="window.tabManager.desequiparTodasPiezasArea('${area.id}')">
+                                    <i class="fas fa-ban"></i>
+                                    DESEQUIPAR TODAS (${piezasEquipadas.length})
+                                </button>
+                            ` : ''}
+                            
+                            ${piezasArea.length === 0 ? `
+                                <button class="btn-accion-grande btn-fabricar"
+                                        onclick="window.f1Manager?.iniciarFabricacion('${area.id}')">
+                                    <i class="fas fa-hammer"></i>
+                                    FABRICAR PRIMERA PIEZA
+                                </button>
+                            ` : ''}
+                        </div>
                     </div>
                 `;
             });
-            
-            html += '</div>'; // Cierra .almacen-rejilla
-            
+
+            html += '</div>';
             container.innerHTML = html;
-            
+
         } catch (error) {
             console.error('❌ Error cargando almacén:', error);
             container.innerHTML = `
-                <div class="error-state">
-                    <i class="fas fa-exclamation-triangle"></i>
+                <div class="error-simple">
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
                     <p>Error cargando el almacén</p>
-                    <button onclick="window.tabManager.loadAlmacenPiezas()">
+                    <button class="btn-reintentar" onclick="window.tabManager.loadAlmacenPiezas()">
                         Reintentar
                     </button>
                 </div>
