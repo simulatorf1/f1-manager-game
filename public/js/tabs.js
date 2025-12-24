@@ -649,7 +649,7 @@ class TabManager {
                 .select('*')
                 .eq('escuderia_id', window.f1Manager.escuderia.id)
                 .order('fabricada_en', { ascending: false });
-            
+            console.log('🔍 [DIAGNÓSTICO] Resultado de consulta:', { data: piezas, error, idUsado: window.f1Manager.escuderia.id });
             if (error) throw error;
             
             // 1. Actualizar contadores si existen en la UI
@@ -712,10 +712,10 @@ class TabManager {
                         </div>
                         <div class="pieza-actions">
                             ${pieza.estado === 'disponible' ? `
-                                <button class="btn-equipar" onclick="window.tabManager.equiparPieza('${pieza.id}')"
+                                <button class="btn-equipar" onclick="window.tabManager.equiparPieza('${pieza.id}')">
                                     <i class="fas fa-bolt"></i> Equipar
                                 </button>
-                                <button class="btn-vender" onclick="venderPieza('${pieza.id}')">
+                                <button class="btn-vender" onclick="window.tabManager.venderPieza('${pieza.id}')">
                                     <i class="fas fa-tag"></i> Vender
                                 </button>
                             ` : pieza.estado === 'equipada' ? `
