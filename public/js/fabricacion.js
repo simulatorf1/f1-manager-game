@@ -137,8 +137,13 @@ class FabricacionManager {
             console.error('❌ No hay escudería ID');
             return false;
         }
-
         try {
+            // 1. Verificar límite de fabricaciones simultáneas (MÁXIMO 3)
+            if (this.produccionesActivas.length >= 3) {
+                alert('❌ Límite alcanzado: Máximo 3 fabricaciones simultáneas');
+                return false;
+            }
+   
             // 1. Verificar fondos disponibles
             const costoFabricacion = 10000;
             
