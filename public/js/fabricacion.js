@@ -400,82 +400,112 @@ class FabricacionManager {
         }
     }
 
-    actualizarUIProduccion() {
+    actualizarUIProduccion(soloContador = false) {
         const container = document.getElementById('produccion-actual');
         if (!container) return;
-
+        
+        // Si no hay producciones, mostrar mensaje estático
         if (this.produccionesActivas.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-industry"></i>
-                    <p>No hay producción en curso</p>
-                    <p class="small-text">Ve al Taller para iniciar fabricaciones</p>
-                </div>
-            `;
+            if (!soloContador) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-industry"></i>
+                        <p>No hay producción en curso</p>
+                        <p class="small-text">Ve al Taller para iniciar fabricaciones</p>
+                    </div>
+                `;
+            }
             return;
         }
-
-        let html = `
-            <div class="produccion-header">
-                <h3><i class="fas fa-industry"></i> Producción en curso</h3>
-                <span class="badge">${this.produccionesActivas.length} activa(s)</span>
-            </div>
-            <div class="fabricaciones-lista">
-        `;
-
-        this.produccionesActivas.forEach(fab => {
-            const ahora = new Date();
-            const tiempoInicio = new Date(fab.tiempo_inicio);
-            const tiempoFin = new Date(fab.tiempo_fin);
-            const duracionTotal = tiempoFin - tiempoInicio;
         
-            const tiempoTranscurrido = ahora - tiempoInicio;
-            const progreso = Math.min(100, (tiempoTranscurrido / duracionTotal) * 100);
-            const tiempoRestante = Math.max(0, duracionTotal - tiempoTranscurrido);
-            const lista = tiempoTranscurrido >= duracionTotal;
-        
-            console.log(`📊 ${fab.id}: ${tiempoTranscurrido/1000}s / ${duracionTotal/1000}s = ${progreso.toFixed(1)}%`);
-            
-            const minutosRestantes = Math.floor(tiempoRestante / 60000);
-            const segundosRestantes = Math.floor((tiempoRestante % 60000) / 1000);
-
-            html += `
-                <div class="fabricacion-item ${lista ? 'lista' : 'fabricando'}">
-                    <div class="fabricacion-info">
-                        <div class="fab-area">
-                            <i class="fas fa-cog"></i>
-                            <span>${fab.area} • Nivel ${fab.nivel}</span>
-                        </div>
-                        <div class="fab-estado">
-                            <span class="estado-badge ${lista ? 'lista' : 'fabricando'}">
-                                ${lista ? '✅ LISTA' : '⏳ ' + minutosRestantes.toString().padStart(2, '0') + ':' + segundosRestantes.toString().padStart(2, '0')}
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div class="fab-progreso">
-                        <div class="progress-bar-small">
-                            <div class="progress-fill-small" style="width: ${progreso}%"></div>
-                        </div>
-                        <div class="fab-tiempo">
-                            <i class="far fa-clock"></i>
-                            <span>${lista ? '¡Lista para recoger!' : `Listo en: ${minutosRestantes}m ${segundosRestantes}s`}</span>
-                        </div>
-                    </div>
-                    
-                    ${lista ? `
-                    <div class="fab-acciones">
-                        <button class="btn-recoger-pieza" onclick="window.fabricacionManager.recogerPieza('${fab.id}')">
-                            <i class="fas fa-box-open"></i> Recoger Pieza
-                        </button>
-                    </div>
-                    ` : ''}
+        // SOLO si no es soloContador, actualizar toda la UI
+        if (!soloContador) {
+            let html = `
+                <div class="produccion-header">
+                    <h3><i class="fas fa-industry"></i> Producción en curso</h3>
+                    <span class="badge">${this.produccionesActivas.length} activa(s)</span>
                 </div>
+                <div class="fabricaciones-lista">
             `;
-        });
+            
+            this.produccionesActivas.forEach(fab => {
+                html += this.generarHTMLFabricacion(fab);
+            });
+            
+            html += `</div>`;
+            container.innerHTML = html;
+        } 
+        // Si es soloContador, solo actualizar los tiempos
+        else {
+            this.actualizarContadoresTiempo();
+        }
+    }
 
-        html += `</div>`;
-        container.innerHTML = html;
+    // NUEVA FUNCIÓN: Solo actualiza contadores
+    actualizarContadoresTiempo() {
+        this.produccionesActivas.forEach(fab => {
+            const elemento = document.querySelector(`[data-fabricacion-id="${fab.id}"] .fab-tiempo`);
+            if (elemento) {
+                const ahora = new Date();
+                const tiempoFin = new Date(fab.tiempo_fin);
+                const tiempoRestante = Math.max(0, tiempoFin - ahora);
+                
+                if (tiempoRestante > 0) {
+                    const minutos = Math.floor(tiempoRestante / 60000);
+                    const segundos = Math.floor((tiempoRestante % 60000) / 1000);
+                    elemento.textContent = `Listo en: ${minutos}m ${segundos}s`;
+                } else {
+                    elemento.textContent = '¡Lista para recoger!';
+                }
+            }
+        });
+    }
+
+    // NUEVA FUNCIÓN: Generar HTML una sola vez
+    generarHTMLFabricacion(fab) {
+        const ahora = new Date();
+        const tiempoFin = new Date(fab.tiempo_fin);
+        const tiempoRestante = Math.max(0, tiempoFin - ahora);
+        const lista = tiempoRestante <= 0;
+        const minutos = Math.floor(tiempoRestante / 60000);
+        const segundos = Math.floor((tiempoRestante % 60000) / 1000);
+        
+        return `
+            <div class="fabricacion-item ${lista ? 'lista' : 'fabricando'}" data-fabricacion-id="${fab.id}">
+                <div class="fabricacion-info">
+                    <div class="fab-area">
+                        <i class="fas fa-cog"></i>
+                        <span>${fab.area} • Nivel ${fab.nivel}</span>
+                    </div>
+                    <div class="fab-estado">
+                        <span class="estado-badge ${lista ? 'lista' : 'fabricando'}">
+                            ${lista ? '✅ LISTA' : `⏳ ${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="fab-progreso">
+                    <div class="progress-bar-small">
+                        <div class="progress-fill-small" 
+                             style="width: ${Math.min(100, ((fab.duracionTotal - tiempoRestante) / fab.duracionTotal) * 100)}%">
+                        </div>
+                    </div>
+                    <div class="fab-tiempo">
+                        <i class="far fa-clock"></i>
+                        <span>${lista ? '¡Lista para recoger!' : `Listo en: ${minutos}m ${segundos}s`}</span>
+                    </div>
+                </div>
+                
+                ${lista ? `
+                <div class="fab-acciones">
+                    <button class="btn-recoger-pieza" 
+                            onclick="window.fabricacionManager.recogerPieza('${fab.id}')">
+                        <i class="fas fa-box-open"></i> Recoger Pieza
+                    </button>
+                </div>
+                ` : ''}
+            </div>
+        `;
     }
 
     formatearTiempo(milisegundos) {
