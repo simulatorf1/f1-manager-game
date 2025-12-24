@@ -643,11 +643,12 @@ class TabManager {
         if (!container || !window.f1Manager?.escuderia?.id) return;
 
         try {
+            
             const { data: piezas, error } = await supabase
                 .from('piezas_almacen')
                 .select('*')
                 .eq('escuderia_id', window.f1Manager.escuderia.id)
-                .order('fabricada_en', { ascending: false }); // ← CAMBIAR A 'fabricada_en'
+                .order('fabricada_en', { ascending: false });
             
             if (error) throw error;
             
