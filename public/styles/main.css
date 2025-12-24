@@ -2824,4 +2824,68 @@ body {
         justify-content: flex-start;
         margin-top: 10px;
     }
+   /* ===== FIX PARA TABLA DE ALMACÉN ===== */
+   .almacen-tabla {
+       width: 100% !important;
+       padding: 20px 0 !important;
+   }
+
+   .pieza-fila {
+       display: grid !important;
+       grid-template-columns: 50px 80px 100px 120px 120px 1fr !important;
+       align-items: center !important;
+       padding: 15px 20px !important;
+       border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+   }
+
+   .celda {
+       padding: 10px !important;
+       display: flex !important;
+       align-items: center !important;
+   }
+
+   .celda-icono {
+       justify-content: center !important;
+       font-size: 1.5rem !important;
+   }
+
+   .celda-acciones {
+       justify-content: flex-end !important;
+       display: flex !important;
+       gap: 10px !important;
+   }
+
+   .btn-accion {
+       padding: 8px 15px !important;
+       border-radius: 5px !important;
+       font-weight: bold !important;
+       cursor: pointer !important;
+       border: none !important;
+       font-size: 0.9rem !important;
+       min-width: 80px !important;
+   }
+
+   .btn-equipar {
+       background: linear-gradient(135deg, #00d2be, #009688) !important;
+       color: white !important;
+   }
+
+   .btn-equipar:disabled {
+       background: linear-gradient(135deg, #4CAF50, #388E3C) !important;
+       cursor: not-allowed !important;
+       opacity: 0.7 !important;
+   }
+
+   .btn-vender {
+       background: linear-gradient(135deg, #e10600, #c62828) !important;
+       color: white !important;
+   }
+
+   .area-tabla {
+       background: rgba(42, 42, 56, 0.8) !important;
+       border-radius: 10px !important;
+       margin-bottom: 20px !important;
+       overflow: hidden !important;
+       border: 1px solid rgba(255,255,255,0.1) !important;
+   }
 }
