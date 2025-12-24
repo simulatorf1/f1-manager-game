@@ -867,7 +867,13 @@ class F1Manager {
                 clearInterval(timer);
             });
         }
-        
+        // CORRECCIÓN: Añadir llave y nombre de propiedad
+        this.timersAutomaticos = {
+            produccion: setInterval(() => {
+                if (window.fabricacionManager && window.fabricacionManager.actualizarUIProduccion) {
+                    window.fabricacionManager.actualizarUIProduccion(true); // true = solo contador
+                }
+            }, 1000), // Cada segundo para contador fluido 
 
             
             dashboard: setInterval(() => {
