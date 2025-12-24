@@ -1,3 +1,4 @@
+console.log('🔴 tabs.js CARGA INICIADA');
 // ========================
 // SISTEMA DE PESTAÑAS COMPLETO
 // ========================
@@ -22,6 +23,7 @@ class TabManager {
     }
     
     setup() {
+        console.log('🔴 setup() ejecutado');
         // Configurar botones de pestañas
         this.setupTabButtons();
         
@@ -881,3 +883,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 console.log('✅ Sistema de pestañas listo para usar');
+console.log('🔴 TabManager instanciado');
