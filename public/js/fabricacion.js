@@ -79,21 +79,17 @@ class FabricacionManager {
             });
             
             if (tiempoTranscurrido >= duracionTotal) {
-                console.log(`✅ Producción ${produccionId} COMPLETADA (con ajuste horario)`);
+                console.log(`✅ Producción ${produccionId} LISTA para recoger`);
                 
                 clearInterval(this.timers[produccionId]);
-                delete this.timers[produccionId];
-                
-                const { error } = await supabase
-                    .from('fabricacion_actual')
-                    .update({ completada: true })
-                    .eq('id', produccionId);
-                
-                if (error) console.error('Error marcando como completada:', error);
-                
-                this.produccionesActivas = this.produccionesActivas.filter(p => p.id !== produccionId);
-                
-                await this.crearPiezaEnAlmacen(produccion);
+                produccion.estado = 'lista_para_recoger';
+                produccion.lista_para_recoger = true; // Bandera adicional
+    
+                // Cambiar a timer de actualización de UI solamente
+                this.timers[produccionId] = setInterval(() => {
+                    this.actualizarUIProduccion(true);
+                }, 1000);
+                // ⬆️ HASTA AQUÍ AÑADIR
                 
                 setTimeout(() => this.actualizarUIProduccion(), 1000);
             }
@@ -259,16 +255,7 @@ class FabricacionManager {
                 return false;
             }
 
-            // 2. Verificar que está lista
-            const ahora = new Date();
-            const fin = new Date(fabricacion.tiempo_fin);
-            if (ahora < fin) {
-                console.error('❌ La pieza aún no está lista');
-                alert('⏳ La pieza aún no está lista para recoger');
-                return false;
-            }
-
-            // 3. Convertir nombre del área al ID correcto
+            // 2. Convertir nombre del área al ID correcto
             let areaId = null;
             const areaConfig = window.CAR_AREAS.find(a => a.name === fabricacion.area);
             
@@ -291,9 +278,8 @@ class FabricacionManager {
                 };
                 areaId = mapeoEmergencia[fabricacion.area] || 'motor';
             }
-            // ACTUALIZAR UI COMPLETA SOLO UNA VEZ
-            this.actualizarUIProduccion(false);
-            // 4. Crear pieza en almacén
+
+            // 3. Crear pieza en almacén
             const { error: piezaError } = await supabase
                 .from('piezas_almacen')
                 .insert([{
@@ -307,7 +293,7 @@ class FabricacionManager {
 
             if (piezaError) throw piezaError;
 
-            // 5. Marcar fabricación como completada
+            // 4. Marcar fabricación como completada
             const { error: updateError } = await supabase
                 .from('fabricacion_actual')
                 .update({ completada: true })
@@ -315,24 +301,24 @@ class FabricacionManager {
 
             if (updateError) throw updateError;
 
-            // 6. Actualizar progreso del coche
+            // 5. Actualizar progreso del coche
             await this.actualizarProgresoCoche(fabricacion.area);
 
-            // 7. Remover de lista local
+            // 6. Remover de lista local
             this.produccionesActivas = this.produccionesActivas.filter(f => f.id !== fabricacionId);
 
-            // 8. Limpiar timer
+            // 7. Limpiar timer
             if (this.timers[fabricacionId]) {
                 clearInterval(this.timers[fabricacionId]);
                 delete this.timers[fabricacionId];
             }
 
-            // 9. Actualizar UI
+            // 8. Actualizar UI
             setTimeout(() => this.actualizarUIProduccion(), 100);
 
             console.log(`✅ Pieza "${areaId}" recogida y almacenada`);
             
-            // 10. Mostrar notificación
+            // 9. Mostrar notificación
             if (window.f1Manager && window.f1Manager.showNotification) {
                 window.f1Manager.showNotification(`✅ Pieza de ${fabricacion.area} recogida`, 'success');
             }
@@ -345,7 +331,6 @@ class FabricacionManager {
             return false;
         }
     }
-
     async actualizarProgresoCoche(areaNombre) {
         try {
             const area = window.CAR_AREAS.find(a => a.name === areaNombre);
@@ -474,7 +459,7 @@ class FabricacionManager {
         const ahora = new Date();
         const tiempoFin = new Date(fab.tiempo_fin);
         const tiempoRestante = Math.max(0, tiempoFin - ahora);
-        const lista = tiempoRestante <= 0;
+        const lista = tiempoRestante <= 0 || fab.estado === 'lista_para_recoger';
         const minutos = Math.floor(tiempoRestante / 60000);
         const segundos = Math.floor((tiempoRestante % 60000) / 1000);
         
