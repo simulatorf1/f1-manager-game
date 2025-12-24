@@ -204,49 +204,16 @@ class TabManager {
     
     getAlmacenContent() {
         return `
-            <div class="almacen-container">
+            <div class="almacen-container-completo">
                 <div class="almacen-header">
                     <h2><i class="fas fa-warehouse"></i> Almacén de Piezas</h2>
-                    <div class="almacen-stats">
-                        <div class="stat-almacen">
-                            <span class="stat-number" id="total-piezas">0</span>
-                            <span class="stat-label">Piezas totales</span>
-                        </div>
-                        <div class="stat-almacen">
-                            <span class="stat-number" id="piezas-disponibles">0</span>
-                            <span class="stat-label">Disponibles</span>
-                        </div>
-                        <div class="stat-almacen">
-                            <span class="stat-number" id="piezas-equipadas">0</span>
-                            <span class="stat-label">Equipadas</span>
-                        </div>
+                    <div class="almacen-info">
+                        <p>Equipa piezas para sumar puntos a tu coche o véndelas en el mercado</p>
                     </div>
-                </div>
-                
-                <div class="almacen-filters">
-                    <button class="filter-btn active" data-filter="all">Todas</button>
-                    <button class="filter-btn" data-filter="available">Disponibles</button>
-                    <button class="filter-btn" data-filter="equipped">Equipadas</button>
-                    <button class="filter-btn" data-filter="sold">Vendidas</button>
                 </div>
                 
                 <div class="almacen-grid" id="almacen-grid">
-                    <div class="empty-almacen">
-                        <i class="fas fa-box-open"></i>
-                        <p>No hay piezas en el almacén</p>
-                        <button class="btn-primary" onclick="window.f1Manager?.iniciarFabricacion('motor')">
-                            <i class="fas fa-industry"></i> Fabricar primera pieza
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="almacen-actions">
-                    <button class="btn-secondary" id="btn-equipar-todas">
-                        <i class="fas fa-bolt"></i> Equipar todas disponibles
-                    </button>
-                    <button class="btn-secondary" id="btn-vender-todas">
-                        <i class="fas fa-tags"></i> Vender todas no equipadas
-                    </button>
+                    <!-- Las piezas se cargarán aquí -->
                 </div>
             </div>
         `;
@@ -1045,10 +1012,54 @@ class TabManager {
             console.error('❌ Error restando puntos del coche:', error);
         }
     }
-    venderPieza(piezaId) {
-        console.log(`💰 Vendiendo pieza: ${piezaId}`);
-        // Por ahora solo muestra mensaje (botón deshabilitado)
-        alert('⚠️ Sistema de ventas en desarrollo. Próximamente.');
+    async venderPieza(piezaId) {
+        if (!confirm('¿Vender esta pieza? Se eliminará permanentemente.')) return;
+        
+        try {
+            const { data: pieza, error: fetchError } = await supabase
+                .from('piezas_almacen')
+                .select('*')
+                .eq('id', piezaId)
+                .single();
+            
+            if (fetchError) throw fetchError;
+            
+            if (pieza.estado === 'equipada') {
+                // Restar puntos si estaba equipada
+                await this.restarPuntosDelCoche(pieza.area, pieza.puntos_base || 10);
+            }
+            
+            // Calcular precio de venta (1.4x costo base)
+            const costoBase = 10000;
+            const precioVenta = Math.round(costoBase * 1.4);
+            
+            // Sumar dinero a la escudería
+            if (window.f1Manager?.escuderia) {
+                window.f1Manager.escuderia.dinero += precioVenta;
+                await window.f1Manager.updateEscuderiaMoney();
+            }
+            
+            // Eliminar pieza de la base de datos
+            const { error: deleteError } = await supabase
+                .from('piezas_almacen')
+                .delete()
+                .eq('id', piezaId);
+            
+            if (deleteError) throw deleteError;
+            
+            // Recargar almacén
+            this.loadAlmacenPiezas();
+            
+            if (window.f1Manager?.showNotification) {
+                window.f1Manager.showNotification(`💰 Pieza vendida por €${precioVenta.toLocaleString()}`, 'success');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error vendiendo pieza:', error);
+            if (window.f1Manager?.showNotification) {
+                window.f1Manager.showNotification('❌ Error al vender la pieza', 'error');
+            }
+        }
     }
     
     async desequiparPieza(piezaId) {
