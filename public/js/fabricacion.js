@@ -45,16 +45,17 @@ class FabricacionManager {
     }
 
     iniciarTimerProduccion(produccionId) {
-        // Si ya existe timer, limpiarlo
         if (this.timers[produccionId]) {
             clearInterval(this.timers[produccionId]);
         }
-
-        console.log(`⏱️ Timer iniciado para producción ${produccionId} (cada 5 segundos)`);
-        
+    
         this.timers[produccionId] = setInterval(() => {
+            // 1. Primero verificar si terminó
             this.verificarProduccion(produccionId);
-        }, 5000);  // Verificar cada 5 segundos
+        
+            // 2. Luego solo actualizar contador (NO toda la UI)
+            this.actualizarUIProduccion(true); // true = solo contador
+        }, 1000); // Cada 1 segundo para contador fluido
     }
 
     async verificarProduccion(produccionId) {
