@@ -285,7 +285,8 @@ class FabricacionManager {
                 };
                 areaId = mapeoEmergencia[fabricacion.area] || 'motor';
             }
-
+            // ACTUALIZAR UI COMPLETA SOLO UNA VEZ
+            this.actualizarUIProduccion(false);
             // 4. Crear pieza en almacén
             const { error: piezaError } = await supabase
                 .from('piezas_almacen')
