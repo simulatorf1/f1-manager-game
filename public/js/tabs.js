@@ -704,7 +704,7 @@ class TabManager {
                         </div>
                         <div class="pieza-actions">
                             ${pieza.estado === 'disponible' ? `
-                                <button class="btn-equipar" onclick="equiparPieza('${pieza.id}')">
+                                <button class="btn-equipar" onclick="window.tabManager.equiparPieza('${pieza.id}')"
                                     <i class="fas fa-bolt"></i> Equipar
                                 </button>
                                 <button class="btn-vender" onclick="venderPieza('${pieza.id}')">
@@ -746,6 +746,80 @@ class TabManager {
                 <p class="empty-subtitle">Sé el primero en vender una pieza</p>
             </div>
         `;
+    }    // ===== FUNCIONES PARA MANEJAR PIEZAS =====
+    
+    async equiparPieza(piezaId) {
+        console.log(`🔧 Equipando pieza: ${piezaId}`);
+        
+        try {
+            // 1. Marcar pieza como equipada en BD
+            const { error } = await supabase
+                .from('piezas_almacen')
+                .update({ 
+                    estado: 'equipada',
+                    equipada_en: new Date().toISOString()
+                })
+                .eq('id', piezaId);
+            
+            if (error) throw error;
+            
+            // 2. Actualizar puntos del coche (añadir puntos_base)
+            // Esto lo implementaremos después
+            
+            // 3. Actualizar UI
+            this.loadAlmacenPiezas();
+            
+            // 4. Mostrar notificación
+            if (window.f1Manager?.showNotification) {
+                window.f1Manager.showNotification('✅ Pieza equipada correctamente', 'success');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error equipando pieza:', error);
+            if (window.f1Manager?.showNotification) {
+                window.f1Manager.showNotification('❌ Error al equipar la pieza', 'error');
+            }
+        }
+    }
+    
+    venderPieza(piezaId) {
+        console.log(`💰 Vendiendo pieza: ${piezaId}`);
+        // Por ahora solo muestra mensaje (botón deshabilitado)
+        alert('⚠️ Sistema de ventas en desarrollo. Próximamente.');
+    }
+    
+    async desequiparPieza(piezaId) {
+        console.log(`🔧 Desequipando pieza: ${piezaId}`);
+        
+        try {
+            // 1. Marcar pieza como disponible en BD
+            const { error } = await supabase
+                .from('piezas_almacen')
+                .update({ 
+                    estado: 'disponible',
+                    equipada_en: null
+                })
+                .eq('id', piezaId);
+            
+            if (error) throw error;
+            
+            // 2. Quitar puntos del coche (restar puntos_base)
+            // Esto lo implementaremos después
+            
+            // 3. Actualizar UI
+            this.loadAlmacenPiezas();
+            
+            // 4. Mostrar notificación
+            if (window.f1Manager?.showNotification) {
+                window.f1Manager.showNotification('✅ Pieza desequipada correctamente', 'success');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error desequipando pieza:', error);
+            if (window.f1Manager?.showNotification) {
+                window.f1Manager.showNotification('❌ Error al desequipar la pieza', 'error');
+            }
+        }
     }
     
     filterAlmacen(filter) {
