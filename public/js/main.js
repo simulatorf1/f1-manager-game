@@ -2283,122 +2283,7 @@ class F1Manager {
         }, 50);
     }
     
-    // FUNCIONES GLOBALES PARA EL TUTORIAL
-    window.tutorialManager = null;
-    window.tutorialData = {
-        estrategaSeleccionado: null,
-        areaSeleccionada: null,
-        pronosticosSeleccionados: {},
-        piezaFabricando: false
-    };
-    
-    window.cargarEstrategasTutorial = function() {
-        const container = document.getElementById('grid-estrategas-tutorial');
-        if (!container) return;
-        
-        const estrategas = [
-            { id: 1, nombre: "Analista de Tiempos", icono: "⏱️", especialidad: "Diferencias de tiempo", bono: "+15%", sueldo: "50,000€", ejemplo: "Diferencia 1º-2º" },
-            { id: 2, nombre: "Meteorólogo", icono: "🌧️", especialidad: "Condiciones climáticas", bono: "+20%", sueldo: "60,000€", ejemplo: "Lluvia/Sequía" },
-            { id: 3, nombre: "Experto en Fiabilidad", icono: "🔧", especialidad: "Abandonos y fallos", bono: "+18%", sueldo: "55,000€", ejemplo: "Número de abandonos" },
-            { id: 4, nombre: "Estratega de Carrera", icono: "🏁", especialidad: "Estrategias de parada", bono: "+22%", sueldo: "75,000€", ejemplo: "Número de paradas" },
-            { id: 5, nombre: "Analista de Neumáticos", icono: "🛞", especialidad: "Degradación de neumáticos", bono: "+16%", sueldo: "52,000€", ejemplo: "Compuesto predominante" },
-            { id: 6, nombre: "Especialista en Overtakes", icono: "💨", especialidad: "Adelantamientos", bono: "+19%", sueldo: "58,000€", ejemplo: "Adelantamientos entre compañeros" }
-        ];
-        
-        container.innerHTML = estrategas.map(e => `
-            <div class="estratega-tutorial-card seleccionable" onclick="tutorialSeleccionarEstrategaPractico(${e.id})">
-                <div class="estratega-icon-tut">${e.icono}</div>
-                <div class="estratega-nombre-tut">${e.nombre}</div>
-                <div class="estratega-especialidad">${e.especialidad}</div>
-                <div class="estratega-bono">Bono: <span class="bono-valor">${e.bono}</span></div>
-                <div class="estratega-sueldo">Sueldo: <span class="sueldo-valor">${e.sueldo}/mes</span></div>
-                <div class="estratega-ejemplo">Ej: "${e.ejemplo}"</div>
-            </div>
-        `).join('');
-    };
-    
-    window.tutorialSeleccionarEstrategaPractico = function(id) {
-        const cards = document.querySelectorAll('.estratega-tutorial-card');
-        cards.forEach(card => card.classList.remove('seleccionado'));
-        cards[id-1].classList.add('seleccionado');
-        
-        const accionBtn = document.getElementById('accion-contratar-tut');
-        if (accionBtn) accionBtn.style.display = 'block';
-        
-        window.tutorialData.estrategaSeleccionado = id;
-    };
-    
-    window.tutorialEjecutarContratacion = function() {
-        alert("✅ Estratega contratado con éxito. Su bono se aplicará a tus pronósticos.");
-        // En un tutorial real, aquí avanzarías al siguiente paso automáticamente
-    };
-    
-    window.tutorialSeleccionarFabricacionPractica = function(area) {
-        const cards = document.querySelectorAll('.fabricacion-tutorial-card');
-        cards.forEach(card => card.classList.remove('seleccionado'));
-        
-        cards.forEach(card => {
-            if (card.getAttribute('onclick') && card.getAttribute('onclick').includes(area)) {
-                card.classList.add('seleccionado');
-            }
-        });
-        
-        const accionBtn = document.getElementById('accion-fabricar-tut');
-        if (accionBtn) accionBtn.style.display = 'block';
-        
-        window.tutorialData.areaSeleccionada = area;
-    };
-    
-    window.tutorialEjecutarFabricacion = function() {
-        alert("✅ Pieza en fabricación. Se completará en el tiempo indicado y aparecerá en tu Almacén.");
-        // En un tutorial real, aquí avanzarías al siguiente paso automáticamente
-    };
-    
-    window.tutorialSeleccionarPronosticoPractico = function(tipo) {
-        const cards = document.querySelectorAll('.pronostico-tutorial-card');
-        cards.forEach(card => card.classList.remove('seleccionado'));
-        
-        cards.forEach(card => {
-            if (card.getAttribute('onclick') && card.getAttribute('onclick').includes(tipo)) {
-                card.classList.add('seleccionado');
-            }
-        });
-        
-        const accionBtn = document.getElementById('accion-pronostico-tut');
-        if (accionBtn) accionBtn.style.display = 'block';
-    };
-    
-    window.tutorialSeleccionarOpcion = function(tipo, opcion) {
-        const opciones = document.querySelectorAll('.opcion-tut');
-        opciones.forEach(op => op.classList.remove('seleccionado'));
-        
-        event.target.classList.add('seleccionado');
-        window.tutorialData.pronosticosSeleccionados[tipo] = opcion;
-    };
-    
-    window.tutorialEjecutarPronostico = function() {
-        alert("✅ Pronósticos enviados. Se verificarán con los datos reales post-carrera.");
-        // En un tutorial real, aquí avanzarías al siguiente paso automáticamente
-    };
-    
-    window.tutorialSimularCarrera = function() {
-        const resultados = document.getElementById('resultado-simulacion');
-        if (resultados) {
-            resultados.innerHTML = `
-                <div class="resultado-simulado">
-                    <h4>📊 RESULTADOS DE LA SIMULACIÓN:</h4>
-                    <div class="resultado-item">✅ Bandera amarilla: SÍ (correcto)</div>
-                    <div class="resultado-item">✅ Abandonos: 3-5 (correcto)</div>
-                    <div class="resultado-item">❌ Diferencia 1º-2º: >5s (incorrecto, fue 2.3s)</div>
-                    <div class="resumen-simulacion">
-                        <strong>2 de 3 pronósticos acertados (66.7%)</strong>
-                    </div>
-                </div>
-            `;
-            resultados.style.display = 'block';
-        }
-        alert("🏁 Carrera simulada. 2 de 3 pronósticos acertados.");
-    };
+
     
     // Añade esta función al objeto principal
     ejecutarAccionTutorial(accion) {
@@ -4374,6 +4259,125 @@ class F1Manager {
         }
     }
 }
+
+    // FUNCIONES GLOBALES PARA EL TUTORIAL
+    window.tutorialManager = null;
+    window.tutorialData = {
+        estrategaSeleccionado: null,
+        areaSeleccionada: null,
+        pronosticosSeleccionados: {},
+        piezaFabricando: false
+    };
+    
+    window.cargarEstrategasTutorial = function() {
+        const container = document.getElementById('grid-estrategas-tutorial');
+        if (!container) return;
+        
+        const estrategas = [
+            { id: 1, nombre: "Analista de Tiempos", icono: "⏱️", especialidad: "Diferencias de tiempo", bono: "+15%", sueldo: "50,000€", ejemplo: "Diferencia 1º-2º" },
+            { id: 2, nombre: "Meteorólogo", icono: "🌧️", especialidad: "Condiciones climáticas", bono: "+20%", sueldo: "60,000€", ejemplo: "Lluvia/Sequía" },
+            { id: 3, nombre: "Experto en Fiabilidad", icono: "🔧", especialidad: "Abandonos y fallos", bono: "+18%", sueldo: "55,000€", ejemplo: "Número de abandonos" },
+            { id: 4, nombre: "Estratega de Carrera", icono: "🏁", especialidad: "Estrategias de parada", bono: "+22%", sueldo: "75,000€", ejemplo: "Número de paradas" },
+            { id: 5, nombre: "Analista de Neumáticos", icono: "🛞", especialidad: "Degradación de neumáticos", bono: "+16%", sueldo: "52,000€", ejemplo: "Compuesto predominante" },
+            { id: 6, nombre: "Especialista en Overtakes", icono: "💨", especialidad: "Adelantamientos", bono: "+19%", sueldo: "58,000€", ejemplo: "Adelantamientos entre compañeros" }
+        ];
+        
+        container.innerHTML = estrategas.map(e => `
+            <div class="estratega-tutorial-card seleccionable" onclick="tutorialSeleccionarEstrategaPractico(${e.id})">
+                <div class="estratega-icon-tut">${e.icono}</div>
+                <div class="estratega-nombre-tut">${e.nombre}</div>
+                <div class="estratega-especialidad">${e.especialidad}</div>
+                <div class="estratega-bono">Bono: <span class="bono-valor">${e.bono}</span></div>
+                <div class="estratega-sueldo">Sueldo: <span class="sueldo-valor">${e.sueldo}/mes</span></div>
+                <div class="estratega-ejemplo">Ej: "${e.ejemplo}"</div>
+            </div>
+        `).join('');
+    };
+    
+    window.tutorialSeleccionarEstrategaPractico = function(id) {
+        const cards = document.querySelectorAll('.estratega-tutorial-card');
+        cards.forEach(card => card.classList.remove('seleccionado'));
+        cards[id-1].classList.add('seleccionado');
+        
+        const accionBtn = document.getElementById('accion-contratar-tut');
+        if (accionBtn) accionBtn.style.display = 'block';
+        
+        window.tutorialData.estrategaSeleccionado = id;
+    };
+    
+    window.tutorialEjecutarContratacion = function() {
+        alert("✅ Estratega contratado con éxito. Su bono se aplicará a tus pronósticos.");
+        // En un tutorial real, aquí avanzarías al siguiente paso automáticamente
+    };
+    
+    window.tutorialSeleccionarFabricacionPractica = function(area) {
+        const cards = document.querySelectorAll('.fabricacion-tutorial-card');
+        cards.forEach(card => card.classList.remove('seleccionado'));
+        
+        cards.forEach(card => {
+            if (card.getAttribute('onclick') && card.getAttribute('onclick').includes(area)) {
+                card.classList.add('seleccionado');
+            }
+        });
+        
+        const accionBtn = document.getElementById('accion-fabricar-tut');
+        if (accionBtn) accionBtn.style.display = 'block';
+        
+        window.tutorialData.areaSeleccionada = area;
+    };
+    
+    window.tutorialEjecutarFabricacion = function() {
+        alert("✅ Pieza en fabricación. Se completará en el tiempo indicado y aparecerá en tu Almacén.");
+        // En un tutorial real, aquí avanzarías al siguiente paso automáticamente
+    };
+    
+    window.tutorialSeleccionarPronosticoPractico = function(tipo) {
+        const cards = document.querySelectorAll('.pronostico-tutorial-card');
+        cards.forEach(card => card.classList.remove('seleccionado'));
+        
+        cards.forEach(card => {
+            if (card.getAttribute('onclick') && card.getAttribute('onclick').includes(tipo)) {
+                card.classList.add('seleccionado');
+            }
+        });
+        
+        const accionBtn = document.getElementById('accion-pronostico-tut');
+        if (accionBtn) accionBtn.style.display = 'block';
+    };
+    
+    window.tutorialSeleccionarOpcion = function(tipo, opcion) {
+        const opciones = document.querySelectorAll('.opcion-tut');
+        opciones.forEach(op => op.classList.remove('seleccionado'));
+        
+        event.target.classList.add('seleccionado');
+        window.tutorialData.pronosticosSeleccionados[tipo] = opcion;
+    };
+    
+    window.tutorialEjecutarPronostico = function() {
+        alert("✅ Pronósticos enviados. Se verificarán con los datos reales post-carrera.");
+        // En un tutorial real, aquí avanzarías al siguiente paso automáticamente
+    };
+    
+    window.tutorialSimularCarrera = function() {
+        const resultados = document.getElementById('resultado-simulacion');
+        if (resultados) {
+            resultados.innerHTML = `
+                <div class="resultado-simulado">
+                    <h4>📊 RESULTADOS DE LA SIMULACIÓN:</h4>
+                    <div class="resultado-item">✅ Bandera amarilla: SÍ (correcto)</div>
+                    <div class="resultado-item">✅ Abandonos: 3-5 (correcto)</div>
+                    <div class="resultado-item">❌ Diferencia 1º-2º: >5s (incorrecto, fue 2.3s)</div>
+                    <div class="resumen-simulacion">
+                        <strong>2 de 3 pronósticos acertados (66.7%)</strong>
+                    </div>
+                </div>
+            `;
+            resultados.style.display = 'block';
+        }
+        alert("🏁 Carrera simulada. 2 de 3 pronósticos acertados.");
+    };
+
+
 // Iniciar aplicación
 console.log('🚀 Iniciando aplicación desde el final del archivo...');
 iniciarAplicacion();
