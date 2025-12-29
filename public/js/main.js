@@ -1825,14 +1825,50 @@ class F1Manager {
                     }
                 }
                 
-                @media (max-width: 768px) {
+                /* Responsive - pantallas pequeñas */
+                @media (max-width: 1200px) {
+                    .grid-6-columns {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                    
+                    .grid-4-columns {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                    
+                    .grid-3-columns {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+                
+                @media (max-width: 900px) {
                     .grid-6-columns, .grid-4-columns, .grid-3-columns {
                         grid-template-columns: 1fr;
                     }
                     
+                    .area-grid-card {
+                        min-height: auto;
+                        padding: 15px;
+                    }
+                    
+                    .area-grid-name {
+                        font-size: 1rem;
+                    }
+                    
+                    .area-grid-desc {
+                        font-size: 0.85rem;
+                        min-height: 35px;
+                    }
+                    
+                    .area-grid-stats, .area-grid-sub {
+                        font-size: 0.85rem;
+                    }
+                }
+                
+                @media (max-width: 768px) {
                     .tutorial-container {
-                        padding: 20px;
+                        padding: 15px;
                         height: 95vh;
+                        max-height: none;
                         margin: 10px;
                         overflow-y: auto;
                     }
@@ -1843,15 +1879,28 @@ class F1Manager {
                     }
                     
                     .grid-icon {
-                        font-size: 2rem;
+                        font-size: 1.8rem;
                     }
                     
                     .grid-title {
-                        font-size: 1rem;
+                        font-size: 0.9rem;
                     }
                     
                     .grid-desc {
-                        font-size: 0.8rem;
+                        font-size: 0.75rem;
+                    }
+                    
+                    .estratega-tutorial-card, .fabricacion-tutorial-card, .pronostico-tutorial-card {
+                        min-height: 200px;
+                        padding: 15px;
+                    }
+                    
+                    .estratega-icon-tut, .fab-icon-tut, .pronostico-icon-tut {
+                        font-size: 2rem;
+                    }
+                    
+                    .estratega-nombre-tut, .fab-nombre-tut, .pronostico-nombre-tut {
+                        font-size: 0.9rem;
                     }
                 }
                 
@@ -2250,16 +2299,22 @@ class F1Manager {
             const prevBtn = document.getElementById('btn-tutorial-prev');
             
             if (nextBtn) {
-                nextBtn.onclick = () => {
+                nextBtn.onclick = async () => {
                     if (step.action === 'comenzarJuegoReal') {
-                        // Finalizar tutorial
+                        // Finalizar tutorial y cargar dashboard
                         document.body.innerHTML = '';
-                        document.body.appendChild(this.appContainer);
-                        if (typeof this.inicializarJuego === 'function') {
-                            this.inicializarJuego();
-                        }
-                        if (typeof this.ocultarLoading === 'function') {
-                            this.ocultarLoading();
+                        await this.cargarDashboardCompleto();
+                        await this.inicializarSistemasIntegrados();
+                        
+                        // Marcar tutorial como completado
+                        localStorage.setItem('f1_tutorial_completado', 'true');
+                        
+                        if (this.escuderia && this.supabase) {
+                            this.supabase
+                                .from('escuderias')
+                                .update({ tutorial_completado: true })
+                                .eq('id', this.escuderia.id)
+                                .catch(error => console.warn('No se pudo actualizar tutorial en BD:', error));
                         }
                     } else {
                         // Avanzar paso
