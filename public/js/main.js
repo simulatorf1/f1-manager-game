@@ -1497,13 +1497,13 @@ class F1Manager {
     }
     
     async mostrarSelectorPilotos() {
-        // Cargar pilotos disponibles desde la base de datos
+        // Cargar ingenieros disponibles desde la base de datos
         try {
-            const { data: pilotos, error } = await supabase
-                .from('ingenieros_catalogo')  // ← NOMBRE CORRECTO
-                .select('id, nombre, nacionalidad, experiencia, habilidad, salario_base')
-                .eq('disponible', true)    // ← Solo pilotos disponibles
-                .order('habilidad', { ascending: false })  // ← Mejores primero
+            const { data: ingenieros, error } = await supabase
+                .from('ingenieros_catalogo')  // ← Tabla correcta
+                .select('id, nombre, nacionalidad, experiencia, nivel_habilidad, salario_base, especialidad, bonificacion_tipo, bonificacion_valor')
+                .eq('disponible', true)
+                .order('nivel_habilidad', { ascending: false })  // ← Columna correcta
                 .limit(10);
             
             if (error) throw error;
@@ -1511,62 +1511,78 @@ class F1Manager {
             // Actualizar el contenido del tutorial
             document.querySelector('.tutorial-content').innerHTML = `
                 <div class="pilotos-tutorial">
-                    <h3>🏎️ SELECCIONA 2 INGENIEROS</h3>
+                    <h3>👨‍🔧 SELECCIONA 2 INGENIEROS</h3>
                     <p class="warning">⚠️ Debes seleccionar exactamente 2 ingenieros para continuar</p>
+                    <p class="success">💰 Los ingenieros te otorgan bonificaciones especiales:</p>
+                    <ul>
+                        <li><strong>Reducción de tiempo</strong>: Fabrican más rápido</li>
+                        <li><strong>Bonificación de calidad</strong>: Piezas con mejores stats</li>
+                        <li><strong>Coste reducido</strong>: Ahorras dinero en fabricación</li>
+                    </ul>
                     
                     <div class="pilotos-grid">
-                        ${pilotos.map(piloto => `
-                            <div class="piloto-card ${this.tutorialData.pilotosContratados.includes(piloto.id) ? 'selected' : ''}" 
-                                 data-piloto-id="${piloto.id}">
+                        ${ingenieros.map(ingeniero => `
+                            <div class="piloto-card ${this.tutorialData.pilotosContratados.includes(ingeniero.id) ? 'selected' : ''}" 
+                                 data-piloto-id="${ingeniero.id}">
                                 <div class="piloto-header">
-                                    <h4>${piloto.nombre}</h4>
-                                    <span class="piloto-nacionalidad">${piloto.nacionalidad || 'Internacional'}</span>
+                                    <h4>${ingeniero.nombre}</h4>
+                                    <span class="piloto-nacionalidad">${ingeniero.nacionalidad || 'Internacional'}</span>
                                 </div>
                                 <div class="piloto-stats">
                                     <div class="stat">
-                                        <i class="fas fa-brain"></i>
-                                        <span>Experiencia: ${piloto.experiencia || 5}/10</span>
+                                        <i class="fas fa-graduation-cap"></i>
+                                        <span>Experiencia: ${ingeniero.experiencia || 5}/10</span>
                                     </div>
                                     <div class="stat">
-                                        <i class="fas fa-bolt"></i>
-                                        <span>Habilidad: ${piloto.habilidad || 5}/10</span>
+                                        <i class="fas fa-star"></i>
+                                        <span>Habilidad: ${ingeniero.nivel_habilidad || 5}/10</span>
+                                    </div>
+                                    <div class="stat">
+                                        <i class="fas fa-cogs"></i>
+                                        <span>Especialidad: ${ingeniero.especialidad || 'General'}</span>
                                     </div>
                                     <div class="stat">
                                         <i class="fas fa-coins"></i>
-                                        <span>Sueldo: €${(parseFloat(piloto.salario_base) || 500000).toLocaleString()}/mes</span>
+                                        <span>Salario: €${(parseFloat(ingeniero.salario_base) || 250000).toLocaleString()}/mes</span>
                                     </div>
+                                    ${ingeniero.bonificacion_tipo ? `
+                                    <div class="stat bonus">
+                                        <i class="fas fa-gift"></i>
+                                        <span>Bonus: ${this.getBonusText(ingeniero.bonificacion_tipo, ingeniero.bonificacion_valor)}</span>
+                                    </div>
+                                    ` : ''}
                                 </div>
-                                <button class="btn-seleccionar" data-piloto-id="${piloto.id}">
-                                    ${this.tutorialData.pilotosContratados.includes(piloto.id) ? '✓ Seleccionado' : 'Seleccionar'}
+                                <button class="btn-seleccionar" data-piloto-id="${ingeniero.id}">
+                                    ${this.tutorialData.pilotosContratados.includes(ingeniero.id) ? '✓ Seleccionado' : 'Seleccionar'}
                                 </button>
                             </div>
                         `).join('')}
                     </div>
                     
                     <div class="pilotos-selected">
-                        <h4>Pilotos seleccionados: <span id="contador-pilotos">${this.tutorialData.pilotosContratados.length}</span>/2</h4>
+                        <h4>Ingenieros seleccionados: <span id="contador-pilotos">${this.tutorialData.pilotosContratados.length}</span>/2</h4>
                         <div id="selected-pilotos-list">
-                            ${this.tutorialData.pilotosContratados.map(pilotoId => {
-                                const piloto = pilotos.find(p => p.id === pilotoId);
-                                return piloto ? `<div class="selected-piloto">✓ ${piloto.nombre}</div>` : '';
+                            ${this.tutorialData.pilotosContratados.map(ingenieroId => {
+                                const ingeniero = ingenieros.find(p => p.id === ingenieroId);
+                                return ingeniero ? `<div class="selected-piloto">✓ ${ingeniero.nombre}</div>` : '';
                             }).join('')}
                         </div>
                         <button class="btn-confirmar" id="btn-confirmar-pilotos" 
                                 ${this.tutorialData.pilotosContratados.length !== 2 ? 'disabled' : ''}>
-                            CONFIRMAR SELECCIÓN (€${((pilotos.find(p => this.tutorialData.pilotosContratados.includes(p.id))?.sueldo_base || 0) * 2).toLocaleString()}/mes)
+                            CONFIRMAR SELECCIÓN (€${((ingenieros.find(p => this.tutorialData.pilotosContratados.includes(p.id))?.salario_base || 0) * 2).toLocaleString()}/mes)
                         </button>
                     </div>
                 </div>
                 
                 <style>
                     .pilotos-tutorial {
-                        max-width: 800px;
+                        max-width: 900px;
                         margin: 0 auto;
                     }
                     
                     .pilotos-grid {
                         display: grid;
-                        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
                         gap: 20px;
                         margin: 20px 0;
                         max-height: 400px;
@@ -1620,6 +1636,16 @@ class F1Manager {
                         font-size: 0.9rem;
                     }
                     
+                    .piloto-stats .stat.bonus {
+                        color: #4CAF50;
+                        font-weight: bold;
+                    }
+                    
+                    .piloto-stats .stat i {
+                        width: 20px;
+                        text-align: center;
+                    }
+                    
                     .btn-seleccionar {
                         width: 100%;
                         padding: 10px;
@@ -1669,32 +1695,50 @@ class F1Manager {
                         background: #666;
                         cursor: not-allowed;
                     }
+                    
+                    .success {
+                        color: #4CAF50;
+                        font-weight: bold;
+                        margin: 10px 0;
+                    }
                 </style>
             `;
+            
+            // AÑADE ESTA FUNCIÓN A LA CLASE F1Manager (fuera de mostrarSelectorPilotos)
+            this.getBonusText = function(tipo, valor) {
+                switch(tipo) {
+                    case 'tiempo_reduccion': return `-${valor}% tiempo fabricación`;
+                    case 'calidad_extra': return `+${valor}% calidad piezas`;
+                    case 'coste_reduccion': return `-${valor}% coste fabricación`;
+                    case 'puntos_extra': return `+${valor} puntos base`;
+                    default: return `Bonus: ${tipo}`;
+                }
+            };
             
             // Eventos de selección
             document.querySelectorAll('.btn-seleccionar').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    const pilotoId = e.target.dataset.pilotoId;
-                    this.seleccionarPilotoTutorial(pilotoId, pilotos);
+                    const ingenieroId = parseInt(e.target.dataset.pilotoId);
+                    this.seleccionarPilotoTutorial(ingenieroId, ingenieros);
                 });
             });
             
             document.getElementById('btn-confirmar-pilotos').addEventListener('click', async () => {
-                await this.confirmarPilotosTutorial();
+                await this.confirmarIngenierosTutorial(ingenieros);  // ← Cambia el nombre
             });
             
         } catch (error) {
-            console.error('Error cargando pilotos:', error);
+            console.error('Error cargando ingenieros:', error);
             document.querySelector('.tutorial-content').innerHTML = `
-                <p class="error">❌ Error cargando pilotos. Recarga la página.</p>
+                <p class="error">❌ Error cargando ingenieros: ${error.message}</p>
                 <button onclick="location.reload()">Recargar</button>
             `;
         }
     }
     
-    seleccionarPilotoTutorial(pilotoId, pilotos) {
-        const index = this.tutorialData.pilotosContratados.indexOf(pilotoId);
+    seleccionarPilotoTutorial(ingenieroId, ingenieros) {
+        // Cambiar nombre de variable para claridad (opcional)
+        const index = this.tutorialData.pilotosContratados.indexOf(ingenieroId);
         
         if (index > -1) {
             // Deseleccionar
@@ -1702,16 +1746,16 @@ class F1Manager {
         } else {
             // Seleccionar (máximo 2)
             if (this.tutorialData.pilotosContratados.length < 2) {
-                this.tutorialData.pilotosContratados.push(pilotoId);
+                this.tutorialData.pilotosContratados.push(ingenieroId);
             } else {
-                alert('Solo puedes seleccionar 2 pilotos');
+                alert('Solo puedes seleccionar 2 ingenieros');  // ← Texto actualizado
                 return;
             }
         }
         
         // Actualizar UI
         document.querySelectorAll('.piloto-card').forEach(card => {
-            if (this.tutorialData.pilotosContratados.includes(card.dataset.pilotoId)) {
+            if (this.tutorialData.pilotosContratados.includes(parseInt(card.dataset.pilotoId))) {
                 card.classList.add('selected');
                 card.querySelector('.btn-seleccionar').textContent = '✓ Seleccionado';
             } else {
@@ -1728,8 +1772,8 @@ class F1Manager {
         const lista = document.getElementById('selected-pilotos-list');
         if (lista) {
             lista.innerHTML = this.tutorialData.pilotosContratados.map(id => {
-                const piloto = pilotos.find(p => p.id === id);
-                return piloto ? `<div class="selected-piloto">✓ ${piloto.nombre}</div>` : '';
+                const ingeniero = ingenieros.find(p => p.id === id);
+                return ingeniero ? `<div class="selected-piloto">✓ ${ingeniero.nombre}</div>` : '';
             }).join('');
         }
         
@@ -1741,53 +1785,56 @@ class F1Manager {
             // Actualizar costo total
             if (this.tutorialData.pilotosContratados.length === 2) {
                 const totalSueldo = this.tutorialData.pilotosContratados.reduce((total, id) => {
-                    const piloto = pilotos.find(p => p.id === id);
-                    return total + (piloto?.salario_base || 500000);
+                    const ingeniero = ingenieros.find(p => p.id === id);
+                    return total + (parseFloat(ingeniero?.salario_base) || 250000);
                 }, 0);
                 confirmBtn.innerHTML = `CONFIRMAR SELECCIÓN (€${totalSueldo.toLocaleString()}/mes)`;
+            } else {
+                confirmBtn.innerHTML = `CONFIRMAR SELECCIÓN`;
             }
         }
     }
     
-    async confirmarPilotosTutorial() {
+    async confirmarIngenierosTutorial(ingenierosCatalogo) {
         if (!this.escuderia) {
             alert('Primero debes crear tu escudería');
             return;
         }
         
         if (this.tutorialData.pilotosContratados.length !== 2) {
-            alert('Debes seleccionar exactamente 2 pilotos');
+            alert('Debes seleccionar exactamente 2 ingenieros');
             return;
         }
         
         try {
-            // 1. Obtener los pilotos seleccionados CON SUS DATOS REALES
-            const { data: pilotosCatalogo, error: catalogoError } = await supabase
-                .from('ingenieros_catalogo')
-                .select('id, nombre, salario_base')
-                .in('id', this.tutorialData.pilotosContratados);
+            // 1. Obtener los ingenieros seleccionados
+            const ingenierosSeleccionados = ingenierosCatalogo.filter(
+                ing => this.tutorialData.pilotosContratados.includes(ing.id)
+            );
             
-            if (catalogoError) throw catalogoError;
-            
-            // 2. Contratar CADA piloto en la tabla pilotos_contratados
-            for (const piloto of pilotosCatalogo) {
+            // 2. Contratar CADA ingeniero en la tabla ingenieros_contratados
+            for (const ingeniero of ingenierosSeleccionados) {
                 const { error: contratoError } = await supabase
-                    .from('pilotos_contratados')
+                    .from('ingenieros_contratados')  // ← Tabla correcta
                     .insert([{
                         escuderia_id: this.escuderia.id,
-                        piloto_id: piloto.id,
-                        nombre: piloto.nombre,
-                        salario: piloto.salario_base || 500000,
-                        carreras_restantes: 12, // 1 temporada
+                        ingeniero_id: ingeniero.id,
+                        nombre: ingeniero.nombre,
+                        salario: ingeniero.salario_base || 250000,
+                        especialidad: ingeniero.especialidad,
+                        bonificacion_tipo: ingeniero.bonificacion_tipo,
+                        bonificacion_valor: ingeniero.bonificacion_valor,
                         activo: true,
-                        salario_actual: piloto.salario_base || 500000
+                        contratado_en: new Date().toISOString()
                     }]);
                 
                 if (contratoError) throw contratoError;
             }
             
             // 3. Descontar el dinero de los salarios
-            const totalSalarios = pilotosCatalogo.reduce((sum, p) => sum + (p.salario_base || 500000), 0);
+            const totalSalarios = ingenierosSeleccionados.reduce(
+                (sum, ing) => sum + (parseFloat(ing.salario_base) || 250000), 0
+            );
             this.escuderia.dinero -= totalSalarios;
             await this.updateEscuderiaMoney();
             
@@ -1795,11 +1842,12 @@ class F1Manager {
             this.tutorialStep++;
             this.mostrarTutorialStep();
             
-            alert(`✅ Pilotos contratados: ${pilotosCatalogo.map(p => p.nombre).join(' y ')}\n💰 Coste mensual: €${totalSalarios.toLocaleString()}`);
+            const nombres = ingenierosSeleccionados.map(ing => ing.nombre).join(' y ');
+            alert(`✅ Ingenieros contratados: ${nombres}\n💰 Coste mensual: €${totalSalarios.toLocaleString()}`);
             
         } catch (error) {
-            console.error('Error contratando pilotos:', error);
-            alert('❌ Error contratando pilotos. Verifica la consola.');
+            console.error('Error contratando ingenieros:', error);
+            alert('❌ Error contratando ingenieros: ' + error.message);
         }
     }
     
