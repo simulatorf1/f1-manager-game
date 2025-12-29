@@ -644,7 +644,7 @@ class F1Manager {
         console.log('🚗 Creando F1Manager para:', user.email);
         this.user = user;
         this.escuderia = null;
-        this.ingenieros = [];
+        this.pilotos = [];
         this.carStats = null;
         this.proximoGP = null;
         this.tutorialStep = 0;
@@ -912,7 +912,7 @@ class F1Manager {
         this.tutorialStep = 1;
         this.tutorialData = {
             escuderiaCreada: false,
-            ingenierosContratados: [],
+            pilotosContratados: [],
             fabricacionIniciada: false,
             piezaEquipada: false,
             apuestaRealizada: false
@@ -931,14 +931,14 @@ class F1Manager {
                     <p>En este tutorial aprenderás a:</p>
                     <ul>
                         <li>Gestionar tu escudería</li>
-                        <li>Contratar ingenieros</li>
+                        <li>Contratar pilotos</li>
                         <li>Fabricar piezas para tu coche</li>
                         <li>Hacer apuestas en carreras</li>
                         <li>Subir en el ranking mundial</li>
                     </ul>
                     <p class="success">💰 Tu escudería ya está creada y tiene 5,000,000€ para empezar</p> <!-- Texto actualizado -->
                 `,
-                action: 'mostrarPestanas' // CAMBIA 'crearEscuderia' por el nombre del SEGUNDO paso real (ej: 'mostrarPestanas' o 'contrataringenieros')
+                action: 'mostrarPestanas' // CAMBIA 'crearEscuderia' por el nombre del SEGUNDO paso real (ej: 'mostrarPestanas' o 'contratarPilotos')
             },
             
             // PASO 2: Dashboard principal
@@ -948,7 +948,7 @@ class F1Manager {
                     <p>Esta es tu pantalla principal. Aquí verás:</p>
                     <ul>
                         <li><strong>Cabecera</strong>: Nombre, dinero y puntos</li>
-                        <li><strong>Panel de ingenieros</strong>: Tus 2 ingenieros contratados</li>
+                        <li><strong>Panel de pilotos</strong>: Tus 2 pilotos contratados</li>
                         <li><strong>Countdown</strong>: Tiempo para la próxima apuesta</li>
                         <li><strong>Fábrica</strong>: Piezas en producción</li>
                         <li><strong>Estado del coche</strong>: Nivel de cada área</li>
@@ -977,22 +977,22 @@ class F1Manager {
                 action: 'mostrarTab'
             },
             
-            // PASO 4: Contratar ingenieros (OBLIGATORIO)
+            // PASO 4: Contratar pilotos (OBLIGATORIO)
             {
-                title: "👨‍🔧 CONTRATAR INGENIEROS (OBLIGATORIO)",
+                title: "👥 CONTRATAR PILOTOS (OBLIGATORIO)",
                 content: `
-                    <p>Necesitas <strong>2 ingenieros</strong> para tu equipo técnico.</p>
-                    <p>Características de los ingenieros:</p>
+                    <p>Necesitas <strong>2 pilotos</strong> para competir.</p>
+                    <p>Características de los pilotos:</p>
                     <ul>
-                        <li><strong>Especialidad</strong>: Área técnica del coche</li>
-                        <li><strong>Bonificación</strong>: % extra en pronósticos específicos</li>
-                        <li><strong>Nivel</strong>: 1-5 (básico a experto)</li>
-                        <li><strong>Salario</strong>: Coste mensual</li>
+                        <li><strong>Sueldo</strong>: Coste mensual</li>
+                        <li><strong>Experiencia</strong>: Mejores decisiones</li>
+                        <li><strong>Habilidad</strong>: Más puntos en carrera</li>
+                        <li><strong>Contrato</strong>: Duración en carreras</li>
                     </ul>
-                    <p class="warning">⚠️ CONSEJO: Contrata un ingeniero de Aerodinámica y otro de Estrategia para cubrir áreas clave</p>
+                    <p class="warning">⚠️ NO puedes continuar sin 2 pilotos</p>
                 `,
-                highlight: '#contratar-ingenieros-btn',
-                action: 'contratarIngenieros', // CAMBIAR: 'contrataringenieros' → 'contratarIngenieros'
+                highlight: '#contratar-pilotos-btn',
+                action: 'contratarPilotos',
                 mandatory: true
             },
             
@@ -1310,8 +1310,8 @@ class F1Manager {
                 this.mostrarTutorialStep();
                 break;
                 
-            case 'contrataringenieros':
-                this.mostrarSelectoringenieros();
+            case 'contratarPilotos':
+                this.mostrarSelectorPilotos();
                 break;
                 
             case 'fabricarPieza':
@@ -1476,92 +1476,222 @@ class F1Manager {
         }, 1500);
     }
     
-    async mostrarSelectorIngenieros() {
+    async mostrarSelectorPilotos() {
+        // Cargar pilotos disponibles desde la base de datos
         try {
-            // Cargar ingenieros disponibles desde la nueva tabla
-            const { data: ingenieros, error } = await supabase
-                .from('ingenieros_catalogo')
-                .select('id, nombre, especialidad, nivel_habilidad, bonificacion_tipo, bonificacion_valor, salario_base')
-                .eq('disponible', true)
-                .order('nivel_habilidad', { ascending: true }) // Básicos primero
+            const { data: pilotos, error } = await supabase
+                .from('pilotos_catalogo')  // ← NOMBRE CORRECTO
+                .select('id, nombre, nacionalidad, experiencia, habilidad, salario_base')
+                .eq('disponible', true)    // ← Solo pilotos disponibles
+                .order('habilidad', { ascending: false })  // ← Mejores primero
                 .limit(10);
             
             if (error) throw error;
             
-            // Actualizar contenido del tutorial con ingenieros
+            // Actualizar el contenido del tutorial
             document.querySelector('.tutorial-content').innerHTML = `
-                <div class="ingenieros-tutorial">
-                    <h3>👨‍🔧 SELECCIONA 2 INGENIEROS</h3>
-                    <p class="warning">⚠️ Debes seleccionar exactamente 2 ingenieros para continuar</p>
+                <div class="pilotos-tutorial">
+                    <h3>🏎️ SELECCIONA 2 PILOTOS</h3>
+                    <p class="warning">⚠️ Debes seleccionar exactamente 2 pilotos para continuar</p>
                     
-                    <div class="ingenieros-grid">
-                        ${ingenieros.map(ing => `
-                            <div class="ingeniero-card" data-ingeniero-id="${ing.id}">
-                                <div class="ingeniero-header">
-                                    <h4>${ing.nombre}</h4>
-                                    <span class="ingeniero-especialidad">${ing.especialidad}</span>
+                    <div class="pilotos-grid">
+                        ${pilotos.map(piloto => `
+                            <div class="piloto-card ${this.tutorialData.pilotosContratados.includes(piloto.id) ? 'selected' : ''}" 
+                                 data-piloto-id="${piloto.id}">
+                                <div class="piloto-header">
+                                    <h4>${piloto.nombre}</h4>
+                                    <span class="piloto-nacionalidad">${piloto.nacionalidad || 'Internacional'}</span>
                                 </div>
-                                <div class="ingeniero-stats">
+                                <div class="piloto-stats">
                                     <div class="stat">
-                                        <i class="fas fa-cog"></i>
-                                        <span>Especialidad: ${ing.especialidad}</span>
+                                        <i class="fas fa-brain"></i>
+                                        <span>Experiencia: ${piloto.experiencia || 5}/10</span>
                                     </div>
                                     <div class="stat">
-                                        <i class="fas fa-chart-line"></i>
-                                        <span>Bonificación: ${ing.bonificacion_valor}% en ${ing.bonificacion_tipo}</span>
+                                        <i class="fas fa-bolt"></i>
+                                        <span>Habilidad: ${piloto.habilidad || 5}/10</span>
                                     </div>
                                     <div class="stat">
                                         <i class="fas fa-coins"></i>
-                                        <span>Salario: €${parseFloat(ing.salario_base).toLocaleString()}/mes</span>
+                                        <span>Sueldo: €${(parseFloat(piloto.salario_base) || 500000).toLocaleString()}/mes</span>
                                     </div>
                                 </div>
-                                <button class="btn-seleccionar" data-ingeniero-id="${ing.id}">
-                                    ${this.tutorialData.ingenierosContratados.includes(ing.id) ? '✓ Seleccionado' : 'Seleccionar'}
+                                <button class="btn-seleccionar" data-piloto-id="${piloto.id}">
+                                    ${this.tutorialData.pilotosContratados.includes(piloto.id) ? '✓ Seleccionado' : 'Seleccionar'}
                                 </button>
                             </div>
                         `).join('')}
                     </div>
                     
-                    <div class="ingenieros-selected">
-                        <h4>Ingenieros seleccionados: <span id="contador-ingenieros">${this.tutorialData.ingenierosContratados.length}</span>/2</h4>
-                        <div id="selected-ingenieros-list">
-                            ${this.tutorialData.ingenierosContratados.map(id => {
-                                const ing = ingenieros.find(i => i.id === id);
-                                return ing ? `<div class="selected-ingeniero">✓ ${ing.nombre} (${ing.especialidad})</div>` : '';
+                    <div class="pilotos-selected">
+                        <h4>Pilotos seleccionados: <span id="contador-pilotos">${this.tutorialData.pilotosContratados.length}</span>/2</h4>
+                        <div id="selected-pilotos-list">
+                            ${this.tutorialData.pilotosContratados.map(pilotoId => {
+                                const piloto = pilotos.find(p => p.id === pilotoId);
+                                return piloto ? `<div class="selected-piloto">✓ ${piloto.nombre}</div>` : '';
                             }).join('')}
                         </div>
-                        <button class="btn-confirmar" id="btn-confirmar-ingenieros" 
-                                ${this.tutorialData.ingenierosContratados.length !== 2 ? 'disabled' : ''}>
-                            CONFIRMAR SELECCIÓN (€${this.calcularSalarioTotal(ingenieros).toLocaleString()}/mes)
+                        <button class="btn-confirmar" id="btn-confirmar-pilotos" 
+                                ${this.tutorialData.pilotosContratados.length !== 2 ? 'disabled' : ''}>
+                            CONFIRMAR SELECCIÓN (€${((pilotos.find(p => this.tutorialData.pilotosContratados.includes(p.id))?.sueldo_base || 0) * 2).toLocaleString()}/mes)
                         </button>
                     </div>
                 </div>
+                
+                <style>
+                    .pilotos-tutorial {
+                        max-width: 800px;
+                        margin: 0 auto;
+                    }
+                    
+                    .pilotos-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                        gap: 20px;
+                        margin: 20px 0;
+                        max-height: 400px;
+                        overflow-y: auto;
+                        padding: 10px;
+                    }
+                    
+                    .piloto-card {
+                        background: rgba(255, 255, 255, 0.05);
+                        border-radius: 10px;
+                        padding: 20px;
+                        border: 2px solid transparent;
+                        transition: all 0.3s;
+                    }
+                    
+                    .piloto-card.selected {
+                        border-color: #00d2be;
+                        background: rgba(0, 210, 190, 0.1);
+                    }
+                    
+                    .piloto-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 15px;
+                    }
+                    
+                    .piloto-header h4 {
+                        color: white;
+                        margin: 0;
+                        font-size: 1.1rem;
+                    }
+                    
+                    .piloto-nacionalidad {
+                        background: rgba(255, 255, 255, 0.1);
+                        padding: 3px 10px;
+                        border-radius: 15px;
+                        font-size: 0.8rem;
+                    }
+                    
+                    .piloto-stats {
+                        margin: 15px 0;
+                    }
+                    
+                    .piloto-stats .stat {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        margin-bottom: 8px;
+                        color: #ccc;
+                        font-size: 0.9rem;
+                    }
+                    
+                    .btn-seleccionar {
+                        width: 100%;
+                        padding: 10px;
+                        background: rgba(0, 210, 190, 0.2);
+                        border: 1px solid #00d2be;
+                        color: #00d2be;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                        font-weight: bold;
+                    }
+                    
+                    .btn-seleccionar:hover {
+                        background: rgba(0, 210, 190, 0.4);
+                    }
+                    
+                    .pilotos-selected {
+                        margin-top: 30px;
+                        padding: 20px;
+                        background: rgba(0, 0, 0, 0.3);
+                        border-radius: 10px;
+                        border: 2px dashed #00d2be;
+                    }
+                    
+                    .selected-piloto {
+                        background: rgba(0, 210, 190, 0.2);
+                        padding: 10px;
+                        margin: 5px 0;
+                        border-radius: 5px;
+                        color: #00d2be;
+                    }
+                    
+                    .btn-confirmar {
+                        margin-top: 20px;
+                        padding: 15px 30px;
+                        background: #00d2be;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        width: 100%;
+                        font-size: 1.1rem;
+                    }
+                    
+                    .btn-confirmar:disabled {
+                        background: #666;
+                        cursor: not-allowed;
+                    }
+                </style>
             `;
             
+            // Eventos de selección
+            document.querySelectorAll('.btn-seleccionar').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const pilotoId = e.target.dataset.pilotoId;
+                    this.seleccionarPilotoTutorial(pilotoId, pilotos);
+                });
+            });
+            
+            document.getElementById('btn-confirmar-pilotos').addEventListener('click', async () => {
+                await this.confirmarPilotosTutorial();
+            });
+            
         } catch (error) {
-            console.error('Error cargando ingenieros:', error);
+            console.error('Error cargando pilotos:', error);
+            document.querySelector('.tutorial-content').innerHTML = `
+                <p class="error">❌ Error cargando pilotos. Recarga la página.</p>
+                <button onclick="location.reload()">Recargar</button>
+            `;
         }
     }
     
-    seleccionarIngenierioTutorial(ingenierioId, ingenieros) {
-        const index = this.tutorialData.ingenierosContratados.indexOf(IngenierioId);
+    seleccionarPilotoTutorial(pilotoId, pilotos) {
+        const index = this.tutorialData.pilotosContratados.indexOf(pilotoId);
         
         if (index > -1) {
             // Deseleccionar
-            this.tutorialData.ingenierosContratados.splice(index, 1);
+            this.tutorialData.pilotosContratados.splice(index, 1);
         } else {
             // Seleccionar (máximo 2)
-            if (this.tutorialData.ingenierosContratados.length < 2) {
-                this.tutorialData.ingenierosContratados.push(ingenierioId);
+            if (this.tutorialData.pilotosContratados.length < 2) {
+                this.tutorialData.pilotosContratados.push(pilotoId);
             } else {
-                alert('Solo puedes seleccionar 2 ingenieros');
+                alert('Solo puedes seleccionar 2 pilotos');
                 return;
             }
         }
         
         // Actualizar UI
-        document.querySelectorAll('.ingenierio-card').forEach(card => {
-            if (this.tutorialData.ingenierosContratados.includes(card.dataset.ingenierioId)) {
+        document.querySelectorAll('.piloto-card').forEach(card => {
+            if (this.tutorialData.pilotosContratados.includes(card.dataset.pilotoId)) {
                 card.classList.add('selected');
                 card.querySelector('.btn-seleccionar').textContent = '✓ Seleccionado';
             } else {
@@ -1571,73 +1701,73 @@ class F1Manager {
         });
         
         // Actualizar contador
-        const contador = document.getElementById('contador-ingenieros');
-        if (contador) contador.textContent = this.tutorialData.ingenierosContratados.length;
+        const contador = document.getElementById('contador-pilotos');
+        if (contador) contador.textContent = this.tutorialData.pilotosContratados.length;
         
         // Actualizar lista de seleccionados
-        const lista = document.getElementById('selected-ingenieros-list');
+        const lista = document.getElementById('selected-pilotos-list');
         if (lista) {
-            lista.innerHTML = this.tutorialData.ingenierosContratados.map(id => {
-                const ingenierio = ingenieros.find(p => p.id === id);
-                return ingenierio ? `<div class="selected-ingenierio">✓ ${ingenierio.nombre}</div>` : '';
+            lista.innerHTML = this.tutorialData.pilotosContratados.map(id => {
+                const piloto = pilotos.find(p => p.id === id);
+                return piloto ? `<div class="selected-piloto">✓ ${piloto.nombre}</div>` : '';
             }).join('');
         }
         
         // Actualizar botón de confirmar
-        const confirmBtn = document.getElementById('btn-confirmar-ingenieros');
+        const confirmBtn = document.getElementById('btn-confirmar-pilotos');
         if (confirmBtn) {
-            confirmBtn.disabled = this.tutorialData.ingenierosContratados.length !== 2;
+            confirmBtn.disabled = this.tutorialData.pilotosContratados.length !== 2;
             
             // Actualizar costo total
-            if (this.tutorialData.ingenierosContratados.length === 2) {
-                const totalSueldo = this.tutorialData.ingenierosContratados.reduce((total, id) => {
-                    const ingenierio = ingenieros.find(p => p.id === id);
-                    return total + (ingenierio?.salario_base || 500000);
+            if (this.tutorialData.pilotosContratados.length === 2) {
+                const totalSueldo = this.tutorialData.pilotosContratados.reduce((total, id) => {
+                    const piloto = pilotos.find(p => p.id === id);
+                    return total + (piloto?.salario_base || 500000);
                 }, 0);
                 confirmBtn.innerHTML = `CONFIRMAR SELECCIÓN (€${totalSueldo.toLocaleString()}/mes)`;
             }
         }
     }
     
-    async confirmaringenierosTutorial() {
+    async confirmarPilotosTutorial() {
         if (!this.escuderia) {
             alert('Primero debes crear tu escudería');
             return;
         }
         
-        if (this.tutorialData.ingenierosContratados.length !== 2) {
-            alert('Debes seleccionar exactamente 2 ingenieros');
+        if (this.tutorialData.pilotosContratados.length !== 2) {
+            alert('Debes seleccionar exactamente 2 pilotos');
             return;
         }
         
         try {
-            // 1. Obtener los ingenieros seleccionados CON SUS DATOS REALES
-            const { data: ingenierosCatalogo, error: catalogoError } = await supabase
-                .from('ingenieros_catalogo')
+            // 1. Obtener los pilotos seleccionados CON SUS DATOS REALES
+            const { data: pilotosCatalogo, error: catalogoError } = await supabase
+                .from('pilotos_catalogo')
                 .select('id, nombre, salario_base')
-                .in('id', this.tutorialData.ingenierosContratados);
+                .in('id', this.tutorialData.pilotosContratados);
             
             if (catalogoError) throw catalogoError;
             
-            // 2. Contratar CADA ingenierio en la tabla ingenieros_contratados
-            for (const ingenierio of ingenierosCatalogo) {
+            // 2. Contratar CADA piloto en la tabla pilotos_contratados
+            for (const piloto of pilotosCatalogo) {
                 const { error: contratoError } = await supabase
-                    .from('ingenieros_contratados')
+                    .from('pilotos_contratados')
                     .insert([{
                         escuderia_id: this.escuderia.id,
-                        ingenierio_id: ingenierio.id,
-                        nombre: ingenierio.nombre,
-                        salario: ingenierio.salario_base || 500000,
+                        piloto_id: piloto.id,
+                        nombre: piloto.nombre,
+                        salario: piloto.salario_base || 500000,
                         carreras_restantes: 12, // 1 temporada
                         activo: true,
-                        salario_actual: ingenierio.salario_base || 500000
+                        salario_actual: piloto.salario_base || 500000
                     }]);
                 
                 if (contratoError) throw contratoError;
             }
             
             // 3. Descontar el dinero de los salarios
-            const totalSalarios = ingenierosCatalogo.reduce((sum, p) => sum + (p.salario_base || 500000), 0);
+            const totalSalarios = pilotosCatalogo.reduce((sum, p) => sum + (p.salario_base || 500000), 0);
             this.escuderia.dinero -= totalSalarios;
             await this.updateEscuderiaMoney();
             
@@ -1645,11 +1775,11 @@ class F1Manager {
             this.tutorialStep++;
             this.mostrarTutorialStep();
             
-            alert(`✅ ingenieros contratados: ${ingenierosCatalogo.map(p => p.nombre).join(' y ')}\n💰 Coste mensual: €${totalSalarios.toLocaleString()}`);
+            alert(`✅ Pilotos contratados: ${pilotosCatalogo.map(p => p.nombre).join(' y ')}\n💰 Coste mensual: €${totalSalarios.toLocaleString()}`);
             
         } catch (error) {
-            console.error('Error contratando ingenieros:', error);
-            alert('❌ Error contratando ingenieros. Verifica la consola.');
+            console.error('Error contratando pilotos:', error);
+            alert('❌ Error contratando pilotos. Verifica la consola.');
         }
     }
     
@@ -1797,7 +1927,7 @@ class F1Manager {
                     <div class="apuesta-card">
                         <h4><i class="fas fa-chart-line"></i> Estrategia</h4>
                         <ul>
-                            <li>Usa las estadísticas de ingenieros</li>
+                            <li>Usa las estadísticas de pilotos</li>
                             <li>Considera el circuito</li>
                             <li>Analiza el rendimiento reciente</li>
                             <li>Gestiona tu riesgo</li>
@@ -1965,16 +2095,16 @@ class F1Manager {
         }
     }
 
-    async loadingenierosContratados() {
+    async loadPilotosContratados() {
         if (!this.escuderia || !this.escuderia.id) {
-            console.log('❌ No hay escudería para cargar ingenieros');
+            console.log('❌ No hay escudería para cargar pilotos');
             return;
         }
 
         try {
-            console.log('👥 Cargando ingenieros contratados...');
-            const { data: ingenieros, error } = await this.supabase
-                .from('ingenieros_contratados')
+            console.log('👥 Cargando pilotos contratados...');
+            const { data: pilotos, error } = await this.supabase
+                .from('pilotos_contratados')
                 .select('*')
                 .eq('escuderia_id', this.escuderia.id)
                 .eq('activo', true)
@@ -1982,16 +2112,16 @@ class F1Manager {
 
             if (error) throw error;
 
-            this.ingenieros = ingenieros || [];
-            console.log(`✅ ${this.ingenieros.length} ingenierio(s) cargado(s)`);
+            this.pilotos = pilotos || [];
+            console.log(`✅ ${this.pilotos.length} piloto(s) cargado(s)`);
             
             // Actualizar la interfaz
-            this.updateingenierosUI();
+            this.updatePilotosUI();
             
         } catch (error) {
-            console.error('❌ Error cargando ingenieros:', error);
-            this.ingenieros = [];
-            this.updateingenierosUI(); // Aún así actualizar la UI para mostrar estado vacío
+            console.error('❌ Error cargando pilotos:', error);
+            this.pilotos = [];
+            this.updatePilotosUI(); // Aún así actualizar la UI para mostrar estado vacío
         }
     }
     
@@ -1999,49 +2129,32 @@ class F1Manager {
     async crearDatosInicialesSiFaltan() {
         console.log('🔍 Verificando si faltan datos iniciales...');
         
-        // ⬇⬇⬇ **NUEVO: Verificar si la tabla users existe** ⬇⬇⬇
-        const { data: tableExists, error: tableError } = await this.supabase
-            .from('information_schema.tables')
-            .select('table_name')
-            .eq('table_schema', 'public')
-            .eq('table_name', 'users')
+        // 1. Verificar si el usuario ya está en public.users
+        const { data: usuarioPublico, error: userError } = await this.supabase
+            .from('users')
+            .select('id')
+            .eq('id', this.user.id)
             .maybeSingle();
         
-        // Si la tabla NO existe, saltar creación de usuario
-        if (!tableExists || tableError) {
-            console.warn('⚠️ Tabla public.users no encontrada. Continuando sin usuario público.');
-            // CONTINUAR directamente con creación de escudería (omitir paso de usuario)
-        } else {
-            // 1. Verificar si el usuario ya está en public.users (SOLO si tabla existe)
-            const { data: usuarioPublico, error: userError } = await this.supabase
+        // Si NO existe en public.users, lo creamos
+        if (!usuarioPublico && !userError) {
+            console.log('👤 Creando usuario en tabla pública...');
+            const { error: insertError } = await this.supabase
                 .from('users')
-                .select('id')
-                .eq('id', this.user.id)
-                .maybeSingle();
+                .insert([{
+                    id: this.user.id,
+                    username: this.user.user_metadata?.username || this.user.email?.split('@')[0],
+                    email: this.user.email,
+                    created_at: new Date().toISOString(),
+                    last_login: new Date().toISOString()
+                }]);
             
-            // Si NO existe en public.users, lo creamos
-            if (!usuarioPublico && !userError) {
-                console.log('👤 Creando usuario en tabla pública...');
-                // ⬇⬇⬇ **CAMBIADO: Añadido onConflict** ⬇⬇⬇
-                const { error: insertError } = await this.supabase
-                    .from('users')
-                    .insert([{
-                        id: this.user.id,
-                        username: this.user.user_metadata?.username || this.user.email?.split('@')[0],
-                        email: this.user.email,
-                        created_at: new Date().toISOString(),
-                        last_login: new Date().toISOString()
-                    }], { onConflict: 'id' }); // ← **ESTO ES NUEVO**
-                
-                if (insertError) {
-                    console.error('❌ Error creando usuario público:', insertError);
-                    // NO lanzar error, continuar sin usuario en tabla pública
-                }
+            if (insertError) {
+                console.error('❌ Error creando usuario público:', insertError);
             }
         }
-        // ⬆⬆⬆ **FIN DE NUEVO CÓDIGO** ⬆⬆⬆
         
-        // 2. Verificar si ya tiene escudería (tu código existente - NO cambiar)
+        // 2. Verificar si ya tiene escudería
         const { data: escuderia, error: escError } = await this.supabase
             .from('escuderias')
             .select('id')
@@ -2053,7 +2166,6 @@ class F1Manager {
             console.log('🏎️ Creando escudería inicial...');
             const nombreEscuderia = this.user.user_metadata?.team_name || `${this.user.user_metadata?.username}'s Team`;
             
-            // ⬇⬇⬇ **CAMBIADO: Quitar returning: 'minimal'** ⬇⬇⬇
             const { error: escInsertError } = await this.supabase
                 .from('escuderias')
                 .insert([{
@@ -2066,7 +2178,7 @@ class F1Manager {
                     color_principal: '#e10600',
                     color_secundario: '#ffffff',
                     creada_en: new Date().toISOString()
-                }]); // ← **QUITAR { returning: 'minimal' }**
+                }], { returning: 'minimal' }); // ← ¡IMPORTANTE!
             
             if (escInsertError) {
                 console.error('❌ Error creando escudería:', escInsertError);
@@ -2109,7 +2221,7 @@ class F1Manager {
         }
         
         return true; // Ya tenía todos los datos
-    }
+    }   
     async cargarCarStats() {
         if (!this.escuderia) return;
         
@@ -2236,20 +2348,20 @@ class F1Manager {
                 <main class="dashboard-content">
                     <!-- Tab Principal -->
                     <div id="tab-principal" class="tab-content active">
-                        <!-- Panel de ingenieros -->
-                        <section class="panel-ingenieros">
+                        <!-- Panel de Pilotos -->
+                        <section class="panel-pilotos">
                             <div class="section-header">
-                                <h2><i class="fas fa-user"></i> TUS ingenieros</h2>
-                                <button class="btn-primary" id="contratar-ingenieros-btn">
-                                    <i class="fas fa-user-plus"></i> Contratar Ingenieros
+                                <h2><i class="fas fa-user"></i> TUS PILOTOS</h2>
+                                <button class="btn-primary" id="contratar-pilotos-btn">
+                                    <i class="fas fa-plus"></i> Contratar Pilotos
                                 </button>
                             </div>
-                            <div id="ingenieros-container" class="ingenieros-container">
+                            <div id="pilotos-container" class="pilotos-container">
                                 <div class="empty-state">
                                     <i class="fas fa-user-slash"></i>
-                                    <p>No tienes ingenieros contratados</p>
-                                    <button class="btn-primary" id="contratar-ingenieros-btn">
-                                        <i class="fas fa-user-plus"></i> Contratar Ingenieros
+                                    <p>No tienes pilotos contratados</p>
+                                    <button class="btn-primary" id="contratar-primer-piloto">
+                                        <i class="fas fa-user-plus"></i> Contratar mi primer piloto
                                     </button>
                                 </div>
                             </div>
@@ -2455,7 +2567,7 @@ class F1Manager {
             };
         } else {
             await this.loadCarStatus();
-            await this.loadingenierosContratados(); // <-- AÑADE ESTA LÍNEA
+            await this.loadPilotosContratados(); // <-- AÑADE ESTA LÍNEA
             await this.loadProximoGP();
         }
         
@@ -2547,22 +2659,22 @@ class F1Manager {
         }
     }
     
-    async loadingenieros() {
+    async loadPilotos() {
         if (!this.escuderia) return;
         
         try {
-            const { data: ingenieros } = await supabase
-                .from('ingenieros_contratados')
+            const { data: pilotos } = await supabase
+                .from('pilotos_contratados')
                 .select('*')
                 .eq('escuderia_id', this.escuderia.id)
                 .eq('activo', true);
             
-            if (ingenieros && ingenieros.length > 0) {
-                this.ingenieros = ingenieros;
-                this.updateingenierosUI();
+            if (pilotos && pilotos.length > 0) {
+                this.pilotos = pilotos;
+                this.updatePilotosUI();
             }
         } catch (error) {
-            console.error('Error cargando ingenieros:', error);
+            console.error('Error cargando pilotos:', error);
         }
     }
     
@@ -2604,63 +2716,63 @@ class F1Manager {
         });
     }
     
-    updateingenierosUI() {
-        const container = document.getElementById('ingenieros-container'); // El div contenedor
+    updatePilotosUI() {
+        const container = document.getElementById('pilotos-container'); // El div contenedor
         if (!container) {
-            console.error('❌ No se encontró #ingenieros-container');
+            console.error('❌ No se encontró #pilotos-container');
             return;
         }
 
-        if (!this.ingenieros || this.ingenieros.length === 0) {
+        if (!this.pilotos || this.pilotos.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-user-slash"></i>
-                    <p>No tienes ingenieros contratados</p>
-                    <button class="btn-primary" id="contratar-ingenieros-btn">
-                        <i class="fas fa-user-plus"></i> Contratar ingenieros
+                    <p>No tienes pilotos contratados</p>
+                    <button class="btn-primary" id="contratar-primer-piloto">
+                        <i class="fas fa-user-plus"></i> Contratar mi primer piloto
                     </button>
                 </div>
             `;
             // Opcional: agregar evento al botón
-            document.getElementById('contratar-primer-ingenierio')?.addEventListener('click', () => {
-                // Tu lógica para abrir el selector de ingenieros
+            document.getElementById('contratar-primer-piloto')?.addEventListener('click', () => {
+                // Tu lógica para abrir el selector de pilotos
             });
             return;
         }
 
-        // Generar HTML para cada ingenierio
+        // Generar HTML para cada piloto
         let html = '';
-        this.ingenieros.forEach(ingenierio => {
+        this.pilotos.forEach(piloto => {
             // Calcula carreras restantes si no está en los datos
-            const carrerasRestantes = ingenierio.carreras_restantes || 'N/A';
-            const salario = ingenierio.salario ? '€' + parseInt(ingenierio.salario).toLocaleString('es-ES') : 'N/A';
+            const carrerasRestantes = piloto.carreras_restantes || 'N/A';
+            const salario = piloto.salario ? '€' + parseInt(piloto.salario).toLocaleString('es-ES') : 'N/A';
             
             html += `
-                <div class="ingenierio-card">
-                    <div class="ingenierio-header">
-                        <div class="ingenierio-name">
-                            <h3>${ingenierio.nombre}</h3>
-                            <span class="ingenierio-nacionalidad">
-                                <i class="fas fa-flag"></i> ${ingenierio.nacionalidad || 'Internacional'}
+                <div class="piloto-card">
+                    <div class="piloto-header">
+                        <div class="piloto-name">
+                            <h3>${piloto.nombre}</h3>
+                            <span class="piloto-nacionalidad">
+                                <i class="fas fa-flag"></i> ${piloto.nacionalidad || 'Internacional'}
                             </span>
                         </div>
-                        <div class="ingenierio-status">Contratado</div>
+                        <div class="piloto-status">Contratado</div>
                     </div>
-                    <div class="ingenierio-stats">
-                        <div class="ingenierio-stat">
+                    <div class="piloto-stats">
+                        <div class="piloto-stat">
                             <span class="stat-label">Salario</span>
                             <span class="stat-value">${salario}</span>
                         </div>
-                        <div class="ingenierio-stat">
+                        <div class="piloto-stat">
                             <span class="stat-label">Carreras Restantes</span>
                             <span class="stat-value">${carrerasRestantes}</span>
                         </div>
-                        <div class="ingenierio-stat">
+                        <div class="piloto-stat">
                             <span class="stat-label">Contrato desde</span>
-                            <span class="stat-value">${new Date(ingenierio.contratado_en).toLocaleDateString('es-ES')}</span>
+                            <span class="stat-value">${new Date(piloto.contratado_en).toLocaleDateString('es-ES')}</span>
                         </div>
                     </div>
-                    <div class="ingenierio-contract">
+                    <div class="piloto-contract">
                         <div class="contract-progress">
                             <span class="contract-label">Progreso del contrato</span>
                             <span class="carreras-restantes">${carrerasRestantes} carreras</span>
@@ -2961,13 +3073,13 @@ class F1Manager {
             this.irAlTaller();
         });
         
-        // Botón de contratar ingenieros
-        document.getElementById('contratar-ingenieros-btn')?.addEventListener('click', () => {
-            this.mostrarContrataringenieros();
+        // Botón de contratar pilotos
+        document.getElementById('contratar-pilotos-btn')?.addEventListener('click', () => {
+            this.mostrarContratarPilotos();
         });
         
-        document.getElementById('contratar-primer-ingenierio')?.addEventListener('click', () => {
-            this.mostrarContrataringenieros();
+        document.getElementById('contratar-primer-piloto')?.addEventListener('click', () => {
+            this.mostrarContratarPilotos();
         });
         
         // Botón de apuestas
@@ -2995,9 +3107,9 @@ class F1Manager {
         }, 1000);
     }
     
-    mostrarContrataringenieros() {
-        this.showNotification('🏎️ Sistema de ingenieros en desarrollo', 'info');
-        // Aquí implementarías la lógica para contratar ingenieros
+    mostrarContratarPilotos() {
+        this.showNotification('🏎️ Sistema de pilotos en desarrollo', 'info');
+        // Aquí implementarías la lógica para contratar pilotos
     }
     
     mostrarApuestas() {
@@ -3039,5 +3151,6 @@ class F1Manager {
         }
     }
 }
-console.log('⏳ Aplicación lista, esperando activación desde auth.js...');
-window.appIniciada = false;
+// Iniciar aplicación
+console.log('🚀 Iniciando aplicación desde el final del archivo...');
+iniciarAplicacion();
