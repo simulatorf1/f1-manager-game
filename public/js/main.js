@@ -2072,13 +2072,28 @@ class F1Manager {
     }
     
     finalizarTutorial() {
-        // Guardar que el tutorial está completado
-        localStorage.setItem('tutorial_completado', 'true');
+        // 1. Guardar en localStorage que el tutorial está completado
+        localStorage.setItem('f1_tutorial_completado', 'true');
+        console.log('💾 Tutorial marcado como completado en localStorage');
         
-        // Cargar dashboard completo
+        // 2. Cargar dashboard completo
         this.cargarDashboardCompleto();
         
-        // Mostrar notificación de bienvenida
+        // 3. Opcional: Marcar también en la base de datos
+        if (this.escuderia && this.supabase) {
+            this.supabase
+                .from('escuderias')
+                .update({ tutorial_completado: true })
+                .eq('id', this.escuderia.id)
+                .then(() => {
+                    console.log('✅ Tutorial marcado como completado en BD');
+                })
+                .catch(error => {
+                    console.warn('⚠️ No se pudo actualizar tutorial en BD:', error);
+                });
+        }
+        
+        // 4. Mostrar notificación de bienvenida
         setTimeout(() => {
             this.showNotification('🎉 ¡Tutorial completado! ¡Bienvenido a F1 Manager!', 'success');
         }, 1000);
