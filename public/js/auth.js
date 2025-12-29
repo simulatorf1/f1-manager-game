@@ -315,3 +315,15 @@ class AuthManager {
         location.reload();
     }
 }
+// ========================
+// INSTANCIA GLOBAL DE AUTHMANAGER
+// ========================
+console.log('🔧 Creando instancia global de AuthManager...');
+
+// Crear la instancia global
+window.authManager = new AuthManager();
+
+// También puedes crear un alias más corto si quieres
+window.am = window.authManager;
+
+console.log('✅ AuthManager disponible globalmente como window.authManager');
