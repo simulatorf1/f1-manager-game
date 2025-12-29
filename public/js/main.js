@@ -1548,7 +1548,7 @@ class F1Manager {
                                     ${ingeniero.bonificacion_tipo ? `
                                     <div class="stat bonus">
                                         <i class="fas fa-gift"></i>
-                                        <span>Bonus: ${this.getBonusText(ingeniero.bonificacion_tipo, ingeniero.bonificacion_valor)}</span>
+                                        <span>Bonus: ${getBonusText(ingeniero.bonificacion_tipo, ingeniero.bonificacion_valor)}</span>
                                     </div>
                                     ` : ''}
                                 </div>
@@ -1705,7 +1705,7 @@ class F1Manager {
             `;
             
             // AÑADE ESTA FUNCIÓN A LA CLASE F1Manager (fuera de mostrarSelectorPilotos)
-            this.getBonusText = function(tipo, valor) {
+            const getBonusText = (tipo, valor) => {
                 switch(tipo) {
                     case 'tiempo_reduccion': return `-${valor}% tiempo fabricación`;
                     case 'calidad_extra': return `+${valor}% calidad piezas`;
