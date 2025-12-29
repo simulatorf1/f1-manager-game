@@ -1499,6 +1499,19 @@ class F1Manager {
     async mostrarSelectorPilotos() {
         // Cargar ingenieros disponibles desde la base de datos
         try {
+            const getBonusText = (tipo, valor) => {
+                switch(tipo) {
+                    case 'tiempo_reduccion': return `-${valor}% tiempo fabricación`;
+                    case 'calidad_extra': return `+${valor}% calidad piezas`;
+                    case 'coste_reduccion': return `-${valor}% coste fabricación`;
+                    case 'puntos_extra': return `+${valor} puntos base`;
+                    default: return `Bonus: ${tipo}`;
+                }
+            };
+
+
+
+            
             const { data: ingenieros, error } = await supabase
                 .from('ingenieros_catalogo')  // ← Tabla correcta
                 .select('id, nombre, nacionalidad, experiencia, nivel_habilidad, salario_base, especialidad, bonificacion_tipo, bonificacion_valor')
@@ -1704,16 +1717,7 @@ class F1Manager {
                 </style>
             `;
             
-            // AÑADE ESTA FUNCIÓN A LA CLASE F1Manager (fuera de mostrarSelectorPilotos)
-            const getBonusText = (tipo, valor) => {
-                switch(tipo) {
-                    case 'tiempo_reduccion': return `-${valor}% tiempo fabricación`;
-                    case 'calidad_extra': return `+${valor}% calidad piezas`;
-                    case 'coste_reduccion': return `-${valor}% coste fabricación`;
-                    case 'puntos_extra': return `+${valor} puntos base`;
-                    default: return `Bonus: ${tipo}`;
-                }
-            };
+
             
             // Eventos de selección
             document.querySelectorAll('.btn-seleccionar').forEach(btn => {
