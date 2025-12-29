@@ -2104,7 +2104,7 @@ class F1Manager {
         try {
             console.log('👥 Cargando pilotos contratados...');
             const { data: pilotos, error } = await this.supabase
-                .from('pilotos_contratados')
+                .from('ingenieros_contratados')
                 .select('*')
                 .eq('escuderia_id', this.escuderia.id)
                 .eq('activo', true)
