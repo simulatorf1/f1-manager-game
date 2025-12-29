@@ -1367,23 +1367,36 @@ class F1Manager {
                         <div class="resultado-card ganancia">
                             <div class="resultado-icon">✅</div>
                             <div class="resultado-titulo">PRONÓSTICO ACERTADO</div>
-                            <div class="resultado-detalle">Bandera amarilla: SÍ</div>
+                            <div class="resultado-detalle">
+                                ${(() => {
+                                    const selecciones = window.tutorialData?.pronosticosSeleccionados || {};
+                                    const acierto = selecciones.bandera === 'si' ? 'Bandera amarilla: SÍ' : 
+                                                   selecciones.abandonos === '3-5' ? 'Abandonos: 3-5' :
+                                                   selecciones.diferencia && selecciones.diferencia !== '>5s' ? 'Diferencia: ' + selecciones.diferencia : 
+                                                   'Pronóstico acertado';
+                                    return acierto;
+                                })()}
+                            </div>
                             <div class="resultado-puntos">+150 pts base</div>
                         </div>
                         
+                        ${window.tutorialData?.estrategaContratado ? `
                         <div class="resultado-card bono">
                             <div class="resultado-icon">👥</div>
                             <div class="resultado-titulo">BONO ESTRATEGA</div>
-                            <div class="resultado-detalle">Analista de Tiempos (+15%)</div>
+                            <div class="resultado-detalle">${window.tutorialData.nombreEstratega || 'Estratega'} (+15%)</div>
                             <div class="resultado-puntos">+22.5 pts extra</div>
                         </div>
+                        ` : ''}
                         
+                        ${window.tutorialData?.piezaFabricando ? `
                         <div class="resultado-card pieza">
                             <div class="resultado-icon">🔧</div>
-                            <div class="resultado-titulo">BONO PIEZA</div>
-                            <div class="resultado-detalle">Motor (+15 pts base)</div>
-                            <div class="resultado-puntos">+15 pts técnicos</div>
+                            <div class="resultado-titulo">PIEZA FABRICADA</div>
+                            <div class="resultado-detalle">${window.tutorialData.nombrePieza || 'Pieza'} (+${window.tutorialData.puntosPieza || '15'} pts)</div>
+                            <div class="resultado-puntos">+${window.tutorialData.puntosPieza || '15'} pts técnicos</div>
                         </div>
+                        ` : ''}
                     </div>
                     
                     <div class="total-ganancias">
@@ -1396,7 +1409,11 @@ class F1Manager {
                     <div class="nuevo-presupuesto">
                         <div class="presupuesto-inicial">Presupuesto inicial: 5,000,000€</div>
                         <div class="presupuesto-ganancia">+ Ganancias: 18,750€</div>
-                        <div class="presupuesto-gastos">- Gastos: 150,000€</div>
+                        <div class="presupuesto-gastos">- Gastos: ${(() => {
+                            const gastoEstratega = window.tutorialData?.sueldoEstratega ? parseInt(window.tutorialData.sueldoEstratega.replace(',', '')) / 12 : 0;
+                            const gastoPieza = window.tutorialData?.costoPieza ? parseInt(window.tutorialData.costoPieza.replace(',', '')) : 0;
+                            return (gastoEstratega + gastoPieza).toLocaleString() + '€';
+                        })()}</div>
                         <div class="presupuesto-final">Nuevo presupuesto: <strong>4,868,750€</strong></div>
                     </div>
                 `,
@@ -1414,21 +1431,25 @@ class F1Manager {
                     </div>
                     
                     <div class="resumen-final">
+                        ${window.tutorialData?.estrategaContratado ? `
                         <div class="resumen-item">
                             <div class="resumen-icon">👥</div>
                             <div class="resumen-text">
                                 <strong>Estratega contratado</strong><br>
-                                Analista de Tiempos
+                                ${window.tutorialData.nombreEstratega || 'Analista de Tiempos'}
                             </div>
                         </div>
+                        ` : ''}
                         
+                        ${window.tutorialData?.piezaFabricando ? `
                         <div class="resumen-item">
                             <div class="resumen-icon">🔧</div>
                             <div class="resumen-text">
                                 <strong>Pieza en producción</strong><br>
-                                Motor (lista en 4h)
+                                ${window.tutorialData.nombrePieza || 'Motor'} (+${window.tutorialData.puntosPieza || '15'} pts)
                             </div>
                         </div>
+                        ` : ''}
                         
                         <div class="resumen-item">
                             <div class="resumen-icon">💰</div>
@@ -1459,7 +1480,7 @@ class F1Manager {
                     
                     <div class="despedida-final">
                         <p>El mundo del motorsport estratégico te espera.</p>
-                        <p class="equipo-nombre-final">¡Buena suerte al mando de <strong>${this.escuderia.nombre || "tu escudería"}!</strong></p>
+                        <p class="equipo-nombre-final">¡Buena suerte al mando de <strong>${this.escuderia?.nombre || "tu escudería"}!</strong></p>
                     </div>
                 `,
                 action: 'comenzarJuegoReal'
@@ -3247,7 +3268,14 @@ class F1Manager {
                     color: #ddd;
                     margin: 10px 0;
                 }
+                .resultado-item.acertado {
+                    color: #4CAF50;
+                    font-weight: bold;
+                }
                 
+                .resultado-item.fallado {
+                    color: #f44336;
+                }
                 .btn-simular-apuesta {
                     padding: 15px 30px;
                     background: linear-gradient(135deg, #e10600, #ff4444);
@@ -4445,9 +4473,45 @@ class F1Manager {
     };
     
     window.tutorialEjecutarContratacion = function() {
-        alert("✅ Estratega contratado con éxito. Su bono se aplicará a tus pronósticos.");
-        // En un tutorial real, aquí avanzarías al siguiente paso automáticamente
+        const estrategaId = window.tutorialData.estrategaSeleccionado;
+        if (!estrategaId) {
+            alert("Primero selecciona un estratega");
+            return;
+        }
+        
+        // Registrar la contratación
+        window.tutorialData.estrategaContratado = true;
+        window.tutorialData.nombreEstratega = getNombreEstratega(estrategaId);
+        window.tutorialData.sueldoEstratega = getSueldoEstratega(estrategaId);
+        
+        alert(`✅ ${window.tutorialData.nombreEstratega} contratado con éxito por ${window.tutorialData.sueldoEstratega}€/mes. Su bono se aplicará a tus pronósticos.`);
+        
+        // Avanzar automáticamente
+        setTimeout(() => {
+            if (window.tutorialManager) {
+                window.tutorialManager.tutorialStep++;
+                window.tutorialManager.mostrarTutorialStep();
+            }
+        }, 1500);
     };
+    
+    function getNombreEstratega(id) {
+        const nombres = {
+            1: "Analista de Tiempos",
+            2: "Meteorólogo", 
+            3: "Experto en Fiabilidad"
+        };
+        return nombres[id] || "Estratega";
+    }
+    
+    function getSueldoEstratega(id) {
+        const sueldos = {
+            1: "50,000",
+            2: "60,000",
+            3: "55,000"
+        };
+        return sueldos[id] || "50,000";
+    }
     
     window.tutorialSeleccionarFabricacionPractica = function(area) {
         const cards = document.querySelectorAll('.fabricacion-tutorial-card');
@@ -4466,9 +4530,56 @@ class F1Manager {
     };
     
     window.tutorialEjecutarFabricacion = function() {
-        alert("✅ Pieza en fabricación. Se completará en el tiempo indicado y aparecerá en tu Almacén.");
-        // En un tutorial real, aquí avanzarías al siguiente paso automáticamente
+        const area = window.tutorialData.areaSeleccionada;
+        if (!area) {
+            alert("Primero selecciona un área para fabricar");
+            return;
+        }
+        
+        // Registrar la fabricación
+        window.tutorialData.piezaFabricando = true;
+        window.tutorialData.areaFabricada = area;
+        window.tutorialData.nombrePieza = getNombrePieza(area);
+        window.tutorialData.costoPieza = getCostoPieza(area);
+        window.tutorialData.puntosPieza = getPuntosPieza(area);
+        
+        alert(`✅ Pieza de ${window.tutorialData.nombrePieza} en fabricación. Costo: ${window.tutorialData.costoPieza}€, Puntos: +${window.tutorialData.puntosPieza}.`);
+        
+        // Avanzar automáticamente
+        setTimeout(() => {
+            if (window.tutorialManager) {
+                window.tutorialManager.tutorialStep++;
+                window.tutorialManager.mostrarTutorialStep();
+            }
+        }, 1500);
     };
+    
+    function getNombrePieza(area) {
+        const nombres = {
+            'motor': "Motor",
+            'chasis': "Chasis",
+            'aerodinamica': "Aerodinámica"
+        };
+        return nombres[area] || area;
+    }
+    
+    function getCostoPieza(area) {
+        const costos = {
+            'motor': "100,000",
+            'chasis': "90,000",
+            'aerodinamica': "85,000"
+        };
+        return costos[area] || "100,000";
+    }
+    
+    function getPuntosPieza(area) {
+        const puntos = {
+            'motor': "15",
+            'chasis': "12",
+            'aerodinamica': "10"
+        };
+        return puntos[area] || "15";
+    }
     
     window.tutorialSeleccionarPronosticoPractico = function(tipo) {
         const cards = document.querySelectorAll('.pronostico-tutorial-card');
@@ -4493,8 +4604,57 @@ class F1Manager {
     };
     
     window.tutorialEjecutarPronostico = function() {
-        alert("✅ Pronósticos enviados. Se verificarán con los datos reales post-carrera.");
-        // En un tutorial real, aquí avanzarías al siguiente paso automáticamente
+        // Obtener las selecciones actuales
+        const selecciones = window.tutorialData.pronosticosSeleccionados || {};
+        const count = Object.keys(selecciones).length;
+        
+        if (count < 3) {
+            alert(`Has seleccionado ${count} de 3 pronósticos. Puedes seleccionar uno de cada categoría.`);
+            return;
+        }
+        
+        // Mostrar resultados BASADOS EN LAS ELECCIONES REALES
+        const resultados = document.getElementById('resultado-simulacion');
+        if (resultados) {
+            // Determinar qué acertaste y qué no (esto es simulación, siempre aciertas 2/3)
+            const acertados = {
+                bandera: selecciones.bandera === 'si',
+                abandonos: selecciones.abandonos === '3-5',
+                diferencia: selecciones.diferencia !== '>5s' // Simulación: >5s es incorrecto
+            };
+            
+            const aciertos = Object.values(acertados).filter(v => v).length;
+            const errores = 3 - aciertos;
+            
+            resultados.innerHTML = `
+                <div class="resultado-simulado">
+                    <h4>📊 TUS RESULTADOS:</h4>
+                    <div class="resultado-item ${acertados.bandera ? 'acertado' : 'fallado'}">
+                        ${acertados.bandera ? '✅' : '❌'} Bandera amarilla: ${selecciones.bandera || 'No seleccionado'}
+                    </div>
+                    <div class="resultado-item ${acertados.abandonos ? 'acertado' : 'fallado'}">
+                        ${acertados.abandonos ? '✅' : '❌'} Abandonos: ${selecciones.abandonos || 'No seleccionado'}
+                    </div>
+                    <div class="resultado-item ${acertados.diferencia ? 'acertado' : 'fallado'}">
+                        ${acertados.diferencia ? '✅' : '❌'} Diferencia 1º-2º: ${selecciones.diferencia || 'No seleccionado'}
+                    </div>
+                    <div class="resumen-simulacion">
+                        <strong>${aciertos} de 3 pronósticos acertados (${Math.round((aciertos/3)*100)}%)</strong>
+                    </div>
+                </div>
+            `;
+            resultados.style.display = 'block';
+        }
+        
+        alert(`✅ ${aciertos} de 3 pronósticos acertados. ¡Buen trabajo!`);
+        
+        // Avanzar automáticamente al siguiente paso
+        setTimeout(() => {
+            if (window.tutorialManager) {
+                window.tutorialManager.tutorialStep++;
+                window.tutorialManager.mostrarTutorialStep();
+            }
+        }, 2000);
     };
     
     window.tutorialSimularCarrera = function() {
