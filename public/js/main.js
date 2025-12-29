@@ -1370,22 +1370,25 @@ class F1Manager {
                             <div class="resultado-detalle">
                                 ${(() => {
                                     const selecciones = window.tutorialData?.pronosticosSeleccionados || {};
-                                    const acierto = selecciones.bandera === 'si' ? 'Bandera amarilla: SÍ' : 
-                                                   selecciones.abandonos === '3-5' ? 'Abandonos: 3-5' :
-                                                   selecciones.diferencia && selecciones.diferencia !== '>5s' ? 'Diferencia: ' + selecciones.diferencia : 
-                                                   'Pronóstico acertado';
-                                    return acierto;
+                                    const aciertos = window.tutorialData?.aciertosPronosticos || 2;
+                                    const total = window.tutorialData?.totalPronosticos || 3;
+                                    
+                                    if (aciertos > 0) {
+                                        return `${aciertos} de ${total} pronósticos`;
+                                    } else {
+                                        return 'Pronóstico acertado';
+                                    }
                                 })()}
                             </div>
-                            <div class="resultado-puntos">+150 pts base</div>
+                            <div class="resultado-puntos">+${(window.tutorialData?.aciertosPronosticos || 2) * 150} pts</div>
                         </div>
                         
                         ${window.tutorialData?.estrategaContratado ? `
                         <div class="resultado-card bono">
                             <div class="resultado-icon">👥</div>
                             <div class="resultado-titulo">BONO ESTRATEGA</div>
-                            <div class="resultado-detalle">${window.tutorialData.nombreEstratega || 'Estratega'} (+15%)</div>
-                            <div class="resultado-puntos">+22.5 pts extra</div>
+                            <div class="resultado-detalle">${window.tutorialData.nombreEstratega || 'Estratega'} (+${window.tutorialData.bonoEstratega || 15}%)</div>
+                            <div class="resultado-puntos">+${Math.round(((window.tutorialData.aciertosPronosticos || 2) * 150) * ((window.tutorialData.bonoEstratega || 15) / 100))} pts extra</div>
                         </div>
                         ` : ''}
                         
@@ -1409,11 +1412,7 @@ class F1Manager {
                     <div class="nuevo-presupuesto">
                         <div class="presupuesto-inicial">Presupuesto inicial: 5,000,000€</div>
                         <div class="presupuesto-ganancia">+ Ganancias: 18,750€</div>
-                        <div class="presupuesto-gastos">- Gastos: ${(() => {
-                            const gastoEstratega = window.tutorialData?.sueldoEstratega ? parseInt(window.tutorialData.sueldoEstratega.replace(',', '')) / 12 : 0;
-                            const gastoPieza = window.tutorialData?.costoPieza ? parseInt(window.tutorialData.costoPieza.replace(',', '')) : 0;
-                            return (gastoEstratega + gastoPieza).toLocaleString() + '€';
-                        })()}</div>
+                        <div class="presupuesto-gastos">- Gastos: 150,000€</div>
                         <div class="presupuesto-final">Nuevo presupuesto: <strong>4,868,750€</strong></div>
                     </div>
                 `,
@@ -4534,8 +4533,9 @@ class F1Manager {
             // 4. Actualizar datos locales
             window.tutorialData.estrategaContratado = true;
             window.tutorialData.nombreEstratega = estrategaCatalogo.nombre;
-            window.tutorialData.sueldoEstratega = estrategaCatalogo.salario_base || 50000;
-            window.tutorialData.bonoEstratega = estrategaCatalogo.bonificacion_valor || 15;
+            window.tutorialData.sueldoEstratega = parseInt(estrategaCatalogo.salario_base) || 50000;
+            window.tutorialData.bonoEstratega = parseInt(estrategaCatalogo.bonificacion_valor) || 15;
+            window.tutorialData.sueldoFormateado = (estrategaCatalogo.salario_base || 50000).toLocaleString();
             window.tutorialData.bonoTipo = estrategaCatalogo.bonificacion_tipo || 'puntos_extra';
             
             // 5. Descontar dinero de la escudería
@@ -4556,7 +4556,7 @@ class F1Manager {
                 }
             }
             
-            alert(`✅ ${estrategaCatalogo.nombre} contratado con éxito por ${(estrategaCatalogo.salario_base || 50000).toLocaleString()}€/mes.\n\nBono: ${estrategaCatalogo.bonificacion_valor || 15}% ${estrategaCatalogo.bonificacion_tipo || 'puntos extra'}.`);
+            alert(`✅ ${estrategaCatalogo.nombre} contratado con éxito por ${(parseInt(estrategaCatalogo.salario_base) || 50000).toLocaleString()}€/mes.\n\nBono: ${estrategaCatalogo.bonificacion_valor || 15}% ${estrategaCatalogo.bonificacion_tipo || 'puntos extra'}.`);
             
             // Avanzar automáticamente
             setTimeout(() => {
