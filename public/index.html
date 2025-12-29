@@ -90,7 +90,16 @@
             // 2. Cargar scripts
             cargarScriptsEsenciales();
             
-            // 3. auth.js se encargará del login automáticamente
+            // 3. 🔥 NUEVO: Inicializar autenticación después de cargar auth.js
+            // Esperar un momento para que auth.js se cargue completamente
+            setTimeout(() => {
+                if (window.authManager) {
+                    console.log('🔐 Ejecutando authManager.init()...');
+                    window.authManager.init();
+                } else {
+                    console.error('❌ authManager no disponible');
+                }
+            }, 1000); // Esperar 1 segundo para que todos los scripts se carguen
         }
         
         function mostrarError(mensaje) {
