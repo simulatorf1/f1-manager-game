@@ -1009,7 +1009,7 @@ class F1Manager {
                         <li><strong>Habilidad</strong>: Más puntos en carrera</li>
                         
                     </ul>
-                    <p class="warning">⚠️ NO puedes continuar sin 2 pilotos</p>
+                    <p class="warning">⚠️ NO puedes continuar sin 2 ingenieros</p>
                 `,
                 highlight: '#contratar-pilotos-btn',
                 action: 'contratarPilotos',
