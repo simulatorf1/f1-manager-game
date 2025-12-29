@@ -90,16 +90,7 @@
             // 2. Cargar scripts
             cargarScriptsEsenciales();
             
-            // 3. 🔥 NUEVO: Inicializar autenticación después de cargar auth.js
-            // Esperar un momento para que auth.js se cargue completamente
-            setTimeout(() => {
-                if (window.authManager) {
-                    console.log('🔐 Ejecutando authManager.init()...');
-                    window.authManager.init();
-                } else {
-                    console.error('❌ authManager no disponible');
-                }
-            }, 1000); // Esperar 1 segundo para que todos los scripts se carguen
+            // 3. auth.js se encargará del login automáticamente
         }
         
         function mostrarError(mensaje) {
@@ -176,103 +167,5 @@
             }
         };
     </script>
-    <!-- MODAL DE AUTENTICACIÓN -->
-    <div id="auth-modal" class="auth-modal" style="display: block;">
-        <div class="auth-content">
-            <div class="auth-header">
-                <h2><i class="fas fa-flag-checkered"></i> F1 Manager E-Strategy</h2>
-                <p>Gestiona tu escudería de Fórmula 1</p>
-            </div>
-            
-            <div class="auth-tabs">
-                <button class="auth-tab active" id="tab-login">Iniciar Sesión</button>
-                <button class="auth-tab" id="tab-register">Crear Cuenta</button>
-            </div>
-            
-            <!-- FORMULARIO LOGIN -->
-            <div id="login-form" class="auth-form active">
-                <div class="form-group">
-                    <label for="login-email"><i class="fas fa-envelope"></i> Correo electrónico</label>
-                    <input type="email" id="login-email" placeholder="tu@email.com">
-                </div>
-                <div class="form-group">
-                    <label for="login-password"><i class="fas fa-lock"></i> Contraseña</label>
-                    <input type="password" id="login-password" placeholder="••••••••">
-                </div>
-                <button class="btn-auth-primary" id="btn-login">
-                    <i class="fas fa-sign-in-alt"></i> INICIAR SESIÓN
-                </button>
-            </div>
-            
-            <!-- FORMULARIO REGISTRO -->
-            <div id="register-form" class="auth-form">
-                <div class="form-group">
-                    <label for="register-username"><i class="fas fa-user"></i> Nombre de usuario</label>
-                    <input type="text" id="register-username" placeholder="Tu nombre en el juego">
-                </div>
-                <div class="form-group">
-                    <label for="register-email"><i class="fas fa-envelope"></i> Correo electrónico</label>
-                    <input type="email" id="register-email" placeholder="tu@email.com">
-                </div>
-                <div class="form-group">
-                    <label for="register-password"><i class="fas fa-lock"></i> Contraseña</label>
-                    <input type="password" id="register-password" placeholder="Mínimo 6 caracteres">
-                </div>
-                <div class="form-group">
-                    <label for="register-team"><i class="fas fa-racing-flag"></i> Nombre de la escudería</label>
-                    <input type="text" id="register-team" placeholder="Ej: Mi Equipo F1">
-                </div>
-                <button class="btn-auth-primary" id="btn-register">
-                    <i class="fas fa-user-plus"></i> CREAR CUENTA
-                </button>
-            </div>
-            
-            <div class="auth-footer">
-                <p class="version">v1.0.0</p>
-                <p class="tagline">Un juego de gestión 100% online</p>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Configurar eventos del modal (añade esto después del HTML)
-        document.addEventListener('DOMContentLoaded', function() {
-            // Cambiar entre login/registro
-            document.getElementById('tab-login').addEventListener('click', function() {
-                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                document.getElementById('login-form').classList.add('active');
-                document.getElementById('register-form').classList.remove('active');
-            });
-            
-            document.getElementById('tab-register').addEventListener('click', function() {
-                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                document.getElementById('register-form').classList.add('active');
-                document.getElementById('login-form').classList.remove('active');
-            });
-            
-            // Botón login
-            document.getElementById('btn-login').addEventListener('click', function() {
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
-                if (window.authManager) {
-                    window.authManager.handleLogin(email, password);
-                }
-            });
-            
-            // Botón registro
-            document.getElementById('btn-register').addEventListener('click', function() {
-                const username = document.getElementById('register-username').value;
-                const email = document.getElementById('register-email').value;
-                const password = document.getElementById('register-password').value;
-                const team = document.getElementById('register-team').value;
-                if (window.authManager) {
-                    window.authManager.handleRegister(email, password, username, team);
-                }
-            });
-        });
-    </script>
-
 </body>
 </html>
