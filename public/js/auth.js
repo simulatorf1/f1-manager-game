@@ -140,8 +140,12 @@ class AuthManager {
             // Mostrar tutorial si es primer inicio
             if (!localStorage.getItem('f1_tutorial_completed')) {
                 this.showTutorial();
-            }
-
+            } else {
+                // Si NO hay tutorial, iniciar el juego inmediatamente
+                if (window.iniciarJuegoSiNoHayTutorial) {
+                    window.iniciarJuegoSiNoHayTutorial();
+                }
+            }    
             return true;
 
         } catch (error) {
