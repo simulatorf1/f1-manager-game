@@ -3371,15 +3371,15 @@ class F1Manager {
     }
 
     async loadPilotosContratados() {
-        if (!this.escuderia || !this.escuderia.id) {
-            console.log('❌ No hay escudería para cargar pilotos/estrategas');
+        if (!this.escuderia || !this.escuderia.id || !this.supabase) {
+            console.log('❌ No hay escudería o supabase');
             return;
         }
     
         try {
-            console.log('👥 Cargando estrategas contratados...');
-            const { data: estrategas, error } = await this.supabase
-                .from('ingenieros_contratados')  // Cambia si tu tabla tiene otro nombre
+            console.log('👥 Cargando ingenieros contratados...');
+            const { data: ingenieros, error } = await this.supabase
+                .from('ingenieros_contratados')
                 .select('*')
                 .eq('escuderia_id', this.escuderia.id)
                 .eq('activo', true)
@@ -3387,15 +3387,15 @@ class F1Manager {
     
             if (error) throw error;
     
-            this.pilotos = estrategas || [];  // Guarda como pilotos (aunque sean estrategas)
-            console.log(`✅ ${this.pilotos.length} estratega(s) cargado(s)`);
+            this.pilotos = ingenieros || [];
+            console.log(`✅ ${this.pilotos.length} ingeniero(s) cargado(s)`);
             
-            // Actualizar la interfaz
+            // Actualizar UI
             this.updatePilotosUI();
             
         } catch (error) {
-            console.error('❌ Error cargando estrategas:', error);
             this.pilotos = [];
+            console.error('❌ Error cargando ingenieros:', error);
             this.updatePilotosUI();
         }
     }
@@ -4237,18 +4237,9 @@ class F1Manager {
     }
     
     async updateProductionMonitor() {
-        if (!window.fabricacionManager) {
-            console.log('⚠️ fabricacionManager no disponible - intentando crear');
-            
-            if (window.FabricacionManager) {
-                window.fabricacionManager = new window.FabricacionManager();
-                if (this.escuderia && this.escuderia.id) {
-                    window.fabricacionManager.inicializar(this.escuderia.id);
-                }
-            } else {
-                console.log('❌ FabricacionManager no está definido');
-                return;
-            }
+        if (!this.escuderia || !this.escuderia.id || !this.supabase) {
+            console.log('❌ No hay escudería para monitor de producción');
+            return;
         }
         
         const container = document.getElementById('produccion-actual');
@@ -4257,89 +4248,97 @@ class F1Manager {
             return;
         }
         
-        let fabricaciones = [];
-        if (window.fabricacionManager.getProduccionesEnCurso) {
-            fabricaciones = window.fabricacionManager.getProduccionesEnCurso();
-        }
-        
-        if (!fabricaciones || fabricaciones.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-industry"></i>
-                    <p>No hay producción en curso</p>
-
-                </div>
-            `;
+        try {
+            // Cargar fabricaciones activas
+            const { data: fabricaciones, error } = await this.supabase
+                .from('fabricacion_actual')
+                .select('*')
+                .eq('escuderia_id', this.escuderia.id)
+                .eq('completada', false)
+                .order('tiempo_inicio', { ascending: true });
             
-            const btn = document.getElementById('iniciar-fabricacion-btn');
-            if (btn) {
-                btn.addEventListener('click', () => {
-                    this.irAlTaller();
-                });
-            }
+            if (error) throw error;
             
-            return;
-        }
-        
-        let html = `
-            <div class="produccion-header">
-                <h3><i class="fas fa-industry"></i> Fabricaciones en curso</h3>
-                <span class="badge">${fabricaciones.length} activas</span>
-            </div>
-            <div class="fabricaciones-lista">
-        `;
-        
-        fabricaciones.forEach((fab, index) => {
-            const ahora = new Date();
-            const tiempoInicio = new Date(fab.tiempo_inicio);
-            const tiempoFin = new Date(fab.tiempo_fin);
-            
-            const tiempoTotal = tiempoFin - tiempoInicio;
-            const tiempoTranscurrido = ahora - tiempoInicio;
-            const progreso = Math.min(100, (tiempoTranscurrido / tiempoTotal) * 100);
-            const tiempoRestante = tiempoFin - ahora;
-            const lista = ahora >= tiempoFin;
-            
-            html += `
-                <div class="fabricacion-item ${lista ? 'lista' : ''}">
-                    <div class="fabricacion-info">
-                        <div class="fab-area">
-                            <i class="fas fa-cog"></i>
-                            <span>${fab.area} Nivel ${fab.nivel}</span>
-                        </div>
-                        <div class="fab-estado">
-                            <span class="estado-badge ${lista ? 'lista' : 'fabricando'}">
-                                ${lista ? '✅ LISTA' : '🔄 FABRICANDO'}
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div class="fab-progreso">
-                        <div class="progress-bar-small">
-                            <div class="progress-fill-small" style="width: ${progreso}%"></div>
-                        </div>
-                        <div class="fab-tiempo">
-                            <i class="far fa-clock"></i>
-                            <span>${lista ? '¡Lista para recoger!' : `Tiempo restante: ${this.formatTime(tiempoRestante)}`}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="fab-acciones">
-                        <button class="btn-small btn-success" ${!lista ? 'disabled' : ''} 
-                                onclick="window.fabricacionManager.recogerPieza('${fab.id}')">
-                            <i class="fas fa-box-open"></i> ${lista ? 'Recoger' : 'Esperar'}
+            if (!fabricaciones || fabricaciones.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-industry"></i>
+                        <p>No hay producción en curso</p>
+                        <button class="btn-primary" id="iniciar-fabricacion-btn">
+                            <i class="fas fa-hammer"></i> Iniciar fabricación
                         </button>
                     </div>
+                `;
+                return;
+            }
+            
+            // Mostrar fabricaciones
+            let html = `
+                <div class="produccion-header">
+                    <h3><i class="fas fa-industry"></i> Fabricaciones en curso</h3>
+                    <span class="badge">${fabricaciones.length} activas</span>
                 </div>
+                <div class="fabricaciones-lista">
             `;
-        });
-        
-        html += `
-            </div>
-
-        `;
-        
-        container.innerHTML = html;
+            
+            fabricaciones.forEach(fab => {
+                const ahora = new Date();
+                const tiempoInicio = new Date(fab.tiempo_inicio);
+                const tiempoFin = new Date(fab.tiempo_fin);
+                
+                const tiempoTotal = tiempoFin - tiempoInicio;
+                const tiempoTranscurrido = ahora - tiempoInicio;
+                const progreso = Math.min(100, (tiempoTranscurrido / tiempoTotal) * 100);
+                const tiempoRestante = tiempoFin - ahora;
+                const lista = ahora >= tiempoFin;
+                
+                const nombreArea = {
+                    'motor': 'Motor',
+                    'chasis': 'Chasis',
+                    'aerodinamica': 'Aerodinámica'
+                }[fab.area] || fab.area;
+                
+                html += `
+                    <div class="fabricacion-item ${lista ? 'lista' : ''}">
+                        <div class="fabricacion-info">
+                            <div class="fab-area">
+                                <i class="fas fa-cog"></i>
+                                <span>${nombreArea} Nivel ${fab.nivel}</span>
+                            </div>
+                            <div class="fab-estado">
+                                <span class="estado-badge ${lista ? 'lista' : 'fabricando'}">
+                                    ${lista ? '✅ LISTA' : '🔄 FABRICANDO'}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="fab-progreso">
+                            <div class="progress-bar-small">
+                                <div class="progress-fill-small" style="width: ${progreso}%"></div>
+                            </div>
+                            <div class="fab-tiempo">
+                                <i class="far fa-clock"></i>
+                                <span>${lista ? '¡Lista para recoger!' : `Tiempo restante: ${this.formatTime(tiempoRestante)}`}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="fab-acciones">
+                            <button class="btn-small btn-success" ${!lista ? 'disabled' : ''} 
+                                    onclick="recogerPiezaTutorial('${fab.id}', '${fab.area}')">
+                                <i class="fas fa-box-open"></i> ${lista ? 'Recoger' : 'Esperar'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            container.innerHTML = html;
+            
+        } catch (error) {
+            console.error("Error cargando fabricaciones:", error);
+            container.innerHTML = `<p class="error">Error cargando producción</p>`;
+        }
     }
     
     setupDashboardEvents() {
@@ -4623,53 +4622,122 @@ class F1Manager {
             return;
         }
         
-        // Obtener el manager del tutorial
         if (!window.tutorialManager || !window.tutorialManager.escuderia) {
             alert("Error: No se pudo encontrar tu escudería");
             return;
         }
         
         try {
-            // Obtener info de la pieza
-            const piezaInfo = getPiezaInfo(area);
+            console.log("Iniciando fabricación para área:", area);
             
-            // Crear la fabricación en la base de datos
-            const tiempoInicio = new Date().toISOString();
-            const tiempoFin = new Date(Date.now() + 30000).toISOString(); // 30 segundos para el tutorial
+            // 1. CREAR REGISTRO EN fabricacion_actual
+            const tiempoInicio = new Date();
+            const tiempoFin = new Date(Date.now() + 30000); // 30 segundos para el tutorial
             
-            const { error } = await window.supabase
-                .from('fabricaciones')  // O la tabla correcta
+            // Costo y puntos según el área
+            const infoPieza = {
+                'motor': { costo: 100000, puntos: 15 },
+                'chasis': { costo: 90000, puntos: 12 },
+                'aerodinamica': { costo: 85000, puntos: 10 }
+            }[area] || { costo: 100000, puntos: 15 };
+            
+            // Crear fabricación
+            const { data: fabricacion, error: errorFabricacion } = await window.supabase
+                .from('fabricacion_actual')
                 .insert([{
                     escuderia_id: window.tutorialManager.escuderia.id,
                     area: area,
                     nivel: 1,
-                    calidad: 1,
-                    puntos_base: parseInt(piezaInfo.puntos),
-                    costo: parseInt(piezaInfo.costo.replace(',', '')),
-                    tiempo_inicio: tiempoInicio,
-                    tiempo_fin: tiempoFin,
-                    completado: false,
-                    recogido: false
-                }]);
+                    tiempo_inicio: tiempoInicio.toISOString(),
+                    tiempo_fin: tiempoFin.toISOString(),
+                    completada: false,
+                    costo: infoPieza.costo,
+                    creada_en: tiempoInicio.toISOString()
+                }])
+                .select()
+                .single();
             
-            if (error) throw error;
-            
-            // Actualizar datos locales
-            window.tutorialData.piezaFabricando = true;
-            window.tutorialData.areaFabricada = area;
-            window.tutorialData.nombrePieza = piezaInfo.nombre;
-            window.tutorialData.costoPieza = piezaInfo.costo;
-            window.tutorialData.puntosPieza = piezaInfo.puntos;
-            
-            // Descontar dinero
-            if (window.tutorialManager.escuderia) {
-                window.tutorialManager.escuderia.dinero -= parseInt(piezaInfo.costo.replace(',', ''));
-                await window.tutorialManager.updateEscuderiaMoney();
+            if (errorFabricacion) {
+                console.error("Error creando fabricación:", errorFabricacion);
+                throw errorFabricacion;
             }
             
-            alert(`✅ Pieza de ${piezaInfo.nombre} en fabricación. Costo: ${piezaInfo.costo}€, Puntos: +${piezaInfo.puntos}. Se completará en 30 segundos.`);
+            console.log("Fabricación creada:", fabricacion.id);
             
-            // Avanzar automáticamente
+            // 2. DESCONTAR DINERO de la escudería
+            if (window.tutorialManager.escuderia) {
+                const nuevoDinero = window.tutorialManager.escuderia.dinero - infoPieza.costo;
+                
+                const { error: errorUpdate } = await window.supabase
+                    .from('escuderias')
+                    .update({ dinero: nuevoDinero })
+                    .eq('id', window.tutorialManager.escuderia.id);
+                
+                if (errorUpdate) {
+                    console.error("Error actualizando dinero:", errorUpdate);
+                    throw errorUpdate;
+                }
+                
+                // Actualizar en memoria
+                window.tutorialManager.escuderia.dinero = nuevoDinero;
+                
+                // Actualizar UI si existe
+                const moneyElement = document.getElementById('money-value');
+                if (moneyElement) {
+                    moneyElement.textContent = `€${nuevoDinero.toLocaleString()}`;
+                }
+            }
+            
+            // 3. ACTUALIZAR DATOS LOCALES para el tutorial
+            window.tutorialData.piezaFabricando = true;
+            window.tutorialData.areaFabricada = area;
+            window.tutorialData.costoPieza = infoPieza.costo;
+            window.tutorialData.puntosPieza = infoPieza.puntos;
+            window.tutorialData.fabricacionId = fabricacion.id;
+            
+            // 4. Programar la COMPLETACIÓN AUTOMÁTICA (para el tutorial)
+            setTimeout(async () => {
+                try {
+                    // Marcar como completada
+                    await window.supabase
+                        .from('fabricacion_actual')
+                        .update({ completada: true })
+                        .eq('id', fabricacion.id);
+                    
+                    // Crear pieza en almacen_piezas
+                    const { error: errorAlmacen } = await window.supabase
+                        .from('almacen_piezas')
+                        .insert([{
+                            escuderia_id: window.tutorialManager.escuderia.id,
+                            area: area,
+                            nivel: 1,
+                            puntos_base: infoPieza.puntos,
+                            calidad: 'Básica',
+                            equipada: false,
+                            fabricada_en: new Date().toISOString(),
+                            creada_en: new Date().toISOString()
+                        }]);
+                    
+                    if (errorAlmacen) {
+                        console.error("Error creando pieza en almacén:", errorAlmacen);
+                    } else {
+                        console.log("Pieza creada en almacén para área:", area);
+                    }
+                } catch (autoError) {
+                    console.error("Error en completación automática:", autoError);
+                }
+            }, 30000); // 30 segundos
+            
+            // 5. Mostrar mensaje
+            const nombreArea = {
+                'motor': 'Motor',
+                'chasis': 'Chasis',
+                'aerodinamica': 'Aerodinámica'
+            }[area] || area;
+            
+            alert(`✅ Pieza de ${nombreArea} en fabricación.\nCosto: ${infoPieza.costo.toLocaleString()}€\nPuntos: +${infoPieza.puntos}\nSe completará en 30 segundos y aparecerá en tu Almacén.`);
+            
+            // 6. Avanzar automáticamente
             setTimeout(() => {
                 if (window.tutorialManager) {
                     window.tutorialManager.tutorialStep++;
@@ -4678,8 +4746,8 @@ class F1Manager {
             }, 1500);
             
         } catch (error) {
-            console.error("Error iniciando fabricación:", error);
-            alert("Error iniciando fabricación: " + error.message);
+            console.error("Error completo en fabricación:", error);
+            alert("Error en fabricación: " + (error.message || "Verifica la consola"));
         }
     };
     
@@ -4918,6 +4986,46 @@ class F1Manager {
             }
         }, 2000);
     };
+
+    // Al final del archivo, con las otras funciones globales
+    window.recogerPiezaTutorial = async function(fabricacionId, area) {
+        try {
+            // 1. Marcar como completada
+            await window.supabase
+                .from('fabricacion_actual')
+                .update({ completada: true })
+                .eq('id', fabricacionId);
+            
+            // 2. Crear pieza en almacen
+            const { error: errorAlmacen } = await window.supabase
+                .from('almacen_piezas')
+                .insert([{
+                    escuderia_id: window.f1Manager.escuderia.id,
+                    area: area,
+                    nivel: 1,
+                    puntos_base: 15, // Ajusta según área
+                    calidad: 'Básica',
+                    equipada: false,
+                    fabricada_en: new Date().toISOString(),
+                    creada_en: new Date().toISOString()
+                }]);
+            
+            if (errorAlmacen) throw errorAlmacen;
+            
+            alert("✅ Pieza recogida y añadida al almacén");
+            
+            // 3. Actualizar UI
+            if (window.f1Manager) {
+                window.f1Manager.updateProductionMonitor();
+            }
+            
+        } catch (error) {
+            console.error("Error recogiendo pieza:", error);
+            alert("Error recogiendo pieza: " + error.message);
+        }
+    };
+
+
 // Iniciar aplicación
 console.log('🚀 Iniciando aplicación desde el final del archivo...');
 iniciarAplicacion();
