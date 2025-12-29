@@ -4479,45 +4479,85 @@ class F1Manager {
             return;
         }
         
-        // Obtener el manager del tutorial
         if (!window.tutorialManager || !window.tutorialManager.escuderia) {
             alert("Error: No se pudo encontrar tu escudería");
             return;
         }
         
         try {
-            // Obtener info del estratega
-            const estrategaInfo = getEstrategaInfo(estrategaId);
+            console.log("Buscando estratega en catálogo ID:", estrategaId);
             
-            // Crear el estratega en la base de datos (en la tabla correcta)
-            const { error } = await window.supabase
-                .from('ingenieros_contratados')  // O la tabla correcta
+            // 1. PRIMERO buscar el estratega en el catálogo
+            const { data: estrategaCatalogo, error: errorCatalogo } = await window.supabase
+                .from('ingenieros_catalogo')
+                .select('*')
+                .eq('id', estrategaId)
+                .single();
+            
+            if (errorCatalogo || !estrategaCatalogo) {
+                console.error("Error buscando en catálogo:", errorCatalogo);
+                throw new Error("No se encontró el estratega en el catálogo");
+            }
+            
+            console.log("Estratega encontrado:", estrategaCatalogo.nombre);
+            
+            // 2. LUEGO contratarlo (insertar en ingenieros_contratados)
+            const { error: errorContrato } = await window.supabase
+                .from('ingenieros_contratados')
                 .insert([{
                     escuderia_id: window.tutorialManager.escuderia.id,
-                    nombre: estrategaInfo.nombre,
-                    salario: estrategaInfo.sueldo,
-                    especialidad: estrategaInfo.especialidad,
-                    bonificacion_tipo: 'puntos_extra',
-                    bonificacion_valor: estrategaInfo.bono.replace('%', ''),
+                    ingeniero_id: estrategaCatalogo.id,
+                    nombre: estrategaCatalogo.nombre,
+                    salario: estrategaCatalogo.salario_base || 50000,
+                    especialidad: estrategaCatalogo.especialidad || 'General',
+                    bonificacion_tipo: estrategaCatalogo.bonificacion_tipo || 'puntos_extra',
+                    bonificacion_valor: estrategaCatalogo.bonificacion_valor || 15,
                     activo: true,
                     contratado_en: new Date().toISOString()
                 }]);
             
-            if (error) throw error;
-            
-            // Actualizar datos locales
-            window.tutorialData.estrategaContratado = true;
-            window.tutorialData.nombreEstratega = estrategaInfo.nombre;
-            window.tutorialData.sueldoEstratega = estrategaInfo.sueldo;
-            window.tutorialData.bonoEstratega = estrategaInfo.bono;
-            
-            // Descontar dinero
-            if (window.tutorialManager.escuderia) {
-                window.tutorialManager.escuderia.dinero -= parseInt(estrategaInfo.sueldo.replace(',', ''));
-                await window.tutorialManager.updateEscuderiaMoney();
+            if (errorContrato) {
+                console.error("Error insertando en contratados:", errorContrato);
+                throw errorContrato;
             }
             
-            alert(`✅ ${estrategaInfo.nombre} contratado con éxito por ${estrategaInfo.sueldo}€/mes. Bono: ${estrategaInfo.bono} puntos extra.`);
+            // 3. OPCIONAL: Marcar como no disponible en catálogo
+            try {
+                await window.supabase
+                    .from('ingenieros_catalogo')
+                    .update({ disponible: false })
+                    .eq('id', estrategaId);
+            } catch (updateError) {
+                console.warn("No se pudo actualizar catálogo:", updateError);
+                // No es crítico, continuamos
+            }
+            
+            // 4. Actualizar datos locales
+            window.tutorialData.estrategaContratado = true;
+            window.tutorialData.nombreEstratega = estrategaCatalogo.nombre;
+            window.tutorialData.sueldoEstratega = estrategaCatalogo.salario_base || 50000;
+            window.tutorialData.bonoEstratega = estrategaCatalogo.bonificacion_valor || 15;
+            window.tutorialData.bonoTipo = estrategaCatalogo.bonificacion_tipo || 'puntos_extra';
+            
+            // 5. Descontar dinero de la escudería
+            if (window.tutorialManager.escuderia) {
+                const costo = parseInt(estrategaCatalogo.salario_base) || 50000;
+                window.tutorialManager.escuderia.dinero -= costo;
+                
+                // Actualizar en la base de datos
+                await window.supabase
+                    .from('escuderias')
+                    .update({ dinero: window.tutorialManager.escuderia.dinero })
+                    .eq('id', window.tutorialManager.escuderia.id);
+                
+                // Actualizar UI
+                const moneyElement = document.getElementById('money-value');
+                if (moneyElement) {
+                    moneyElement.textContent = `€${window.tutorialManager.escuderia.dinero.toLocaleString()}`;
+                }
+            }
+            
+            alert(`✅ ${estrategaCatalogo.nombre} contratado con éxito por ${(estrategaCatalogo.salario_base || 50000).toLocaleString()}€/mes.\n\nBono: ${estrategaCatalogo.bonificacion_valor || 15}% ${estrategaCatalogo.bonificacion_tipo || 'puntos extra'}.`);
             
             // Avanzar automáticamente
             setTimeout(() => {
@@ -4528,8 +4568,8 @@ class F1Manager {
             }, 1500);
             
         } catch (error) {
-            console.error("Error contratando estratega:", error);
-            alert("Error contratando estratega: " + error.message);
+            console.error("Error completo contratando estratega:", error);
+            alert("Error contratando estratega: " + (error.message || "Verifica la consola para más detalles"));
         }
     };
     
