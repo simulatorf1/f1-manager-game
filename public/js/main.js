@@ -942,6 +942,22 @@ class F1Manager {
     }
     
     mostrarTutorialStep() {
+
+        // 1. Asegúrate que tutorialManager está disponible
+        if (!window.tutorialManager) {
+            window.tutorialManager = this;
+        }
+    
+        // 2. Inicializa tutorialData si no existe
+        if (!window.tutorialData) {
+            window.tutorialData = {
+                estrategaSeleccionado: null,
+                estrategaContratado: false,
+                areaSeleccionada: null,
+                piezaFabricando: false,
+                pronosticoSeleccionado: null
+            };
+        }
         const steps = [
             // PASO 1: Bienvenida al juego online multijugador
             {
@@ -967,169 +983,198 @@ class F1Manager {
                 action: 'siguientePaso'
             },
             
-            // PASO 2: Dashboard principal - Herramientas de gestión
+            // PASO 2: Herramientas de gestión (CORREGIDO)
             {
-                title: "📊 TUS HERRAMIENTAS DE GESTIÓN",
+                title: "📊 SECCIONES PRINCIPALES DE GESTIÓN",
                 content: `
-                    <p>Esta es tu <strong>pantalla principal de control</strong>. Desde aquí gestionas toda tu escudería:</p>
+                    <p>Tu escudería se gestiona a través de <strong>6 secciones clave</strong>:</p>
                     
-                    <div class="dashboard-preview">
-                        <div class="dashboard-item highlighted">
-                            <div class="item-icon">💰</div>
-                            <div class="item-text">
-                                <strong>Presupuesto y Puntos</strong><br>
-                                Controla tu dinero y puntuación
+                    <div class="sections-grid">
+                        <div class="section-card" onclick="seleccionarSeccion('principal')">
+                            <div class="section-icon">🏠</div>
+                            <div class="section-info">
+                                <h4>PRINCIPAL</h4>
+                                <p>Vista general y resumen</p>
+                                <div class="section-tag">Dashboard</div>
                             </div>
                         </div>
                         
-                        <div class="dashboard-item">
-                            <div class="item-icon">👥</div>
-                            <div class="item-text">
-                                <strong>Tu Equipo</strong><br>
-                                Gestiona estrategas y personal
+                        <div class="section-card" onclick="seleccionarSeccion('taller')">
+                            <div class="section-icon">🔧</div>
+                            <div class="section-info">
+                                <h4>TALLER</h4>
+                                <p>Fabrica piezas técnicas</p>
+                                <div class="section-tag">Producción</div>
                             </div>
                         </div>
                         
-                        <div class="dashboard-item">
-                            <div class="item-icon">⏱️</div>
-                            <div class="item-text">
-                                <strong>Próxima Carrera</strong><br>
-                                Tiempo para enviar pronósticos
+                        <div class="section-card" onclick="seleccionarSeccion('equipo')">
+                            <div class="section-icon">👥</div>
+                            <div class="section-info">
+                                <h4>EQUIPO</h4>
+                                <p>Contrata estrategas</p>
+                                <div class="section-tag">Personal</div>
                             </div>
                         </div>
                         
-                        <div class="dashboard-item">
-                            <div class="item-icon">🔧</div>
-                            <div class="item-text">
-                                <strong>Desarrollo Técnico</strong><br>
-                                Estado de tus 11 áreas
+                        <div class="section-card" onclick="seleccionarSeccion('almacen')">
+                            <div class="section-icon">📦</div>
+                            <div class="section-info">
+                                <h4>ALMACÉN</h4>
+                                <p>Gestiona piezas</p>
+                                <div class="section-tag">Inventario</div>
                             </div>
                         </div>
                         
-                        <div class="dashboard-item">
-                            <div class="item-icon">🏭</div>
-                            <div class="item-text">
-                                <strong>Producción</strong><br>
-                                Piezas en fabricación
+                        <div class="section-card" onclick="seleccionarSeccion('pronosticos')">
+                            <div class="section-icon">🎯</div>
+                            <div class="section-info">
+                                <h4>PRONÓSTICOS</h4>
+                                <p>Haz tus predicciones</p>
+                                <div class="section-tag">Competencia</div>
+                            </div>
+                        </div>
+                        
+                        <div class="section-card" onclick="seleccionarSeccion('ranking')">
+                            <div class="section-icon">🏆</div>
+                            <div class="section-info">
+                                <h4>RANKING</h4>
+                                <p>Posición global</p>
+                                <div class="section-tag">Clasificación</div>
                             </div>
                         </div>
                     </div>
+                    
+                    <p class="tip">💡 <strong>Cada sección tiene una función específica.</strong> Navega entre ellas usando las pestañas superiores.</p>
                 `,
                 action: 'siguientePaso'
+        
             },
             
-            // PASO 3: Las 11 áreas técnicas de desarrollo
+            // PASO 3: Áreas técnicas (MEJORADO)
             {
-                title: "🔧 LAS 11 ÁREAS CLAVE DE TU ESCUDERÍA",
+                title: "🔧 ÁREAS TÉCNICAS DE DESARROLLO",
                 content: `
-                    <p>Tu escudería tiene <strong>11 áreas principales</strong> que debes desarrollar para mejorar tu rendimiento:</p>
+                    <p>Desarrolla estas <strong>11 áreas técnicas</strong> fabricando piezas en el Taller:</p>
                     
-                    <div class="areas-grid">
-                        <div class="area-card">
-                            <div class="area-icon">🏎️</div>
-                            <div class="area-name">Motor</div>
-                        </div>
-                        <div class="area-card">
-                            <div class="area-icon">📊</div>
-                            <div class="area-name">Chasis</div>
-                        </div>
-                        <div class="area-card">
-                            <div class="area-icon">🌀</div>
-                            <div class="area-name">Aerodinámica</div>
-                        </div>
-                        <div class="area-card">
-                            <div class="area-icon">⚙️</div>
-                            <div class="area-name">Suspensión</div>
-                        </div>
-                        <div class="area-card">
-                            <div class="area-icon">🔄</div>
-                            <div class="area-name">Transmisión</div>
-                        </div>
-                        <div class="area-card">
-                            <div class="area-icon">🛑</div>
-                            <div class="area-name">Frenos</div>
-                        </div>
-                        <div class="area-card">
-                            <div class="area-icon">💡</div>
-                            <div class="area-name">Electrónica</div>
-                        </div>
-                        <div class="area-card">
-                            <div class="area-icon">🎮</div>
-                            <div class="area-name">Control</div>
-                        </div>
-                        <div class="area-card">
-                            <div class="area-icon">🌪️</div>
-                            <div class="area-name">Difusor</div>
-                        </div>
-                        <div class="area-card">
-                            <div class="area-icon">🪽</div>
-                            <div class="area-name">Alerones</div>
-                        </div>
-                        <div class="area-card">
-                            <div class="area-icon">📦</div>
-                            <div class="area-name">Pontones</div>
-                        </div>
-                    </div>
-                    
-                    <div class="level-system">
-                        <p class="system-title">📈 <strong>Sistema de Niveles:</strong></p>
-                        <ul>
-                            <li>Cada área tiene <strong>10 niveles principales</strong> (0-9)</li>
-                            <li>Cada nivel tiene <strong>20 subniveles</strong> (0.1 - 0.20)</li>
-                            <li><strong>Ejemplo:</strong> Motor nivel 2.15 significa nivel 2, subnivel 15</li>
-                            <li>Cada subnivel completado otorga <strong>puntos base permanentes</strong></li>
-                        </ul>
-                    </div>
-                `,
-                action: 'siguientePaso'
-            },
-            
-            // PASO 4: Contratación de estrategas
-            {
-                title: "👥 CONTRATA TU PRIMER ESTRATEGA",
-                content: `
-                    <p>Los estrategas son <strong>expertos analistas</strong> que potencian tus aciertos en los pronósticos.</p>
-                    
-                    <div class="analysts-showcase">
-                        <div class="analyst-example">
-                            <div class="analyst-icon">⏱️</div>
-                            <div class="analyst-details">
-                                <strong>Especialista en Tiempos</strong><br>
-                                <em>Ventaja:</em> +15% puntos al acertar diferencias de tiempo<br>
-                                <em>Ejemplo:</em> "Diferencia 1º-2º será menor a 1 segundo"
+                    <div class="areas-detailed-grid">
+                        <!-- Motor -->
+                        <div class="area-detailed-card">
+                            <div class="area-header">
+                                <div class="area-icon-large">🏎️</div>
+                                <h4>MOTOR</h4>
                             </div>
+                            <div class="area-description">
+                                Potencia y eficiencia del propulsor
+                            </div>
+                            <div class="area-stats">
+                                <div class="stat">
+                                    <span>Tiempo fabricación:</span>
+                                    <strong>4 horas</strong>
+                                </div>
+                                <div class="stat">
+                                    <span>Puntos base:</span>
+                                    <strong class="points">+15</strong>
+                                </div>
+                            </div>
+                            <button class="btn-fabrica-area" onclick="simularFabricar('motor')">
+                                <i class="fas fa-hammer"></i> Fabricar
+                            </button>
                         </div>
                         
-                        <div class="analyst-example">
-                            <div class="analyst-icon">🌦️</div>
-                            <div class="analyst-details">
-                                <strong>Meteorólogo de Carrera</strong><br>
-                                <em>Ventaja:</em> +20% puntos en pronósticos climáticos<br>
-                                <em>Ejemplo:</em> "Lluvia afectará el desarrollo de la carrera"
+                        <!-- Chasis -->
+                        <div class="area-detailed-card">
+                            <div class="area-header">
+                                <div class="area-icon-large">📊</div>
+                                <h4>CHASIS</h4>
                             </div>
+                            <div class="area-description">
+                                Estructura principal del vehículo
+                            </div>
+                            <div class="area-stats">
+                                <div class="stat">
+                                    <span>Tiempo fabricación:</span>
+                                    <strong>4 horas</strong>
+                                </div>
+                                <div class="stat">
+                                    <span>Puntos base:</span>
+                                    <strong class="points">+12</strong>
+                                </div>
+                            </div>
+                            <button class="btn-fabrica-area" onclick="simularFabricar('chasis')">
+                                <i class="fas fa-hammer"></i> Fabricar
+                            </button>
                         </div>
                         
-                        <div class="analyst-example">
-                            <div class="analyst-icon">🔧</div>
-                            <div class="analyst-details">
-                                <strong>Experto en Fiabilidad</strong><br>
-                                <em>Ventaja:</em> +18% puntos en abandonos<br>
-                                <em>Ejemplo:</em> "Más de 5 pilotos no terminarán"
+                        <!-- Aerodinámica -->
+                        <div class="area-detailed-card">
+                            <div class="area-header">
+                                <div class="area-icon-large">🌀</div>
+                                <h4>AERODINÁMICA</h4>
                             </div>
+                            <div class="area-description">
+                                Flujo de aire y downforce
+                            </div>
+                            <div class="area-stats">
+                                <div class="stat">
+                                    <span>Tiempo fabricación:</span>
+                                    <strong>3 horas</strong>
+                                </div>
+                                <div class="stat">
+                                    <span>Puntos base:</span>
+                                    <strong class="points">+10</strong>
+                                </div>
+                            </div>
+                            <button class="btn-fabrica-area" onclick="simularFabricar('aerodinamica')">
+                                <i class="fas fa-hammer"></i> Fabricar
+                            </button>
                         </div>
+                        
+                        <!-- ... Añade las otras 8 áreas de forma similar ... -->
                     </div>
                     
-                    <div class="hiring-process">
-                        <p class="process-title">📋 <strong>Proceso de contratación:</strong></p>
+                    <div class="fabrication-info">
+                        <p>🔨 <strong>¿Cómo funciona?</strong></p>
                         <ol>
-                            <li><strong>Elige especialidad</strong> según tus preferencias de pronóstico</li>
-                            <li><strong>Revisa su sueldo</strong> mensual (gestionable en Presupuesto)</li>
-                            <li><strong>Asígnalo a pronósticos</strong> específicos para maximizar su bono</li>
-                            <li><strong>Más adelante</strong> podrás contratar más estrategas</li>
+                            <li>Selecciona un área para fabricar</li>
+                            <li>La pieza se producirá en el tiempo indicado</li>
+                            <li>Aparecerá en tu Almacén lista para montar o vender</li>
+                            <li>Cada pieza montada sube el nivel del área</li>
                         </ol>
                     </div>
                 `,
                 action: 'siguientePaso'
+        
+            },
+            
+            // PASO 4: Contratar estrategas (CON TABLA REAL)
+            {
+                title: "👥 CONTRATA TU PRIMER ESTRATEGA",
+                content: `
+                    <p>Selecciona uno de estos estrategas disponibles:</p>
+                    
+                    <div id="tabla-estrategas-tutorial" class="estrategas-grid">
+                        <!-- ESTO SE LLENARÁ DINÁMICAMENTE -->
+                        <div class="loading-estrategas">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando estrategas disponibles...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="estratega-seleccionado" id="estratega-seleccionado-container" style="display: none;">
+                        <h4>Estratega Seleccionado:</h4>
+                        <div id="info-estratega-seleccionado"></div>
+                        <button class="btn-contratar" onclick="contratarEstrategaSeleccionado()">
+                            <i class="fas fa-file-contract"></i> Contratar por <span id="sueldo-estratega">0</span>€/mes
+                        </button>
+                    </div>
+                `,
+                action: 'siguientePaso',
+                onLoad: function() {
+                    // Cargar estrategas dinámicamente
+                    cargarEstrategasTutorial();
+                }
+
             },
             
             // PASO 5: Sistema de producción y almacén
@@ -1178,62 +1223,294 @@ class F1Manager {
                 action: 'siguientePaso'
             },
             
-            // PASO 6: Práctica - Primer ciclo completo
+            // PASO 6: Tutorial práctico (MEJORADO Y FUNCIONAL)
             {
-                title: "🎯 PRIMER CICLO DE TRABAJO",
+                title: "🎯 TUTORIAL PRÁCTICO COMPLETO",
                 content: `
-                    <p>Vamos a simular tu <strong>primera semana completa</strong> como director de escudería.</p>
+                    <div class="tutorial-progress">
+                        <div class="progress-step active" id="step1">
+                            <div class="step-number">1</div>
+                            <div class="step-title">Contratar Estratega</div>
+                        </div>
+                        <div class="progress-step" id="step2">
+                            <div class="step-number">2</div>
+                            <div class="step-title">Fabricar Pieza</div>
+                        </div>
+                        <div class="progress-step" id="step3">
+                            <div class="step-number">3</div>
+                            <div class="step-title">Hacer Pronóstico</div>
+                        </div>
+                        <div class="progress-step" id="step4">
+                            <div class="step-number">4</div>
+                            <div class="step-title">Ver Resultados</div>
+                        </div>
+                    </div>
                     
-                    <div class="practice-instructions">
-                        <p class="section-title">📋 <strong>Lo que harás ahora:</strong></p>
+                    <!-- PASO 1: Contratar estratega -->
+                    <div id="tutorial-paso1" class="tutorial-paso activo">
+                        <h4>1. CONTRATA TU PRIMER ESTRATEGA</h4>
+                        <div class="estrategas-tutorial-grid">
+                            <div class="estratega-option" onclick="tutorialSeleccionarEstratega(1)">
+                                <div class="estratega-icon">⏱️</div>
+                                <div class="estratega-info">
+                                    <h5>Analista de Tiempos</h5>
+                                    <p><strong>Especialidad:</strong> Diferencias de tiempo</p>
+                                    <p><strong>Bono:</strong> +15% puntos</p>
+                                    <p><strong>Sueldo:</strong> 50,000€/mes</p>
+                                </div>
+                                <button class="btn-seleccionar">Seleccionar</button>
+                            </div>
+                            
+                            <div class="estratega-option" onclick="tutorialSeleccionarEstratega(2)">
+                                <div class="estratega-icon">🌧️</div>
+                                <div class="estratega-info">
+                                    <h5>Meteorólogo</h5>
+                                    <p><strong>Especialidad:</strong> Condiciones climáticas</p>
+                                    <p><strong>Bono:</strong> +20% puntos</p>
+                                    <p><strong>Sueldo:</strong> 60,000€/mes</p>
+                                </div>
+                                <button class="btn-seleccionar">Seleccionar</button>
+                            </div>
+                            
+                            <div class="estratega-option" onclick="tutorialSeleccionarEstratega(3)">
+                                <div class="estratega-icon">🔧</div>
+                                <div class="estratega-info">
+                                    <h5>Experto en Fiabilidad</h5>
+                                    <p><strong>Especialidad:</strong> Abandonos</p>
+                                    <p><strong>Bono:</strong> +18% puntos</p>
+                                    <p><strong>Sueldo:</strong> 55,000€/mes</p>
+                                </div>
+                                <button class="btn-seleccionar">Seleccionar</button>
+                            </div>
+                        </div>
                         
-                        <div class="task-list">
-                            <div class="task-item">
-                                <input type="checkbox" id="task1" checked disabled>
-                                <label for="task1"><strong>1. Crear tu escudería</strong> ✓ COMPLETADO</label>
+                        <div class="tutorial-accion" id="accion-contratar" style="display: none;">
+                            <button class="btn-tutorial-accion" onclick="tutorialContratarEstratega()">
+                                <i class="fas fa-file-contract"></i> Contratar Estratega Seleccionado
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- PASO 2: Fabricar pieza -->
+                    <div id="tutorial-paso2" class="tutorial-paso">
+                        <h4>2. FABRICA TU PRIMERA PIEZA</h4>
+                        <div class="areas-tutorial-grid">
+                            <div class="area-option" onclick="tutorialSeleccionarArea('motor')">
+                                <div class="area-icon">🏎️</div>
+                                <div class="area-info">
+                                    <h5>Motor</h5>
+                                    <p><strong>Tiempo:</strong> 4 horas</p>
+                                    <p><strong>Puntos:</strong> +15 base</p>
+                                    <p><strong>Costo:</strong> 100,000€</p>
+                                </div>
                             </div>
                             
-                            <div class="task-item">
-                                <input type="checkbox" id="task2" disabled>
-                                <label for="task2"><strong>2. Contratar tu primer estratega</strong> (próximamente)</label>
+                            <div class="area-option" onclick="tutorialSeleccionarArea('chasis')">
+                                <div class="area-icon">📊</div>
+                                <div class="area-info">
+                                    <h5>Chasis</h5>
+                                    <p><strong>Tiempo:</strong> 4 horas</p>
+                                    <p><strong>Puntos:</strong> +12 base</p>
+                                    <p><strong>Costo:</strong> 90,000€</p>
+                                </div>
                             </div>
                             
-                            <div class="task-item">
-                                <input type="checkbox" id="task3" disabled>
-                                <label for="task3"><strong>3. Fabricar tu primera pieza</strong> (próximamente)</label>
+                            <div class="area-option" onclick="tutorialSeleccionarArea('aerodinamica')">
+                                <div class="area-icon">🌀</div>
+                                <div class="area-info">
+                                    <h5>Aerodinámica</h5>
+                                    <p><strong>Tiempo:</strong> 3 horas</p>
+                                    <p><strong>Puntos:</strong> +10 base</p>
+                                    <p><strong>Costo:</strong> 85,000€</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tutorial-accion" id="accion-fabricar" style="display: none;">
+                            <button class="btn-tutorial-accion" onclick="tutorialIniciarFabricacion()">
+                                <i class="fas fa-hammer"></i> Iniciar Fabricación
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- PASO 3: Hacer pronóstico -->
+                    <div id="tutorial-paso3" class="tutorial-paso">
+                        <h4>3. HAZ UN PRONÓSTICO</h4>
+                        <div class="pronosticos-tutorial-grid">
+                            <div class="pronostico-option" onclick="tutorialSeleccionarPronostico(1)">
+                                <div class="pronostico-icon">🚩</div>
+                                <div class="pronostico-info">
+                                    <h5>Bandera Amarilla</h5>
+                                    <p>¿Habrá neutralización en carrera?</p>
+                                    <div class="opciones">
+                                        <span class="opcion">SÍ</span>
+                                        <span class="opcion">NO</span>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div class="task-item">
-                                <input type="checkbox" id="task4" disabled>
-                                <label for="task4"><strong>4. Hacer un pronóstico simple</strong> (próximamente)</label>
+                            <div class="pronostico-option" onclick="tutorialSeleccionarPronostico(2)">
+                                <div class="pronostico-icon">🚗</div>
+                                <div class="pronostico-info">
+                                    <h5>Abandonos</h5>
+                                    <p>¿Cuántos pilotos no terminarán?</p>
+                                    <div class="opciones">
+                                        <span class="opcion">0-2</span>
+                                        <span class="opcion">3-5</span>
+                                        <span class="opcion">>5</span>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div class="task-item">
-                                <input type="checkbox" id="task5" disabled>
-                                <label for="task5"><strong>5. Ver resultados y ganancias</strong> (próximamente)</label>
+                            <div class="pronostico-option" onclick="tutorialSeleccionarPronostico(3)">
+                                <div class="pronostico-icon">⏱️</div>
+                                <div class="pronostico-info">
+                                    <h5>Diferencia 1º-2º</h5>
+                                    <p>Tiempo entre primero y segundo</p>
+                                    <div class="opciones">
+                                        <span class="opcion">&lt;1s</span>
+                                        <span class="opcion">1-5s</span>
+                                        <span class="opcion">&gt;5s</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tutorial-accion" id="accion-pronostico" style="display: none;">
+                            <div id="opciones-pronostico" style="display: none;">
+                                <!-- Se llena dinámicamente -->
+                            </div>
+                            <button class="btn-tutorial-accion" onclick="tutorialEnviarPronostico()">
+                                <i class="fas fa-paper-plane"></i> Enviar Pronóstico
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- PASO 4: Ver resultados -->
+                    <div id="tutorial-paso4" class="tutorial-paso">
+                        <h4>4. RESULTADOS Y GANANCIAS</h4>
+                        <div class="resultados-simulados" id="resultados-simulados">
+                            <div class="resultado-item">
+                                <div class="resultado-icon">✅</div>
+                                <div class="resultado-info">
+                                    <h5>Pronóstico Acertado</h5>
+                                    <p><strong>Bandera Amarilla: SÍ</strong> (correcto)</p>
+                                    <p class="ganancia">+150 puntos base</p>
+                                </div>
+                            </div>
+                            
+                            <div class="resultado-item">
+                                <div class="resultado-icon">👥</div>
+                                <div class="resultado-info">
+                                    <h5>Bono de Estratega</h5>
+                                    <p>Analista de Tiempos (+15%)</p>
+                                    <p class="ganancia">+22.5 puntos extra</p>
+                                </div>
+                            </div>
+                            
+                            <div class="resultado-item">
+                                <div class="resultado-icon">🔧</div>
+                                <div class="resultado-info">
+                                    <h5>Bono de Pieza</h5>
+                                    <p>Motor nivel 1 (+15 puntos)</p>
+                                    <p class="ganancia">+15 puntos técnicos</p>
+                                </div>
+                            </div>
+                            
+                            <div class="resultado-total">
+                                <h4>TOTAL OBTENIDO:</h4>
+                                <div class="total-puntos">187.5 puntos</div>
+                                <div class="total-dinero">+18,750€</div>
+                                <p class="conversion">(1 punto = 100€)</p>
                             </div>
                         </div>
                     </div>
                 `,
-                action: 'siguientePaso'
+                action: 'finalizarTutorial'
             },
             
-            // PASO 7: Finalización y comienzo real
+            // PASO 7: Finalización (ACTUALIZADO)
             {
-                title: "🚀 ¡TODO LISTO PARA COMPETIR!",
+                title: "🏁 ¡TODO LISTO! TUTORIAL COMPLETADO",
                 content: `
                     <div class="completion-celebration">
                         <div class="celebration-icon">🎉</div>
-                        <h3>¡Tutorial Completado!</h3>
+                        <h3>¡FELICITACIONES!</h3>
+                        <p class="subtitle">Has completado el tutorial con éxito</p>
                     </div>
                     
-                    <p>Felicidades, director. Has completado tu <strong>formación inicial</strong> y ahora estás preparado para competir.</p>
+                    <div class="resumen-tutorial">
+                        <h4>📋 RESUMEN DE LO APRENDIDO:</h4>
+                        <div class="resumen-grid">
+                            <div class="resumen-item completado">
+                                <div class="resumen-icon">👥</div>
+                                <div class="resumen-text">
+                                    <strong>Estratega contratado</strong>
+                                    <p>Analista de Tiempos (+15%)</p>
+                                </div>
+                            </div>
+                            
+                            <div class="resumen-item completado">
+                                <div class="resumen-icon">🔧</div>
+                                <div class="resumen-text">
+                                    <strong>Pieza fabricada</strong>
+                                    <p>Motor en producción (4h)</p>
+                                </div>
+                            </div>
+                            
+                            <div class="resumen-item completado">
+                                <div class="resumen-icon">🎯</div>
+                                <div class="resumen-text">
+                                    <strong>Pronóstico realizado</strong>
+                                    <p>Bandera amarilla: SÍ</p>
+                                </div>
+                            </div>
+                            
+                            <div class="resumen-item completado">
+                                <div class="resumen-icon">💰</div>
+                                <div class="resumen-text">
+                                    <strong>Ganancias simuladas</strong>
+                                    <p>187.5 puntos = 18,750€</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
-                    <div class="final-message">
-                        <p>El mundo del motorsport estratégico te espera. Miles de directores ya están compitiendo.</p>
-                        <p class="challenge">¿Podrás convertir a <strong>${this.escuderia.nombre || "tu equipo"}</strong> en el mejor del mundo?</p>
-                        
-                        <p class="good-luck">¡MUCHA SUERTE EN LA PISTA! 🏁</p>
+                    <div class="primeros-pasos-reales">
+                        <h4>🚀 TUS PRIMEROS PASOS REALES:</h4>
+                        <ol>
+                            <li><strong>Ve a la pestaña "Equipo"</strong> y contrata tu primer estratega REAL</li>
+                            <li><strong>Visita el "Taller"</strong> y fabrica tu primera pieza REAL</li>
+                            <li><strong>Revisa "Pronósticos"</strong> para la próxima carrera REAL</li>
+                            <li><strong>Consulta el "Ranking"</strong> y compite contra miles</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="estado-inicial">
+                        <h4>💰 TU SITUACIÓN INICIAL:</h4>
+                        <div class="estado-grid">
+                            <div class="estado-item">
+                                <span>Presupuesto:</span>
+                                <strong class="dinero">5,000,000€</strong>
+                            </div>
+                            <div class="estado-item">
+                                <span>Puntos iniciales:</span>
+                                <strong class="puntos">0</strong>
+                            </div>
+                            <div class="estado-item">
+                                <span>Posición global:</span>
+                                <strong class="ranking">#1,245</strong>
+                            </div>
+                            <div class="estado-item">
+                                <span>Próxima carrera:</span>
+                                <strong class="carrera">En 3 días</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="despedida-tutorial">
+                        <p class="mensaje-final">El mundo del motorsport estratégico te espera. ¡Demuestra que eres el mejor estratega!</p>
+                        <p class="equipo-nombre">¡Buena suerte, director de <strong>${this.escuderia.nombre || "tu escudería"}!</strong></p>
                     </div>
                 `,
                 action: 'comenzarJuegoReal'
@@ -3619,3 +3896,47 @@ class F1Manager {
 // Iniciar aplicación
 console.log('🚀 Iniciando aplicación desde el final del archivo...');
 iniciarAplicacion();
+// AL FINAL DE TU ARCHIVO JS, FUERA DE CUALQUIER CLASE/FUNCIÓN
+(function() {
+    // Variable global para los datos del tutorial
+    window.tutorialData = {
+        estrategaSeleccionado: null,
+        estrategaContratado: false,
+        areaSeleccionada: null,
+        piezaFabricando: false,
+        pronosticoSeleccionado: null
+    };
+    
+    // Funciones globales que llaman a los métodos del objeto
+    window.tutorialSeleccionarEstratega = function(id) {
+        if (window.tutorialManager && typeof window.tutorialManager.tutorialSeleccionarEstratega === 'function') {
+            window.tutorialManager.tutorialSeleccionarEstratega(id);
+        } else {
+            console.error("tutorialManager no está disponible");
+        }
+    };
+    
+    window.tutorialContratarEstratega = function() {
+        if (window.tutorialManager && typeof window.tutorialManager.tutorialContratarEstratega === 'function') {
+            window.tutorialManager.tutorialContratarEstratega();
+        } else {
+            console.error("tutorialManager no está disponible");
+        }
+    };
+    
+    window.tutorialSeleccionarArea = function(area) {
+        if (window.tutorialManager && typeof window.tutorialManager.tutorialSeleccionarArea === 'function') {
+            window.tutorialManager.tutorialSeleccionarArea(area);
+        } else {
+            console.error("tutorialManager no está disponible");
+        }
+    };
+    
+    window.tutorialIniciarFabricacion = function() {
+        if (window.tutorialManager && typeof window.tutorialManager.tutorialIniciarFabricacion === 'function') {
+            window.tutorialManager.tutorialIniciarFabricacion();
+        } else {
+            console.error("tutorialManager no está disponible");
+        }
+    };
+})();
