@@ -3039,6 +3039,5 @@ class F1Manager {
         }
     }
 }
-// Iniciar aplicación
-console.log('🚀 Iniciando aplicación desde el final del archivo...');
-iniciarAplicacion();
+console.log('⏳ Aplicación lista, esperando activación desde auth.js...');
+window.appIniciada = false;
