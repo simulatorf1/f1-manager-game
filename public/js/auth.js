@@ -25,19 +25,51 @@ class AuthManager {
 
     async handleRegister(email, password, username, teamName) {
         try {
-            // 1. VERIFICAR si el nombre de escudería ya existe
-            const { data: nombreExiste } = await supabase
-                .from('escuderias')
-                .select('nombre')
-                .eq('nombre', teamName)
+            // 1. VALIDAR que no esté vacío
+            if (!email || !password || !username || !teamName) {
+                this.showNotification('❌ Todos los campos son obligatorios', 'error');
+                return false;
+            }
+            
+            // 2. VERIFICAR si el CORREO ya existe (en auth)
+            const { data: emailCheck } = await supabase
+                .from('users')  // O verificar en auth.users si tienes acceso
+                .select('email')
+                .eq('email', email)
                 .maybeSingle();
             
-            if (nombreExiste) {
+            if (emailCheck) {
+                this.showNotification('❌ Este correo electrónico ya está registrado', 'error');
+                return false;
+            }
+            
+            // 3. VERIFICAR si el NOMBRE DE ESCUDERÍA ya existe
+            const { data: teamCheck } = await supabase
+                .from('escuderias')
+                .select('nombre')
+                .eq('nombre', teamName.trim())
+                .maybeSingle();
+            
+            if (teamCheck) {
                 this.showNotification(`❌ El nombre "${teamName}" ya está en uso. Elige otro.`, 'error');
                 return false;
             }
             
-            // 2. Registrar usuario
+            // 4. VERIFICAR si el NOMBRE DE USUARIO ya existe
+            const { data: userCheck } = await supabase
+                .from('users')
+                .select('username')
+                .eq('username', username.trim())
+                .maybeSingle();
+            
+            if (userCheck) {
+                this.showNotification(`❌ El nombre de usuario "${username}" ya existe`, 'error');
+                return false;
+            }
+            
+            // 5. REGISTRAR (si pasó todas las validaciones)
+            console.log('✅ Validaciones pasadas, registrando usuario...');
+            
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: email,
                 password: password,
@@ -45,28 +77,84 @@ class AuthManager {
                     data: {
                         username: username,
                         team_name: teamName
-                    }
+                    },
+                    emailRedirectTo: window.location.origin
                 }
             });
     
-            if (authError) throw authError;
+            if (authError) {
+                // Capturar error de correo duplicado en Auth
+                if (authError.message.includes('already registered') || 
+                    authError.message.includes('User already registered')) {
+                    this.showNotification('❌ Este correo ya está registrado en el sistema', 'error');
+                    return false;
+                }
+                throw authError;
+            }
     
             if (authData.user) {
+                // 6. Crear usuario en tabla pública
+                const { error: userError } = await supabase
+                    .from('users')
+                    .insert([{
+                        id: authData.user.id,
+                        username: username,
+                        email: email,
+                        created_at: new Date().toISOString(),
+                        last_login: new Date().toISOString()
+                    }]);
+                
+                if (userError) {
+                    console.warn('⚠️ No se pudo crear usuario público:', userError);
+                }
+                
+                // 7. Crear escudería
+                const { error: escError } = await supabase
+                    .from('escuderias')
+                    .insert([{
+                        user_id: authData.user.id,
+                        nombre: teamName,
+                        dinero: 5000000,
+                        puntos: 0,
+                        ranking: 999,
+                        nivel_ingenieria: 1,
+                        color_principal: '#e10600',
+                        color_secundario: '#ffffff',
+                        creada_en: new Date().toISOString()
+                    }]);
+                
+                if (escError) {
+                    console.error('❌ Error crítico creando escudería:', escError);
+                    this.showNotification('❌ Error creando tu equipo', 'error');
+                    return false;
+                }
+                
+                // 8. Crear stats del coche
+                setTimeout(async () => {
+                    try {
+                        const { data: escuderia } = await supabase
+                            .from('escuderias')
+                            .select('id')
+                            .eq('user_id', authData.user.id)
+                            .single();
+                        
+                        if (escuderia) {
+                            await supabase
+                                .from('coches_stats')
+                                .insert([{ escuderia_id: escuderia.id }]);
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ Stats del coche no creados:', e);
+                    }
+                }, 1000);
+                
                 this.showNotification('✅ ¡Registro exitoso! Revisa tu email para confirmar.', 'success');
                 return true;
             }
     
         } catch (error) {
             console.error('❌ Error en registro:', error);
-            
-            let mensajeError = error.message;
-            if (error.message.includes('already registered')) {
-                mensajeError = 'Este correo ya está registrado';
-            } else if (error.message.includes('password')) {
-                mensajeError = 'La contraseña debe tener al menos 6 caracteres';
-            }
-            
-            this.showNotification(`❌ Error: ${mensajeError}`, 'error');
+            this.showNotification('❌ Error al registrarse: ' + error.message, 'error');
             return false;
         }
     }
