@@ -5143,7 +5143,26 @@ class F1Manager {
             
             if (errorAlmacen) throw errorAlmacen;
             
-            alert("✅ Pieza recogida y añadida al almacén");
+            // Notificación en lugar de alert
+            const notificacion = document.createElement('div');
+            notificacion.className = 'notification success';
+            notificacion.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-box-open"></i>
+                    <span>✅ Pieza añadida al almacén</span>
+                </div>
+            `;
+            document.body.appendChild(notificacion);
+            
+            setTimeout(() => notificacion.classList.add('show'), 10);
+            setTimeout(() => {
+                notificacion.classList.remove('show');
+                setTimeout(() => {
+                    if (notificacion.parentNode) {
+                        notificacion.parentNode.removeChild(notificacion);
+                    }
+                }, 300);
+            }, 2000);
             
             // 3. Actualizar UI
             if (window.f1Manager) {
