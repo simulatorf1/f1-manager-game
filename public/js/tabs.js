@@ -659,7 +659,9 @@ class TabManager {
             
             // Lista SIMPLE sin agrupar
             todasLasPiezas.forEach((pieza, index) => {
-                const areaInfo = window.CAR_AREAS.find(a => a.id === pieza.area);
+                const areaInfo = window.CAR_AREAS.find(a => 
+                    a.id === pieza.area || a.name === pieza.area
+                    );
                 const filaClase = index % 2 === 0 ? 'fila-par' : 'fila-impar';
                 const equipada = pieza.equipada === true;  // CAMBIO 2: usa campo equipada
                 
@@ -906,13 +908,32 @@ class TabManager {
         }
     }
     
-    async sumarPuntosAlCoche(areaId, puntos) {
+    async sumarPuntosAlCoche(areaNombre, puntos) {
         try {
-            // CONVERTIR A MINÚSCULAS
-            const areaLower = areaId.toLowerCase();
-            console.log(`📊 Sumando ${puntos} pts al área ${areaLower}`);
+            // 1. CONVERTIR nombre del área al ID correcto (de window.CAR_AREAS)
+            let areaId = null;
             
-            // 1. Obtener stats actuales del coche
+            // Buscar en CAR_AREAS por nombre
+            const areaConfig = window.CAR_AREAS.find(a => 
+                a.name === areaNombre || a.id === areaNombre
+            );
+            
+            if (areaConfig) {
+                areaId = areaConfig.id; // Ej: "caja_cambios"
+            } else {
+                // Mapeo manual para áreas con espacios
+                const mapeoManual = {
+                    'caja de cambios': 'caja_cambios',
+                    'alerón delantero': 'aleron_delantero',
+                    'alerón trasero': 'aleron_trasero',
+                    'suelo y difusor': 'suelo'
+                };
+                areaId = mapeoManual[areaNombre.toLowerCase()] || areaNombre.toLowerCase().replace(/ /g, '_');
+            }
+            
+            console.log(`📊 Sumando ${puntos} pts al área ${areaId} (original: ${areaNombre})`);
+            
+            // 2. Obtener stats actuales del coche
             const { data: stats, error: fetchError } = await supabase
                 .from('coches_stats')
                 .select('*')
@@ -925,8 +946,8 @@ class TabManager {
                     .from('coches_stats')
                     .insert([{
                         escuderia_id: window.f1Manager.escuderia.id,
-                        [`${areaLower}_progreso`]: 1,
-                        [`${areaLower}_nivel`]: 0,
+                        [`${areaId}_progreso`]: 1,
+                        [`${areaId}_nivel`]: 0,
                         actualizado_en: new Date().toISOString()
                     }]);
                 
@@ -937,9 +958,9 @@ class TabManager {
             
             if (!stats) return;
             
-            // 2. Calcular nuevo progreso (USAR MINÚSCULAS)
-            const columnaProgreso = `${areaLower}_progreso`;
-            const columnaNivel = `${areaLower}_nivel`;
+            // 3. Calcular nuevo progreso
+            const columnaProgreso = `${areaId}_progreso`;
+            const columnaNivel = `${areaId}_nivel`;
             
             const progresoActual = stats[columnaProgreso] || 0;
             const nivelActual = stats[columnaNivel] || 0;
@@ -953,10 +974,10 @@ class TabManager {
                 nuevoNivel = nivelActual + 1;
                 if (nuevoNivel > 10) nuevoNivel = 10;
                 
-                console.log(`🎉 ¡NIVEL UP! ${areaLower} ahora es nivel ${nuevoNivel}`);
+                console.log(`🎉 ¡NIVEL UP! ${areaId} ahora es nivel ${nuevoNivel}`);
             }
             
-            // 3. Actualizar en BD
+            // 4. Actualizar en BD
             const { error: updateError } = await supabase
                 .from('coches_stats')
                 .update({
@@ -968,20 +989,36 @@ class TabManager {
             
             if (updateError) throw updateError;
             
-            console.log(`✅ Progreso actualizado: ${areaLower} - Progreso: ${nuevoProgreso}/20, Nivel: ${nuevoNivel}`);
+            console.log(`✅ Progreso actualizado: ${areaId} - Progreso: ${nuevoProgreso}/20, Nivel: ${nuevoNivel}`);
             
         } catch (error) {
             console.error('❌ Error sumando puntos al coche:', error);
         }
     }
     
-    async restarPuntosDelCoche(areaId, puntos) {
+    async restarPuntosDelCoche(areaNombre, puntos) {
         try {
-            // CONVERTIR A MINÚSCULAS
-            const areaLower = areaId.toLowerCase();
-            console.log(`📊 Restando ${puntos} pts del área ${areaLower}`);
+            // 1. CONVERTIR nombre del área al ID correcto
+            let areaId = null;
+            const areaConfig = window.CAR_AREAS.find(a => 
+                a.name === areaNombre || a.id === areaNombre
+            );
             
-            // 1. Obtener stats actuales del coche
+            if (areaConfig) {
+                areaId = areaConfig.id;
+            } else {
+                const mapeoManual = {
+                    'caja de cambios': 'caja_cambios',
+                    'alerón delantero': 'aleron_delantero',
+                    'alerón trasero': 'aleron_trasero',
+                    'suelo y difusor': 'suelo'
+                };
+                areaId = mapeoManual[areaNombre.toLowerCase()] || areaNombre.toLowerCase().replace(/ /g, '_');
+            }
+            
+            console.log(`📊 Restando ${puntos} pts del área ${areaId} (original: ${areaNombre})`);
+            
+            // 2. Obtener stats actuales del coche
             const { data: stats, error: fetchError } = await supabase
                 .from('coches_stats')
                 .select('*')
@@ -993,9 +1030,9 @@ class TabManager {
                 return;
             }
             
-            // 2. Calcular nuevo progreso (USAR MINÚSCULAS)
-            const columnaProgreso = `${areaLower}_progreso`;
-            const columnaNivel = `${areaLower}_nivel`;
+            // 3. Calcular nuevo progreso
+            const columnaProgreso = `${areaId}_progreso`;
+            const columnaNivel = `${areaId}_nivel`;
             
             const progresoActual = stats[columnaProgreso] || 0;
             const nivelActual = stats[columnaNivel] || 0;
@@ -1010,7 +1047,7 @@ class TabManager {
                 if (nuevoNivel < 0) nuevoNivel = 0;
             }
             
-            // 3. Actualizar en BD
+            // 4. Actualizar en BD
             const { error: updateError } = await supabase
                 .from('coches_stats')
                 .update({
@@ -1022,7 +1059,7 @@ class TabManager {
             
             if (updateError) throw updateError;
             
-            console.log(`✅ Progreso actualizado: ${areaLower} - Progreso: ${nuevoProgreso}/20, Nivel: ${nuevoNivel}`);
+            console.log(`✅ Progreso actualizado: ${areaId} - Progreso: ${nuevoProgreso}/20, Nivel: ${nuevoNivel}`);
             
         } catch (error) {
             console.error('❌ Error restando puntos del coche:', error);
