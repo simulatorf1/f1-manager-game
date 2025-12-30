@@ -281,14 +281,16 @@ class FabricacionManager {
 
             // 3. Crear pieza en almacén
             const { error: piezaError } = await supabase
-                .from('piezas_almacen')
+                .from('almacen_piezas')  // ← AQUÍ EL CAMBIO
                 .insert([{
                     escuderia_id: fabricacion.escuderia_id,
                     area: areaId,
                     nivel: fabricacion.nivel,
-                    estado: 'disponible',
                     puntos_base: 10,
-                    fabricada_en: new Date().toISOString()
+                    calidad: 'Estándar',
+                    equipada: false,
+                    fabricada_en: new Date().toISOString(),
+                    creada_en: new Date().toISOString()
                 }]);
 
             if (piezaError) throw piezaError;
