@@ -23,10 +23,50 @@ class AuthManager {
         return false;
     }
 
-    async handleRegisterOriginal(email, password, username, teamName) {
+    async handleRegister(email, password, username, teamName) {
         try {
-            // Esta función SOLO registra, NO valida (ya se validó antes)
-            console.log('🚀 Registrando usuario validado...');
+            // VALIDACIÓN FINAL (por si alguien manipula el frontend)
+            const { data: teamCheck } = await supabase
+                .from('escuderias')
+                .select('nombre')
+                .eq('nombre', teamName.trim())
+                .maybeSingle();
+            
+            if (teamCheck) {
+                this.showNotification(`❌ "${teamName}" ya está en uso. Elige otro.`, 'error');
+                return false;
+            }
+            
+            const { data: userCheck } = await supabase
+                .from('users')
+                .select('username')
+                .eq('username', username.trim())
+                .maybeSingle();
+            
+            if (userCheck) {
+                this.showNotification(`❌ "${username}" ya existe. Elige otro.`, 'error');
+                return false;
+            }
+            
+            // VERIFICAR EMAIL (intento de login para ver si existe)
+            try {
+                // Intento de login con contraseña incorrecta
+                const { error: checkError } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: 'wrongPassword123'
+                });
+                
+                // Si NO es error de "Invalid login credentials", el email existe
+                if (checkError && !checkError.message.includes('Invalid login credentials')) {
+                    this.showNotification('❌ Este correo ya está registrado', 'error');
+                    return false;
+                }
+            } catch (e) {
+                // Error esperado - email no existe
+            }
+            
+            // REGISTRAR (solo si pasó todas las validaciones)
+            console.log('✅ Todas las validaciones pasadas, registrando...');
             
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: email,
@@ -40,7 +80,14 @@ class AuthManager {
                 }
             });
     
-            if (authError) throw authError;
+            if (authError) {
+                if (authError.message.includes('already registered')) {
+                    this.showNotification('❌ Este correo ya está registrado', 'error');
+                } else {
+                    this.showNotification('❌ Error en registro: ' + authError.message, 'error');
+                }
+                return false;
+            }
     
             if (authData.user) {
                 // Crear usuario en tabla pública
@@ -53,8 +100,8 @@ class AuthManager {
                         created_at: new Date().toISOString()
                     }]);
                 
-                // Crear escudería (ya validamos que el nombre está disponible)
-                const { data: escuderia, error: escError } = await supabase
+                // Crear escudería
+                const { data: escuderia } = await supabase
                     .from('escuderias')
                     .insert([{
                         user_id: authData.user.id,
@@ -70,21 +117,19 @@ class AuthManager {
                     .select()
                     .single();
                 
-                if (escError) throw escError;
-                
                 // Crear stats del coche
                 await supabase
                     .from('coches_stats')
                     .insert([{ escuderia_id: escuderia.id }]);
                 
+                this.showNotification('✅ ¡Registro exitoso! Revisa tu email para confirmar.', 'success');
                 return true;
             }
     
-            return false;
-            
         } catch (error) {
             console.error('❌ Error en registro:', error);
-            throw error;
+            this.showNotification('❌ Error al registrarse: ' + error.message, 'error');
+            return false;
         }
     }
 
