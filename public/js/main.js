@@ -1174,7 +1174,7 @@ class F1Manager {
                 content: `
                     <div class="simulacion-intro">
                         <div class="intro-icon">🔄</div>
-                        <h3>¡Comienza tu aventura en F1!</h3>
+                        <h3>¡Comienza tu aventura en MotorSports!</h3>
                         <p>Vamos a simular una semana completa para que entiendas el funcionamiento:</p>
                         <ul class="simulacion-pasos">
                             <li>✅ <strong>Día 1:</strong> Contratarás tu primer estratega</li>
@@ -3644,7 +3644,7 @@ class F1Manager {
                         <div class="f1-logo">
                             <i class="fas fa-flag-checkered"></i>
                         </div>
-                        <h1>F1 MANAGER E-STRATEGY</h1>
+                        <h1>MOTORSPORT MANAGER E-STRATEGY</h1>
                         <div class="loading-bar">
                             <div class="loading-progress"></div>
                         </div>
