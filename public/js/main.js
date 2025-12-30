@@ -3507,7 +3507,7 @@ class F1Manager {
     
      // AÑADE ESTE MÉTODO DENTRO DE LA CLASE F1Manager en main.js
     async crearDatosInicialesSiFaltan() {
-        console.log('🔍 Verificando si faltan datos iniciales...');
+        console.log('🔍 Verificando datos del usuario...');
         
         try {
             // 1. Verificar si ya tiene escudería
@@ -3517,125 +3517,35 @@ class F1Manager {
                 .eq('user_id', this.user.id)
                 .maybeSingle();
             
-            if (escError && escError.code !== 'PGRST116') {
+            if (escError) {
                 console.error('❌ Error verificando escudería:', escError);
                 return false;
             }
             
-            if (escuderiaExistente) {
-                console.log('✅ Escudería ya existe:', escuderiaExistente.nombre);
-                this.escuderia = escuderiaExistente;
-                return true;
+            if (!escuderiaExistente) {
+                console.error('❌ ERROR CRÍTICO: Usuario no tiene escudería');
+                this.showNotification('❌ Tu equipo no fue creado correctamente. Contacta soporte.', 'error');
+                return false;
             }
             
-            // 2. Crear usuario en tabla pública si no existe
-            const { data: usuarioPublico, error: userError } = await this.supabase
-                .from('users')
-                .select('id')
-                .eq('id', this.user.id)
+            // 2. Asignar escudería
+            this.escuderia = escuderiaExistente;
+            console.log('✅ Escudería cargada:', escuderiaExistente.nombre);
+            
+            // 3. Verificar stats del coche
+            const { data: statsExistentes } = await this.supabase
+                .from('coches_stats')
+                .select('*')
+                .eq('escuderia_id', this.escuderia.id)
                 .maybeSingle();
             
-            if (!usuarioPublico && !userError) {
-                console.log('👤 Creando usuario en tabla pública...');
-                const { error: insertError } = await this.supabase
-                    .from('users')
-                    .insert([{
-                        id: this.user.id,
-                        username: this.user.user_metadata?.username || this.user.email?.split('@')[0],
-                        email: this.user.email,
-                        created_at: new Date().toISOString(),
-                        last_login: new Date().toISOString()
-                    }]);
-                
-                if (insertError) {
-                    console.warn('⚠️ No se pudo crear usuario público:', insertError);
-                    // No es fatal, continuamos
-                }
-            }
-            
-            // 3. Crear escudería con nombre único
-            let nombreBase = this.user.user_metadata?.team_name || 
-                            `${this.user.user_metadata?.username}'s Team` || 
-                            'Mi Escudería';
-            
-            let nombreFinal = nombreBase;
-            let contador = 1;
-            
-            // Verificar si el nombre ya existe
-            const { data: nombreExiste } = await this.supabase
-                .from('escuderias')
-                .select('nombre')
-                .eq('nombre', nombreFinal)
-                .maybeSingle();
-            
-            if (nombreExiste) {
-                // Si existe, agregar número
-                nombreFinal = `${nombreBase} ${Math.floor(Math.random() * 1000)}`;
-                console.log(`🔄 Nombre duplicado, usando: ${nombreFinal}`);
-            }
-            
-            // 4. Crear la escudería (SIN returning: 'minimal')
-            const { data: nuevaEscuderia, error: escInsertError } = await this.supabase
-                .from('escuderias')
-                .insert([{
-                    user_id: this.user.id,
-                    nombre: nombreFinal,
-                    dinero: 5000000,
-                    puntos: 0,
-                    ranking: 999,
-                    nivel_ingenieria: 1,
-                    color_principal: '#e10600',
-                    color_secundario: '#ffffff',
-                    creada_en: new Date().toISOString()
-                }])
-                .select()
-                .single(); // ← QUITA { returning: 'minimal' }
-            
-            if (escInsertError) {
-                console.error('❌ Error crítico creando escudería:', escInsertError);
-                
-                // Último intento con nombre aleatorio
-                const nombreAleatorio = `${nombreBase} ${Math.floor(Math.random() * 10000)}`;
-                const { data: escuderiaRespaldo, error: errorRespaldo } = await this.supabase
-                    .from('escuderias')
-                    .insert([{
-                        user_id: this.user.id,
-                        nombre: nombreAleatorio,
-                        dinero: 5000000,
-                        puntos: 0,
-                        ranking: 999,
-                        nivel_ingenieria: 1,
-                        color_principal: '#e10600',
-                        color_secundario: '#ffffff',
-                        creada_en: new Date().toISOString()
-                    }])
-                    .select()
-                    .single();
-                
-                if (errorRespaldo) {
-                    console.error('❌ Error FATAL creando escudería de respaldo:', errorRespaldo);
-                    return false;
-                }
-                
-                this.escuderia = escuderiaRespaldo;
-            } else {
-                this.escuderia = nuevaEscuderia;
-            }
-            
-            // 5. Crear stats del coche
-            if (this.escuderia) {
-                const { error: statsError } = await this.supabase
+            if (!statsExistentes) {
+                console.log('📊 Creando stats del coche...');
+                await this.supabase
                     .from('coches_stats')
                     .insert([{ escuderia_id: this.escuderia.id }]);
-                
-                if (statsError && statsError.code !== '23505') { // Ignorar error de duplicado
-                    console.warn('⚠️ No se pudieron crear stats del coche:', statsError);
-                } else {
-                    console.log('📊 Stats del coche creados');
-                }
             }
             
-            console.log('✅ Datos iniciales creados correctamente:', this.escuderia?.nombre);
             return true;
             
         } catch (error) {
