@@ -18,7 +18,7 @@ class AlmacenManager {
     async cargarPiezas() {
         try {
             const { data, error } = await supabase
-                .from('piezas_almacen')
+                .from('almacen_piezas')
                 .select('*')
                 .eq('escuderia_id', this.escuderiaId)
                 .eq('estado', 'disponible')
