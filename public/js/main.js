@@ -4916,7 +4916,27 @@ class F1Manager {
             resultados.style.display = 'block';
         }
         
-        alert(`✅ ${aciertos} de 3 pronósticos acertados. ¡Buen trabajo!`);
+        // Mostrar notificación en lugar de alert
+        const notification = document.createElement('div');
+        notification.className = 'notification success';
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-trophy"></i>
+                <span>✅ ${aciertos} de 3 pronósticos acertados</span>
+            </div>
+        `;
+        document.body.appendChild(notification);
+        
+        // Animación
+        setTimeout(() => notification.classList.add('show'), 10);
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 2000);
         
         // Avanzar automáticamente al siguiente paso
         setTimeout(() => {
@@ -4943,7 +4963,26 @@ class F1Manager {
             `;
             resultados.style.display = 'block';
         }
-        alert("🏁 Carrera simulada. 2 de 3 pronósticos acertados.");
+        // Notificación para carrera simulada
+        const notifCarrera = document.createElement('div');
+        notifCarrera.className = 'notification info';
+        notifCarrera.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-flag-checkered"></i>
+                <span>🏁 Carrera simulada - 2 de 3 aciertos</span>
+            </div>
+        `;
+        document.body.appendChild(notifCarrera);
+        
+        setTimeout(() => notifCarrera.classList.add('show'), 10);
+        setTimeout(() => {
+            notifCarrera.classList.remove('show');
+            setTimeout(() => {
+                if (notifCarrera.parentNode) {
+                    notifCarrera.parentNode.removeChild(notifCarrera);
+                }
+            }, 300);
+        }, 2000);
     };
     window.tutorialIrSeccion = function(seccion) {
         alert(`Esta función te llevaría a la sección: ${seccion.toUpperCase()}\n\nEn el juego real, puedes navegar entre secciones usando el menú superior.`);
@@ -5049,7 +5088,26 @@ class F1Manager {
         window.tutorialData.aciertosPronosticos = aciertos;
         window.tutorialData.totalPronosticos = 3;
         
-        alert(`✅ ${aciertos} de 3 pronósticos acertados. ¡Buen trabajo!`);
+        // Notificación basada en aciertos reales
+        const notificacion = document.createElement('div');
+        notificacion.className = aciertos >= 2 ? 'notification success' : 'notification warning';
+        notificacion.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-${aciertos >= 2 ? 'trophy' : 'chart-line'}"></i>
+                <span>${aciertos} de 3 pronósticos acertados</span>
+            </div>
+        `;
+        document.body.appendChild(notificacion);
+        
+        setTimeout(() => notificacion.classList.add('show'), 10);
+        setTimeout(() => {
+            notificacion.classList.remove('show');
+            setTimeout(() => {
+                if (notificacion.parentNode) {
+                    notificacion.parentNode.removeChild(notificacion);
+                }
+            }, 300);
+        }, 2000);
         
         // Avanzar automáticamente después de 2 segundos
         setTimeout(() => {
