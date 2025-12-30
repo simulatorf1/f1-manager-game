@@ -25,49 +25,7 @@ class AuthManager {
 
     async handleRegister(email, password, username, teamName) {
         try {
-            // VALIDACIÓN FINAL (por si alguien manipula el frontend)
-            const { data: teamCheck } = await supabase
-                .from('escuderias')
-                .select('nombre')
-                .eq('nombre', teamName.trim())
-                .maybeSingle();
-            
-            if (teamCheck) {
-                this.showNotification(`❌ "${teamName}" ya está en uso. Elige otro.`, 'error');
-                return false;
-            }
-            
-            const { data: userCheck } = await supabase
-                .from('users')
-                .select('username')
-                .eq('username', username.trim())
-                .maybeSingle();
-            
-            if (userCheck) {
-                this.showNotification(`❌ "${username}" ya existe. Elige otro.`, 'error');
-                return false;
-            }
-            
-            // VERIFICAR EMAIL (intento de login para ver si existe)
-            try {
-                // Intento de login con contraseña incorrecta
-                const { error: checkError } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: 'wrongPassword123'
-                });
-                
-                // Si NO es error de "Invalid login credentials", el email existe
-                if (checkError && !checkError.message.includes('Invalid login credentials')) {
-                    this.showNotification('❌ Este correo ya está registrado', 'error');
-                    return false;
-                }
-            } catch (e) {
-                // Error esperado - email no existe
-            }
-            
-            // REGISTRAR (solo si pasó todas las validaciones)
-            console.log('✅ Todas las validaciones pasadas, registrando...');
-            
+            // 1. Registrar usuario en Supabase Auth
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: email,
                 password: password,
@@ -75,57 +33,19 @@ class AuthManager {
                     data: {
                         username: username,
                         team_name: teamName
-                    },
-                    emailRedirectTo: window.location.origin
+                    }
                 }
             });
-    
-            if (authError) {
-                if (authError.message.includes('already registered')) {
-                    this.showNotification('❌ Este correo ya está registrado', 'error');
-                } else {
-                    this.showNotification('❌ Error en registro: ' + authError.message, 'error');
-                }
-                return false;
-            }
-    
+
+            if (authError) throw authError;
+
             if (authData.user) {
-                // Crear usuario en tabla pública
-                await supabase
-                    .from('users')
-                    .insert([{
-                        id: authData.user.id,
-                        username: username,
-                        email: email,
-                        created_at: new Date().toISOString()
-                    }]);
-                
-                // Crear escudería
-                const { data: escuderia } = await supabase
-                    .from('escuderias')
-                    .insert([{
-                        user_id: authData.user.id,
-                        nombre: teamName,
-                        dinero: 5000000,
-                        puntos: 0,
-                        ranking: 999,
-                        nivel_ingenieria: 1,
-                        color_principal: '#e10600',
-                        color_secundario: '#ffffff',
-                        creada_en: new Date().toISOString()
-                    }])
-                    .select()
-                    .single();
-                
-                // Crear stats del coche
-                await supabase
-                    .from('coches_stats')
-                    .insert([{ escuderia_id: escuderia.id }]);
-                
+
+
                 this.showNotification('✅ ¡Registro exitoso! Revisa tu email para confirmar.', 'success');
                 return true;
             }
-    
+
         } catch (error) {
             console.error('❌ Error en registro:', error);
             this.showNotification('❌ Error al registrarse: ' + error.message, 'error');
