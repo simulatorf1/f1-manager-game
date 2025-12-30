@@ -833,52 +833,80 @@ class TabManager {
         console.log(`🔧 Equipando pieza: ${piezaId}`);
         
         try {
+            // 1. OBTENER PIEZA DESDE LA TABLA CORRECTA
             const { data: pieza, error: fetchError } = await supabase
-                .from('piezas_almacen')
+                .from('almacen_piezas')
                 .select('*')
                 .eq('id', piezaId)
                 .single();
             
             if (fetchError) throw fetchError;
+            if (!pieza) throw new Error('Pieza no encontrada');
             
-            // Actualizar pieza como equipada
+            console.log('✅ Pieza encontrada:', pieza);
+            
+            // 2. MARCAR COMO EQUIPADA EN LA MISMA TABLA
             const { error: updateError } = await supabase
-                .from('piezas_almacen')
+                .from('almacen_piezas')
                 .update({ 
-                    estado: 'equipada',
-                    equipada_en: new Date().toISOString()
+                    equipada: true,
+                    creada_en: new Date().toISOString()
                 })
                 .eq('id', piezaId);
             
             if (updateError) throw updateError;
             
-            // Sumar puntos al área del coche
+            // 3. SUMAR PUNTOS AL COCHE
             await this.sumarPuntosAlCoche(pieza.area, pieza.puntos_base || 10);
             
-            // Recargar almacén
+            // 4. SUMAR PUNTOS A LA ESCUDERÍA
+            const puntosSumar = pieza.puntos_base || 10;
+            const nuevosPuntos = (window.f1Manager?.escuderia?.puntos || 0) + puntosSumar;
+            
+            const { error: puntosError } = await supabase
+                .from('escuderias')
+                .update({ puntos: nuevosPuntos })
+                .eq('id', window.f1Manager?.escuderia?.id);
+            
+            if (puntosError) throw puntosError;
+            
+            // 5. ACTUALIZAR EN MEMORIA
+            if (window.f1Manager?.escuderia) {
+                window.f1Manager.escuderia.puntos = nuevosPuntos;
+            }
+            
+            // 6. ACTUALIZAR UI
+            const puntosElement = document.getElementById('points-value');
+            if (puntosElement) {
+                puntosElement.textContent = nuevosPuntos;
+            }
+            
+            // 7. RECARGAR ALMACÉN Y ESTADÍSTICAS
             this.loadAlmacenPiezas();
             
-            // Actualizar stats del coche en pantalla principal
             if (window.f1Manager?.loadCarStatus) {
                 setTimeout(() => {
                     window.f1Manager.loadCarStatus();
-                    window.f1Manager.updateCarAreasUI();
-                    window.f1Manager.updateProductionMonitor();
+                    if (window.f1Manager.updateCarAreasUI) {
+                        window.f1Manager.updateCarAreasUI();
+                    }
                 }, 500);
             }
             
+            // 8. NOTIFICACIÓN
             if (window.f1Manager?.showNotification) {
-                window.f1Manager.showNotification(`✅ Pieza equipada (+${pieza.puntos_base || 10} pts)`, 'success');
+                window.f1Manager.showNotification(`✅ ${pieza.area} equipada (+${puntosSumar} pts)`, 'success');
             }
             
         } catch (error) {
             console.error('❌ Error equipando pieza:', error);
             if (window.f1Manager?.showNotification) {
-                window.f1Manager.showNotification('❌ Error al equipar la pieza', 'error');
+                window.f1Manager.showNotification('❌ Error al equipar la pieza: ' + error.message, 'error');
             }
         }
     }
-        async sumarPuntosAlCoche(areaId, puntos) {
+    
+    async sumarPuntosAlCoche(areaId, puntos) {
         try {
             console.log(`📊 Sumando ${puntos} pts al área ${areaId}`);
             
@@ -895,12 +923,13 @@ class TabManager {
                     .from('coches_stats')
                     .insert([{
                         escuderia_id: window.f1Manager.escuderia.id,
-                        [`${areaId}_progreso`]: 0,
+                        [`${areaId}_progreso`]: 1,
                         [`${areaId}_nivel`]: 0,
                         actualizado_en: new Date().toISOString()
                     }]);
                 
                 if (createError) throw createError;
+                console.log('✅ Stats creados desde cero');
                 return;
             }
             
@@ -913,7 +942,7 @@ class TabManager {
             const progresoActual = stats[columnaProgreso] || 0;
             const nivelActual = stats[columnaNivel] || 0;
             
-            let nuevoProgreso = progresoActual + 1; // Cada pieza suma 1 al progreso
+            let nuevoProgreso = progresoActual + 1;
             let nuevoNivel = nivelActual;
             
             // Si alcanza 20 piezas, subir de nivel
@@ -942,10 +971,9 @@ class TabManager {
         } catch (error) {
             console.error('❌ Error sumando puntos al coche:', error);
         }
-
-            
     }
-        async restarPuntosDelCoche(areaId, puntos) {
+    
+    async restarPuntosDelCoche(areaId, puntos) {
         try {
             console.log(`📊 Restando ${puntos} pts del área ${areaId}`);
             
@@ -968,13 +996,13 @@ class TabManager {
             const progresoActual = stats[columnaProgreso] || 0;
             const nivelActual = stats[columnaNivel] || 0;
             
-            let nuevoProgreso = Math.max(0, progresoActual - 1); // Restar 1, mínimo 0
+            let nuevoProgreso = Math.max(0, progresoActual - 1);
             let nuevoNivel = nivelActual;
             
             // Si estaba en progreso 0 y nivel > 0, bajar de nivel
             if (progresoActual === 0 && nivelActual > 0) {
                 nuevoNivel = nivelActual - 1;
-                nuevoProgreso = 19; // Al bajar de nivel, vuelve a 19/20
+                nuevoProgreso = 19;
                 if (nuevoNivel < 0) nuevoNivel = 0;
             }
             
@@ -996,44 +1024,70 @@ class TabManager {
             console.error('❌ Error restando puntos del coche:', error);
         }
     }
+    
     async venderPieza(piezaId) {
         if (!confirm('¿Vender esta pieza? Se eliminará permanentemente.')) return;
         
         try {
+            // TABLA CORRECTA
             const { data: pieza, error: fetchError } = await supabase
-                .from('piezas_almacen')
+                .from('almacen_piezas')
                 .select('*')
                 .eq('id', piezaId)
                 .single();
             
             if (fetchError) throw fetchError;
             
-            if (pieza.estado === 'equipada') {
-                // Restar puntos si estaba equipada
+            // RESTAR PUNTOS SI ESTABA EQUIPADA
+            if (pieza.equipada === true) {
                 await this.restarPuntosDelCoche(pieza.area, pieza.puntos_base || 10);
+                
+                // RESTAR PUNTOS DE LA ESCUDERÍA
+                const puntosRestar = pieza.puntos_base || 10;
+                const nuevosPuntos = Math.max(0, (window.f1Manager?.escuderia?.puntos || 0) - puntosRestar);
+                
+                await supabase
+                    .from('escuderias')
+                    .update({ puntos: nuevosPuntos })
+                    .eq('id', window.f1Manager?.escuderia?.id);
+                
+                if (window.f1Manager?.escuderia) {
+                    window.f1Manager.escuderia.puntos = nuevosPuntos;
+                }
+                
+                const puntosElement = document.getElementById('points-value');
+                if (puntosElement) {
+                    puntosElement.textContent = nuevosPuntos;
+                }
             }
             
-            // Calcular precio de venta (1.4x costo base)
+            // CALCULAR PRECIO DE VENTA
             const costoBase = 10000;
             const precioVenta = Math.round(costoBase * 1.4);
             
-            // Sumar dinero a la escudería
+            // SUMAR DINERO A LA ESCUDERÍA
             if (window.f1Manager?.escuderia) {
                 window.f1Manager.escuderia.dinero += precioVenta;
                 await window.f1Manager.updateEscuderiaMoney();
             }
             
-            // Eliminar pieza de la base de datos
+            // ELIMINAR PIEZA DE LA BD
             const { error: deleteError } = await supabase
-                .from('piezas_almacen')
+                .from('almacen_piezas')
                 .delete()
                 .eq('id', piezaId);
             
             if (deleteError) throw deleteError;
             
-            // Recargar almacén
+            // RECARGAR ALMACÉN
             this.loadAlmacenPiezas();
             
+            // ACTUALIZAR UI DEL COCHE
+            if (window.f1Manager?.loadCarStatus) {
+                setTimeout(() => window.f1Manager.loadCarStatus(), 500);
+            }
+            
+            // NOTIFICACIÓN
             if (window.f1Manager?.showNotification) {
                 window.f1Manager.showNotification(`💰 Pieza vendida por €${precioVenta.toLocaleString()}`, 'success');
             }
@@ -1050,41 +1104,60 @@ class TabManager {
         console.log(`🔧 Desequipando pieza: ${piezaId}`);
         
         try {
-            // 1. Obtener datos de la pieza
+            // 1. OBTENER PIEZA DESDE TABLA CORRECTA
             const { data: pieza, error: fetchError } = await supabase
-                .from('piezas_almacen')
+                .from('almacen_piezas')
                 .select('*')
                 .eq('id', piezaId)
                 .single();
             
             if (fetchError) throw fetchError;
             
-            // 2. Marcar pieza como disponible en BD
+            // 2. MARCAR PIEZA COMO NO EQUIPADA
             const { error: updateError } = await supabase
-                .from('piezas_almacen')
+                .from('almacen_piezas')
                 .update({ 
-                    estado: 'disponible',
-                    equipada_en: null
+                    equipada: false
                 })
                 .eq('id', piezaId);
             
             if (updateError) throw updateError;
             
-            // 3. RESTAR PUNTOS DEL COCHE (NUEVO)
+            // 3. RESTAR PUNTOS DEL COCHE
             await this.restarPuntosDelCoche(pieza.area, pieza.puntos_base || 10);
             
-            // 4. Actualizar UI
+            // 4. RESTAR PUNTOS DE LA ESCUDERÍA
+            const puntosRestar = pieza.puntos_base || 10;
+            const nuevosPuntos = Math.max(0, (window.f1Manager?.escuderia?.puntos || 0) - puntosRestar);
+            
+            await supabase
+                .from('escuderias')
+                .update({ puntos: nuevosPuntos })
+                .eq('id', window.f1Manager?.escuderia?.id);
+            
+            if (window.f1Manager?.escuderia) {
+                window.f1Manager.escuderia.puntos = nuevosPuntos;
+            }
+            
+            // 5. ACTUALIZAR UI
+            const puntosElement = document.getElementById('points-value');
+            if (puntosElement) {
+                puntosElement.textContent = nuevosPuntos;
+            }
+            
             this.loadAlmacenPiezas();
             
-            // 5. Actualizar UI principal si está disponible
+            // 6. ACTUALIZAR UI PRINCIPAL
             if (window.f1Manager?.loadCarStatus) {
                 setTimeout(() => {
                     window.f1Manager.loadCarStatus();
-                    window.f1Manager.updateCarAreasUI();
+                    if (window.f1Manager.updateCarAreasUI) {
+                        window.f1Manager.updateCarAreasUI();
+                    }
                 }, 500);
             }
             
-            // 6. Mostrar notificación
+            // 7. NOTIFICACIÓN
             if (window.f1Manager?.showNotification) {
                 window.f1Manager.showNotification(`✅ Pieza desequipada (-${pieza.puntos_base || 10} pts)`, 'success');
             }
