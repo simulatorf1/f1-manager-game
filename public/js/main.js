@@ -4525,8 +4525,8 @@ class F1Manager {
     
     window.tutorialEjecutarContratacion = async function() {
         const estrategaId = window.tutorialData.estrategaSeleccionado;
-        if (!estrategaId) {
-            alert("Primero selecciona un estratega");
+        if (!estrategaId && window.tutorialManager && window.tutorialManager.showNotification) {
+            window.tutorialManager.showNotification("Primero selecciona un estratega", 'warning');
             return;
         }
         
@@ -4609,7 +4609,9 @@ class F1Manager {
                 }
             }
             
-            alert(`✅ ${estrategaCatalogo.nombre} contratado con éxito por ${(parseInt(estrategaCatalogo.salario_base) || 50000).toLocaleString()}€/mes.\n\nBono: ${estrategaCatalogo.bonificacion_valor || 15}% ${estrategaCatalogo.bonificacion_tipo || 'puntos extra'}.`);
+            if (window.tutorialManager && window.tutorialManager.showNotification) {
+                window.tutorialManager.showNotification(`✅ ${estrategaCatalogo.nombre} contratado`, 'success');
+            }
             
             // Avanzar automáticamente
             setTimeout(() => {
