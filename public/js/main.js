@@ -318,7 +318,7 @@ function mostrarPantallaRegistro() {
                 
                 <div class="register-header">
                     <h1>CREAR CUENTA</h1>
-                    <p>Comienza tu aventura en la F1</p>
+                    <p>Comienza tu aventura en MotorSport</p>
                 </div>
                 
                 <div id="register-error" class="error-message"></div>
@@ -326,7 +326,7 @@ function mostrarPantallaRegistro() {
                 
                 <div class="register-form">
                     <div class="form-group">
-                        <label for="register-username">Nombre de usuario</label>
+                        <label for="register-username">Nombre de tu escudería</label>
                         <input type="text" id="register-username" placeholder="Ej: RedBullManager" maxlength="20">
                     </div>
                     <div class="form-group">
