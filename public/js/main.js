@@ -307,6 +307,77 @@ function mostrarPantallaLogin() {
     });
 }
 
+// ← AÑADIR ESTA FUNCIÓN NUEVA
+async function verificarDisponibilidad() {
+    const username = document.getElementById('register-username').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const btnVerificar = document.getElementById('btn-verificar-disponibilidad');
+    const btnCrear = document.getElementById('btn-register-submit');
+    const errorDiv = document.getElementById('register-error');
+    const successDiv = document.getElementById('register-success');
+    
+    if (!username || !email) {
+        mostrarMensaje('Por favor, ingresa nombre de escudería y correo para verificar', errorDiv);
+        return;
+    }
+    
+    // Deshabilitar botones mientras se verifica
+    if (btnVerificar) {
+        btnVerificar.disabled = true;
+        btnVerificar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> VERIFICANDO...';
+    }
+    if (btnCrear) btnCrear.disabled = true;
+    
+    try {
+        const supabase = window.supabase;
+        if (!supabase) throw new Error('No hay conexión');
+        
+        // 1. Verificar escudería
+        const { data: escuderiaExistente } = await supabase
+            .from('escuderias')
+            .select('id')
+            .eq('nombre', username)
+            .maybeSingle();
+        
+        if (escuderiaExistente) {
+            mostrarMensaje('❌ Ya existe una escudería con ese nombre', errorDiv);
+            return;
+        }
+        
+        // 2. Verificar email (intentando iniciar sesión)
+        const { error: emailError } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: 'DummyPassword123!'
+        });
+        
+        // Si NO hay error de "invalid credentials", el email existe
+        if (!emailError || !emailError.message.includes('Invalid login credentials')) {
+            mostrarMensaje('✉️ Este correo ya está registrado', errorDiv);
+            return;
+        }
+        
+        // ¡Todo disponible!
+        mostrarMensaje('✅ ¡Nombre y correo disponibles! Ahora puedes crear tu cuenta.', successDiv);
+        
+        // Habilitar botón de crear cuenta
+        if (btnCrear) {
+            btnCrear.disabled = false;
+            btnCrear.style.opacity = '1';
+            btnCrear.style.cursor = 'pointer';
+        }
+        
+    } catch (error) {
+        mostrarMensaje('Error verificando disponibilidad', errorDiv);
+    } finally {
+        if (btnVerificar) {
+            btnVerificar.disabled = false;
+            btnVerificar.innerHTML = '<i class="fas fa-search"></i> VERIFICAR DISPONIBILIDAD';
+        }
+    }
+}
+// ← FIN FUNCIÓN NUEVA
+
+// ← MODIFICAR la pantalla de registro para añadir el botón de verificación
 function mostrarPantallaRegistro() {
     document.body.innerHTML = `
         <div class="register-screen">
@@ -339,7 +410,29 @@ function mostrarPantallaRegistro() {
                     </div>
                 </div>
                 
-                <button class="register-button" id="btn-register-submit">
+                <!-- ← AÑADIR BOTÓN DE VERIFICACIÓN -->
+                <div class="verification-section" style="margin: 20px 0; padding: 15px; background: rgba(0,210,190,0.1); border-radius: 10px; border: 1px solid #00d2be;">
+                    <p style="margin: 0 0 10px 0; color: #aaa; font-size: 0.9rem;">Primero verifica que tu nombre y correo estén disponibles:</p>
+                    <button class="btn-verificar" id="btn-verificar-disponibilidad" style="
+                        width: 100%;
+                        padding: 12px;
+                        background: #00d2be;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        font-family: 'Orbitron', sans-serif;
+                        font-weight: bold;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 10px;
+                    ">
+                        <i class="fas fa-search"></i> VERIFICAR DISPONIBILIDAD
+                    </button>
+                </div>
+                
+                <button class="register-button" id="btn-register-submit" style="opacity: 0.5; cursor: not-allowed;" disabled>
                     <i class="fas fa-check-circle"></i>
                     CREAR CUENTA
                 </button>
@@ -351,131 +444,96 @@ function mostrarPantallaRegistro() {
         </div>
         
         <style>
-            .register-screen {
-                min-height: 100vh;
-                background: linear-gradient(135deg, #15151e 0%, #1a1a2e 100%);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                padding: 20px;
+            /* ... mantén todos tus estilos actuales ... */
+            .register-button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
             }
             
-            .register-container {
-                background: rgba(42, 42, 56, 0.9);
-                border-radius: 15px;
-                padding: 40px;
-                width: 100%;
-                max-width: 400px;
-                border: 2px solid #00d2be;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            }
-            
-            .register-header {
-                text-align: center;
-                margin-bottom: 30px;
-            }
-            
-            .register-header h1 {
-                font-family: 'Orbitron', sans-serif;
-                font-size: 2rem;
-                background: linear-gradient(90deg, #00d2be, #e10600);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                margin-bottom: 10px;
-            }
-            
-            .register-header p {
-                color: #888;
-                font-size: 0.9rem;
-            }
-            
-            .back-button {
-                background: transparent;
-                border: none;
-                color: #aaa;
-                display: flex;
-                align-items: center;
-                gap: 5px;
+            .register-button:not(:disabled) {
+                opacity: 1;
                 cursor: pointer;
-                margin-bottom: 20px;
-                transition: color 0.3s;
             }
             
-            .back-button:hover {
-                color: #00d2be;
-            }
-            
-            .register-form {
-                margin-bottom: 25px;
-            }
-            
-            .form-group {
-                margin-bottom: 20px;
-            }
-            
-            .form-group label {
-                display: block;
-                color: #aaa;
-                margin-bottom: 5px;
-                font-size: 0.9rem;
-            }
-            
-            .form-group input {
-                width: 100%;
-                padding: 12px;
-                background: rgba(255,255,255,0.1);
-                border: 1px solid rgba(255,255,255,0.2);
-                border-radius: 5px;
-                color: white;
-                font-size: 1rem;
-                transition: border 0.3s;
-            }
-            
-            .form-group input:focus {
-                outline: none;
-                border-color: #e10600;
-            }
-            
-            .register-button {
-                width: 100%;
-                padding: 15px;
-                background: linear-gradient(135deg, #00d2be, #00a35c);
-                border: none;
-                border-radius: 5px;
-                color: white;
-                font-family: 'Orbitron', sans-serif;
-                font-size: 1rem;
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.3s;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-                margin-top: 10px;
-            }
-            
-            .register-button:hover {
+            .btn-verificar:hover:not(:disabled) {
                 transform: translateY(-2px);
                 box-shadow: 0 5px 15px rgba(0, 210, 190, 0.4);
-            }
-            
-            .register-footer {
-                text-align: center;
-                margin-top: 25px;
-                padding-top: 20px;
-                border-top: 1px solid rgba(255,255,255,0.1);
-                color: #666;
-                font-size: 0.9rem;
             }
         </style>
     `;
     
     // Configurar eventos
     document.getElementById('btn-back').addEventListener('click', mostrarPantallaLogin);
+    document.getElementById('btn-verificar-disponibilidad').addEventListener('click', verificarDisponibilidad); // ← NUEVO
     document.getElementById('btn-register-submit').addEventListener('click', manejarRegistro);
 }
+// ← FIN MODIFICACIÓN
 
+// ← MODIFICAR manejarRegistro para que SOLO se ejecute si pasó la verificación
+async function manejarRegistro() {
+    const btnCrear = document.getElementById('btn-register-submit');
+    if (btnCrear && btnCrear.disabled) {
+        mostrarMensaje('❌ Primero debes verificar la disponibilidad', document.getElementById('register-error'));
+        return;
+    }
+    
+    // Resto del código de manejarRegistro (sin cambios en la lógica interna)
+    const supabase = window.supabase;
+    if (!supabase) {
+        mostrarErrorCritico('No se pudo conectar a la base de datos');
+        return;
+    }
+    
+    const username = document.getElementById('register-username').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value;
+    const errorDiv = document.getElementById('register-error');
+    const successDiv = document.getElementById('register-success');
+    
+    if (!username || !email || !password) {
+        mostrarMensaje('Por favor, completa todos los campos', errorDiv);
+        return;
+    }
+    
+    if (password.length < 6) {
+        mostrarMensaje('La contraseña debe tener al menos 6 caracteres', errorDiv);
+        return;
+    }
+    
+    // Deshabilitar botón durante registro
+    if (btnCrear) {
+        btnCrear.disabled = true;
+        btnCrear.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CREANDO CUENTA...';
+    }
+    
+    try {
+        // ... resto del código de manejarRegistro (sin verificación duplicada)
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: { 
+                    username: username,
+                    team_name: `${username}'s Team`
+                },
+                emailRedirectTo: window.location.origin
+            }
+        });
+        
+        if (authError) throw authError;
+        
+        // ... resto del código igual
+        // Crear escudería, etc.
+        
+    } catch (error) {
+        // ... manejo de errores igual
+    } finally {
+        if (btnCrear) {
+            btnCrear.disabled = false;
+            btnCrear.innerHTML = '<i class="fas fa-check-circle"></i> CREAR CUENTA';
+        }
+    }
+}
 async function manejarLogin() {
     const supabase = window.supabase;
     if (!supabase) {
