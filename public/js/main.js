@@ -308,6 +308,7 @@ function mostrarPantallaLogin() {
 }
 
 function mostrarPantallaRegistro() {
+    // USA TU HTML ORIGINAL - no lo cambies
     document.body.innerHTML = `
         <div class="register-screen">
             <div class="register-container">
@@ -327,26 +328,26 @@ function mostrarPantallaRegistro() {
                     <div class="form-group">
                         <label for="register-username">Nombre de usuario</label>
                         <input type="text" id="register-username" placeholder="Ej: RedBullManager" maxlength="20">
-                        <div class="validation-message" id="username-validation"></div>
+                        <div class="validation-feedback" id="username-feedback" style="font-size: 0.8rem; margin-top: 5px; min-height: 20px;"></div>
                     </div>
                     <div class="form-group">
                         <label for="register-email">Correo electrónico</label>
                         <input type="email" id="register-email" placeholder="tu@email.com">
-                        <div class="validation-message" id="email-validation"></div>
+                        <div class="validation-feedback" id="email-feedback" style="font-size: 0.8rem; margin-top: 5px; min-height: 20px;"></div>
                     </div>
                     <div class="form-group">
                         <label for="register-password">Contraseña</label>
                         <input type="password" id="register-password" placeholder="•••••••• (mínimo 6 caracteres)">
-                        <div class="validation-message" id="password-validation"></div>
+                        <div class="validation-feedback" id="password-feedback" style="font-size: 0.8rem; margin-top: 5px; min-height: 20px;"></div>
                     </div>
                     <div class="form-group">
                         <label for="register-team">Nombre de tu escudería</label>
                         <input type="text" id="register-team" placeholder="Ej: McLaren Racing">
-                        <div class="validation-message" id="team-validation"></div>
+                        <div class="validation-feedback" id="team-feedback" style="font-size: 0.8rem; margin-top: 5px; min-height: 20px;"></div>
                     </div>
                 </div>
                 
-                <button class="register-button" id="btn-register-submit" disabled>
+                <button class="register-button" id="btn-register-submit">
                     <i class="fas fa-check-circle"></i>
                     CREAR CUENTA
                 </button>
@@ -356,52 +357,29 @@ function mostrarPantallaRegistro() {
                 </div>
             </div>
         </div>
-        
-        <style>
-            .validation-message {
-                font-size: 0.8rem;
-                margin-top: 5px;
-                min-height: 20px;
-                transition: all 0.3s;
-            }
-            
-            .validation-message.valid {
-                color: #4CAF50;
-            }
-            
-            .validation-message.invalid {
-                color: #f44336;
-            }
-            
-            .validation-message.checking {
-                color: #ff9800;
-            }
-            
-            .register-button:disabled {
-                background: #666 !important;
-                cursor: not-allowed;
-                opacity: 0.7;
-            }
-        </style>
     `;
     
-    // Configurar eventos
+    // Configurar eventos básicos
     document.getElementById('btn-back').addEventListener('click', mostrarPantallaLogin);
+    document.getElementById('btn-register-submit').addEventListener('click', manejarRegistro);
     
-    // Obtener referencias
+    // Configurar validación en tiempo real
+    setupRealTimeValidation();
+}
+
+// FUNCIÓN NUEVA: Validación en tiempo real
+function setupRealTimeValidation() {
     const usernameInput = document.getElementById('register-username');
     const emailInput = document.getElementById('register-email');
     const passwordInput = document.getElementById('register-password');
     const teamInput = document.getElementById('register-team');
     const submitBtn = document.getElementById('btn-register-submit');
     
-    // Estados de validación
-    const validationState = {
-        username: { valid: false, checking: false },
-        email: { valid: false, checking: false },
-        password: { valid: false, checking: false },
-        team: { valid: false, checking: false }
-    };
+    // Estados
+    let isUsernameAvailable = false;
+    let isEmailAvailable = false;
+    let isPasswordValid = false;
+    let isTeamAvailable = false;
     
     // Función para verificar disponibilidad
     async function checkAvailability(type, value) {
@@ -411,7 +389,7 @@ function mostrarPantallaRegistro() {
             let exists = false;
             
             if (type === 'email') {
-                // Verificar email (simulación)
+                // Verificar en tabla users
                 const { data } = await supabase
                     .from('users')
                     .select('email')
@@ -436,7 +414,7 @@ function mostrarPantallaRegistro() {
                 exists = !!data;
             }
             
-            return !exists; // true = disponible, false = ya existe
+            return !exists; // true = disponible
             
         } catch (error) {
             console.error(`Error checking ${type}:`, error);
@@ -444,176 +422,139 @@ function mostrarPantallaRegistro() {
         }
     }
     
-    // Función para actualizar botón de envío
-    function updateSubmitButton() {
-        const allValid = Object.values(validationState).every(field => field.valid);
-        const anyChecking = Object.values(validationState).some(field => field.checking);
-        
-        submitBtn.disabled = !allValid || anyChecking;
-    }
-    
-    // Función para mostrar mensaje de validación
-    function showValidationMessage(elementId, message, type) {
+    // Función para mostrar feedback
+    function showFeedback(elementId, message, isValid) {
         const element = document.getElementById(elementId);
         element.textContent = message;
-        element.className = 'validation-message ' + type;
+        element.style.color = isValid ? '#4CAF50' : '#f44336';
     }
     
-    // Validación en tiempo real - USERNAME
+    // Validación USERNAME
     let usernameTimeout;
     usernameInput.addEventListener('input', async (e) => {
         const value = e.target.value.trim();
-        const validationElement = document.getElementById('username-validation');
-        
         clearTimeout(usernameTimeout);
         
         if (value.length < 3) {
-            validationState.username = { valid: false, checking: false };
-            showValidationMessage('username-validation', 'Mínimo 3 caracteres', 'invalid');
-            updateSubmitButton();
+            showFeedback('username-feedback', 'Mínimo 3 caracteres', false);
+            isUsernameAvailable = false;
             return;
         }
         
-        validationState.username = { valid: false, checking: true };
-        showValidationMessage('username-validation', 'Verificando disponibilidad...', 'checking');
-        updateSubmitButton();
+        showFeedback('username-feedback', 'Verificando...', false);
         
         usernameTimeout = setTimeout(async () => {
-            const isAvailable = await checkAvailability('username', value);
+            const available = await checkAvailability('username', value);
+            isUsernameAvailable = available;
             
-            if (isAvailable) {
-                validationState.username = { valid: true, checking: false };
-                showValidationMessage('username-validation', '✓ Nombre disponible', 'valid');
+            if (available) {
+                showFeedback('username-feedback', '✓ Disponible', true);
             } else {
-                validationState.username = { valid: false, checking: false };
-                showValidationMessage('username-validation', '✗ Este nombre ya está en uso', 'invalid');
+                showFeedback('username-feedback', '✗ Ya en uso', false);
             }
-            
-            updateSubmitButton();
         }, 500);
     });
     
-    // Validación en tiempo real - EMAIL
+    // Validación EMAIL
     let emailTimeout;
     emailInput.addEventListener('input', async (e) => {
         const value = e.target.value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        
         clearTimeout(emailTimeout);
         
         if (!emailRegex.test(value)) {
-            validationState.email = { valid: false, checking: false };
-            showValidationMessage('email-validation', 'Email no válido', 'invalid');
-            updateSubmitButton();
+            showFeedback('email-feedback', 'Email no válido', false);
+            isEmailAvailable = false;
             return;
         }
         
-        validationState.email = { valid: false, checking: true };
-        showValidationMessage('email-validation', 'Verificando disponibilidad...', 'checking');
-        updateSubmitButton();
+        showFeedback('email-feedback', 'Verificando...', false);
         
         emailTimeout = setTimeout(async () => {
-            const isAvailable = await checkAvailability('email', value);
+            const available = await checkAvailability('email', value);
+            isEmailAvailable = available;
             
-            if (isAvailable) {
-                validationState.email = { valid: true, checking: false };
-                showValidationMessage('email-validation', '✓ Email disponible', 'valid');
+            if (available) {
+                showFeedback('email-feedback', '✓ Disponible', true);
             } else {
-                validationState.email = { valid: false, checking: false };
-                showValidationMessage('email-validation', '✗ Este email ya está registrado', 'invalid');
+                showFeedback('email-feedback', '✗ Ya registrado', false);
             }
-            
-            updateSubmitButton();
         }, 500);
     });
     
-    // Validación en tiempo real - PASSWORD
+    // Validación PASSWORD
     passwordInput.addEventListener('input', (e) => {
         const value = e.target.value;
         
         if (value.length < 6) {
-            validationState.password = { valid: false, checking: false };
-            showValidationMessage('password-validation', 'Mínimo 6 caracteres', 'invalid');
+            showFeedback('password-feedback', 'Mínimo 6 caracteres', false);
+            isPasswordValid = false;
         } else {
-            validationState.password = { valid: true, checking: false };
-            showValidationMessage('password-validation', '✓ Contraseña válida', 'valid');
+            showFeedback('password-feedback', '✓ Válida', true);
+            isPasswordValid = true;
         }
-        
-        updateSubmitButton();
     });
     
-    // Validación en tiempo real - TEAM NAME
+    // Validación TEAM NAME
     let teamTimeout;
     teamInput.addEventListener('input', async (e) => {
         const value = e.target.value.trim();
-        
         clearTimeout(teamTimeout);
         
         if (value.length < 3) {
-            validationState.team = { valid: false, checking: false };
-            showValidationMessage('team-validation', 'Mínimo 3 caracteres', 'invalid');
-            updateSubmitButton();
+            showFeedback('team-feedback', 'Mínimo 3 caracteres', false);
+            isTeamAvailable = false;
             return;
         }
         
-        validationState.team = { valid: false, checking: true };
-        showValidationMessage('team-validation', 'Verificando disponibilidad...', 'checking');
-        updateSubmitButton();
+        showFeedback('team-feedback', 'Verificando...', false);
         
         teamTimeout = setTimeout(async () => {
-            const isAvailable = await checkAvailability('team', value);
+            const available = await checkAvailability('team', value);
+            isTeamAvailable = available;
             
-            if (isAvailable) {
-                validationState.team = { valid: true, checking: false };
-                showValidationMessage('team-validation', '✓ Nombre disponible', 'valid');
+            if (available) {
+                showFeedback('team-feedback', '✓ Disponible', true);
             } else {
-                validationState.team = { valid: false, checking: false };
-                showValidationMessage('team-validation', '✗ Esta escudería ya existe', 'invalid');
+                showFeedback('team-feedback', '✗ Ya existe', false);
             }
-            
-            updateSubmitButton();
         }, 500);
     });
     
-    // Evento de envío del formulario
-    document.getElementById('btn-register-submit').addEventListener('click', async () => {
-        // Verificar una última vez antes de enviar
-        if (!Object.values(validationState).every(field => field.valid)) {
-            showValidationMessage('team-validation', 'Corrige los errores antes de continuar', 'invalid');
+    // Interceptar el clic del botón para validar antes de registrar
+    const originalClickHandler = submitBtn.onclick;
+    submitBtn.onclick = async (e) => {
+        e.preventDefault();
+        
+        // Validar TODO antes de proceder
+        if (!isUsernameAvailable) {
+            showFeedback('username-feedback', '✗ Elige un nombre de usuario disponible', false);
+            usernameInput.focus();
             return;
         }
         
-        // Llamar a handleRegister con los valores validados
-        await manejarRegistro();
-    });
-    
-    // Función manejarRegistro (simplificada)
-    async function manejarRegistro() {
-        const username = usernameInput.value.trim();
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-        const teamName = teamInput.value.trim();
-        
-        // Deshabilitar botón durante registro
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CREANDO CUENTA...';
-        
-        try {
-            // Aquí llamas a tu función de registro original
-            const success = await handleRegisterOriginal(email, password, username, teamName);
-            
-            if (!success) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> CREAR CUENTA';
-            }
-        } catch (error) {
-            console.error('Error en registro:', error);
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> CREAR CUENTA';
+        if (!isEmailAvailable) {
+            showFeedback('email-feedback', '✗ Elige un email disponible', false);
+            emailInput.focus();
+            return;
         }
-    }
+        
+        if (!isPasswordValid) {
+            showFeedback('password-feedback', '✗ Contraseña inválida', false);
+            passwordInput.focus();
+            return;
+        }
+        
+        if (!isTeamAvailable) {
+            showFeedback('team-feedback', '✗ Elige un nombre de escudería disponible', false);
+            teamInput.focus();
+            return;
+        }
+        
+        // Si todo está bien, proceder con el registro original
+        await manejarRegistro();
+    };
 }
-
 async function manejarLogin() {
     const supabase = window.supabase;
     if (!supabase) {
