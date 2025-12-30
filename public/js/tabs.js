@@ -79,6 +79,15 @@ class TabManager {
             // 2. Luego marcar como activa
             tabContent.classList.add('active');
             this.currentTab = tabId;
+            
+            // AÑADE ESTO: Verificar si el almacén necesita actualizar
+            if (tabId === 'almacen' && window.almacenNecesitaActualizar) {
+                setTimeout(() => {
+                    this.loadAlmacenPiezas();
+                    window.almacenNecesitaActualizar = false;
+                    console.log('📦 Almacén actualizado automáticamente');
+                }, 500);
+            }
         }
     }
     
