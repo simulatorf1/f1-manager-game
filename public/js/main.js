@@ -621,6 +621,8 @@ async function manejarRegistro() {
             mensajeError = 'La contraseña no cumple los requisitos';
         } else if (error.message.includes('email')) {
             mensajeError = 'El correo electrónico no es válido';
+        } else if (error.message.includes('escuderias_nombre_key') || error.message.includes('duplicate key')) {
+            mensajeError = '❌ Ya existe una escudería con ese nombre. Por favor, elige otro nombre.';
         }
         
         mostrarMensaje(mensajeError, errorDiv);
