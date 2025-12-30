@@ -312,13 +312,12 @@ function mostrarPantallaRegistro() {
         <div class="register-screen">
             <div class="register-container">
                 <button class="back-button" id="btn-back">
-                    <i class="fas fa-arrow-left"></i>
-                    Volver al login
+                    <i class="fas fa-arrow-left"></i> Volver al login
                 </button>
                 
                 <div class="register-header">
                     <h1>CREAR CUENTA</h1>
-                    <p>Comienza tu aventura en MotorSport</p>
+                    <p>Comienza tu aventura en la F1</p>
                 </div>
                 
                 <div id="register-error" class="error-message"></div>
@@ -326,20 +325,28 @@ function mostrarPantallaRegistro() {
                 
                 <div class="register-form">
                     <div class="form-group">
-                        <label for="register-username">Nombre de tu escudería</label>
+                        <label for="register-username">Nombre de usuario</label>
                         <input type="text" id="register-username" placeholder="Ej: RedBullManager" maxlength="20">
+                        <div class="validation-message" id="username-validation"></div>
                     </div>
                     <div class="form-group">
                         <label for="register-email">Correo electrónico</label>
                         <input type="email" id="register-email" placeholder="tu@email.com">
+                        <div class="validation-message" id="email-validation"></div>
                     </div>
                     <div class="form-group">
                         <label for="register-password">Contraseña</label>
                         <input type="password" id="register-password" placeholder="•••••••• (mínimo 6 caracteres)">
+                        <div class="validation-message" id="password-validation"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-team">Nombre de tu escudería</label>
+                        <input type="text" id="register-team" placeholder="Ej: McLaren Racing">
+                        <div class="validation-message" id="team-validation"></div>
                     </div>
                 </div>
                 
-                <button class="register-button" id="btn-register-submit">
+                <button class="register-button" id="btn-register-submit" disabled>
                     <i class="fas fa-check-circle"></i>
                     CREAR CUENTA
                 </button>
@@ -351,129 +358,260 @@ function mostrarPantallaRegistro() {
         </div>
         
         <style>
-            .register-screen {
-                min-height: 100vh;
-                background: linear-gradient(135deg, #15151e 0%, #1a1a2e 100%);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                padding: 20px;
-            }
-            
-            .register-container {
-                background: rgba(42, 42, 56, 0.9);
-                border-radius: 15px;
-                padding: 40px;
-                width: 100%;
-                max-width: 400px;
-                border: 2px solid #00d2be;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            }
-            
-            .register-header {
-                text-align: center;
-                margin-bottom: 30px;
-            }
-            
-            .register-header h1 {
-                font-family: 'Orbitron', sans-serif;
-                font-size: 2rem;
-                background: linear-gradient(90deg, #00d2be, #e10600);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                margin-bottom: 10px;
-            }
-            
-            .register-header p {
-                color: #888;
-                font-size: 0.9rem;
-            }
-            
-            .back-button {
-                background: transparent;
-                border: none;
-                color: #aaa;
-                display: flex;
-                align-items: center;
-                gap: 5px;
-                cursor: pointer;
-                margin-bottom: 20px;
-                transition: color 0.3s;
-            }
-            
-            .back-button:hover {
-                color: #00d2be;
-            }
-            
-            .register-form {
-                margin-bottom: 25px;
-            }
-            
-            .form-group {
-                margin-bottom: 20px;
-            }
-            
-            .form-group label {
-                display: block;
-                color: #aaa;
-                margin-bottom: 5px;
-                font-size: 0.9rem;
-            }
-            
-            .form-group input {
-                width: 100%;
-                padding: 12px;
-                background: rgba(255,255,255,0.1);
-                border: 1px solid rgba(255,255,255,0.2);
-                border-radius: 5px;
-                color: white;
-                font-size: 1rem;
-                transition: border 0.3s;
-            }
-            
-            .form-group input:focus {
-                outline: none;
-                border-color: #e10600;
-            }
-            
-            .register-button {
-                width: 100%;
-                padding: 15px;
-                background: linear-gradient(135deg, #00d2be, #00a35c);
-                border: none;
-                border-radius: 5px;
-                color: white;
-                font-family: 'Orbitron', sans-serif;
-                font-size: 1rem;
-                font-weight: bold;
-                cursor: pointer;
+            .validation-message {
+                font-size: 0.8rem;
+                margin-top: 5px;
+                min-height: 20px;
                 transition: all 0.3s;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-                margin-top: 10px;
             }
             
-            .register-button:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(0, 210, 190, 0.4);
+            .validation-message.valid {
+                color: #4CAF50;
             }
             
-            .register-footer {
-                text-align: center;
-                margin-top: 25px;
-                padding-top: 20px;
-                border-top: 1px solid rgba(255,255,255,0.1);
-                color: #666;
-                font-size: 0.9rem;
+            .validation-message.invalid {
+                color: #f44336;
+            }
+            
+            .validation-message.checking {
+                color: #ff9800;
+            }
+            
+            .register-button:disabled {
+                background: #666 !important;
+                cursor: not-allowed;
+                opacity: 0.7;
             }
         </style>
     `;
     
     // Configurar eventos
     document.getElementById('btn-back').addEventListener('click', mostrarPantallaLogin);
-    document.getElementById('btn-register-submit').addEventListener('click', manejarRegistro);
+    
+    // Obtener referencias
+    const usernameInput = document.getElementById('register-username');
+    const emailInput = document.getElementById('register-email');
+    const passwordInput = document.getElementById('register-password');
+    const teamInput = document.getElementById('register-team');
+    const submitBtn = document.getElementById('btn-register-submit');
+    
+    // Estados de validación
+    const validationState = {
+        username: { valid: false, checking: false },
+        email: { valid: false, checking: false },
+        password: { valid: false, checking: false },
+        team: { valid: false, checking: false }
+    };
+    
+    // Función para verificar disponibilidad
+    async function checkAvailability(type, value) {
+        if (!value || value.trim().length < 3) return false;
+        
+        try {
+            let exists = false;
+            
+            if (type === 'email') {
+                // Verificar email (simulación)
+                const { data } = await supabase
+                    .from('users')
+                    .select('email')
+                    .eq('email', value.trim())
+                    .maybeSingle();
+                exists = !!data;
+            } 
+            else if (type === 'username') {
+                const { data } = await supabase
+                    .from('users')
+                    .select('username')
+                    .eq('username', value.trim())
+                    .maybeSingle();
+                exists = !!data;
+            }
+            else if (type === 'team') {
+                const { data } = await supabase
+                    .from('escuderias')
+                    .select('nombre')
+                    .eq('nombre', value.trim())
+                    .maybeSingle();
+                exists = !!data;
+            }
+            
+            return !exists; // true = disponible, false = ya existe
+            
+        } catch (error) {
+            console.error(`Error checking ${type}:`, error);
+            return false;
+        }
+    }
+    
+    // Función para actualizar botón de envío
+    function updateSubmitButton() {
+        const allValid = Object.values(validationState).every(field => field.valid);
+        const anyChecking = Object.values(validationState).some(field => field.checking);
+        
+        submitBtn.disabled = !allValid || anyChecking;
+    }
+    
+    // Función para mostrar mensaje de validación
+    function showValidationMessage(elementId, message, type) {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.className = 'validation-message ' + type;
+    }
+    
+    // Validación en tiempo real - USERNAME
+    let usernameTimeout;
+    usernameInput.addEventListener('input', async (e) => {
+        const value = e.target.value.trim();
+        const validationElement = document.getElementById('username-validation');
+        
+        clearTimeout(usernameTimeout);
+        
+        if (value.length < 3) {
+            validationState.username = { valid: false, checking: false };
+            showValidationMessage('username-validation', 'Mínimo 3 caracteres', 'invalid');
+            updateSubmitButton();
+            return;
+        }
+        
+        validationState.username = { valid: false, checking: true };
+        showValidationMessage('username-validation', 'Verificando disponibilidad...', 'checking');
+        updateSubmitButton();
+        
+        usernameTimeout = setTimeout(async () => {
+            const isAvailable = await checkAvailability('username', value);
+            
+            if (isAvailable) {
+                validationState.username = { valid: true, checking: false };
+                showValidationMessage('username-validation', '✓ Nombre disponible', 'valid');
+            } else {
+                validationState.username = { valid: false, checking: false };
+                showValidationMessage('username-validation', '✗ Este nombre ya está en uso', 'invalid');
+            }
+            
+            updateSubmitButton();
+        }, 500);
+    });
+    
+    // Validación en tiempo real - EMAIL
+    let emailTimeout;
+    emailInput.addEventListener('input', async (e) => {
+        const value = e.target.value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        clearTimeout(emailTimeout);
+        
+        if (!emailRegex.test(value)) {
+            validationState.email = { valid: false, checking: false };
+            showValidationMessage('email-validation', 'Email no válido', 'invalid');
+            updateSubmitButton();
+            return;
+        }
+        
+        validationState.email = { valid: false, checking: true };
+        showValidationMessage('email-validation', 'Verificando disponibilidad...', 'checking');
+        updateSubmitButton();
+        
+        emailTimeout = setTimeout(async () => {
+            const isAvailable = await checkAvailability('email', value);
+            
+            if (isAvailable) {
+                validationState.email = { valid: true, checking: false };
+                showValidationMessage('email-validation', '✓ Email disponible', 'valid');
+            } else {
+                validationState.email = { valid: false, checking: false };
+                showValidationMessage('email-validation', '✗ Este email ya está registrado', 'invalid');
+            }
+            
+            updateSubmitButton();
+        }, 500);
+    });
+    
+    // Validación en tiempo real - PASSWORD
+    passwordInput.addEventListener('input', (e) => {
+        const value = e.target.value;
+        
+        if (value.length < 6) {
+            validationState.password = { valid: false, checking: false };
+            showValidationMessage('password-validation', 'Mínimo 6 caracteres', 'invalid');
+        } else {
+            validationState.password = { valid: true, checking: false };
+            showValidationMessage('password-validation', '✓ Contraseña válida', 'valid');
+        }
+        
+        updateSubmitButton();
+    });
+    
+    // Validación en tiempo real - TEAM NAME
+    let teamTimeout;
+    teamInput.addEventListener('input', async (e) => {
+        const value = e.target.value.trim();
+        
+        clearTimeout(teamTimeout);
+        
+        if (value.length < 3) {
+            validationState.team = { valid: false, checking: false };
+            showValidationMessage('team-validation', 'Mínimo 3 caracteres', 'invalid');
+            updateSubmitButton();
+            return;
+        }
+        
+        validationState.team = { valid: false, checking: true };
+        showValidationMessage('team-validation', 'Verificando disponibilidad...', 'checking');
+        updateSubmitButton();
+        
+        teamTimeout = setTimeout(async () => {
+            const isAvailable = await checkAvailability('team', value);
+            
+            if (isAvailable) {
+                validationState.team = { valid: true, checking: false };
+                showValidationMessage('team-validation', '✓ Nombre disponible', 'valid');
+            } else {
+                validationState.team = { valid: false, checking: false };
+                showValidationMessage('team-validation', '✗ Esta escudería ya existe', 'invalid');
+            }
+            
+            updateSubmitButton();
+        }, 500);
+    });
+    
+    // Evento de envío del formulario
+    document.getElementById('btn-register-submit').addEventListener('click', async () => {
+        // Verificar una última vez antes de enviar
+        if (!Object.values(validationState).every(field => field.valid)) {
+            showValidationMessage('team-validation', 'Corrige los errores antes de continuar', 'invalid');
+            return;
+        }
+        
+        // Llamar a handleRegister con los valores validados
+        await manejarRegistro();
+    });
+    
+    // Función manejarRegistro (simplificada)
+    async function manejarRegistro() {
+        const username = usernameInput.value.trim();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const teamName = teamInput.value.trim();
+        
+        // Deshabilitar botón durante registro
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CREANDO CUENTA...';
+        
+        try {
+            // Aquí llamas a tu función de registro original
+            const success = await handleRegisterOriginal(email, password, username, teamName);
+            
+            if (!success) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> CREAR CUENTA';
+            }
+        } catch (error) {
+            console.error('Error en registro:', error);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> CREAR CUENTA';
+        }
+    }
 }
 
 async function manejarLogin() {
