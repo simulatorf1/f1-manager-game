@@ -392,10 +392,16 @@ function mostrarPantallaRegistro() {
                     </div>
                 </div>
                 
-                <button class="register-button" id="btn-register-submit">
-                    <i class="fas fa-check-circle"></i>
-                    CREAR CUENTA
-                </button>
+                <div class="register-buttons">
+                    <button class="btn-validate" id="btn-validate">
+                        <i class="fas fa-check-circle"></i>
+                        VALIDAR DISPONIBILIDAD
+                    </button>
+                    <button class="register-button" id="btn-register-submit" disabled>
+                        <i class="fas fa-user-plus"></i>
+                        CREAR CUENTA
+                    </button>
+                </div>
                 
                 <div class="register-footer">
                     <p>Recibirás 5,000,000€ para empezar</p>
@@ -518,6 +524,36 @@ function mostrarPantallaRegistro() {
                 color: #00d2be;
             }
             
+            .register-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                margin-top: 20px;
+            }
+            
+            .btn-validate {
+                width: 100%;
+                padding: 15px;
+                background: linear-gradient(135deg, #ff9800, #ff5722);
+                border: none;
+                border-radius: 5px;
+                color: white;
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1rem;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+            }
+            
+            .btn-validate:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);
+            }
+            
             .register-button {
                 width: 100%;
                 padding: 15px;
@@ -534,12 +570,17 @@ function mostrarPantallaRegistro() {
                 align-items: center;
                 justify-content: center;
                 gap: 10px;
-                margin-top: 10px;
             }
             
-            .register-button:hover {
+            .register-button:hover:not(:disabled) {
                 transform: translateY(-2px);
                 box-shadow: 0 5px 15px rgba(0, 210, 190, 0.4);
+            }
+            
+            .register-button:disabled {
+                background: linear-gradient(135deg, #666, #888);
+                cursor: not-allowed;
+                opacity: 0.6;
             }
             
             .register-footer {
@@ -555,6 +596,7 @@ function mostrarPantallaRegistro() {
     
     // Configurar eventos
     document.getElementById('btn-back').addEventListener('click', mostrarPantallaLogin);
+    document.getElementById('btn-validate').addEventListener('click', validarDisponibilidad);
     document.getElementById('btn-register-submit').addEventListener('click', manejarRegistro);
     
     // Configurar botón para mostrar/ocultar contraseña en registro
@@ -570,6 +612,247 @@ function mostrarPantallaRegistro() {
             icon.className = 'fas fa-eye';
         }
     });
+}
+
+async function validarDisponibilidad() {
+    const username = document.getElementById('register-username').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value;
+    const errorDiv = document.getElementById('register-error');
+    const successDiv = document.getElementById('register-success');
+    const btnRegister = document.getElementById('btn-register-submit');
+    const btnValidate = document.getElementById('btn-validate');
+    
+    // Limpiar mensajes anteriores
+    mostrarMensaje('', errorDiv);
+    mostrarMensaje('', successDiv);
+    
+    // Validaciones básicas
+    if (!username || !email || !password) {
+        mostrarMensaje('Por favor, completa todos los campos', errorDiv);
+        btnRegister.disabled = true;
+        return;
+    }
+    
+    if (password.length < 6) {
+        mostrarMensaje('La contraseña debe tener al menos 6 caracteres', errorDiv);
+        btnRegister.disabled = true;
+        return;
+    }
+    
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        mostrarMensaje('Por favor, introduce un correo electrónico válido', errorDiv);
+        btnRegister.disabled = true;
+        return;
+    }
+    
+    // Deshabilitar botón de validar mientras se verifica
+    btnValidate.disabled = true;
+    btnValidate.innerHTML = '<i class="fas fa-spinner fa-spin"></i> VERIFICANDO...';
+    
+    try {
+        // 1. Verificar si el correo ya existe en usuarios de Supabase Auth
+        const { data: users, error: usersError } = await supabase
+            .from('users')
+            .select('email')
+            .eq('email', email)
+            .maybeSingle();
+        
+        if (usersError && usersError.code !== 'PGRST116') {
+            throw usersError;
+        }
+        
+        if (users) {
+            mostrarMensaje('❌ Este correo electrónico ya está registrado', errorDiv);
+            btnRegister.disabled = true;
+            btnValidate.disabled = false;
+            btnValidate.innerHTML = '<i class="fas fa-check-circle"></i> VALIDAR DISPONIBILIDAD';
+            return;
+        }
+        
+        // 2. Verificar si el nombre de escudería ya existe
+        const { data: escuderia, error: escError } = await supabase
+            .from('escuderias')
+            .select('nombre')
+            .eq('nombre', username)
+            .maybeSingle();
+        
+        if (escError && escError.code !== 'PGRST116') {
+            throw escError;
+        }
+        
+        if (escuderia) {
+            mostrarMensaje('❌ Ya existe una escudería con ese nombre', errorDiv);
+            btnRegister.disabled = true;
+            btnValidate.disabled = false;
+            btnValidate.innerHTML = '<i class="fas fa-check-circle"></i> VALIDAR DISPONIBILIDAD';
+            return;
+        }
+        
+        // 3. Si pasa ambas validaciones, habilitar el botón de crear cuenta
+        mostrarMensaje('✅ ¡Nombre y correo disponibles! Ahora puedes crear tu cuenta', successDiv);
+        btnRegister.disabled = false;
+        
+        // Cambiar texto del botón de validar
+        btnValidate.disabled = false;
+        btnValidate.innerHTML = '<i class="fas fa-check-double"></i> VALIDADO ✓';
+        btnValidate.style.background = 'linear-gradient(135deg, #4CAF50, #388E3C)';
+        
+    } catch (error) {
+        console.error('Error en validación:', error);
+        mostrarMensaje('❌ Error al verificar disponibilidad: ' + error.message, errorDiv);
+        btnRegister.disabled = true;
+        
+        // Restaurar botón de validar
+        btnValidate.disabled = false;
+        btnValidate.innerHTML = '<i class="fas fa-check-circle"></i> VALIDAR DISPONIBILIDAD';
+        btnValidate.style.background = 'linear-gradient(135deg, #ff9800, #ff5722)';
+    }
+}
+
+async function manejarRegistro() {
+    // ← DESHABILITAR BOTÓN INMEDIATAMENTE
+    const btnCrear = document.getElementById('btn-register-submit');
+    const textoOriginal = btnCrear.innerHTML;
+    btnCrear.disabled = true;
+    btnCrear.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESANDO...';
+    
+    const supabase = window.supabase;
+    if (!supabase) {
+        mostrarErrorCritico('No se pudo conectar con la base de datos');
+        btnCrear.disabled = false;
+        btnCrear.innerHTML = textoOriginal;
+        return;
+    }
+    
+    const username = document.getElementById('register-username').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value;
+    const errorDiv = document.getElementById('register-error');
+    const successDiv = document.getElementById('register-success');
+    
+    if (!username || !email || !password) {
+        mostrarMensaje('Por favor, completa todos los campos', errorDiv);
+        btnCrear.disabled = false;
+        btnCrear.innerHTML = textoOriginal;
+        return;
+    }
+    
+    if (password.length < 6) {
+        mostrarMensaje('La contraseña debe tener al menos 6 caracteres', errorDiv);
+        btnCrear.disabled = false;
+        btnCrear.innerHTML = textoOriginal;
+        return;
+    }
+    
+    try {
+        console.log('📝 Verificando disponibilidad...');
+        
+        // ← PRIMERO verificar si YA existe usuario con ese email
+        try {
+            // Intento verificar si hay sesión (usuario ya logeado con ese email)
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                mostrarMensaje('⚠️ Ya hay una sesión activa con otro usuario', errorDiv);
+                return;
+            }
+        } catch (e) {
+            // Ignorar error de verificación
+        }
+        
+        // ← SOLO SI pasa la verificación, registrar
+        console.log('✅ Creando usuario:', email);
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: { 
+                    username: username,
+                    team_name: `${username}'s Team`
+                },
+                emailRedirectTo: window.location.origin
+            }
+        });
+        
+        if (authError) {
+            console.error('❌ Error Auth:', authError);
+            
+            // ← SI el error es "email ya registrado", mostramos mensaje y SALIMOS
+            if (authError.message.includes('already registered') || 
+                authError.message.includes('User already registered')) {
+                mostrarMensaje('Este correo ya está registrado', errorDiv);
+                return;
+            }
+            throw authError;
+        }
+        
+        console.log('✅ Usuario creado en Auth:', authData.user?.id);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // ← AHORA crear la escudería (la BD ya valida nombre único)
+        console.log('🏎️ Creando escudería:', username);
+        const { data: nuevaEscuderia, error: escError } = await supabase
+            .from('escuderias')
+            .insert([{
+                user_id: authData.user.id,
+                nombre: username,
+                dinero: 5000000,
+                puntos: 0,
+                ranking: 999,
+                nivel_ingenieria: 1,
+                color_principal: '#e10600',
+                color_secundario: '#ffffff',
+                creada_en: new Date().toISOString()
+            }])
+            .select()
+            .single();
+        
+        if (escError) {
+            console.error('❌ Error creando escudería:', escError);
+            
+            // ← SI la escudería ya existe, mostramos error PERO el usuario YA está creado
+            // Esto es lo que queremos evitar, pero si pasa, al menos informamos
+            if (escError.message.includes('escuderias_nombre_key') || 
+                escError.message.includes('duplicate')) {
+                mostrarMensaje('❌ Ya existe una escudería con ese nombre (el usuario se creó)', errorDiv);
+            }
+            throw escError;
+        }
+        
+        console.log('✅ Escudería creada:', nuevaEscuderia.id);
+        
+        await supabase
+            .from('coches_stats')
+            .insert([{ escuderia_id: nuevaEscuderia.id }]);
+        
+        mostrarMensaje('✅ ¡Cuenta creada! Revisa tu correo para confirmarla.', successDiv);
+        
+        setTimeout(() => mostrarPantallaLogin(), 3000);
+        
+    } catch (error) {
+        console.error('❌ Error en registro completo:', error);
+        
+        let mensajeError = error.message || 'Error creando la cuenta';
+        
+        if (error.message.includes('already registered')) {
+            mensajeError = 'Este correo ya está registrado';
+        } else if (error.message.includes('password')) {
+            mensajeError = 'La contraseña no cumple los requisitos';
+        } else if (error.message.includes('email')) {
+            mensajeError = 'El correo electrónico no es válido';
+        } else if (error.message.includes('escuderias_nombre_key') || error.message.includes('duplicate key')) {
+            mensajeError = '❌ Ya existe una escudería con ese nombre. Por favor, elige otro nombre.';
+        }
+        
+        mostrarMensaje(mensajeError, errorDiv);
+        
+    } finally {
+        // ← SIEMPRE restaurar botón
+        btnCrear.disabled = false;
+        btnCrear.innerHTML = textoOriginal;
+    }
 }
 
 async function manejarLogin() {
