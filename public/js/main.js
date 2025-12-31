@@ -655,53 +655,45 @@ async function validarDisponibilidad() {
     try {
         console.log('🔍 Iniciando validación para:', { username, email });
         
-        // 1. Verificar si el NOMBRE DE ESCUDERÍA ya existe
-        console.log('📊 Buscando escudería:', username);
-        const { data: escuderiaExistente, error: escError } = await supabase
-            .from('escuderias')
-            .select('id, nombre')
-            .eq('nombre', username)
-            .maybeSingle(); // Cambiado a maybeSingle
+        // 1. Verificar si el USERNAME ya existe en la tabla users
+        console.log('📊 Buscando username en users:', username);
+        const { data: usernameExistente, error: userError } = await supabase
+            .from('users')
+            .select('username, email')
+            .eq('username', username)
+            .maybeSingle();
         
-        console.log('Resultado búsqueda escudería:', escuderiaExistente, 'Error:', escError);
+        console.log('Resultado búsqueda username:', usernameExistente, 'Error:', userError);
         
-        if (escError) {
-            console.error('Error en consulta escuderías:', escError);
-            if (escError.code === 'PGRST116') {
-                // No encontrado - está bien
-            } else {
-                throw escError;
-            }
+        if (userError && userError.code !== 'PGRST116') {
+            console.error('Error en consulta username:', userError);
+            throw userError;
         }
         
-        if (escuderiaExistente) {
-            mostrarMensaje('❌ Ya existe una escudería con ese nombre', errorDiv);
+        if (usernameExistente) {
+            mostrarMensaje('❌ Ya existe un usuario con ese nombre de escudería', errorDiv);
             btnRegister.disabled = true;
             btnValidate.disabled = false;
             btnValidate.innerHTML = '<i class="fas fa-check-circle"></i> VALIDAR DISPONIBILIDAD';
             return;
         }
         
-        // 2. Verificar si el EMAIL ya existe en users
-        console.log('📧 Buscando email:', email);
-        const { data: usuarioExistente, error: userError } = await supabase
+        // 2. Verificar si el EMAIL ya existe en la tabla users
+        console.log('📧 Buscando email en users:', email);
+        const { data: emailExistente, error: emailError } = await supabase
             .from('users')
-            .select('id, email')
+            .select('username, email')
             .eq('email', email)
-            .maybeSingle(); // Cambiado a maybeSingle
+            .maybeSingle();
         
-        console.log('Resultado búsqueda email:', usuarioExistente, 'Error:', userError);
+        console.log('Resultado búsqueda email:', emailExistente, 'Error:', emailError);
         
-        if (userError) {
-            console.error('Error en consulta users:', userError);
-            if (userError.code === 'PGRST116') {
-                // No encontrado - está bien
-            } else {
-                throw userError;
-            }
+        if (emailError && emailError.code !== 'PGRST116') {
+            console.error('Error en consulta email:', emailError);
+            throw emailError;
         }
         
-        if (usuarioExistente) {
+        if (emailExistente) {
             mostrarMensaje('❌ Este correo electrónico ya está registrado', errorDiv);
             btnRegister.disabled = true;
             btnValidate.disabled = false;
@@ -722,15 +714,7 @@ async function validarDisponibilidad() {
     } catch (error) {
         console.error('❌ Error completo en validación:', error);
         
-        // Mostrar error específico
-        let mensajeError = 'Error al verificar disponibilidad';
-        if (error.message.includes('JWT')) {
-            mensajeError = 'Error de conexión. Recarga la página.';
-        } else if (error.message.includes('network')) {
-            mensajeError = 'Error de red. Verifica tu conexión.';
-        }
-        
-        mostrarMensaje('❌ ' + mensajeError, errorDiv);
+        mostrarMensaje('❌ Error al verificar disponibilidad. Intenta de nuevo.', errorDiv);
         btnRegister.disabled = true;
         
         // Restaurar botón de validar
@@ -956,16 +940,29 @@ async function manejarRegistro() {
     try {
         console.log('📝 Verificando disponibilidad...');
         
-        // ← PRIMERO verificar si YA existe usuario con ese email
-        try {
-            // Intento verificar si hay sesión (usuario ya logeado con ese email)
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                mostrarMensaje('⚠️ Ya hay una sesión activa con otro usuario', errorDiv);
-                return;
-            }
-        } catch (e) {
-            // Ignorar error de verificación
+        // ← VERIFICACIÓN FINAL (doble chequeo en tabla users)
+        // 1. Verificar username en tabla users
+        const { data: usernameExistente, error: userCheckError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('username', username)
+            .maybeSingle();
+        
+        if (!userCheckError && usernameExistente) {
+            mostrarMensaje('❌ Ya existe un usuario con ese nombre de escudería. Por favor, elige otro.', errorDiv);
+            return;
+        }
+        
+        // 2. Verificar email en tabla users
+        const { data: emailExistente, error: emailCheckError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', email)
+            .maybeSingle();
+        
+        if (!emailCheckError && emailExistente) {
+            mostrarMensaje('❌ Este correo electrónico ya está registrado.', errorDiv);
+            return;
         }
         
         // ← SOLO SI pasa la verificación, registrar
