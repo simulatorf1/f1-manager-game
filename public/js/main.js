@@ -1660,10 +1660,10 @@ class F1Manager {
                         </button>
                     </div>
                 `,
-                action: 'siguientePaso'
+                action: null  // ← CAMBIA esto de 'siguientePaso' a null
             },
             
-            // PASO 6: DÍA 2 - Fabricación
+             // PASO 6: DÍA 2 - Fabricación
             {
                 title: "🔧 DÍA 2: FABRICAR PIEZA",
                 content: `
@@ -1708,7 +1708,7 @@ class F1Manager {
                         </button>
                     </div>
                 `,
-                action: 'siguientePaso'
+                action: null  // ← CAMBIA esto de 'siguientePaso' a null
             },
             
             // PASO 7: DÍA 3-4 - Pronósticos
@@ -1766,7 +1766,7 @@ class F1Manager {
                         </button>
                     </div>
                 `,
-                action: 'siguientePaso'
+                action: null  // ← CAMBIA esto de 'siguientePaso' a null
             },
             
             // PASO 9: FIN DE SEMANA - Simulación carrera
