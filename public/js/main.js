@@ -653,37 +653,28 @@ async function validarDisponibilidad() {
     btnValidate.innerHTML = '<i class="fas fa-spinner fa-spin"></i> VERIFICANDO...';
     
     try {
-        // 1. Verificar si el correo ya existe en usuarios de Supabase Auth
-        const { data: users, error: usersError } = await supabase
-            .from('users')
-            .select('email')
-            .eq('email', email)
-            .maybeSingle();
+        console.log('🔍 Iniciando validación para:', { username, email });
         
-        if (usersError && usersError.code !== 'PGRST116') {
-            throw usersError;
-        }
-        
-        if (users) {
-            mostrarMensaje('❌ Este correo electrónico ya está registrado', errorDiv);
-            btnRegister.disabled = true;
-            btnValidate.disabled = false;
-            btnValidate.innerHTML = '<i class="fas fa-check-circle"></i> VALIDAR DISPONIBILIDAD';
-            return;
-        }
-        
-        // 2. Verificar si el nombre de escudería ya existe
-        const { data: escuderia, error: escError } = await supabase
+        // 1. Verificar si el NOMBRE DE ESCUDERÍA ya existe
+        console.log('📊 Buscando escudería:', username);
+        const { data: escuderiaExistente, error: escError } = await supabase
             .from('escuderias')
-            .select('nombre')
+            .select('id, nombre')
             .eq('nombre', username)
-            .maybeSingle();
+            .maybeSingle(); // Cambiado a maybeSingle
         
-        if (escError && escError.code !== 'PGRST116') {
-            throw escError;
+        console.log('Resultado búsqueda escudería:', escuderiaExistente, 'Error:', escError);
+        
+        if (escError) {
+            console.error('Error en consulta escuderías:', escError);
+            if (escError.code === 'PGRST116') {
+                // No encontrado - está bien
+            } else {
+                throw escError;
+            }
         }
         
-        if (escuderia) {
+        if (escuderiaExistente) {
             mostrarMensaje('❌ Ya existe una escudería con ese nombre', errorDiv);
             btnRegister.disabled = true;
             btnValidate.disabled = false;
@@ -691,18 +682,55 @@ async function validarDisponibilidad() {
             return;
         }
         
-        // 3. Si pasa ambas validaciones, habilitar el botón de crear cuenta
+        // 2. Verificar si el EMAIL ya existe en users
+        console.log('📧 Buscando email:', email);
+        const { data: usuarioExistente, error: userError } = await supabase
+            .from('users')
+            .select('id, email')
+            .eq('email', email)
+            .maybeSingle(); // Cambiado a maybeSingle
+        
+        console.log('Resultado búsqueda email:', usuarioExistente, 'Error:', userError);
+        
+        if (userError) {
+            console.error('Error en consulta users:', userError);
+            if (userError.code === 'PGRST116') {
+                // No encontrado - está bien
+            } else {
+                throw userError;
+            }
+        }
+        
+        if (usuarioExistente) {
+            mostrarMensaje('❌ Este correo electrónico ya está registrado', errorDiv);
+            btnRegister.disabled = true;
+            btnValidate.disabled = false;
+            btnValidate.innerHTML = '<i class="fas fa-check-circle"></i> VALIDAR DISPONIBILIDAD';
+            return;
+        }
+        
+        // 3. Si pasa ambas validaciones
+        console.log('✅ Validación exitosa - Datos disponibles');
         mostrarMensaje('✅ ¡Nombre y correo disponibles! Ahora puedes crear tu cuenta', successDiv);
         btnRegister.disabled = false;
         
-        // Cambiar texto del botón de validar
+        // Cambiar botón de validar
         btnValidate.disabled = false;
         btnValidate.innerHTML = '<i class="fas fa-check-double"></i> VALIDADO ✓';
         btnValidate.style.background = 'linear-gradient(135deg, #4CAF50, #388E3C)';
         
     } catch (error) {
-        console.error('Error en validación:', error);
-        mostrarMensaje('❌ Error al verificar disponibilidad: ' + error.message, errorDiv);
+        console.error('❌ Error completo en validación:', error);
+        
+        // Mostrar error específico
+        let mensajeError = 'Error al verificar disponibilidad';
+        if (error.message.includes('JWT')) {
+            mensajeError = 'Error de conexión. Recarga la página.';
+        } else if (error.message.includes('network')) {
+            mensajeError = 'Error de red. Verifica tu conexión.';
+        }
+        
+        mostrarMensaje('❌ ' + mensajeError, errorDiv);
         btnRegister.disabled = true;
         
         // Restaurar botón de validar
