@@ -2088,9 +2088,10 @@ class F1Manager {
         }
         
         document.body.innerHTML = `
+            // DENTRO DE document.body.innerHTML = `
             <div class="tutorial-screen">
                 <div class="tutorial-container">
-                    <!-- Progreso horizontal -->
+                    <!-- Progreso horizontal (FIJO ARRIBA) -->
                     <div class="tutorial-progress-horizontal">
                         ${steps.map((s, i) => `
                             <div class="progress-step-horizontal ${i + 1 === this.tutorialStep ? 'active' : ''} 
@@ -2100,16 +2101,19 @@ class F1Manager {
                         `).join('')}
                     </div>
                     
-                    <!-- Contenido -->
+                    <!-- Header (FIJO) -->
                     <div class="tutorial-header">
                         <h1>${step.title}</h1>
                     </div>
                     
-                    <div class="tutorial-content-grid">
-                        ${step.content}
+                    <!-- CONTENIDO CON SCROLL INTERNO -->
+                    <div class="tutorial-content-wrapper">
+                        <div class="tutorial-content-grid">
+                            ${step.content}
+                        </div>
                     </div>
                     
-                    <!-- Botones -->
+                    <!-- Botones (FIJO ABAJO) -->
                     <div class="tutorial-actions-bottom">
                         ${this.tutorialStep > 1 ? `
                             <button class="btn-tutorial-prev" id="btn-tutorial-prev">
@@ -2128,850 +2132,967 @@ class F1Manager {
             </div>
             
             <style>
-                .tutorial-screen {
-                    min-height: 100vh;
-                    background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    padding: 20px;
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    z-index: 9999;
-                    overflow-y: auto;
-                    font-family: 'Roboto', sans-serif;
-                }
-                .area-grid-sub {
-                    color: #aaa;
-                    font-size: 0.8rem;
-                    margin-top: 5px;
-                    font-style: italic;
-                }
-                .tutorial-container {
-                    background: rgba(21, 21, 30, 0.98);
-                    border-radius: 20px;
-                    padding: 30px;
-                    width: 100%;
-                    max-width: 1000px;
-                    border: 3px solid #00d2be;
-                    box-shadow: 0 25px 60px rgba(0, 210, 190, 0.3);
-                    display: flex;
-                    flex-direction: column;
-                    min-height: 95vh;
-                    max-height: none;
-                    height: auto;
-                    overflow-y: auto;
-                }
-                /* Y AÑADE ESTO: */
-                .tutorial-content-grid {
-                    flex: 1;
-                    overflow-y: auto;
-                    padding-bottom: 20px;
+            .tutorial-screen {
+                min-height: 100vh;
+                background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 10px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 9999;
+                overflow: hidden;
+                font-family: 'Roboto', sans-serif;
+            }
+            
+            .area-grid-sub {
+                color: #aaa;
+                font-size: 0.8rem;
+                margin-top: 5px;
+                font-style: italic;
+            }
+            
+            .tutorial-container {
+                background: rgba(21, 21, 30, 0.98);
+                border-radius: 20px;
+                padding: 20px;
+                width: 100%;
+                max-width: 1000px;
+                max-height: 90vh;
+                border: 3px solid #00d2be;
+                box-shadow: 0 25px 60px rgba(0, 210, 190, 0.3);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            
+            .tutorial-content-wrapper {
+                flex: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
+                padding: 10px 5px;
+                margin: 5px 0;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .tutorial-content-grid {
+                max-width: 100%;
+                overflow: visible;
+            }
+            
+            .tutorial-actions-bottom {
+                flex-shrink: 0;
+                padding-top: 15px;
+                border-top: 2px solid rgba(255, 255, 255, 0.1);
+                margin-top: 10px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                position: sticky;
+                bottom: 0;
+                background: rgba(21, 21, 30, 0.95);
+                z-index: 10;
+                padding: 10px 0;
+            }
+            
+            .tutorial-progress-horizontal {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+                padding: 10px 5px;
+                flex-shrink: 0;
+                position: sticky;
+                top: 0;
+                background: rgba(21, 21, 30, 0.95);
+                z-index: 10;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .progress-step-horizontal {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                position: relative;
+                flex: 1;
+            }
+            
+            .step-number-horizontal {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.1);
+                color: #888;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1.1rem;
+                transition: all 0.3s;
+                border: 2px solid transparent;
+            }
+            
+            .progress-step-horizontal.active .step-number-horizontal {
+                background: linear-gradient(135deg, #00d2be, #009688);
+                color: white;
+                transform: scale(1.2);
+                box-shadow: 0 0 20px rgba(0, 210, 190, 0.7);
+                border: 2px solid white;
+            }
+            
+            .progress-step-horizontal.completed .step-number-horizontal {
+                background: linear-gradient(135deg, #4CAF50, #388E3C);
+                color: white;
+            }
+            
+            .grid-6-columns, .grid-4-columns, .grid-3-columns {
+                display: grid;
+                gap: 12px;
+                margin: 15px 0;
+            }
+            
+            .grid-6-columns { grid-template-columns: repeat(3, 1fr); }
+            .grid-4-columns { grid-template-columns: repeat(4, 1fr); }
+            .grid-3-columns { grid-template-columns: repeat(3, 1fr); }
+            
+            .grid-btn-big {
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                border-radius: 15px;
+                padding: 15px 10px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 120px;
+            }
+            
+            .grid-btn-big:hover {
+                border-color: #00d2be;
+                background: rgba(0, 210, 190, 0.1);
+                transform: translateY(-5px);
+            }
+            
+            .grid-icon {
+                font-size: 2rem;
+                margin-bottom: 10px;
+            }
+            
+            .grid-title {
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1.2rem;
+                font-weight: bold;
+                color: white;
+                margin-bottom: 5px;
+            }
+            
+            .grid-desc {
+                color: #aaa;
+                font-size: 0.9rem;
+            }
+            
+            .area-grid-card {
+                background: rgba(42, 42, 56, 0.8);
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 15px;
+                text-align: center;
+                transition: all 0.3s;
+            }
+            
+            .area-grid-card:hover {
+                border-color: #00d2be;
+                transform: translateY(-3px);
+            }
+            
+            .area-grid-icon {
+                font-size: 2rem;
+                margin-bottom: 10px;
+            }
+            
+            .area-grid-name {
+                font-family: 'Orbitron', sans-serif;
+                font-weight: bold;
+                color: white;
+                font-size: 1.1rem;
+                margin-bottom: 5px;
+            }
+            
+            .area-grid-desc {
+                color: #aaa;
+                font-size: 0.9rem;
+                margin-bottom: 10px;
+                min-height: 40px;
+            }
+            
+            .area-grid-stats {
+                background: rgba(0, 210, 190, 0.1);
+                color: #00d2be;
+                padding: 5px 10px;
+                border-radius: 20px;
+                font-size: 0.9rem;
+                font-weight: bold;
+            }
+            
+            .fabricacion-card {
+                background: linear-gradient(135deg, rgba(225, 6, 0, 0.1), rgba(0, 210, 190, 0.1));
+                border: 2px solid rgba(225, 6, 0, 0.3);
+                border-radius: 15px;
+                padding: 20px 15px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            .fabricacion-card:hover {
+                border-color: #00d2be;
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0, 210, 190, 0.2);
+            }
+            
+            .fab-icon {
+                font-size: 2.5rem;
+                margin-bottom: 15px;
+            }
+            
+            .fab-title {
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1.3rem;
+                font-weight: bold;
+                color: white;
+                margin-bottom: 15px;
+            }
+            
+            .fab-details {
+                display: flex;
+                justify-content: space-around;
+                margin: 15px 0;
+            }
+            
+            .fab-time, .fab-cost, .fab-points {
+                font-size: 0.9rem;
+                color: #aaa;
+            }
+            
+            .fab-action {
+                background: rgba(0, 210, 190, 0.2);
+                color: #00d2be;
+                padding: 10px;
+                border-radius: 10px;
+                font-weight: bold;
+                margin-top: 15px;
+                border: 1px solid #00d2be;
+            }
+            
+            .dia-info {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                margin-bottom: 20px;
+                background: rgba(0, 0, 0, 0.3);
+                padding: 12px;
+                border-radius: 10px;
+                border-left: 5px solid #00d2be;
+            }
+            
+            .dia-numero {
+                background: #00d2be;
+                color: white;
+                font-family: 'Orbitron', sans-serif;
+                font-weight: bold;
+                padding: 8px 15px;
+                border-radius: 20px;
+                font-size: 1.1rem;
+            }
+            
+            .dia-titulo {
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1.2rem;
+                color: white;
+                flex: 1;
+            }
+            
+            .seleccionable {
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            .seleccionable:hover {
+                transform: translateY(-5px);
+            }
+            
+            .seleccionable.seleccionado {
+                border-color: #00d2be !important;
+                background: rgba(0, 210, 190, 0.15) !important;
+                box-shadow: 0 0 20px rgba(0, 210, 190, 0.3);
+            }
+            
+            .btn-tutorial-accion-grande {
+                background: linear-gradient(135deg, #00d2be, #009688);
+                color: white;
+                border: none;
+                padding: 15px 30px;
+                border-radius: 12px;
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1.2rem;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s;
+                display: block;
+                width: 100%;
+                margin-top: 15px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            
+            .btn-tutorial-accion-grande:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 25px rgba(0, 210, 190, 0.4);
+            }
+            
+            .tutorial-header {
+                margin-bottom: 15px;
+                text-align: center;
+                flex-shrink: 0;
+            }
+            
+            .tutorial-header h1 {
+                font-size: 1.5rem;
+                margin: 0;
+                padding: 0 10px;
+                word-wrap: break-word;
+                line-height: 1.3;
+            }
+            
+            @media (max-width: 1024px) {
+                .grid-6-columns {
+                    grid-template-columns: repeat(2, 1fr);
                 }
                 
-                .tutorial-actions-bottom {
-                    flex-shrink: 0;
-                    padding-top: 20px;
-                    border-top: 2px solid rgba(255, 255, 255, 0.1);
-                    margin-top: auto;
-                }
-                /* Progreso horizontal */
-                .tutorial-progress-horizontal {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 30px;
-                    padding: 0 10px;
+                .grid-4-columns {
+                    grid-template-columns: repeat(2, 1fr);
                 }
                 
-                .progress-step-horizontal {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    position: relative;
-                    flex: 1;
+                .grid-3-columns {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+            
+            @media (max-width: 1200px) {
+                .grid-6-columns {
+                    grid-template-columns: repeat(2, 1fr);
                 }
                 
-                .step-number-horizontal {
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 50%;
-                    background: rgba(255, 255, 255, 0.1);
-                    color: #888;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-weight: bold;
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 1.1rem;
-                    transition: all 0.3s;
-                    border: 2px solid transparent;
+                .grid-4-columns {
+                    grid-template-columns: repeat(2, 1fr);
                 }
                 
-                .progress-step-horizontal.active .step-number-horizontal {
-                    background: linear-gradient(135deg, #00d2be, #009688);
-                    color: white;
-                    transform: scale(1.2);
-                    box-shadow: 0 0 20px rgba(0, 210, 190, 0.7);
-                    border: 2px solid white;
+                .grid-3-columns {
+                    grid-template-columns: repeat(2, 1fr);
                 }
-                
-                .progress-step-horizontal.completed .step-number-horizontal {
-                    background: linear-gradient(135deg, #4CAF50, #388E3C);
-                    color: white;
-                }
-                
-                /* Grids */
+            }
+            
+            @media (max-width: 900px) {
                 .grid-6-columns, .grid-4-columns, .grid-3-columns {
-                    display: grid;
-                    gap: 15px;
-                    margin: 25px 0;
+                    grid-template-columns: 1fr;
                 }
                 
-                .grid-6-columns { grid-template-columns: repeat(3, 1fr); }
-                .grid-4-columns { grid-template-columns: repeat(4, 1fr); }
-                .grid-3-columns { grid-template-columns: repeat(3, 1fr); }
-                
-                /* Botones grandes en grid */
-                .grid-btn-big {
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 2px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 15px;
-                    padding: 25px 15px;
-                    text-align: center;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    min-height: 150px;
-                }
-                
-                .grid-btn-big:hover {
-                    border-color: #00d2be;
-                    background: rgba(0, 210, 190, 0.1);
-                    transform: translateY(-5px);
-                }
-                
-                .grid-icon {
-                    font-size: 2.5rem;
-                    margin-bottom: 15px;
-                }
-                
-                .grid-title {
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 1.2rem;
-                    font-weight: bold;
-                    color: white;
-                    margin-bottom: 5px;
-                }
-                
-                .grid-desc {
-                    color: #aaa;
-                    font-size: 0.9rem;
-                }
-                
-                /* Cards para áreas */
                 .area-grid-card {
-                    background: rgba(42, 42, 56, 0.8);
-                    border: 2px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 12px;
-                    padding: 20px;
-                    text-align: center;
-                    transition: all 0.3s;
-                }
-                
-                .area-grid-card:hover {
-                    border-color: #00d2be;
-                    transform: translateY(-3px);
-                }
-                
-                .area-grid-icon {
-                    font-size: 2rem;
-                    margin-bottom: 10px;
+                    min-height: auto;
+                    padding: 12px;
                 }
                 
                 .area-grid-name {
-                    font-family: 'Orbitron', sans-serif;
-                    font-weight: bold;
-                    color: white;
-                    font-size: 1.1rem;
-                    margin-bottom: 5px;
+                    font-size: 1rem;
                 }
                 
                 .area-grid-desc {
-                    color: #aaa;
-                    font-size: 0.9rem;
-                    margin-bottom: 10px;
-                    min-height: 40px;
+                    font-size: 0.85rem;
+                    min-height: 35px;
                 }
                 
-                .area-grid-stats {
-                    background: rgba(0, 210, 190, 0.1);
-                    color: #00d2be;
-                    padding: 5px 10px;
-                    border-radius: 20px;
-                    font-size: 0.9rem;
-                    font-weight: bold;
+                .area-grid-stats, .area-grid-sub {
+                    font-size: 0.85rem;
                 }
-                
-                /* Cards de fabricación */
-                .fabricacion-card {
-                    background: linear-gradient(135deg, rgba(225, 6, 0, 0.1), rgba(0, 210, 190, 0.1));
-                    border: 2px solid rgba(225, 6, 0, 0.3);
-                    border-radius: 15px;
-                    padding: 25px 20px;
-                    text-align: center;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                }
-                
-                .fabricacion-card:hover {
-                    border-color: #00d2be;
-                    transform: translateY(-5px);
-                    box-shadow: 0 10px 20px rgba(0, 210, 190, 0.2);
-                }
-                
-                .fab-icon {
-                    font-size: 3rem;
-                    margin-bottom: 15px;
-                }
-                
-                .fab-title {
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 1.3rem;
-                    font-weight: bold;
-                    color: white;
-                    margin-bottom: 15px;
-                }
-                
-                .fab-details {
-                    display: flex;
-                    justify-content: space-around;
-                    margin: 15px 0;
-                }
-                
-                .fab-time, .fab-cost, .fab-points {
-                    font-size: 0.9rem;
-                    color: #aaa;
-                }
-                
-                .fab-action {
-                    background: rgba(0, 210, 190, 0.2);
-                    color: #00d2be;
-                    padding: 10px;
-                    border-radius: 10px;
-                    font-weight: bold;
-                    margin-top: 15px;
-                    border: 1px solid #00d2be;
-                }
-                
-                /* Días del tutorial */
-                .dia-info {
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                    margin-bottom: 25px;
-                    background: rgba(0, 0, 0, 0.3);
+            }
+            
+            @media (max-width: 768px) {
+                .tutorial-container {
                     padding: 15px;
-                    border-radius: 10px;
-                    border-left: 5px solid #00d2be;
+                    max-height: 85vh;
+                    margin: 10px;
                 }
                 
-                .dia-numero {
-                    background: #00d2be;
-                    color: white;
-                    font-family: 'Orbitron', sans-serif;
-                    font-weight: bold;
-                    padding: 8px 15px;
-                    border-radius: 20px;
-                    font-size: 1.1rem;
+                .grid-btn-big {
+                    min-height: 110px;
+                    padding: 12px 8px;
                 }
                 
-                .dia-titulo {
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 1.2rem;
-                    color: white;
-                    flex: 1;
+                .grid-icon {
+                    font-size: 1.8rem;
                 }
                 
-                /* Cards seleccionables */
-                .seleccionable {
-                    cursor: pointer;
-                    transition: all 0.3s;
+                .grid-title {
+                    font-size: 0.9rem;
                 }
                 
-                .seleccionable:hover {
-                    transform: translateY(-5px);
+                .grid-desc {
+                    font-size: 0.75rem;
                 }
                 
-                .seleccionable.seleccionado {
-                    border-color: #00d2be !important;
-                    background: rgba(0, 210, 190, 0.15) !important;
-                    box-shadow: 0 0 20px rgba(0, 210, 190, 0.3);
-                }
-                
-                /* Botones de acción grandes */
-                .btn-tutorial-accion-grande {
-                    background: linear-gradient(135deg, #00d2be, #009688);
-                    color: white;
-                    border: none;
-                    padding: 20px 40px;
-                    border-radius: 12px;
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 1.2rem;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    display: block;
-                    width: 100%;
-                    margin-top: 20px;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                }
-                
-                .btn-tutorial-accion-grande:hover {
-                    transform: translateY(-3px);
-                    box-shadow: 0 10px 25px rgba(0, 210, 190, 0.4);
-                }
-                
-                /* Responsive */
-                @media (max-width: 1024px) {
-                    .grid-6-columns {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
-                    
-                    .grid-4-columns {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
-                    
-                    .grid-3-columns {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
-                }
-                
-                /* Responsive - pantallas pequeñas */
-                @media (max-width: 1200px) {
-                    .grid-6-columns {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
-                    
-                    .grid-4-columns {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
-                    
-                    .grid-3-columns {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
-                }
-                
-                @media (max-width: 900px) {
-                    .grid-6-columns, .grid-4-columns, .grid-3-columns {
-                        grid-template-columns: 1fr;
-                    }
-                    
-                    .area-grid-card {
-                        min-height: auto;
-                        padding: 15px;
-                    }
-                    
-                    .area-grid-name {
-                        font-size: 1rem;
-                    }
-                    
-                    .area-grid-desc {
-                        font-size: 0.85rem;
-                        min-height: 35px;
-                    }
-                    
-                    .area-grid-stats, .area-grid-sub {
-                        font-size: 0.85rem;
-                    }
-                }
-                
-                @media (max-width: 768px) {
-                    .tutorial-container {
-                        padding: 15px;
-                        height: 95vh;
-                        max-height: none;
-                        margin: 10px;
-                        overflow-y: auto;
-                    }
-                    
-                    .grid-btn-big {
-                        min-height: 120px;
-                        padding: 15px;
-                    }
-                    
-                    .grid-icon {
-                        font-size: 1.8rem;
-                    }
-                    
-                    .grid-title {
-                        font-size: 0.9rem;
-                    }
-                    
-                    .grid-desc {
-                        font-size: 0.75rem;
-                    }
-                    
-                    .estratega-tutorial-card, .fabricacion-tutorial-card, .pronostico-tutorial-card {
-                        min-height: 200px;
-                        padding: 15px;
-                    }
-                    
-                    .estratega-icon-tut, .fab-icon-tut, .pronostico-icon-tut {
-                        font-size: 2rem;
-                    }
-                    
-                    .estratega-nombre-tut, .fab-nombre-tut, .pronostico-nombre-tut {
-                        font-size: 0.9rem;
-                    }
-                }
-                
-                /* Estilos específicos para tutorial práctico */
                 .estratega-tutorial-card, .fabricacion-tutorial-card, .pronostico-tutorial-card {
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 2px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 15px;
-                    padding: 20px;
-                    text-align: center;
-                    min-height: 250px;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-between;
+                    min-height: 180px;
+                    padding: 12px;
                 }
                 
                 .estratega-icon-tut, .fab-icon-tut, .pronostico-icon-tut {
-                    font-size: 2.5rem;
-                    margin-bottom: 15px;
+                    font-size: 1.8rem;
                 }
                 
                 .estratega-nombre-tut, .fab-nombre-tut, .pronostico-nombre-tut {
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 1.1rem;
-                    font-weight: bold;
-                    color: white;
-                    margin-bottom: 10px;
-                }
-                
-                .estratega-especialidad, .fab-desc-tut, .pronostico-pregunta {
-                    color: #aaa;
                     font-size: 0.9rem;
-                    margin-bottom: 15px;
-                    flex: 1;
                 }
                 
-                .estratega-bono, .estratega-sueldo, .fab-tiempo-tut, .fab-costo-tut, .fab-puntos-tut, .pronostico-puntos {
+                .tutorial-header h1 {
+                    font-size: 1.3rem;
+                }
+                
+                .grid-6-columns, .grid-4-columns, .grid-3-columns {
+                    grid-template-columns: 1fr;
+                    gap: 10px;
+                }
+                
+                .btn-tutorial-next-large, .btn-tutorial-prev {
+                    padding: 10px 20px;
+                    font-size: 1rem;
+                    min-height: 45px;
+                }
+                
+                .step-number-horizontal {
+                    width: 32px;
+                    height: 32px;
                     font-size: 0.9rem;
-                    margin: 5px 0;
                 }
                 
-                .bono-valor, .sueldo-valor {
-                    color: #00d2be;
-                    font-weight: bold;
+                .tutorial-content-wrapper {
+                    padding: 5px 2px;
                 }
                 
-                .estratega-ejemplo {
+                .area-grid-name, .estratega-nombre-tut, .fab-nombre-tut, .pronostico-nombre-tut {
+                    font-size: 0.9rem;
+                }
+                
+                .area-grid-desc, .estratega-especialidad, .fab-desc-tut, .pronostico-pregunta {
                     font-size: 0.8rem;
-                    color: #888;
-                    font-style: italic;
-                    margin-top: 10px;
+                    margin-bottom: 10px;
+                }
+            }
+            
+            .estratega-tutorial-card, .fabricacion-tutorial-card, .pronostico-tutorial-card {
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                border-radius: 15px;
+                padding: 15px;
+                text-align: center;
+                min-height: 200px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+            
+            .estratega-icon-tut, .fab-icon-tut, .pronostico-icon-tut {
+                font-size: 2rem;
+                margin-bottom: 10px;
+            }
+            
+            .estratega-nombre-tut, .fab-nombre-tut, .pronostico-nombre-tut {
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1.1rem;
+                font-weight: bold;
+                color: white;
+                margin-bottom: 10px;
+            }
+            
+            .estratega-especialidad, .fab-desc-tut, .pronostico-pregunta {
+                color: #aaa;
+                font-size: 0.9rem;
+                margin-bottom: 15px;
+                flex: 1;
+            }
+            
+            .estratega-bono, .estratega-sueldo, .fab-tiempo-tut, .fab-costo-tut, .fab-puntos-tut, .pronostico-puntos {
+                font-size: 0.9rem;
+                margin: 5px 0;
+            }
+            
+            .bono-valor, .sueldo-valor {
+                color: #00d2be;
+                font-weight: bold;
+            }
+            
+            .estratega-ejemplo {
+                font-size: 0.8rem;
+                color: #888;
+                font-style: italic;
+                margin-top: 10px;
+            }
+            
+            .fab-accion-tut {
+                background: rgba(0, 210, 190, 0.2);
+                color: #00d2be;
+                padding: 8px;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                margin-top: 15px;
+                border: 1px solid rgba(0, 210, 190, 0.5);
+            }
+            
+            .pronostico-opciones {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                margin: 15px 0;
+            }
+            
+            .opcion-tut {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 8px 15px;
+                border-radius: 20px;
+                cursor: pointer;
+                transition: all 0.3s;
+                font-size: 0.9rem;
+            }
+            
+            .opcion-tut:hover {
+                background: rgba(0, 210, 190, 0.3);
+                color: white;
+            }
+            
+            .opcion-tut.seleccionado {
+                background: #00d2be;
+                color: white;
+                font-weight: bold;
+            }
+            
+            .simulacion-carrera {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                margin: 20px 0;
+            }
+            
+            .carrera-paso {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                background: rgba(255, 255, 255, 0.05);
+                padding: 12px;
+                border-radius: 10px;
+                border-left: 4px solid #00d2be;
+            }
+            
+            .paso-icon {
+                font-size: 1.8rem;
+            }
+            
+            .btn-simular-carrera {
+                background: linear-gradient(135deg, #e10600, #ff4444);
+                color: white;
+                border: none;
+                padding: 12px 25px;
+                border-radius: 10px;
+                font-family: 'Orbitron', sans-serif;
+                font-weight: bold;
+                cursor: pointer;
+                width: 100%;
+                margin: 15px 0;
+                font-size: 1.1rem;
+                transition: all 0.3s;
+            }
+            
+            .btn-simular-carrera:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 20px rgba(225, 6, 0, 0.3);
+            }
+            
+            .resultados-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+                margin: 20px 0;
+            }
+            
+            .resultado-card {
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                padding: 15px;
+                text-align: center;
+            }
+            
+            .resultado-card.ganancia { border-top: 4px solid #4CAF50; }
+            .resultado-card.bono { border-top: 4px solid #00d2be; }
+            .resultado-card.pieza { border-top: 4px solid #ff9800; }
+            
+            .resultado-icon {
+                font-size: 1.8rem;
+                margin-bottom: 12px;
+            }
+            
+            .resultado-titulo {
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1rem;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            
+            .resultado-detalle {
+                color: #aaa;
+                font-size: 0.9rem;
+                margin-bottom: 12px;
+            }
+            
+            .resultado-puntos {
+                font-size: 1.2rem;
+                font-weight: bold;
+                color: #ffd700;
+            }
+            
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #1a1a2e;
+                border-left: 4px solid #00d2be;
+                color: white;
+                padding: 12px 16px;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                z-index: 10000;
+                transform: translateX(120%);
+                transition: transform 0.3s ease;
+                max-width: 300px;
+            }
+            
+            .notification.show {
+                transform: translateX(0);
+            }
+            
+            .notification.success {
+                border-left-color: #4CAF50;
+            }
+            
+            .notification.error {
+                border-left-color: #f44336;
+            }
+            
+            .notification.warning {
+                border-left-color: #ff9800;
+            }
+            
+            .notification.info {
+                border-left-color: #2196F3;
+            }
+            
+            .notification-content {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .notification i {
+                font-size: 1.2rem;
+            }
+            
+            .total-ganancias {
+                background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(0, 210, 190, 0.1));
+                border-radius: 15px;
+                padding: 20px;
+                text-align: center;
+                margin: 20px 0;
+                border: 2px solid #ffd700;
+            }
+            
+            .total-titulo {
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1.1rem;
+                color: #aaa;
+                margin-bottom: 10px;
+            }
+            
+            .total-puntos {
+                font-size: 2rem;
+                font-weight: bold;
+                color: #ffd700;
+                margin: 10px 0;
+                font-family: 'Orbitron', sans-serif;
+            }
+            
+            .total-dinero {
+                font-size: 1.3rem;
+                color: #4CAF50;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            
+            .total-conversion {
+                color: #aaa;
+                font-size: 0.9rem;
+            }
+            
+            .nuevo-presupuesto {
+                background: rgba(0, 0, 0, 0.3);
+                border-radius: 12px;
+                padding: 15px;
+                margin: 20px 0;
+            }
+            
+            .presupuesto-inicial, .presupuesto-ganancia, .presupuesto-gastos {
+                display: flex;
+                justify-content: space-between;
+                margin: 8px 0;
+                color: #aaa;
+                font-size: 0.9rem;
+            }
+            
+            .presupuesto-final {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                font-size: 1.1rem;
+                color: white;
+                font-weight: bold;
+            }
+            
+            .completado-celebracion {
+                text-align: center;
+                margin: 20px 0;
+            }
+            
+            .celebracion-icon {
+                font-size: 3rem;
+                margin-bottom: 15px;
+                animation: bounce 1s infinite;
+            }
+            
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+            
+            .celebracion-sub {
+                color: #00d2be;
+                font-size: 1.1rem;
+                margin-top: 10px;
+            }
+            
+            .resumen-final {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                margin: 20px 0;
+            }
+            
+            .resumen-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                background: rgba(255, 255, 255, 0.05);
+                padding: 12px;
+                border-radius: 10px;
+            }
+            
+            .escuderia-destacada {
+                color: #00d2be;
+                font-size: 1.5rem;
+                font-weight: bold;
+                font-family: 'Orbitron', sans-serif;
+                text-shadow: 0 0 10px rgba(0, 210, 190, 0.7);
+                display: inline-block;
+                margin: 0 5px;
+                animation: glow 2s infinite alternate;
+            }
+            
+            @keyframes glow {
+                from { text-shadow: 0 0 10px rgba(0, 210, 190, 0.7); }
+                to { text-shadow: 0 0 20px rgba(0, 210, 190, 1), 0 0 30px rgba(0, 210, 190, 0.5); }
+            }
+            
+            .resumen-icon {
+                font-size: 1.5rem;
+                width: 45px;
+                height: 45px;
+                background: rgba(0, 210, 190, 0.2);
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .primeros-pasos-reales {
+                background: rgba(0, 0, 0, 0.3);
+                border-radius: 15px;
+                padding: 20px;
+                margin: 20px 0;
+            }
+            
+            .pasos-reales-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                margin-top: 15px;
+            }
+            
+            .paso-real {
+                background: rgba(255, 255, 255, 0.05);
+                padding: 12px;
+                border-radius: 8px;
+                border-left: 4px solid #00d2be;
+                font-size: 0.9rem;
+            }
+            
+            .despedida-final {
+                text-align: center;
+                padding: 20px;
+                background: linear-gradient(135deg, rgba(225, 6, 0, 0.1), rgba(0, 210, 190, 0.1));
+                border-radius: 15px;
+                margin-top: 20px;
+            }
+            
+            .equipo-nombre-final {
+                font-size: 1.1rem;
+                color: #00d2be;
+                margin-top: 12px;
+                font-family: 'Orbitron', sans-serif;
+            }
+            
+            .btn-tutorial-prev {
+                background: transparent;
+                border: 2px solid #888;
+                color: #888;
+                padding: 12px 25px;
+                border-radius: 10px;
+                font-family: 'Orbitron', sans-serif;
+                font-size: 0.9rem;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                min-height: 50px;
+            }
+            
+            .btn-tutorial-prev:hover {
+                border-color: #00d2be;
+                color: #00d2be;
+                transform: translateY(-3px);
+            }
+            
+            .btn-tutorial-next-large {
+                background: linear-gradient(135deg, #00d2be, #009688);
+                color: white;
+                border: none;
+                padding: 15px 30px;
+                border-radius: 12px;
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1.1rem;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                min-height: 55px;
+                box-shadow: 0 10px 25px rgba(0, 210, 190, 0.4);
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            
+            .btn-tutorial-next-large:hover {
+                transform: translateY(-5px) scale(1.05);
+                box-shadow: 0 15px 35px rgba(0, 210, 190, 0.6);
+                background: linear-gradient(135deg, #00e6cc, #00a895);
+            }
+            
+            .spacer {
+                width: 100px;
+            }
+            
+            @media (max-width: 480px) {
+                .tutorial-container {
+                    max-height: 80vh;
+                    padding: 10px;
                 }
                 
-                .fab-accion-tut {
-                    background: rgba(0, 210, 190, 0.2);
-                    color: #00d2be;
-                    padding: 8px;
-                    border-radius: 8px;
-                    font-size: 0.9rem;
-                    margin-top: 15px;
-                    border: 1px solid rgba(0, 210, 190, 0.5);
+                .tutorial-header h1 {
+                    font-size: 1.1rem;
                 }
                 
-                .pronostico-opciones {
-                    display: flex;
-                    justify-content: center;
-                    gap: 10px;
-                    margin: 15px 0;
-                }
-                
-                .opcion-tut {
-                    background: rgba(255, 255, 255, 0.1);
+                .btn-tutorial-next-large, .btn-tutorial-prev {
                     padding: 8px 15px;
-                    border-radius: 20px;
-                    cursor: pointer;
-                    transition: all 0.3s;
                     font-size: 0.9rem;
+                    min-height: 40px;
                 }
                 
-                .opcion-tut:hover {
-                    background: rgba(0, 210, 190, 0.3);
-                    color: white;
+                .step-number-horizontal {
+                    width: 28px;
+                    height: 28px;
+                    font-size: 0.8rem;
                 }
                 
-                .opcion-tut.seleccionado {
-                    background: #00d2be;
-                    color: white;
-                    font-weight: bold;
-                }
-                
-                /* Simulación carrera */
-                .simulacion-carrera {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 15px;
-                    margin: 25px 0;
-                }
-                
-                .carrera-paso {
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                    background: rgba(255, 255, 255, 0.05);
-                    padding: 15px;
-                    border-radius: 10px;
-                    border-left: 4px solid #00d2be;
-                }
-                
-                .paso-icon {
-                    font-size: 2rem;
-                }
-                
-                .btn-simular-carrera {
-                    background: linear-gradient(135deg, #e10600, #ff4444);
-                    color: white;
-                    border: none;
-                    padding: 15px 30px;
-                    border-radius: 10px;
-                    font-family: 'Orbitron', sans-serif;
-                    font-weight: bold;
-                    cursor: pointer;
-                    width: 100%;
-                    margin: 20px 0;
-                    font-size: 1.1rem;
-                    transition: all 0.3s;
-                }
-                
-                .btn-simular-carrera:hover {
-                    transform: translateY(-3px);
-                    box-shadow: 0 10px 20px rgba(225, 6, 0, 0.3);
-                }
-                
-                /* Resultados */
-                .resultados-grid {
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 15px;
-                    margin: 25px 0;
-                }
-                
-                .resultado-card {
-                    background: rgba(255, 255, 255, 0.05);
-                    border-radius: 12px;
-                    padding: 20px;
-                    text-align: center;
-                }
-                
-                .resultado-card.ganancia { border-top: 4px solid #4CAF50; }
-                .resultado-card.bono { border-top: 4px solid #00d2be; }
-                .resultado-card.pieza { border-top: 4px solid #ff9800; }
-                
-                .resultado-icon {
-                    font-size: 2rem;
-                    margin-bottom: 15px;
-                }
-                
-                .resultado-titulo {
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 1rem;
-                    font-weight: bold;
-                    margin-bottom: 10px;
-                }
-                
-                .resultado-detalle {
-                    color: #aaa;
-                    font-size: 0.9rem;
-                    margin-bottom: 15px;
-                }
-                
-                .resultado-puntos {
-                    font-size: 1.2rem;
-                    font-weight: bold;
-                    color: #ffd700;
-                }
-                .notification {
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    background: #1a1a2e;
-                    border-left: 4px solid #00d2be;
-                    color: white;
-                    padding: 15px 20px;
-                    border-radius: 8px;
-                    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                    z-index: 10000;
-                    transform: translateX(120%);
-                    transition: transform 0.3s ease;
-                    max-width: 350px;
-                }
-                
-                .notification.show {
-                    transform: translateX(0);
-                }
-                
-                .notification.success {
-                    border-left-color: #4CAF50;
-                }
-                
-                .notification.error {
-                    border-left-color: #f44336;
-                }
-                
-                .notification.warning {
-                    border-left-color: #ff9800;
-                }
-                
-                .notification.info {
-                    border-left-color: #2196F3;
-                }
-                
-                .notification-content {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                }
-                
-                .notification i {
-                    font-size: 1.2rem;
-                }
-                .total-ganancias {
-                    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(0, 210, 190, 0.1));
-                    border-radius: 15px;
-                    padding: 25px;
-                    text-align: center;
-                    margin: 25px 0;
-                    border: 2px solid #ffd700;
-                }
-                
-                .total-titulo {
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 1.1rem;
-                    color: #aaa;
-                    margin-bottom: 10px;
-                }
-                
-                .total-puntos {
-                    font-size: 2.5rem;
-                    font-weight: bold;
-                    color: #ffd700;
-                    margin: 10px 0;
-                    font-family: 'Orbitron', sans-serif;
-                }
-                
-                .total-dinero {
+                .grid-icon, .estratega-icon-tut, .fab-icon-tut, .pronostico-icon-tut {
                     font-size: 1.5rem;
-                    color: #4CAF50;
-                    font-weight: bold;
-                    margin-bottom: 5px;
-                }
-                
-                .total-conversion {
-                    color: #aaa;
-                    font-size: 0.9rem;
-                }
-                
-                .nuevo-presupuesto {
-                    background: rgba(0, 0, 0, 0.3);
-                    border-radius: 12px;
-                    padding: 20px;
-                    margin: 25px 0;
-                }
-                
-                .presupuesto-inicial, .presupuesto-ganancia, .presupuesto-gastos {
-                    display: flex;
-                    justify-content: space-between;
-                    margin: 8px 0;
-                    color: #aaa;
-                }
-                
-                .presupuesto-final {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-top: 15px;
-                    padding-top: 15px;
-                    border-top: 1px solid rgba(255, 255, 255, 0.1);
-                    font-size: 1.2rem;
-                    color: white;
-                    font-weight: bold;
-                }
-                
-                /* Completado */
-                .completado-celebracion {
-                    text-align: center;
-                    margin: 30px 0;
-                }
-                
-                .celebracion-icon {
-                    font-size: 4rem;
-                    margin-bottom: 20px;
-                    animation: bounce 1s infinite;
-                }
-                
-                @keyframes bounce {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-10px); }
-                }
-                
-                .celebracion-sub {
-                    color: #00d2be;
-                    font-size: 1.2rem;
-                    margin-top: 10px;
-                }
-                
-                .resumen-final {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 15px;
-                    margin: 25px 0;
-                }
-                
-                .resumen-item {
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                    background: rgba(255, 255, 255, 0.05);
-                    padding: 15px;
-                    border-radius: 10px;
-                }
-                .escuderia-destacada {
-                    color: #00d2be;
-                    font-size: 1.8rem;
-                    font-weight: bold;
-                    font-family: 'Orbitron', sans-serif;
-                    text-shadow: 0 0 10px rgba(0, 210, 190, 0.7);
-                    display: inline-block;
-                    margin: 0 5px;
-                    animation: glow 2s infinite alternate;
-                }
-                
-                @keyframes glow {
-                    from { text-shadow: 0 0 10px rgba(0, 210, 190, 0.7); }
-                    to { text-shadow: 0 0 20px rgba(0, 210, 190, 1), 0 0 30px rgba(0, 210, 190, 0.5); }
-                }
-                .resumen-icon {
-                    font-size: 1.8rem;
-                    width: 50px;
-                    height: 50px;
-                    background: rgba(0, 210, 190, 0.2);
-                    border-radius: 10px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                
-                .primeros-pasos-reales {
-                    background: rgba(0, 0, 0, 0.3);
-                    border-radius: 15px;
-                    padding: 25px;
-                    margin: 25px 0;
-                }
-                
-                .pasos-reales-grid {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 15px;
-                    margin-top: 20px;
-                }
-                
-                .paso-real {
-                    background: rgba(255, 255, 255, 0.05);
-                    padding: 15px;
-                    border-radius: 8px;
-                    border-left: 4px solid #00d2be;
-                }
-                
-                .despedida-final {
-                    text-align: center;
-                    padding: 30px;
-                    background: linear-gradient(135deg, rgba(225, 6, 0, 0.1), rgba(0, 210, 190, 0.1));
-                    border-radius: 15px;
-                    margin-top: 25px;
-                }
-                
-                .equipo-nombre-final {
-                    font-size: 1.3rem;
-                    color: #00d2be;
-                    margin-top: 15px;
-                    font-family: 'Orbitron', sans-serif;
-                }
-                
-                /* Botones de navegación */
-                .tutorial-actions-bottom {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding-top: 25px;
-                    border-top: 2px solid rgba(255, 255, 255, 0.1);
-                    margin-top: 20px;
-                }
-                
-                .btn-tutorial-prev {
-                    background: transparent;
-                    border: 2px solid #888;
-                    color: #888;
-                    padding: 15px 30px;
-                    border-radius: 10px;
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 1rem;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    min-height: 60px;
-                }
-                
-                .btn-tutorial-prev:hover {
-                    border-color: #00d2be;
-                    color: #00d2be;
-                    transform: translateY(-3px);
-                }
-                
-                .btn-tutorial-next-large {
-                    background: linear-gradient(135deg, #00d2be, #009688);
-                    color: white;
-                    border: none;
-                    padding: 20px 50px;
-                    border-radius: 12px;
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 1.3rem;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                    min-height: 70px;
-                    box-shadow: 0 10px 25px rgba(0, 210, 190, 0.4);
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                }
-                
-                .btn-tutorial-next-large:hover {
-                    transform: translateY(-5px) scale(1.05);
-                    box-shadow: 0 15px 35px rgba(0, 210, 190, 0.6);
-                    background: linear-gradient(135deg, #00e6cc, #00a895);
+                    margin-bottom: 8px;
                 }
                 
                 .spacer {
-                    width: 120px;
+                    width: 80px;
                 }
+                
+                .grid-btn-big {
+                    min-height: 100px;
+                    padding: 10px 8px;
+                }
+                
+                .estratega-tutorial-card, .fabricacion-tutorial-card, .pronostico-tutorial-card {
+                    min-height: 170px;
+                    padding: 10px;
+                }
+                
+                .resultados-grid {
+                    grid-template-columns: 1fr;
+                }
+                
+                .resumen-final {
+                    grid-template-columns: 1fr;
+                }
+                
+                .pasos-reales-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            
+            .tutorial-content-wrapper {
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
+            
+            html, body {
+                overflow-x: hidden;
+                position: relative;
+            }
             </style>
         `;
         
