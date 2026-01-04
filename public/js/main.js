@@ -2007,15 +2007,55 @@ class F1Manager {
                             <div class="resumen-icon">💰</div>
                             <div class="resumen-text">
                                 <strong>Ganancias obtenidas</strong><br>
-                                18,750€ primera semana
+                                ${(() => {
+                                    // Calcular ganancias reales
+                                    const puntosBase = window.tutorialData?.puntosBaseCalculados || 0;
+                                    let puntosBono = 0;
+                                    
+                                    if (window.tutorialData?.estrategaContratado && puntosBase > 0) {
+                                        const bono = window.tutorialData?.bonoEstratega || 15;
+                                        puntosBono = Math.round(puntosBase * (bono / 100));
+                                    }
+                                    
+                                    const puntosPieza = window.tutorialData?.piezaFabricando ? 
+                                        (window.tutorialData?.puntosPieza || 15) : 0;
+                                    
+                                    const totalPuntos = puntosBase + puntosBono + puntosPieza;
+                                    const ganancias = totalPuntos * 100;
+                                    return ganancias.toLocaleString() + '€ primera semana';
+                                })()}
                             </div>
                         </div>
                         
                         <div class="resumen-item">
                             <div class="resumen-icon">🏆</div>
                             <div class="resumen-text">
-                                <strong>Posición inicial</strong><br>
-                                Ranking #1,245 global
+                                <strong>Posición inicial estimada</strong><br>
+                                ${(() => {
+                                    // Estimar ranking basado en puntos
+                                    const puntosBase = window.tutorialData?.puntosBaseCalculados || 0;
+                                    let puntosBono = 0;
+                                    
+                                    if (window.tutorialData?.estrategaContratado && puntosBase > 0) {
+                                        const bono = window.tutorialData?.bonoEstratega || 15;
+                                        puntosBono = Math.round(puntosBase * (bono / 100));
+                                    }
+                                    
+                                    const puntosPieza = window.tutorialData?.piezaFabricando ? 
+                                        (window.tutorialData?.puntosPieza || 15) : 0;
+                                    
+                                    const totalPuntos = puntosBase + puntosBono + puntosPieza;
+                                    
+                                    // Estimación de ranking (menos puntos = mejor ranking)
+                                    let rankingEstimado;
+                                    if (totalPuntos >= 500) rankingEstimado = "#800-1,000";
+                                    else if (totalPuntos >= 300) rankingEstimado = "#1,000-1,500";
+                                    else if (totalPuntos >= 200) rankingEstimado = "#1,500-2,000";
+                                    else if (totalPuntos >= 100) rankingEstimado = "#2,000-2,500";
+                                    else rankingEstimado = "#2,500-3,000";
+                                    
+                                    return `Ranking ${rankingEstimado} global`;
+                                })()}
                             </div>
                         </div>
                     </div>
