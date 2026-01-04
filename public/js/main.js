@@ -4934,14 +4934,14 @@ class F1Manager {
                 // Verificar que los botones funcionan
                 setTimeout(() => {
                     const botones = document.querySelectorAll('[data-tab]');
-                    console.log(`📌 Botones de pestañas encontrados: ${botones.length}`);
+                    console.log('Botones de pestañas encontrados:', botones.length);
                     
                     // Añadir eventos manualmente si es necesario
                     botones.forEach(btn => {
                         const tabId = btn.getAttribute('data-tab');
                         btn.addEventListener('click', (e) => {
                             e.preventDefault();
-                            console.log(`Clic en pestaña: ${tabId}`);
+                            console.log('Clic en pestaña:', tabId);
                             if (window.tabManager && window.tabManager.switchTab) {
                                 window.tabManager.switchTab(tabId);
                             } else {
@@ -4957,6 +4957,7 @@ class F1Manager {
                             }
                         });
                     });
+                });
                     
                     console.log('✅ Sistema de pestañas listo');
                     
