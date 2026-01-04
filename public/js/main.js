@@ -2088,7 +2088,7 @@ class F1Manager {
         }
         
         document.body.innerHTML = `
-            // DENTRO DE document.body.innerHTML = `
+            
             <div class="tutorial-screen">
                 <div class="tutorial-container">
                     <!-- Progreso horizontal (FIJO ARRIBA) -->
