@@ -6179,6 +6179,34 @@ iniciarAplicacion();
             console.error("tutorialManager no está disponible");
         }
     };
+    // Funciones para gestionar estrategas
+    window.mostrarModalContratacion = function(huecoNumero) {
+        alert(`Mostrar modal para contratar estratega en hueco ${huecoNumero}`);
+        // Aquí implementarías la lógica para mostrar un modal de contratación
+    };
+    
+    window.despedirEstratega = function(estrategaId) {
+        if (confirm('¿Estás seguro de despedir a este estratega?')) {
+            // Aquí implementarías la lógica para despedir estratega
+            console.log('Despedir estratega ID:', estrategaId);
+            alert('Estratega despedido. Hueco disponible para nuevo contrato.');
+            
+            // Recargar UI
+            if (window.f1Manager) {
+                setTimeout(() => window.f1Manager.updatePilotosUI(), 500);
+            }
+        }
+    };
+    
+    // Función para contratar estratega desde tutorial
+    window.contratarEstrategaDesdeTutorial = function() {
+        // Redirigir al sistema de contratación
+        if (window.tabManager) {
+            window.tabManager.switchTab('equipo'); // Asumiendo que tienes una pestaña "equipo"
+        } else {
+            window.mostrarModalContratacion(1);
+        }
+    };
     // Función para recoger piezas y actualizar almacén
     window.recogerPiezaYActualizarAlmacen = async function(fabricacionId) {
         try {
