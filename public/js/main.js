@@ -4411,17 +4411,7 @@ class F1Manager {
                     <!-- Tab Principal -->
                     <div id="tab-principal" class="tab-content active">
                         <!-- Panel de Pilotos -->
-                        <section class="panel-pilotos">
-                            <div class="section-header">
-                                <h2><i class="fas fa-user"></i> TUS EQUIPO TÉCNICO</h2>
-                            </div>
-                            <div id="pilotos-container-equipo" class="pilotos-container">
-                                <div class="empty-state">
-                                    <i class="fas fa-user-slash"></i>
-                                    <p>No tienes estrategas contratados</p>
-                                </div>
-                            </div>
-                        </section>
+
                         
                         <!-- Three Columns Layout -->
                         <div class="three-columns-layout">
