@@ -6270,6 +6270,114 @@ iniciarAplicacion();
             }
         }
     };
+    window.gestionarEstrategas = function() {
+        alert('Mostrar pantalla completa de gestión de estrategas');
+        // Aquí puedes redirigir a una pestaña específica o mostrar un modal grande
+        if (window.tabManager && window.tabManager.switchTab) {
+            window.tabManager.switchTab('equipo');
+        }
+    };
+    
+    window.mostrarModalContratacion = function(huecoNumero) {
+        // Modal simple para contratar
+        const modalHTML = `
+            <div id="modal-contratacion" style="
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            ">
+                <div style="
+                    background: #1a1a2e;
+                    padding: 20px;
+                    border-radius: 10px;
+                    border: 2px solid #00d2be;
+                    max-width: 400px;
+                    width: 90%;
+                ">
+                    <h3 style="color: #00d2be; margin-top: 0;">Contratar Estratega</h3>
+                    <p>Selecciona un estratega para el hueco ${huecoNumero}:</p>
+                    
+                    <div style="margin: 20px 0;">
+                        <button onclick="contratarEstrategaFicticio(1, ${huecoNumero})" style="
+                            width: 100%;
+                            padding: 10px;
+                            margin: 5px 0;
+                            background: rgba(0,210,190,0.1);
+                            border: 1px solid #00d2be;
+                            color: white;
+                            border-radius: 5px;
+                            cursor: pointer;
+                        ">
+                            🕐 Analista de Tiempos (+15%)
+                        </button>
+                        
+                        <button onclick="contratarEstrategaFicticio(2, ${huecoNumero})" style="
+                            width: 100%;
+                            padding: 10px;
+                            margin: 5px 0;
+                            background: rgba(0,210,190,0.1);
+                            border: 1px solid #00d2be;
+                            color: white;
+                            border-radius: 5px;
+                            cursor: pointer;
+                        ">
+                            🌧️ Meteorólogo (+20%)
+                        </button>
+                        
+                        <button onclick="contratarEstrategaFicticio(3, ${huecoNumero})" style="
+                            width: 100%;
+                            padding: 10px;
+                            margin: 5px 0;
+                            background: rgba(0,210,190,0.1);
+                            border: 1px solid #00d2be;
+                            color: white;
+                            border-radius: 5px;
+                            cursor: pointer;
+                        ">
+                            🔧 Experto en Fiabilidad (+18%)
+                        </button>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="document.getElementById('modal-contratacion').remove()" style="
+                            flex: 1;
+                            padding: 10px;
+                            background: transparent;
+                            border: 1px solid #666;
+                            color: #aaa;
+                            border-radius: 5px;
+                            cursor: pointer;
+                        ">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Insertar modal
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    };
+    
+    window.contratarEstrategaFicticio = function(tipo, hueco) {
+        const estrategas = {
+            1: { nombre: "Analista Tiempos", especialidad: "Análisis", bono: 15 },
+            2: { nombre: "Meteorólogo", especialidad: "Clima", bono: 20 },
+            3: { nombre: "Experto Fiabilidad", especialidad: "Técnica", bono: 18 }
+        };
+        
+        alert(`Contratado: ${estrategas[tipo].nombre} en hueco ${hueco}`);
+        document.getElementById('modal-contratacion').remove();
+        
+        // Actualizar UI
+        if (window.f1Manager) {
+            setTimeout(() => window.f1Manager.updatePilotosUI(), 500);
+        }
+    };
     
     // Función para contratar estratega desde tutorial
     window.contratarEstrategaDesdeTutorial = function() {
