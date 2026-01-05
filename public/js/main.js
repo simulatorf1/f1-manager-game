@@ -4423,63 +4423,82 @@ class F1Manager {
                             </div>
                         </section>
                         
-                        <!-- Two Columns Layout -->
-                        <div class="two-columns">
-                            <!-- Columna 1: Countdown y GP -->
-                            <div class="countdown-section">
-                                <div class="section-header">
-                                    <h2><i class="fas fa-clock"></i> PRÓXIMA CARRERA</h2>
-                                    <span class="tag upcoming">EN VIVO</span>
-                                </div>
-                                <div id="countdown-container">
-                                    <div class="countdown-timer">
-                                        <div class="time-block">
-                                            <span class="time-number" id="hours">00</span>
-                                            <span class="time-label">Horas</span>
-                                        </div>
-                                        <div class="time-separator">:</div>
-                                        <div class="time-block">
-                                            <span class="time-number" id="minutes">00</span>
-                                            <span class="time-label">Minutos</span>
-                                        </div>
-                                        <div class="time-separator">:</div>
-                                        <div class="time-block">
-                                            <span class="time-number" id="seconds">00</span>
-                                            <span class="time-label">Segundos</span>
-                                        </div>
+                        <!-- Three Columns Layout -->
+                        <div class="three-columns-layout">
+                            <!-- Columna 1: Estrategas Compactos -->
+                            <div class="col-estrategas">
+                                <section class="panel-pilotos compacto">
+                                    <div class="section-header">
+                                        <h2><i class="fas fa-users"></i> ESTRATEGAS</h2>
+                                        <span class="badge" id="contador-estrategas">0/4</span>
                                     </div>
-                                    <div class="proximo-gp">
-                                        <h3 id="gp-nombre">Cargando próximo GP...</h3>
-                                        <div class="gp-info">
-                                            <div class="gp-date">
-                                                <i class="far fa-calendar"></i>
-                                                <span id="gp-fecha">Fecha por confirmar</span>
+                                    <div id="pilotos-container" class="pilotos-container">
+                                        <!-- Contenido dinámico -->
+                                    </div>
+                                </section>
+                            </div>
+                            
+                            <!-- Columna 2: Countdown y GP -->
+                            <div class="col-countdown">
+                                <div class="countdown-section">
+                                    <!-- Mantén TODO el contenido original del countdown aquí -->
+                                    <div class="section-header">
+                                        <h2><i class="fas fa-clock"></i> PRÓXIMA CARRERA</h2>
+                                        <span class="tag upcoming">EN VIVO</span>
+                                    </div>
+                                    <div id="countdown-container">
+                                        <div class="countdown-timer">
+                                            <div class="time-block">
+                                                <span class="time-number" id="hours">00</span>
+                                                <span class="time-label">Horas</span>
                                             </div>
-                                            <div class="gp-circuit">
-                                                <i class="fas fa-map-marker-alt"></i>
-                                                <span id="gp-circuito">Circuito por confirmar</span>
+                                            <div class="time-separator">:</div>
+                                            <div class="time-block">
+                                                <span class="time-number" id="minutes">00</span>
+                                                <span class="time-label">Minutos</span>
+                                            </div>
+                                            <div class="time-separator">:</div>
+                                            <div class="time-block">
+                                                <span class="time-number" id="seconds">00</span>
+                                                <span class="time-label">Segundos</span>
                                             </div>
                                         </div>
-                                        <button class="btn-primary" id="btn-apostar">
-                                            <i class="fas fa-coins"></i> HACER APUESTA
-                                        </button>
+                                        <div class="proximo-gp">
+                                            <h3 id="gp-nombre">Cargando próximo GP...</h3>
+                                            <div class="gp-info">
+                                                <div class="gp-date">
+                                                    <i class="far fa-calendar"></i>
+                                                    <span id="gp-fecha">Fecha por confirmar</span>
+                                                </div>
+                                                <div class="gp-circuit">
+                                                    <i class="fas fa-map-marker-alt"></i>
+                                                    <span id="gp-circuito">Circuito por confirmar</span>
+                                                </div>
+                                            </div>
+                                            <button class="btn-primary" id="btn-apostar">
+                                                <i class="fas fa-coins"></i> HACER APUESTA
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Columna 2: Monitor de Fábrica -->
-                            <div class="monitor-fabrica">
-                                <div class="section-header">
-                                    <h2><i class="fas fa-industry"></i> PRODUCCIÓN</h2>
-                                    <div id="alerta-almacen" class="alerta-almacen" style="display: none;">
-                                        <i class="fas fa-bell"></i>
-                                        <span>¡Piezas nuevas en almacén!</span>
+                            <!-- Columna 3: Monitor de Fábrica -->
+                            <div class="col-fabrica">
+                                <div class="monitor-fabrica">
+                                    <!-- Mantén TODO el contenido original del monitor aquí -->
+                                    <div class="section-header">
+                                        <h2><i class="fas fa-industry"></i> PRODUCCIÓN</h2>
+                                        <div id="alerta-almacen" class="alerta-almacen" style="display: none;">
+                                            <i class="fas fa-bell"></i>
+                                            <span>¡Piezas nuevas en almacén!</span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div id="produccion-actual" class="produccion-actual">
-                                    <div class="empty-state">
-                                        <i class="fas fa-industry"></i>
-                                        <p>No hay producción en curso</p>
+                                    <div id="produccion-actual" class="produccion-actual">
+                                        <div class="empty-state">
+                                            <i class="fas fa-industry"></i>
+                                            <p>No hay producción en curso</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
