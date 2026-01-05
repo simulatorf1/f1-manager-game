@@ -4870,200 +4870,273 @@ class F1Manager {
     
         // Calcular estrategas contratados
         const estrategasContratados = this.pilotos || [];
-        const huecosDisponibles = 4 - estrategasContratados.length;
         
-        // HTML del panel de estrategas
+        // HTML del panel compacto de estrategas
         let html = `
-            <div class="section-header">
-                <h2><i class="fas fa-users"></i> ESTRATEGAS (${estrategasContratados.length}/4)</h2>
-            </div>
-            <div class="estrategas-grid">
+            <div class="estrategas-compact-container">
+                <div class="estrategas-header-compact">
+                    <h3><i class="fas fa-users"></i> ESTRATEGAS</h3>
+                    <span class="contador-compact">${estrategasContratados.length}/4</span>
+                </div>
+                
+                <div class="estrategas-grid-compact">
         `;
         
-        // Mostrar estrategas contratados primero
-        estrategasContratados.forEach((estratega, index) => {
-            html += `
-                <div class="estratega-card contratado">
-                    <div class="estratega-header">
-                        <div class="estratega-avatar">
+        // Mostrar 4 huecos fijos (como una matriz 2x2)
+        for (let i = 0; i < 4; i++) {
+            const estratega = estrategasContratados[i];
+            
+            if (estratega) {
+                // Hueco con estratega contratado
+                html += `
+                    <div class="estratega-btn-compact contratado" title="${estratega.nombre || 'Estratega'} - ${estratega.especialidad || 'General'}">
+                        <div class="estratega-icon-compact">
                             <i class="fas fa-user-tie"></i>
                         </div>
-                        <div class="estratega-info">
-                            <h4>${estratega.nombre || 'Estratega'}</h4>
-                            <span class="estratega-especialidad">${estratega.especialidad || 'General'}</span>
+                        <div class="estratega-info-mini">
+                            <span class="estratega-nombre-mini">${this.getIniciales(estratega.nombre)}</span>
+                            <span class="estratega-bono-mini">+${estratega.bonificacion_valor || 15}%</span>
                         </div>
                     </div>
-                    <div class="estratega-bono">
-                        <i class="fas fa-star"></i>
-                        <span>+${estratega.bonificacion_valor || 15}% puntos</span>
-                    </div>
-                    <div class="estratega-sueldo">
-                        <i class="fas fa-coins"></i>
-                        <span>${(estratega.salario || 50000).toLocaleString()}€/mes</span>
-                    </div>
-                    <button class="btn-despedir" onclick="despedirEstratega(${estratega.id})">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-        });
-        
-        // Mostrar huecos disponibles
-        for (let i = 0; i < huecosDisponibles; i++) {
-            html += `
-                <div class="estratega-card hueco">
-                    <div class="estratega-header">
-                        <div class="estratega-avatar">
-                            <i class="fas fa-user-plus"></i>
+                `;
+            } else {
+                // Hueco vacío (mostrar como punto)
+                html += `
+                    <div class="estratega-btn-compact vacio" onclick="mostrarModalContratacion(${i + 1})" title="Hueco disponible - Click para contratar">
+                        <div class="estratega-icon-compact">
+                            <i class="fas fa-circle"></i>
                         </div>
-                        <div class="estratega-info">
-                            <h4>Hueco disponible</h4>
-                            <span class="estratega-especialidad">Contratar estratega</span>
+                        <div class="estratega-info-mini">
+                            <span class="estratega-nombre-mini">---</span>
+                            <span class="estratega-bono-mini">Vacío</span>
                         </div>
                     </div>
-                    <div class="estratega-bono">
-                        <i class="fas fa-gift"></i>
-                        <span>Bonificación variable</span>
-                    </div>
-                    <button class="btn-contratar" onclick="mostrarModalContratacion(${estrategasContratados.length + i + 1})">
-                        <i class="fas fa-plus"></i> Contratar
-                    </button>
-                </div>
-            `;
+                `;
+            }
         }
         
         html += `
+                </div>
+                
+                <div class="estrategas-footer-compact">
+                    <button class="btn-gestionar-compact" onclick="gestionarEstrategas()">
+                        <i class="fas fa-cog"></i> Gestionar
+                    </button>
+                </div>
             </div>
             
             <style>
-                .estrategas-grid {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 15px;
-                    padding: 10px;
-                }
-                
-                .estratega-card {
-                    background: rgba(255, 255, 255, 0.05);
+                /* CONTENEDOR COMPACTO */
+                .estrategas-compact-container {
+                    background: rgba(30, 30, 40, 0.8);
                     border-radius: 10px;
                     padding: 15px;
-                    border: 2px solid rgba(255, 255, 255, 0.1);
-                    min-height: 140px;
+                    max-width: 300px; /* Máximo la mitad de una pantalla normal */
+                    margin: 0 auto;
+                    border: 1px solid rgba(0, 210, 190, 0.3);
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+                }
+                
+                .estrategas-header-compact {
                     display: flex;
-                    flex-direction: column;
                     justify-content: space-between;
-                    transition: all 0.3s;
-                }
-                
-                .estratega-card.hueco {
-                    border-style: dashed;
-                    border-color: rgba(0, 210, 190, 0.5);
-                    background: rgba(0, 210, 190, 0.05);
-                }
-                
-                .estratega-card.contratado {
-                    border-color: rgba(225, 6, 0, 0.5);
-                }
-                
-                .estratega-card:hover {
-                    transform: translateY(-3px);
-                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-                }
-                
-                .estratega-header {
-                    display: flex;
                     align-items: center;
-                    gap: 12px;
-                    margin-bottom: 10px;
+                    margin-bottom: 15px;
+                    padding-bottom: 8px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                 }
                 
-                .estratega-avatar {
-                    width: 40px;
-                    height: 40px;
-                    background: rgba(0, 210, 190, 0.2);
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 1.2rem;
-                }
-                
-                .estratega-card.hueco .estratega-avatar {
-                    background: rgba(255, 255, 255, 0.1);
-                }
-                
-                .estratega-info h4 {
+                .estrategas-header-compact h3 {
                     margin: 0;
                     color: white;
                     font-size: 1rem;
-                    font-weight: bold;
-                }
-                
-                .estratega-especialidad {
-                    color: #aaa;
-                    font-size: 0.8rem;
-                }
-                
-                .estratega-bono, .estratega-sueldo {
                     display: flex;
                     align-items: center;
                     gap: 8px;
-                    color: #ccc;
-                    font-size: 0.85rem;
-                    margin: 5px 0;
                 }
                 
-                .estratega-bono i {
-                    color: #ffd700;
+                .contador-compact {
+                    background: rgba(0, 210, 190, 0.2);
+                    color: #00d2be;
+                    padding: 3px 10px;
+                    border-radius: 12px;
+                    font-size: 0.9rem;
+                    font-weight: bold;
                 }
                 
-                .estratega-sueldo i {
-                    color: #4CAF50;
+                /* GRID 2x2 COMPACTO */
+                .estrategas-grid-compact {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    grid-template-rows: repeat(2, 1fr);
+                    gap: 10px;
+                    aspect-ratio: 1/1; /* Hace el contenedor cuadrado */
+                    max-height: 250px; /* Máximo tamaño */
                 }
                 
-                .btn-contratar, .btn-despedir {
-                    margin-top: 10px;
-                    padding: 8px 12px;
-                    border: none;
-                    border-radius: 5px;
+                /* BOTONES PEQUEÑOS DE ESTRATEGAS */
+                .estratega-btn-compact {
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 2px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 8px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 10px 5px;
                     cursor: pointer;
-                    font-size: 0.85rem;
+                    transition: all 0.3s;
+                    min-height: 80px; /* Tamaño fijo pequeño */
+                }
+                
+                .estratega-btn-compact.contratado {
+                    border-color: rgba(0, 210, 190, 0.5);
+                    background: rgba(0, 210, 190, 0.1);
+                }
+                
+                .estratega-btn-compact.vacio {
+                    border-color: rgba(255, 255, 255, 0.1);
+                    border-style: dotted;
+                    background: rgba(255, 255, 255, 0.02);
+                }
+                
+                .estratega-btn-compact.vacio:hover {
+                    border-color: rgba(0, 210, 190, 0.5);
+                    background: rgba(0, 210, 190, 0.05);
+                    transform: scale(1.05);
+                }
+                
+                .estratega-btn-compact.contratado:hover {
+                    border-color: rgba(0, 210, 190, 0.8);
+                    background: rgba(0, 210, 190, 0.15);
+                    transform: translateY(-2px);
+                }
+                
+                .estratega-icon-compact {
+                    font-size: 1.5rem;
+                    margin-bottom: 5px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                }
+                
+                .estratega-btn-compact.contratado .estratega-icon-compact {
+                    background: rgba(0, 210, 190, 0.2);
+                    color: #00d2be;
+                }
+                
+                .estratega-btn-compact.vacio .estratega-icon-compact {
+                    background: rgba(255, 255, 255, 0.05);
+                    color: #888;
+                }
+                
+                .estratega-info-mini {
+                    text-align: center;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                }
+                
+                .estratega-nombre-mini {
+                    font-size: 0.8rem;
+                    font-weight: bold;
+                    color: white;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    max-width: 80px;
+                }
+                
+                .estratega-btn-compact.vacio .estratega-nombre-mini {
+                    color: #aaa;
+                }
+                
+                .estratega-bono-mini {
+                    font-size: 0.7rem;
+                    color: #00d2be;
+                    font-weight: bold;
+                }
+                
+                .estratega-btn-compact.vacio .estratega-bono-mini {
+                    color: #888;
+                    font-weight: normal;
+                }
+                
+                /* FOOTER COMPACTO */
+                .estrategas-footer-compact {
+                    margin-top: 15px;
+                    padding-top: 10px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
+                    text-align: center;
+                }
+                
+                .btn-gestionar-compact {
+                    background: rgba(0, 0, 0, 0.3);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    color: #aaa;
+                    padding: 6px 15px;
+                    border-radius: 5px;
+                    font-size: 0.8rem;
+                    cursor: pointer;
+                    display: inline-flex;
+                    align-items: center;
                     gap: 5px;
-                    width: 100%;
                     transition: all 0.3s;
                 }
                 
-                .btn-contratar {
-                    background: linear-gradient(135deg, #00d2be, #00a35c);
-                    color: white;
+                .btn-gestionar-compact:hover {
+                    background: rgba(0, 210, 190, 0.1);
+                    color: #00d2be;
+                    border-color: #00d2be;
                 }
                 
-                .btn-despedir {
-                    background: rgba(225, 6, 0, 0.2);
-                    color: #ff4444;
-                    border: 1px solid rgba(225, 6, 0, 0.3);
+                /* SIN SCROLL - asegurar que no aparece */
+                .estrategas-compact-container {
+                    overflow: hidden !important;
                 }
                 
-                .btn-contratar:hover {
-                    background: linear-gradient(135deg, #00e6cc, #00b368);
+                .estrategas-grid-compact {
+                    overflow: hidden !important;
                 }
                 
-                .btn-despedir:hover {
-                    background: rgba(225, 6, 0, 0.3);
-                }
-                
+                /* RESPONSIVE */
                 @media (max-width: 768px) {
-                    .estrategas-grid {
-                        grid-template-columns: 1fr;
+                    .estrategas-compact-container {
+                        max-width: 250px;
+                    }
+                    
+                    .estrategas-grid-compact {
+                        max-height: 200px;
+                    }
+                    
+                    .estratega-btn-compact {
+                        min-height: 70px;
+                        padding: 8px 3px;
+                    }
+                    
+                    .estratega-icon-compact {
+                        font-size: 1.2rem;
+                        width: 35px;
+                        height: 35px;
                     }
                 }
             </style>
         `;
         
         container.innerHTML = html;
+    }
+    
+    // Añade este método auxiliar para obtener iniciales
+    getIniciales(nombre) {
+        if (!nombre) return "??";
+        return nombre.split(' ')
+            .map(word => word.charAt(0))
+            .join('')
+            .toUpperCase()
+            .substring(0, 3);
     }
     
     iniciarFabricacion(areaId) {
