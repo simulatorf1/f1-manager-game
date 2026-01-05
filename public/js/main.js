@@ -4415,7 +4415,7 @@ class F1Manager {
                             <div class="section-header">
                                 <h2><i class="fas fa-user"></i> TUS EQUIPO TÉCNICO</h2>
                             </div>
-                            <div id="pilotos-container" class="pilotos-container">
+                            <div id="pilotos-container-equipo" class="pilotos-container">
                                 <div class="empty-state">
                                     <i class="fas fa-user-slash"></i>
                                     <p>No tienes estrategas contratados</p>
@@ -4432,7 +4432,7 @@ class F1Manager {
                                         <h2><i class="fas fa-users"></i> ESTRATEGAS</h2>
                                         <span class="badge" id="contador-estrategas">0/4</span>
                                     </div>
-                                    <div id="pilotos-container" class="pilotos-container">
+                                    <div id="pilotos-container-compacto" class="pilotos-container">
                                         <!-- Contenido dinámico -->
                                     </div>
                                 </section>
@@ -4881,7 +4881,7 @@ class F1Manager {
     }
     
     updatePilotosUI() {
-        const container = document.getElementById('pilotos-container');
+        const container = document.getElementById('pilotos-container-compacto');
         if (!container) {
             console.error('❌ No se encontró #pilotos-container');
             return;
