@@ -4881,7 +4881,6 @@ class F1Manager {
     }
     
     updatePilotosUI() {
-
         const container = document.getElementById('pilotos-container');
         if (!container) {
             console.error('❌ No se encontró #pilotos-container');
@@ -4890,11 +4889,13 @@ class F1Manager {
     
         // Calcular estrategas contratados
         const estrategasContratados = this.pilotos || [];
+        
         // Actualizar contador en el header
         const contadorElement = document.getElementById('contador-estrategas');
         if (contadorElement) {
             contadorElement.textContent = `${estrategasContratados.length}/4`;
         }
+        
         // HTML del panel compacto de estrategas
         let html = `
             <div class="estrategas-compact-container">
@@ -4948,214 +4949,6 @@ class F1Manager {
                     </button>
                 </div>
             </div>
-            
-            <style>
-                /* CONTENEDOR COMPACTO */
-                .estrategas-compact-container {
-                    background: rgba(30, 30, 40, 0.8);
-                    border-radius: 10px;
-                    padding: 15px;
-                    width: 100%; /* Ocupa el 100% del contenedor padre */
-                    height: 100%; /* Ocupa toda la altura disponible */
-                    border: 1px solid rgba(0, 210, 190, 0.3);
-                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-                    display: flex;
-                    flex-direction: column;
-                    box-sizing: border-box; /* Importante para que el padding no rompa el layout */
-                }
-                
-                .estrategas-header-compact {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 15px;
-                    padding-bottom: 8px;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                }
-                
-                .estrategas-header-compact h3 {
-                    margin: 0;
-                    color: white;
-                    font-size: 1rem;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-                
-                .contador-compact {
-                    background: rgba(0, 210, 190, 0.2);
-                    color: #00d2be;
-                    padding: 3px 10px;
-                    border-radius: 12px;
-                    font-size: 0.9rem;
-                    font-weight: bold;
-                }
-                
-                /* GRID 2x2 COMPACTO */
-                .estrategas-grid-compact {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    grid-template-rows: repeat(2, 1fr);
-                    gap: 10px;
-                    aspect-ratio: 1/1; /* Hace el contenedor cuadrado */
-                    max-height: 250px; /* Máximo tamaño */
-                }
-                
-                /* BOTONES PEQUEÑOS DE ESTRATEGAS */
-                 .estratega-btn-compact {
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 2px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 8px;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 5px;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    min-height: 0; /* Importante */
-                }
-                
-                .estratega-btn-compact.contratado {
-                    border-color: rgba(0, 210, 190, 0.5);
-                    background: rgba(0, 210, 190, 0.1);
-                }
-                
-                .estratega-btn-compact.vacio {
-                    border-color: rgba(255, 255, 255, 0.1);
-                    border-style: dotted;
-                    background: rgba(255, 255, 255, 0.02);
-                }
-                
-                .estratega-btn-compact.vacio:hover {
-                    border-color: rgba(0, 210, 190, 0.5);
-                    background: rgba(0, 210, 190, 0.05);
-                    transform: scale(1.05);
-                }
-                
-                .estratega-btn-compact.contratado:hover {
-                    border-color: rgba(0, 210, 190, 0.8);
-                    background: rgba(0, 210, 190, 0.15);
-                    transform: translateY(-2px);
-                }
-                
-                .estratega-icon-compact {
-                    font-size: 1.5rem;
-                    margin-bottom: 5px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 50%;
-                }
-                
-                .estratega-btn-compact.contratado .estratega-icon-compact {
-                    background: rgba(0, 210, 190, 0.2);
-                    color: #00d2be;
-                }
-                
-                .estratega-btn-compact.vacio .estratega-icon-compact {
-                    background: rgba(255, 255, 255, 0.05);
-                    color: #888;
-                }
-                
-                .estratega-info-mini {
-                    text-align: center;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 2px;
-                }
-                
-                .estratega-nombre-mini {
-                    font-size: 0.8rem;
-                    font-weight: bold;
-                    color: white;
-                    text-overflow: ellipsis;
-                    overflow: hidden;
-                    white-space: nowrap;
-                    max-width: 80px;
-                }
-                
-                .estratega-btn-compact.vacio .estratega-nombre-mini {
-                    color: #aaa;
-                }
-                
-                .estratega-bono-mini {
-                    font-size: 0.7rem;
-                    color: #00d2be;
-                    font-weight: bold;
-                }
-                
-                .estratega-btn-compact.vacio .estratega-bono-mini {
-                    color: #888;
-                    font-weight: normal;
-                }
-                
-                /* FOOTER COMPACTO */
-                .estrategas-footer-compact {
-                    margin-top: 15px;
-                    padding-top: 10px;
-                    border-top: 1px solid rgba(255, 255, 255, 0.1);
-                    text-align: center;
-                }
-                
-                .btn-gestionar-compact {
-                    background: rgba(0, 0, 0, 0.3);
-                    border: 1px solid rgba(255, 255, 255, 0.2);
-                    color: #aaa;
-                    padding: 6px 15px;
-                    border-radius: 5px;
-                    font-size: 0.8rem;
-                    cursor: pointer;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 5px;
-                    transition: all 0.3s;
-                }
-                
-                .btn-gestionar-compact:hover {
-                    background: rgba(0, 210, 190, 0.1);
-                    color: #00d2be;
-                    border-color: #00d2be;
-                }
-                
-                /* SIN SCROLL - asegurar que no aparece */
-                .estrategas-compact-container {
-                    overflow: hidden !important;
-                }
-                
-                .estrategas-grid-compact {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    grid-template-rows: repeat(2, 1fr);
-                    gap: 10px;
-                    flex: 1; /* Ocupa el espacio restante */
-                    min-height: 0; /* Permite que se reduzca */
-                }
-                
-                /* RESPONSIVE */
-                @media (max-width: 768px) {
-                    .estrategas-compact-container {
-                        max-width: 250px;
-                    }
-                    
-                    .estrategas-grid-compact {
-                        max-height: 200px;
-                    }
-                    
-                    .estratega-btn-compact {
-                        min-height: 70px;
-                        padding: 8px 3px;
-                    }
-                    
-                    .estratega-icon-compact {
-                        font-size: 1.2rem;
-                        width: 35px;
-                        height: 35px;
-                    }
-                }
-            </style>
         `;
         
         container.innerHTML = html;
