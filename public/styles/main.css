@@ -44,17 +44,7 @@ body {
     color: var(--f1-light);
     min-height: 100vh;
     overflow-x: hidden;
-    overflow-y: auto;
     line-height: 1.6;
-    position: fixed; /* ← AÑADE ESTO */
-    top: 0; /* ← AÑADE ESTO */
-    left: 0; /* ← AÑADE ESTO */
-    right: 0; /* ← AÑADE ESTO */
-    bottom: 0; /* ← AÑADE ESTO */
-    width: 100vw; /* ← AÑADE ESTO */
-    height: 100vh; /* ← AÑADE ESTO */
-    -webkit-overflow-scrolling: touch; /* ← Añade esto */
-    background-attachment: fixed; /* ← Añade esto para fondo fijo */
 }
 
 /* ============================================
@@ -143,14 +133,6 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    position: fixed; /* ← AÑADE ESTO */
-    top: 0; /* ← AÑADE ESTO */
-    left: 0; /* ← AÑADE ESTO */
-    right: 0; /* ← AÑADE ESTO */
-    bottom: 0; /* ← AÑADE ESTO */
-    width: 100vw; /* ← AÑADE ESTO */
-    height: 100vh; /* ← AÑADE ESTO */
-    overflow: hidden; /* ← AÑADE ESTO */
 }
 
 /* ============================================
@@ -356,9 +338,6 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
-    overflow-y: auto; /* ← AÑADE ESTO */
-    overflow-x: hidden; /* ← AÑADE ESTO */
-    -webkit-overflow-scrolling: touch; /* ← AÑADE ESTO (para móvil) */
 }
 
 .tab-content {
@@ -2908,42 +2887,5 @@ body {
        margin-bottom: 20px !important;
        overflow: hidden !important;
        border: 1px solid rgba(255,255,255,0.1) !important;
-   }
-   /* ===== MATAR LA BARRA DE SCROLL DEFINITIVAMENTE ===== */
-   /* Para TODO el documento */
-   html, body {
-       -ms-overflow-style: none !important;  /* IE/Edge */
-       scrollbar-width: none !important;     /* Firefox */
-   }
-   
-   html::-webkit-scrollbar,
-   body::-webkit-scrollbar {
-       display: none !important;            /* Chrome, Safari, Opera */
-       width: 0 !important;
-       height: 0 !important;
-   }
-   
-   /* Para el contenido del dashboard */
-   .dashboard-content {
-       -ms-overflow-style: none !important;
-       scrollbar-width: none !important;
-   }
-   
-   .dashboard-content::-webkit-scrollbar {
-       display: none !important;
-       width: 0 !important;
-       height: 0 !important;
-   }
-   
-   /* Para TODOS los elementos con scroll */
-   * {
-       -ms-overflow-style: none !important;
-       scrollbar-width: none !important;
-   }
-   
-   *::-webkit-scrollbar {
-       display: none !important;
-       width: 0 !important;
-       height: 0 !important;
    }
 }
