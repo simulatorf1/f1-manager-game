@@ -4414,29 +4414,29 @@ class F1Manager {
 
                         
                         <!-- Three Columns Layout -->
-                        <div class="three-columns-layout">
+                        <div class="three-columns-layout" style="display: flex; flex-direction: row; gap: 20px; margin: 20px 0; width: 100%; height: 320px; align-items: stretch;">
+                            
                             <!-- Columna 1: Estrategas Compactos -->
-                            <div class="col-estrategas">
-                                <section class="panel-pilotos compacto">
+                            <div class="col-estrategas" style="flex: 0 0 320px; height: 100%; background: rgba(30,30,40,0.8); border-radius: 10px; border: 1px solid rgba(0,210,190,0.3); padding: 15px;">
+                                <section class="panel-pilotos compacto" style="height: 100%; display: flex; flex-direction: column;">
                                     <div class="section-header">
                                         <h2><i class="fas fa-users"></i> ESTRATEGAS</h2>
                                         <span class="badge" id="contador-estrategas">0/4</span>
                                     </div>
-                                    <div id="pilotos-container-compacto" class="pilotos-container">
+                                    <div id="pilotos-container" class="pilotos-container" style="flex: 1; overflow: hidden;">
                                         <!-- Contenido dinámico -->
                                     </div>
                                 </section>
                             </div>
                             
                             <!-- Columna 2: Countdown y GP -->
-                            <div class="col-countdown">
-                                <div class="countdown-section">
-                                    <!-- Mantén TODO el contenido original del countdown aquí -->
+                            <div class="col-countdown" style="flex: 1; min-width: 0; height: 100%; background: rgba(30,30,40,0.8); border-radius: 10px; border: 1px solid rgba(0,210,190,0.3); padding: 15px;">
+                                <div class="countdown-section" style="height: 100%; display: flex; flex-direction: column;">
                                     <div class="section-header">
                                         <h2><i class="fas fa-clock"></i> PRÓXIMA CARRERA</h2>
                                         <span class="tag upcoming">EN VIVO</span>
                                     </div>
-                                    <div id="countdown-container">
+                                    <div id="countdown-container" style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
                                         <div class="countdown-timer">
                                             <div class="time-block">
                                                 <span class="time-number" id="hours">00</span>
@@ -4474,9 +4474,8 @@ class F1Manager {
                             </div>
                             
                             <!-- Columna 3: Monitor de Fábrica -->
-                            <div class="col-fabrica">
-                                <div class="monitor-fabrica">
-                                    <!-- Mantén TODO el contenido original del monitor aquí -->
+                            <div class="col-fabrica" style="flex: 1; min-width: 0; height: 100%; background: rgba(30,30,40,0.8); border-radius: 10px; border: 1px solid rgba(0,210,190,0.3); padding: 15px;">
+                                <div class="monitor-fabrica" style="height: 100%; display: flex; flex-direction: column;">
                                     <div class="section-header">
                                         <h2><i class="fas fa-industry"></i> PRODUCCIÓN</h2>
                                         <div id="alerta-almacen" class="alerta-almacen" style="display: none;">
@@ -4484,7 +4483,7 @@ class F1Manager {
                                             <span>¡Piezas nuevas en almacén!</span>
                                         </div>
                                     </div>
-                                    <div id="produccion-actual" class="produccion-actual">
+                                    <div id="produccion-actual" class="produccion-actual" style="flex: 1; overflow-y: auto; padding-right: 5px;">
                                         <div class="empty-state">
                                             <i class="fas fa-industry"></i>
                                             <p>No hay producción en curso</p>
