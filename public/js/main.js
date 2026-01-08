@@ -4748,16 +4748,7 @@ class F1Manager {
                 await this.loadPilotosContratados();
                 await this.loadProximoGP();
             }
-            // Al final del método cargarDashboardCompleto()
-            setTimeout(() => {
-                // Iniciar timer de producción
-                window.iniciarTimerProduccion();
-                
-                // Actualizar producción inmediatamente
-                if (this.updateProductionMonitor) {
-                    this.updateProductionMonitor();
-                }
-            }, 1000);
+            
             // 5. Configurar eventos
             await this.cargarDatosDashboard();
             console.log('✅ Dashboard cargado correctamente con CSS');
@@ -6140,120 +6131,7 @@ class F1Manager {
             }
         }, 2000);
     };
-    // Función para ir al taller
-    window.irAlTaller = function() {
-        if (window.tabManager && window.tabManager.switchTab) {
-            window.tabManager.switchTab('taller');
-        } else {
-            // Fallback si no existe tabManager
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
-            
-            const tabTaller = document.getElementById('tab-taller');
-            const btnTaller = document.querySelector('[data-tab="taller"]');
-            
-            if (tabTaller) {
-                tabTaller.classList.add('active');
-                tabTaller.innerHTML = '<h2>Redirigiendo al taller...</h2>';
-                // Aquí cargarías el contenido real del taller
-            }
-            if (btnTaller) btnTaller.classList.add('active');
-            
-            // Mostrar mensaje
-            if (window.f1Manager && window.f1Manager.showNotification) {
-                window.f1Manager.showNotification('🏭 Redirigiendo al taller...', 'info');
-            }
-        }
-    };
     
-    // Función para recoger pieza e ir al almacén
-    window.recogerPiezaYIrAlmacen = async function(fabricacionId, area) {
-        try {
-            // Mostrar estado de carga
-            const boton = document.querySelector(`[data-fab-id="${fabricacionId}"]`);
-            if (boton) {
-                boton.innerHTML = '<div class="produccion-icon"><i class="fas fa-spinner fa-spin"></i></div><div class="produccion-info"><span>Recogiendo...</span></div>';
-            }
-            
-            // 1. Obtener fabricación
-            const { data: fabricacion, error: fetchError } = await supabase
-                .from('fabricacion_actual')
-                .select('*')
-                .eq('id', fabricacionId)
-                .single();
-            
-            if (fetchError) throw fetchError;
-            
-            // 2. Crear pieza en almacén
-            const { error: insertError } = await supabase
-                .from('almacen_piezas')
-                .insert([{
-                    escuderia_id: fabricacion.escuderia_id,
-                    area: fabricacion.area,
-                    nivel: fabricacion.nivel || 1,
-                    calidad: 'Normal',
-                    puntos_base: 10 * (fabricacion.nivel || 1),
-                    fabricada_en: new Date().toISOString(),
-                    equipada: false
-                }]);
-            
-            if (insertError) throw insertError;
-            
-            // 3. Marcar como completada
-            const { error: updateError } = await supabase
-                .from('fabricacion_actual')
-                .update({ completada: true })
-                .eq('id', fabricacionId);
-            
-            if (updateError) throw updateError;
-            
-            // 4. Notificación
-            if (window.f1Manager && window.f1Manager.showNotification) {
-                const nombreArea = {
-                    'motor': 'Motor',
-                    'chasis': 'Chasis',
-                    'aerodinamica': 'Aerodinámica'
-                }[fabricacion.area] || fabricacion.area;
-                
-                window.f1Manager.showNotification(`✅ ${nombreArea} añadida al almacén`, 'success');
-            }
-            
-            // 5. Actualizar UI inmediatamente
-            setTimeout(() => {
-                if (window.f1Manager && window.f1Manager.updateProductionMonitor) {
-                    window.f1Manager.updateProductionMonitor();
-                }
-                
-                // 6. Redirigir al almacén si se desea
-                if (window.tabManager && window.tabManager.switchTab) {
-                    window.tabManager.switchTab('almacen');
-                }
-            }, 500);
-            
-        } catch (error) {
-            console.error("Error recogiendo pieza:", error);
-            if (window.f1Manager && window.f1Manager.showNotification) {
-                window.f1Manager.showNotification('❌ Error al recoger pieza', 'error');
-            }
-            // Restaurar botón
-            if (window.f1Manager && window.f1Manager.updateProductionMonitor) {
-                setTimeout(() => window.f1Manager.updateProductionMonitor(), 1000);
-            }
-        }
-    };
-    
-    // Función para actualizar contadores en tiempo real
-    window.iniciarTimerProduccion = function() {
-        if (window.produccionTimer) {
-            clearInterval(window.produccionTimer);
-        }
-        
-        window.produccionTimer = setInterval(() => {
-            if (window.f1Manager && window.f1Manager.updateProductionMonitor) {
-                window.f1Manager.updateProductionMonitor();
-            }
-        }, 1000); // Actualizar cada segundo para contar atrás preciso
-    };
     window.tutorialSimularCarrera = function() {
         // 1. Obtener las selecciones del usuario
         const tutorialData = window.tutorialData || {};
