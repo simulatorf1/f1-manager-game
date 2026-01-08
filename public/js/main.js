@@ -6977,7 +6977,15 @@ class F1Manager {
     
     window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
         console.log("🔧 Recogiendo pieza:", { fabricacionId, lista });
-        
+        // PRIMERO verificar si realmente pasó el tiempo
+        if (window.f1Manager && window.f1Manager.verificarTiempoFabricacion) {
+            const tiempoPasado = await window.f1Manager.verificarTiempoFabricacion(fabricacionId);
+            
+            if (!tiempoPasado) {
+                alert("⏳ La pieza aún está en fabricación. Espera a que termine el tiempo.");
+                return;
+            }
+        }
         if (!lista) {
             // Mostrar información de la pieza en fabricación
             try {
