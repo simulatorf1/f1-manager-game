@@ -2491,7 +2491,93 @@ class F1Manager {
             .grid-6-columns { grid-template-columns: repeat(3, 1fr); }
             .grid-4-columns { grid-template-columns: repeat(4, 1fr); }
             .grid-3-columns { grid-template-columns: repeat(3, 1fr); }
+            .grid-11-columns {
+                display: grid;
+                grid-template-columns: repeat(11, 1fr);
+                gap: 8px;
+                margin-top: 15px;
+            }
             
+            .boton-area-montada {
+                background: rgba(0, 210, 190, 0.1);
+                border: 2px solid rgba(0, 210, 190, 0.3);
+                border-radius: 8px;
+                padding: 12px 8px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s;
+                min-height: 90px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .boton-area-montada:hover {
+                border-color: #00d2be;
+                transform: translateY(-2px);
+            }
+            
+            .boton-area-vacia {
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px dashed rgba(255, 255, 255, 0.2);
+                border-radius: 8px;
+                padding: 12px 8px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s;
+                min-height: 90px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .boton-area-vacia:hover {
+                border-color: #00d2be;
+                background: rgba(0, 210, 190, 0.05);
+            }
+            
+            .icono-area {
+                font-size: 1.5rem;
+                margin-bottom: 5px;
+            }
+            
+            .nombre-area {
+                font-size: 0.75rem;
+                font-weight: bold;
+                color: white;
+                margin-bottom: 3px;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+                width: 100%;
+                text-align: center;
+            }
+            
+            .nivel-pieza {
+                font-size: 0.7rem;
+                color: #00d2be;
+                margin-bottom: 2px;
+            }
+            
+            .puntos-pieza {
+                font-size: 0.7rem;
+                color: #FFD700;
+                font-weight: bold;
+            }
+            
+            .total-puntos-montadas {
+                background: rgba(255, 215, 0, 0.1);
+                border: 1px solid #FFD700;
+                border-radius: 20px;
+                padding: 5px 15px;
+                color: #FFD700;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
             .grid-btn-big {
                 background: rgba(255, 255, 255, 0.05);
                 border: 2px solid rgba(255, 255, 255, 0.1);
@@ -3085,93 +3171,7 @@ class F1Manager {
                 padding: 15px;
                 margin: 20px 0;
             }
-            .grid-11-columns {
-                display: grid;
-                grid-template-columns: repeat(11, 1fr);
-                gap: 8px;
-                margin-top: 15px;
-            }
-            
-            .boton-area-montada {
-                background: rgba(0, 210, 190, 0.1);
-                border: 2px solid rgba(0, 210, 190, 0.3);
-                border-radius: 8px;
-                padding: 12px 8px;
-                text-align: center;
-                cursor: pointer;
-                transition: all 0.3s;
-                min-height: 90px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            }
-            
-            .boton-area-montada:hover {
-                border-color: #00d2be;
-                transform: translateY(-2px);
-            }
-            
-            .boton-area-vacia {
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px dashed rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                padding: 12px 8px;
-                text-align: center;
-                cursor: pointer;
-                transition: all 0.3s;
-                min-height: 90px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            }
-            
-            .boton-area-vacia:hover {
-                border-color: #00d2be;
-                background: rgba(0, 210, 190, 0.05);
-            }
-            
-            .icono-area {
-                font-size: 1.5rem;
-                margin-bottom: 5px;
-            }
-            
-            .nombre-area {
-                font-size: 0.75rem;
-                font-weight: bold;
-                color: white;
-                margin-bottom: 3px;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                white-space: nowrap;
-                width: 100%;
-                text-align: center;
-            }
-            
-            .nivel-pieza {
-                font-size: 0.7rem;
-                color: #00d2be;
-                margin-bottom: 2px;
-            }
-            
-            .puntos-pieza {
-                font-size: 0.7rem;
-                color: #FFD700;
-                font-weight: bold;
-            }
-            
-            .total-puntos-montadas {
-                background: rgba(255, 215, 0, 0.1);
-                border: 1px solid #FFD700;
-                border-radius: 20px;
-                padding: 5px 15px;
-                color: #FFD700;
-                font-weight: bold;
-                display: flex;
-                align-items: center;
-                gap: 5px;
-            }
+
             .presupuesto-inicial, .presupuesto-ganancia, .presupuesto-gastos {
                 display: flex;
                 justify-content: space-between;
@@ -5033,7 +5033,10 @@ class F1Manager {
                 await this.loadCarStatus();
                 await this.loadPilotosContratados();
                 await this.loadProximoGP();
-                await this.cargarPiezasMontadas();
+                // ESPERAR un poco más para asegurar que el DOM está listo
+                setTimeout(async () => {
+                    await this.cargarPiezasMontadas();
+                }, 500);
             }
             
             // 5. Configurar eventos
