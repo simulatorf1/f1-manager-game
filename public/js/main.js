@@ -4677,46 +4677,6 @@ class F1Manager {
                                 <!-- Las áreas se cargarán dinámicamente -->
                             </div>
                         </section>
-                        
-                        <!-- Estadísticas y Calendario -->
-                        <section class="panel-estadisticas">
-                            <div class="section-header">
-                                <h2><i class="fas fa-chart-bar"></i> ESTADÍSTICAS Y CALENDARIO</h2>
-                            </div>
-                            <div class="stats-calendar-grid">
-                                <div class="mini-calendar">
-                                    <h3><i class="far fa-calendar"></i> Próximas Carreras</h3>
-                                    <div id="calendario-lista" class="calendar-list">
-                                        <div class="calendar-item">
-                                            <h4>Gran Premio de España</h4>
-                                            <div class="calendar-date">
-                                                <i class="far fa-clock"></i>
-                                                <span>21-23 Junio 2024</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="quick-stats">
-                                    <h3><i class="fas fa-chart-line"></i> Tus Estadísticas</h3>
-                                    <div class="stats-grid">
-                                        <div class="stat-item">
-                                            <i class="fas fa-check-circle"></i>
-                                            <div>
-                                                <span class="stat-title">Mejor acierto</span>
-                                                <span class="stat-number" id="mejor-acierto">0 pts</span>
-                                            </div>
-                                        </div>
-                                        <div class="stat-item">
-                                            <i class="fas fa-history"></i>
-                                            <div>
-                                                <span class="stat-title">Piezas fabricadas</span>
-                                                <span class="stat-number" id="piezas-fabricadas">0</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
                     </div>
                     
                     <!-- Otras pestañas -->
