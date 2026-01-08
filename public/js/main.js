@@ -1932,7 +1932,7 @@ class F1Manager {
                 return false;
             }
             
-            // 2. Contar cuántas piezas ya has fabricado de esta área y nivel (para calcular tiempo)
+            // 2. Contar cuántas piezas ya has fabricado de esta área y nivel
             const { data: piezasExistentes, error: errorPiezas } = await this.supabase
                 .from('almacen_piezas')
                 .select('id')
@@ -1945,9 +1945,10 @@ class F1Manager {
             const numeroPieza = (piezasExistentes?.length || 0) + 1;
             console.log(`📊 Fabricando pieza ${numeroPieza} para ${areaId} nivel ${nivel}`);
             
-            // 3. Calcular tiempo progresivo (usa el número de pieza para calcular tiempo)
+            // 3. Calcular tiempo progresivo EN MINUTOS y convertirlo a milisegundos
             const tiempoMinutos = this.calcularTiempoProgresivo(numeroPieza);
-            console.log(`⏱️ Tiempo: ${tiempoMinutos} minutos`);
+            const tiempoMilisegundos = tiempoMinutos * 60 * 1000; // Convertir minutos a milisegundos
+            console.log(`⏱️ Tiempo: ${tiempoMinutos} minutos (${tiempoMilisegundos}ms)`);
             
             // 4. Verificar dinero (costo fijo)
             const costo = 10000;
@@ -1956,9 +1957,15 @@ class F1Manager {
                 return false;
             }
             
-            // 5. Crear fabricación en fabricacion_actual (SOLO columnas que existen)
+            // 5. Crear fabricación con tiempo futuro REAL
             const ahora = new Date();
-            const tiempoFin = new Date(ahora.getTime() + (tiempoMinutos * 60 * 1000));
+            const tiempoFin = new Date(ahora.getTime() + tiempoMilisegundos); // Añadir tiempo real en milisegundos
+            
+            console.log('📅 Tiempos:', {
+                inicio: ahora.toISOString(),
+                fin: tiempoFin.toISOString(),
+                diferenciaMinutos: tiempoMinutos
+            });
             
             const { data: fabricacion, error: errorCrear } = await this.supabase
                 .from('fabricacion_actual')
@@ -1970,7 +1977,6 @@ class F1Manager {
                     tiempo_fin: tiempoFin.toISOString(),
                     completada: false,
                     costo: costo,
-                    // pieza_id: null, // OPCIONAL: dejamos null por ahora
                     creada_en: ahora.toISOString()
                 }])
                 .select()
@@ -1982,7 +1988,7 @@ class F1Manager {
             this.escuderia.dinero -= costo;
             await this.updateEscuderiaMoney();
             
-            // 7. Mostrar notificación
+            // 7. Mostrar notificación con tiempo REAL
             const nombreArea = this.getNombreArea(areaId);
             this.showNotification(
                 `✅ ${nombreArea} (Pieza ${numeroPieza}) en fabricación - ${tiempoMinutos} minutos`, 
