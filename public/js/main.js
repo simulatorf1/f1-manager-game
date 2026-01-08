@@ -1501,22 +1501,13 @@ class F1Manager {
         
         const contenedor = document.getElementById('grid-piezas-montadas');
         console.log('🎯 [DEBUG] Contenedor encontrado?', !!contenedor);
-        console.log('🎯 [DEBUG] Contenedor:', contenedor);
         
         if (!contenedor) {
             console.error('❌ [DEBUG] NO EXISTE #grid-piezas-montadas');
-            // Busca si existe con otro nombre
-            console.log('🔍 [DEBUG] Buscando todos los divs...');
-            document.querySelectorAll('div').forEach((div, i) => {
-                if (div.id && div.id.includes('piezas')) {
-                    console.log(`🔍 [DEBUG] Div encontrado: ${div.id}`);
-                }
-            });
             return;
         }
         
         console.log('🔧 Cargando piezas montadas...');
-
         
         try {
             // 1. Obtener stats del coche
@@ -1528,10 +1519,10 @@ class F1Manager {
             
             // 2. Obtener piezas montadas del almacén
             const { data: piezasMontadas } = await supabase
-                .from('almacen_piezas')  // ← TABLA CORRECTA
+                .from('almacen_piezas')
                 .select('*')
                 .eq('escuderia_id', this.escuderia.id)
-                .eq('equipada', true); 
+                .eq('equipada', true);
             
             // 3. Crear mapeo área -> pieza montada
             const piezasPorArea = {};
@@ -1564,21 +1555,21 @@ class F1Manager {
                     // Botón con pieza montada
                     puntosTotales += pieza.puntos_base || 0;
                     html += `
-                        <div class="boton-area-montada" title="${area.nombre} - Nivel ${pieza.nivel}">
+                        <div class="boton-area-montada" onclick="irAlAlmacenDesdePiezas()" title="${area.nombre} - Nivel ${pieza.nivel}">
                             <div class="icono-area">${area.icono}</div>
                             <div class="nombre-area">${area.nombre}</div>
                             <div class="nivel-pieza">Nivel ${pieza.nivel}</div>
-                            <div class="puntos-pieza">+${pieza.puntos_base} pts</div>
+                            <div class="puntos-pieza">+${pieza.puntos_base}</div>
                         </div>
                     `;
                 } else {
                     // Botón vacío
                     html += `
                         <div class="boton-area-vacia" onclick="irAlAlmacenDesdePiezas()" title="Sin pieza - Click para equipar">
-                            <div class="icono-area">${area.icono}</div>
+                            <div class="icono-area">+</div>
                             <div class="nombre-area">${area.nombre}</div>
                             <div style="font-size: 0.7rem; color: #888; margin-top: 5px;">
-                                <i class="fas fa-plus"></i> Vacío
+                                Vacío
                             </div>
                         </div>
                     `;
@@ -1597,7 +1588,24 @@ class F1Manager {
             
         } catch (error) {
             console.error('❌ Error cargando piezas montadas:', error);
-            contenedor.innerHTML = '<div style="color: #f00; text-align: center;">Error cargando piezas</div>';
+            // Mostrar botones vacíos como fallback
+            const areas = ['Suelo', 'Motor', 'Alerón Del.', 'Caja Cambios', 'Pontones', 
+                          'Suspensión', 'Alerón Tras.', 'Chasis', 'Frenos', 'Volante', 'Electrónica'];
+            
+            let html = '';
+            areas.forEach(area => {
+                html += `
+                    <div class="boton-area-vacia" onclick="irAlAlmacenDesdePiezas()" title="Sin pieza">
+                        <div class="icono-area">+</div>
+                        <div class="nombre-area">${area}</div>
+                        <div style="font-size: 0.7rem; color: #888; margin-top: 5px;">
+                            Vacío
+                        </div>
+                    </div>
+                `;
+            });
+            
+            contenedor.innerHTML = html;
         }
     }
     
@@ -2494,77 +2502,93 @@ class F1Manager {
             .grid-11-columns {
                 display: grid;
                 grid-template-columns: repeat(11, 1fr);
-                gap: 8px;
-                margin-top: 15px;
+                gap: 8px !important; /* Menor espacio entre botones */
+                margin-top: 10px !important;
+                height: 100px; /* Altura fija para la fila */
+                align-items: stretch;
+            }
+            
+            .boton-area-montada, .boton-area-vacia {
+                background: rgba(255, 255, 255, 0.03) !important;
+                border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
+                border-radius: 6px !important;
+                padding: 8px 6px !important;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                height: 85px; /* Igual que estrategas y producción */
+                min-height: 85px !important;
             }
             
             .boton-area-montada {
-                background: rgba(0, 210, 190, 0.1);
-                border: 2px solid rgba(0, 210, 190, 0.3);
-                border-radius: 8px;
-                padding: 12px 8px;
-                text-align: center;
-                cursor: pointer;
-                transition: all 0.3s;
-                min-height: 90px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
+                border-color: rgba(0, 210, 190, 0.25) !important;
+                background: rgba(0, 210, 190, 0.04) !important;
             }
             
             .boton-area-montada:hover {
-                border-color: #00d2be;
-                transform: translateY(-2px);
+                border-color: rgba(0, 210, 190, 0.5) !important;
+                background: rgba(0, 210, 190, 0.08) !important;
+                transform: translateY(-1px);
             }
             
             .boton-area-vacia {
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px dashed rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                padding: 12px 8px;
-                text-align: center;
-                cursor: pointer;
-                transition: all 0.3s;
-                min-height: 90px;
+                border-style: dashed !important;
+                border-color: rgba(255, 255, 255, 0.1) !important;
+                background: rgba(255, 255, 255, 0.015) !important;
+            }
+            
+            .boton-area-vacia:hover {
+                border-color: rgba(0, 210, 190, 0.4) !important;
+                background: rgba(0, 210, 190, 0.05) !important;
+            }
+            
+            .icono-area {
+                font-size: 1.1rem !important;
+                margin-bottom: 5px !important;
+                color: #00d2be;
+                height: 22px;
                 display: flex;
-                flex-direction: column;
                 align-items: center;
                 justify-content: center;
             }
             
-            .boton-area-vacia:hover {
-                border-color: #00d2be;
-                background: rgba(0, 210, 190, 0.05);
-            }
-            
-            .icono-area {
-                font-size: 1.5rem;
-                margin-bottom: 5px;
+            .boton-area-vacia .icono-area {
+                color: #666;
+                font-size: 1rem !important;
             }
             
             .nombre-area {
-                font-size: 0.75rem;
+                display: block;
                 font-weight: bold;
+                font-size: 0.75rem !important;
                 color: white;
-                margin-bottom: 3px;
-                text-overflow: ellipsis;
-                overflow: hidden;
+                margin-bottom: 2px;
                 white-space: nowrap;
-                width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                line-height: 1.1;
                 text-align: center;
+                width: 100%;
             }
             
             .nivel-pieza {
-                font-size: 0.7rem;
-                color: #00d2be;
-                margin-bottom: 2px;
+                display: block;
+                font-size: 0.65rem !important;
+                color: #4CAF50;
+                margin-bottom: 1px;
+                line-height: 1;
+                font-weight: bold;
             }
             
             .puntos-pieza {
-                font-size: 0.7rem;
+                display: block;
+                font-size: 0.6rem !important;
                 color: #FFD700;
                 font-weight: bold;
+                line-height: 1;
             }
             
             .total-puntos-montadas {
@@ -6291,7 +6315,14 @@ class F1Manager {
         event.target.classList.add('seleccionado');
         window.tutorialData.pronosticosSeleccionados[tipo] = opcion;
     };
-    
+    window.irAlAlmacenDesdePiezas = function() {
+        if (window.tabManager && window.tabManager.switchTab) {
+            window.tabManager.switchTab('almacen');
+        } else {
+            console.log('Redirigiendo al almacén...');
+            // Aquí puedes añadir más lógica
+        }
+    };
     window.tutorialEjecutarPronostico = function() {
         // Obtener las selecciones actuales
         const selecciones = window.tutorialData.pronosticosSeleccionados || {};
