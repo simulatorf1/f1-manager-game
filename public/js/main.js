@@ -1906,10 +1906,18 @@ class F1Manager {
     // ========================
     // MÉTODO PARA INICIAR FABRICACIÓN DESDE TALLER MINIMALISTA
     // ========================
+    // ========================
+    // MÉTODO CORREGIDO PARA INICIAR FABRICACIÓN
+    // ========================
     async iniciarFabricacionTaller(areaId, nivel) {
-        console.log('🔧 Iniciando fabricación minimal:', { areaId, nivel });
+        console.log('🔧 Iniciando fabricación:', { areaId, nivel });
         
-        // 1. Verificar que no haya 4 fabricaciones activas
+        if (!this.escuderia || !this.escuderia.id) {
+            this.showNotification('❌ Error: No tienes escudería', 'error');
+            return false;
+        }
+        
+        // 1. Verificar límite de 4 fabricaciones simultáneas
         try {
             const { data: fabricacionesActivas, error } = await this.supabase
                 .from('fabricacion_actual')
@@ -1920,18 +1928,64 @@ class F1Manager {
             if (error) throw error;
             
             if (fabricacionesActivas && fabricacionesActivas.length >= 4) {
-                this.showNotification('❌ No hay slots disponibles (máximo 4 fabricaciones)', 'error');
+                this.showNotification('❌ Límite alcanzado (máximo 4 fabricaciones simultáneas)', 'error');
                 return false;
             }
             
         } catch (error) {
-            console.error('Error verificando slots:', error);
+            console.error('Error verificando límite:', error);
             this.showNotification('❌ Error verificando disponibilidad', 'error');
             return false;
         }
         
-        // 2. Iniciar fabricación (igual que antes)
-        return await this.iniciarFabricacionTaller(areaId, nivel);
+        // 2. Verificar dinero
+        const costo = 10000; // Costo por pieza
+        if (this.escuderia.dinero < costo) {
+            this.showNotification(`❌ Fondos insuficientes. Necesitas €${costo.toLocaleString()}`, 'error');
+            return false;
+        }
+        
+        // 3. Crear fabricación en fabricacion_actual
+        try {
+            const ahora = new Date();
+            const tiempoFin = new Date(ahora.getTime() + (30 * 60 * 1000)); // 30 minutos
+            
+            const { data: fabricacion, error } = await this.supabase
+                .from('fabricacion_actual')
+                .insert([{
+                    escuderia_id: this.escuderia.id,
+                    area: areaId,
+                    nivel: nivel,
+                    tiempo_inicio: ahora.toISOString(),
+                    tiempo_fin: tiempoFin.toISOString(),
+                    completada: false,
+                    costo: costo,
+                    creada_en: ahora.toISOString()
+                }])
+                .select()
+                .single();
+            
+            if (error) throw error;
+            
+            // 4. Descontar dinero
+            this.escuderia.dinero -= costo;
+            await this.updateEscuderiaMoney();
+            
+            // 5. Actualizar UI
+            this.showNotification(`✅ Fabricación iniciada para ${this.getNombreArea(areaId)}`, 'success');
+            
+            // 6. Actualizar monitor de producción
+            setTimeout(() => {
+                this.updateProductionMonitor();
+            }, 500);
+            
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Error creando fabricación:', error);
+            this.showNotification(`❌ Error: ${error.message}`, 'error');
+            return false;
+        }
     }
     
     // ========================
@@ -6472,7 +6526,7 @@ class F1Manager {
         }
         
         try {
-            // Cargar fabricaciones activas
+            // Cargar fabricaciones activas DESDE LA TABLA CORRECTA
             const { data: fabricaciones, error } = await this.supabase
                 .from('fabricacion_actual')
                 .select('*')
@@ -6480,9 +6534,14 @@ class F1Manager {
                 .eq('completada', false)
                 .order('tiempo_inicio', { ascending: true });
             
-            if (error) throw error;
+            if (error) {
+                console.error("Error cargando fabricaciones:", error);
+                throw error;
+            }
             
-            // Asegurar que los estilos están cargados
+            console.log('📊 Fabricaciones activas encontradas:', fabricaciones?.length || 0);
+            
+            // Asegurar estilos
             this.cargarEstilosProduccion();
             
             let html = `
@@ -6497,14 +6556,15 @@ class F1Manager {
                     const ahora = new Date();
                     const tiempoFin = new Date(fabricacion.tiempo_fin);
                     const tiempoRestante = tiempoFin - ahora;
-                    const lista = ahora >= tiempoFin;
+                    const lista = tiempoRestante <= 0;
                     
                     const nombreArea = this.getNombreArea(fabricacion.area);
                     const tiempoFormateado = this.formatTime(tiempoRestante);
                     
                     html += `
                         <div class="produccion-slot ${lista ? 'produccion-lista' : 'produccion-activa'}" 
-                             onclick="recogerPiezaSiLista('${fabricacion.id}', ${lista}, ${i})">
+                             onclick="recogerPiezaSiLista('${fabricacion.id}', ${lista}, ${i})"
+                             title="${nombreArea} - Nivel ${fabricacion.nivel}">
                             <div class="produccion-icon">
                                 ${lista ? '✅' : '🔄'}
                             </div>
@@ -6514,6 +6574,7 @@ class F1Manager {
                                     `<span class="produccion-lista-text">¡LISTA!</span>` :
                                     `<span class="produccion-tiempo">${tiempoFormateado}</span>`
                                 }
+                                <span class="produccion-nivel">Nivel ${fabricacion.nivel}</span>
                             </div>
                         </div>
                     `;
@@ -6524,6 +6585,7 @@ class F1Manager {
                             <div class="slot-content">
                                 <i class="fas fa-plus"></i>
                                 <span>Slot ${i + 1}</span>
+                                <span class="slot-disponible">Disponible</span>
                             </div>
                         </div>
                     `;
@@ -6534,33 +6596,11 @@ class F1Manager {
             container.innerHTML = html;
             
         } catch (error) {
-            console.error("Error cargando fabricaciones:", error);
+            console.error("Error fatal en updateProductionMonitor:", error);
             container.innerHTML = `
-                <div class="produccion-slots">
-                    <div class="produccion-slot" onclick="irAlTallerDesdeProduccion()">
-                        <div class="slot-content">
-                            <i class="fas fa-plus"></i>
-                            <span>Slot 1</span>
-                        </div>
-                    </div>
-                    <div class="produccion-slot" onclick="irAlTallerDesdeProduccion()">
-                        <div class="slot-content">
-                            <i class="fas fa-plus"></i>
-                            <span>Slot 2</span>
-                        </div>
-                    </div>
-                    <div class="produccion-slot" onclick="irAlTallerDesdeProduccion()">
-                        <div class="slot-content">
-                            <i class="fas fa-plus"></i>
-                            <span>Slot 3</span>
-                        </div>
-                    </div>
-                    <div class="produccion-slot" onclick="irAlTallerDesdeProduccion()">
-                        <div class="slot-content">
-                            <i class="fas fa-plus"></i>
-                            <span>Slot 4</span>
-                        </div>
-                    </div>
+                <div class="produccion-error">
+                    <p>❌ Error cargando producción</p>
+                    <button onclick="window.f1Manager.updateProductionMonitor()">Reintentar</button>
                 </div>
             `;
         }
@@ -6697,11 +6737,10 @@ class F1Manager {
     };
     
     window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
-        console.log("🔧 [DEBUG] Intentando recoger pieza:", { fabricacionId, lista, slotIndex });
+        console.log("🔧 [DEBUG] Recogiendo pieza:", { fabricacionId, lista, slotIndex });
         
         if (!lista) {
-            console.log("Pieza aún en producción, mostrando info...");
-            // Mostrar información de la pieza en producción
+            // Mostrar información
             try {
                 const { data: fabricacion } = await window.supabase
                     .from('fabricacion_actual')
@@ -6710,16 +6749,13 @@ class F1Manager {
                     .single();
                     
                 if (fabricacion) {
-                    const areaNombre = window.f1Manager ? 
-                        window.f1Manager.getNombreArea(fabricacion.area) : fabricacion.area;
-                    
                     const ahora = new Date();
                     const tiempoFin = new Date(fabricacion.tiempo_fin);
                     const tiempoRestante = tiempoFin - ahora;
                     const tiempoFormateado = tiempoRestante > 0 ? 
-                        window.f1Manager.formatTime(tiempoRestante) : "Finalizando...";
+                        formatTime(tiempoRestante) : "Finalizando...";
                     
-                    alert(`🔄 ${areaNombre}\nTiempo restante: ${tiempoFormateado}\nNivel: ${fabricacion.nivel || 1}`);
+                    alert(`🔄 ${fabricacion.area}\nNivel: ${fabricacion.nivel}\nTiempo restante: ${tiempoFormateado}`);
                 }
             } catch (error) {
                 console.error("Error obteniendo info:", error);
@@ -6727,11 +6763,9 @@ class F1Manager {
             return;
         }
         
-        // SI está lista, recoger automáticamente
-        console.log("✅ Pieza lista, recogiendo...");
-        
+        // SI está lista, recoger
         try {
-            // 1. Primero obtener la fabricación completa
+            // 1. Obtener fabricación
             const { data: fabricacion, error: fetchError } = await window.supabase
                 .from('fabricacion_actual')
                 .select('*')
@@ -6740,82 +6774,79 @@ class F1Manager {
             
             if (fetchError) throw fetchError;
             
-            console.log("Fabricación encontrada:", fabricacion);
-            
-            // 2. Crear pieza en almacén - USAR TABLA CORRECTA: almacen_piezas
+            // 2. Crear pieza en almacen_piezas (TABLA CORRECTA)
             const { error: insertError } = await window.supabase
-                .from('almacen_piezas')  // ← TABLA CORRECTA
+                .from('almacen_piezas')
                 .insert([{
                     escuderia_id: fabricacion.escuderia_id,
                     area: fabricacion.area,
                     nivel: fabricacion.nivel || 1,
-                    puntos_base: 10,  // Existe en la tabla
-                    calidad: 'Normal', // Existe en la tabla
-                    equipada: false,   // Existe en la tabla
+                    puntos_base: calcularPuntosPorArea(fabricacion.area, fabricacion.nivel),
+                    calidad: 'Normal',
+                    equipada: false,
                     fabricada_en: new Date().toISOString(),
                     creada_en: new Date().toISOString()
-                    // NO añadas 'nombre' ni 'valor_venta' - NO existen en la tabla
                 }]);
             
-            if (insertError) {
-                console.error("Error insertando en almacén:", insertError);
-                throw insertError;
-            }
+            if (insertError) throw insertError;
             
-            console.log("✅ Pieza añadida al almacén (almacen_piezas)");
-            
-            // 3. Marcar como completada en fabricacion_actual
-            const { error: updateError } = await window.supabase
+            // 3. Marcar como completada
+            await window.supabase
                 .from('fabricacion_actual')
-                .update({ 
-                    completada: true,
-                })
+                .update({ completada: true })
                 .eq('id', fabricacionId);
             
-            if (updateError) throw updateError;
-            
-            console.log("✅ Fabricación marcada como completada");
-            
-            // 5. Mostrar notificación de ÉXITO
+            // 4. Notificación
             if (window.f1Manager && window.f1Manager.showNotification) {
-                const areaNombre = window.f1Manager.getNombreArea ? 
-                    window.f1Manager.getNombreArea(fabricacion.area) : fabricacion.area;
-                window.f1Manager.showNotification(
-                    `✅ ${areaNombre} recogida y enviada al almacén`,
-                    'success'
-                );
-            } else {
-                alert(`✅ ${fabricacion.area} recogida y enviada al almacén`);
+                window.f1Manager.showNotification(`✅ Pieza ${fabricacion.area} añadida al almacén`, 'success');
             }
             
-            // 6. Actualizar UI INMEDIATAMENTE
-            setTimeout(() => {
-                if (window.f1Manager && window.f1Manager.updateProductionMonitor) {
+            // 5. Actualizar UI
+            if (window.f1Manager) {
+                setTimeout(() => {
                     window.f1Manager.updateProductionMonitor();
-                }
-                
-                // Si estamos en la pestaña almacén, actualizarla también
-                if (window.tabManager && window.tabManager.currentTab === 'almacen') {
-                    if (window.tabManager.loadAlmacenPiezas) {
-                        setTimeout(() => window.tabManager.loadAlmacenPiezas(), 1000);
+                    // Si está en almacén, recargar
+                    if (window.tabManager && window.tabManager.currentTab === 'almacen') {
+                        window.tabManager.loadAlmacenPiezas();
                     }
-                }
-            }, 500);
+                }, 500);
+            }
             
         } catch (error) {
-            console.error('❌ Error completo al recoger pieza:', error);
-            
-            // Mostrar error DETALLADO
+            console.error('❌ Error recogiendo pieza:', error);
             if (window.f1Manager && window.f1Manager.showNotification) {
-                window.f1Manager.showNotification(
-                    `❌ Error: ${error.message || 'No se pudo recoger la pieza'}`,
-                    'error'
-                );
-            } else {
-                alert(`❌ Error: ${error.message || 'No se pudo recoger la pieza'}`);
+                window.f1Manager.showNotification(`❌ Error: ${error.message}`, 'error');
             }
         }
     };
+    
+    // Función auxiliar para calcular puntos
+    function calcularPuntosPorArea(area, nivel) {
+        const puntosBase = {
+            'motor': 15,
+            'chasis': 12,
+            'suelo': 10,
+            'aleron_delantero': 8,
+            'aleron_trasero': 8,
+            'caja_cambios': 9,
+            'suspension': 7,
+            'frenos': 6,
+            'electronica': 14,
+            'volante': 5,
+            'pontones': 7
+        };
+        return (puntosBase[area] || 10) * (nivel || 1);
+    }
+    
+    // Función auxiliar para formatear tiempo
+    function formatTime(milliseconds) {
+        if (milliseconds <= 0) return "00:00:00";
+        const seconds = Math.floor(milliseconds / 1000);
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
     window.cargarEstrategasTutorial = function() {
         const container = document.getElementById('grid-estrategas-tutorial');
         if (!container) return;
@@ -6852,25 +6883,36 @@ class F1Manager {
         window.tutorialData.estrategaSeleccionado = id;
     };
     // Función global para fabricar desde los botones del taller
+    // Función global CORREGIDA
     window.iniciarFabricacionTallerDesdeBoton = async function(areaId, nivel) {
         console.log('🔧 Función global llamada para:', areaId, nivel);
         
-        if (window.f1Manager) {
-            // Llamar al método que SÍ existe
+        if (window.f1Manager && window.f1Manager.iniciarFabricacionTaller) {
+            // Llamar al método CORREGIDO (sin recursión)
             const resultado = await window.f1Manager.iniciarFabricacionTaller(areaId, nivel);
             
-            // Si se inició fabricación, cambiar a pestaña principal
-            if (resultado && window.tabManager) {
+            // Actualizar UI
+            if (resultado) {
+                // Actualizar taller
                 setTimeout(() => {
-                    window.tabManager.switchTab('principal');
+                    if (window.f1Manager.cargarTabTaller) {
+                        window.f1Manager.cargarTabTaller();
+                    }
                 }, 800);
+                
+                // Cambiar a pestaña principal para ver producción
+                setTimeout(() => {
+                    if (window.tabManager) {
+                        window.tabManager.switchTab('principal');
+                    }
+                }, 1000);
             }
             return resultado;
         } else {
             alert('Error: Sistema de fabricación no disponible');
             return false;
         }
-    };    
+    };
     window.tutorialEjecutarContratacion = async function() {
         const estrategaId = window.tutorialData.estrategaSeleccionado;
         if (!estrategaId && window.tutorialManager && window.tutorialManager.showNotification) {
