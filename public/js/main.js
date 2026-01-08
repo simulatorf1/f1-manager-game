@@ -1068,6 +1068,132 @@ function mostrarMensaje(mensaje, elemento) {
 }
 
 // ========================
+// ESTILOS CSS PARA PRODUCCIÓN (NUEVO DISEÑO)
+// ========================
+const produccionStyles = `
+    /* Grid de producción como estrategas */
+    .produccion-slots {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        gap: 8px;
+        height: 100%;
+        padding: 2px;
+    }
+    
+    .produccion-slot {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1.5px solid rgba(255, 255, 255, 0.08);
+        border-radius: 6px;
+        padding: 8px 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        height: 85px;
+        min-height: 85px;
+    }
+    
+    .produccion-slot:hover {
+        border-color: rgba(0, 210, 190, 0.4);
+        background: rgba(0, 210, 190, 0.05);
+        transform: translateY(-1px);
+    }
+    
+    .slot-content {
+        text-align: center;
+        width: 100%;
+    }
+    
+    .slot-content i {
+        font-size: 1.1rem;
+        color: #00d2be;
+        margin-bottom: 5px;
+    }
+    
+    .slot-content span {
+        display: block;
+        font-size: 0.75rem;
+        color: #888;
+        line-height: 1.1;
+    }
+    
+    /* Estilo cuando hay producción activa */
+    .produccion-activa {
+        border-color: rgba(0, 210, 190, 0.25);
+        background: rgba(0, 210, 190, 0.04);
+    }
+    
+    .produccion-lista {
+        border-color: #4CAF50 !important;
+        background: rgba(76, 175, 80, 0.15) !important;
+        animation: pulse-green 2s infinite;
+    }
+    
+    @keyframes pulse-green {
+        0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+    }
+    
+    .produccion-info {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .produccion-nombre {
+        display: block;
+        font-weight: bold;
+        font-size: 0.75rem;
+        color: white;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .produccion-tiempo {
+        display: block;
+        font-size: 0.65rem;
+        color: #00d2be;
+        margin-bottom: 1px;
+        line-height: 1;
+    }
+    
+    .produccion-lista-text {
+        color: #4CAF50;
+        font-weight: bold;
+        animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+    
+    .produccion-icon {
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+`;
+
+// Añadir los estilos al DOM cuando se cargue la página
+document.addEventListener('DOMContentLoaded', function() {
+    if (!document.getElementById('estilos-produccion')) {
+        const style = document.createElement('style');
+        style.id = 'estilos-produccion';
+        style.innerHTML = produccionStyles;
+        document.head.appendChild(style);
+    }
+});
+
+// ========================
 // 4. CLASE F1Manager PRINCIPAL CON TUTORIAL
 // ========================
 class F1Manager {
@@ -4500,9 +4626,32 @@ class F1Manager {
                                         </div>
                                     </div>
                                     <div id="produccion-actual" class="produccion-actual" style="flex: 1; overflow-y: auto; padding-right: 5px;">
-                                        <div class="empty-state">
-                                            <i class="fas fa-industry"></i>
-                                            <p>No hay producción en curso</p>
+                                        <!-- Grid de 4 slots como estrategas -->
+                                        <div id="produccion-slots" class="produccion-slots">
+                                            <div class="produccion-slot" data-slot="0" onclick="irAlTallerDesdeProduccion()">
+                                                <div class="slot-content">
+                                                    <i class="fas fa-plus"></i>
+                                                    <span>Slot 1</span>
+                                                </div>
+                                            </div>
+                                            <div class="produccion-slot" data-slot="1" onclick="irAlTallerDesdeProduccion()">
+                                                <div class="slot-content">
+                                                    <i class="fas fa-plus"></i>
+                                                    <span>Slot 2</span>
+                                                </div>
+                                            </div>
+                                            <div class="produccion-slot" data-slot="2" onclick="irAlTallerDesdeProduccion()">
+                                                <div class="slot-content">
+                                                    <i class="fas fa-plus"></i>
+                                                    <span>Slot 3</span>
+                                                </div>
+                                            </div>
+                                            <div class="produccion-slot" data-slot="3" onclick="irAlTallerDesdeProduccion()">
+                                                <div class="slot-content">
+                                                    <i class="fas fa-plus"></i>
+                                                    <span>Slot 4</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -5295,6 +5444,7 @@ class F1Manager {
         console.log('⏱️ Timers iniciados');
     }
     
+    // En el método updateProductionMonitor() de la clase F1Manager
     async updateProductionMonitor() {
         if (!this.escuderia || !this.escuderia.id || !this.supabase) {
             console.log('❌ No hay escudería para monitor de producción');
@@ -5318,86 +5468,115 @@ class F1Manager {
             
             if (error) throw error;
             
-            if (!fabricaciones || fabricaciones.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-industry"></i>
-                        <p>No hay producción en curso</p>
-                        <button class="btn-primary" id="iniciar-fabricacion-btn">
-                            <i class="fas fa-hammer"></i> Iniciar fabricación
-                        </button>
-                    </div>
-                `;
-                return;
-            }
+            // Asegurar que los estilos están cargados
+            this.cargarEstilosProduccion();
             
-            // Mostrar fabricaciones
             let html = `
-                <div class="produccion-header">
-                    <h3><i class="fas fa-industry"></i> Fabricaciones en curso</h3>
-                    <span class="badge">${fabricaciones.length} activas</span>
-                </div>
-                <div class="fabricaciones-lista">
+                <div class="produccion-slots">
             `;
             
-            fabricaciones.forEach(fab => {
-                const ahora = new Date();
-                const tiempoInicio = new Date(fab.tiempo_inicio);
-                const tiempoFin = new Date(fab.tiempo_fin);
+            // Crear 4 slots
+            for (let i = 0; i < 4; i++) {
+                const fabricacion = fabricaciones && fabricaciones[i];
                 
-                const tiempoTotal = tiempoFin - tiempoInicio;
-                const tiempoTranscurrido = ahora - tiempoInicio;
-                const progreso = Math.min(100, (tiempoTranscurrido / tiempoTotal) * 100);
-                const tiempoRestante = tiempoFin - ahora;
-                const lista = ahora >= tiempoFin;
-                
-                const nombreArea = {
-                    'motor': 'Motor',
-                    'chasis': 'Chasis',
-                    'aerodinamica': 'Aerodinámica'
-                }[fab.area] || fab.area;
-                
-                html += `
-                    <div class="fabricacion-item ${lista ? 'lista' : ''}">
-                        <div class="fabricacion-info">
-                            <div class="fab-area">
-                                <i class="fas fa-cog"></i>
-                                <span>${nombreArea} Nivel ${fab.nivel}</span>
+                if (fabricacion) {
+                    const ahora = new Date();
+                    const tiempoFin = new Date(fabricacion.tiempo_fin);
+                    const tiempoRestante = tiempoFin - ahora;
+                    const lista = ahora >= tiempoFin;
+                    
+                    const nombreArea = this.getNombreArea(fabricacion.area);
+                    const tiempoFormateado = this.formatTime(tiempoRestante);
+                    
+                    html += `
+                        <div class="produccion-slot ${lista ? 'produccion-lista' : 'produccion-activa'}" 
+                             onclick="recogerPiezaSiLista(${fabricacion.id}, ${lista}, ${i})">
+                            <div class="produccion-icon">
+                                ${lista ? '✅' : '🔄'}
                             </div>
-                            <div class="fab-estado">
-                                <span class="estado-badge ${lista ? 'lista' : 'fabricando'}">
-                                    ${lista ? '✅ LISTA' : '🔄 FABRICANDO'}
-                                </span>
+                            <div class="produccion-info">
+                                <span class="produccion-nombre">${nombreArea}</span>
+                                ${lista ? 
+                                    `<span class="produccion-lista-text">¡LISTA!</span>` :
+                                    `<span class="produccion-tiempo">${tiempoFormateado}</span>`
+                                }
                             </div>
                         </div>
-                        
-                        <div class="fab-progreso">
-                            <div class="progress-bar-small">
-                                <div class="progress-fill-small" style="width: ${progreso}%"></div>
-                            </div>
-                            <div class="fab-tiempo">
-                                <i class="far fa-clock"></i>
-                                <span>${lista ? '¡Lista para recoger!' : `Tiempo restante: ${this.formatTime(tiempoRestante)}`}</span>
+                    `;
+                } else {
+                    // Slot vacío
+                    html += `
+                        <div class="produccion-slot" data-slot="${i}" onclick="irAlTallerDesdeProduccion()">
+                            <div class="slot-content">
+                                <i class="fas fa-plus"></i>
+                                <span>Slot ${i + 1}</span>
                             </div>
                         </div>
-                        
-                        <div class="fab-acciones">
-                            <button class="btn-small btn-success" ${!lista ? 'disabled' : ''} 
-                                    onclick="recogerPiezaTutorial('${fab.id}', '${fab.area}')">
-                                <i class="fas fa-box-open"></i> ${lista ? 'Recoger' : 'Esperar'}
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
+                    `;
+                }
+            }
             
             html += `</div>`;
             container.innerHTML = html;
             
         } catch (error) {
             console.error("Error cargando fabricaciones:", error);
-            container.innerHTML = `<p class="error">Error cargando producción</p>`;
+            container.innerHTML = `
+                <div class="produccion-slots">
+                    <div class="produccion-slot" onclick="irAlTallerDesdeProduccion()">
+                        <div class="slot-content">
+                            <i class="fas fa-plus"></i>
+                            <span>Slot 1</span>
+                        </div>
+                    </div>
+                    <div class="produccion-slot" onclick="irAlTallerDesdeProduccion()">
+                        <div class="slot-content">
+                            <i class="fas fa-plus"></i>
+                            <span>Slot 2</span>
+                        </div>
+                    </div>
+                    <div class="produccion-slot" onclick="irAlTallerDesdeProduccion()">
+                        <div class="slot-content">
+                            <i class="fas fa-plus"></i>
+                            <span>Slot 3</span>
+                        </div>
+                    </div>
+                    <div class="produccion-slot" onclick="irAlTallerDesdeProduccion()">
+                        <div class="slot-content">
+                            <i class="fas fa-plus"></i>
+                            <span>Slot 4</span>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
+    }
+    
+    // Añadir este método auxiliar
+    cargarEstilosProduccion() {
+        if (!document.getElementById('estilos-produccion')) {
+            const style = document.createElement('style');
+            style.id = 'estilos-produccion';
+            style.innerHTML = produccionStyles; // Usa los estilos definidos arriba
+            document.head.appendChild(style);
+        }
+    }
+    
+    getNombreArea(areaId) {
+        const areas = {
+            'motor': 'Motor',
+            'chasis': 'Chasis',
+            'aerodinamica': 'Aerodinámica',
+            'suspension': 'Suspensión',
+            'transmision': 'Transmisión',
+            'frenos': 'Frenos',
+            'electronica': 'Electrónica',
+            'control': 'Control',
+            'difusor': 'Difusor',
+            'alerones': 'Alerones',
+            'pontones': 'Pontones'
+        };
+        return areas[areaId] || areaId;
     }
     
     setupDashboardEvents() {
@@ -5493,7 +5672,70 @@ class F1Manager {
         pronosticosSeleccionados: {},
         piezaFabricando: false
     };
+    // Al final del archivo, con las otras funciones globales
+    window.irAlTallerDesdeProduccion = function() {
+        if (window.tabManager && window.tabManager.switchTab) {
+            window.tabManager.switchTab('taller');
+        } else {
+            alert('Redirigiendo al taller para fabricar...');
+            // Aquí deberías implementar la navegación al taller
+        }
+    };
     
+    window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
+        if (!lista) {
+            // Si no está lista, solo mostrar info
+            console.log('Pieza aún en producción');
+            return;
+        }
+        
+        // Si está lista, recoger automáticamente
+        try {
+            // 1. Marcar como completada
+            await window.supabase
+                .from('fabricacion_actual')
+                .update({ completada: true })
+                .eq('id', fabricacionId);
+            
+            // 2. Crear pieza en almacén
+            const { data: fabricacion } = await window.supabase
+                .from('fabricacion_actual')
+                .select('*')
+                .eq('id', fabricacionId)
+                .single();
+            
+            if (fabricacion) {
+                await window.supabase
+                    .from('piezas_almacen')
+                    .insert([{
+                        escuderia_id: fabricacion.escuderia_id,
+                        area: fabricacion.area,
+                        nivel: fabricacion.nivel || 1,
+                        puntos_base: 10,
+                        estado: 'disponible',
+                        fabricada_en: new Date().toISOString()
+                    }]);
+            }
+            
+            // 3. Mostrar notificación
+            if (window.f1Manager && window.f1Manager.showNotification) {
+                window.f1Manager.showNotification(`✅ Pieza recogida y enviada al almacén`, 'success');
+            }
+            
+            // 4. Actualizar UI inmediatamente
+            setTimeout(() => {
+                if (window.f1Manager && window.f1Manager.updateProductionMonitor) {
+                    window.f1Manager.updateProductionMonitor();
+                }
+            }, 500);
+            
+        } catch (error) {
+            console.error('Error recogiendo pieza:', error);
+            if (window.f1Manager && window.f1Manager.showNotification) {
+                window.f1Manager.showNotification('❌ Error al recoger pieza', 'error');
+            }
+        }
+    };    
     window.cargarEstrategasTutorial = function() {
         const container = document.getElementById('grid-estrategas-tutorial');
         if (!container) return;
