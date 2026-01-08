@@ -5683,59 +5683,137 @@ class F1Manager {
     };
     
     window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
+        console.log("🔧 [DEBUG] Intentando recoger pieza:", { fabricacionId, lista, slotIndex });
+        
         if (!lista) {
-            // Si no está lista, solo mostrar info
-            console.log('Pieza aún en producción');
+            console.log("Pieza aún en producción, mostrando info...");
+            // Mostrar información de la pieza en producción
+            try {
+                const { data: fabricacion } = await window.supabase
+                    .from('fabricacion_actual')
+                    .select('*')
+                    .eq('id', fabricacionId)
+                    .single();
+                    
+                if (fabricacion) {
+                    const areaNombre = window.f1Manager ? 
+                        window.f1Manager.getNombreArea(fabricacion.area) : fabricacion.area;
+                    
+                    const ahora = new Date();
+                    const tiempoFin = new Date(fabricacion.tiempo_fin);
+                    const tiempoRestante = tiempoFin - ahora;
+                    const tiempoFormateado = tiempoRestante > 0 ? 
+                        window.f1Manager.formatTime(tiempoRestante) : "Finalizando...";
+                    
+                    alert(`🔄 ${areaNombre}\nTiempo restante: ${tiempoFormateado}\nNivel: ${fabricacion.nivel || 1}`);
+                }
+            } catch (error) {
+                console.error("Error obteniendo info:", error);
+            }
             return;
         }
         
-        // Si está lista, recoger automáticamente
+        // SI está lista, recoger automáticamente
+        console.log("✅ Pieza lista, recogiendo...");
+        
         try {
-            // 1. Marcar como completada
-            await window.supabase
-                .from('fabricacion_actual')
-                .update({ completada: true })
-                .eq('id', fabricacionId);
-            
-            // 2. Crear pieza en almacén
-            const { data: fabricacion } = await window.supabase
+            // 1. Primero obtener la fabricación completa
+            const { data: fabricacion, error: fetchError } = await window.supabase
                 .from('fabricacion_actual')
                 .select('*')
                 .eq('id', fabricacionId)
                 .single();
             
-            if (fabricacion) {
-                await window.supabase
-                    .from('piezas_almacen')
-                    .insert([{
-                        escuderia_id: fabricacion.escuderia_id,
-                        area: fabricacion.area,
-                        nivel: fabricacion.nivel || 1,
-                        puntos_base: 10,
-                        estado: 'disponible',
-                        fabricada_en: new Date().toISOString()
-                    }]);
+            if (fetchError) throw fetchError;
+            
+            console.log("Fabricación encontrada:", fabricacion);
+            
+            // 2. Crear pieza en almacén (AÑADE TODOS LOS CAMPOS NECESARIOS)
+            const { error: insertError } = await window.supabase
+                .from('piezas_almacen')
+                .insert([{
+                    escuderia_id: fabricacion.escuderia_id,
+                    area: fabricacion.area,
+                    nivel: fabricacion.nivel || 1,
+                    puntos_base: 10,
+                    calidad: 'Normal',
+                    equipada: false,
+                    estado: 'disponible',
+                    fabricada_en: new Date().toISOString(),
+                    creada_en: new Date().toISOString(),
+                    // Si tu tabla tiene más campos, añádelos aquí
+                    nombre: `${fabricacion.area} Nivel ${fabricacion.nivel || 1}`,
+                    valor_venta: 5000 // o calcula según nivel
+                }]);
+            
+            if (insertError) {
+                console.error("Error insertando en almacén:", insertError);
+                throw insertError;
             }
             
-            // 3. Mostrar notificación
+            console.log("✅ Pieza añadida al almacén");
+            
+            // 3. Marcar como completada en fabricacion_actual
+            const { error: updateError } = await window.supabase
+                .from('fabricacion_actual')
+                .update({ 
+                    completada: true,
+                    recogida_en: new Date().toISOString()
+                })
+                .eq('id', fabricacionId);
+            
+            if (updateError) throw updateError;
+            
+            console.log("✅ Fabricación marcada como completada");
+            
+            // 4. Opcional: Actualizar estadísticas de la escudería
+            if (window.f1Manager && window.f1Manager.escuderia) {
+                // Incrementar contador de piezas fabricadas
+                await window.supabase.rpc('incrementar_piezas_fabricadas', {
+                    escuderia_id_param: window.f1Manager.escuderia.id
+                }).catch(e => console.log("No se pudo actualizar estadísticas:", e));
+            }
+            
+            // 5. Mostrar notificación de ÉXITO
             if (window.f1Manager && window.f1Manager.showNotification) {
-                window.f1Manager.showNotification(`✅ Pieza recogida y enviada al almacén`, 'success');
+                const areaNombre = window.f1Manager.getNombreArea ? 
+                    window.f1Manager.getNombreArea(fabricacion.area) : fabricacion.area;
+                window.f1Manager.showNotification(
+                    `✅ ${areaNombre} recogida y enviada al almacén`,
+                    'success'
+                );
+            } else {
+                alert(`✅ ${fabricacion.area} recogida y enviada al almacén`);
             }
             
-            // 4. Actualizar UI inmediatamente
+            // 6. Actualizar UI INMEDIATAMENTE
             setTimeout(() => {
                 if (window.f1Manager && window.f1Manager.updateProductionMonitor) {
                     window.f1Manager.updateProductionMonitor();
                 }
+                
+                // Si estamos en la pestaña almacén, actualizarla también
+                if (window.tabManager && window.tabManager.currentTab === 'almacen') {
+                    if (window.tabManager.loadAlmacenPiezas) {
+                        setTimeout(() => window.tabManager.loadAlmacenPiezas(), 1000);
+                    }
+                }
             }, 500);
             
         } catch (error) {
-            console.error('Error recogiendo pieza:', error);
+            console.error('❌ Error completo al recoger pieza:', error);
+            
+            // Mostrar error DETALLADO
             if (window.f1Manager && window.f1Manager.showNotification) {
-                window.f1Manager.showNotification('❌ Error al recoger pieza', 'error');
+                window.f1Manager.showNotification(
+                    `❌ Error: ${error.message || 'No se pudo recoger la pieza'}`,
+                    'error'
+                );
+            } else {
+                alert(`❌ Error: ${error.message || 'No se pudo recoger la pieza'}`);
             }
         }
-    };    
+    };
     window.cargarEstrategasTutorial = function() {
         const container = document.getElementById('grid-estrategas-tutorial');
         if (!container) return;
