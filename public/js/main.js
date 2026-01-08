@@ -1496,12 +1496,7 @@ class F1Manager {
         console.log('⏱️ Timers automáticos iniciados');
     };
 
-    // Función para ir al almacén
-    window.irAlAlmacenDesdePiezas = function() {
-        if (window.tabManager) {
-            window.tabManager.switchTab('almacen');
-        }
-    };
+
     
     async esperarSupabase() {
         console.log('⏳ Esperando Supabase...');
