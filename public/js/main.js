@@ -2448,7 +2448,7 @@ class F1Manager {
         } else {
             return `${segundos}s`;
         }
-    }
+    };
 
     // Añade este método después del init():
     async mostrarFormularioEscuderiaSimple() {
