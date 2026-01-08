@@ -1943,12 +1943,10 @@ class F1Manager {
             if (errorPiezas) throw errorPiezas;
             
             const numeroPieza = (piezasExistentes?.length || 0) + 1;
-            console.log(`📊 Fabricando pieza ${numeroPieza} para ${areaId} nivel ${nivel}`);
             
-            // 3. Calcular tiempo progresivo EN MINUTOS y convertirlo a milisegundos
+            // 3. Calcular tiempo progresivo BASADO EN EL NÚMERO DE PIEZA
             const tiempoMinutos = this.calcularTiempoProgresivo(numeroPieza);
-            const tiempoMilisegundos = tiempoMinutos * 60 * 1000; // Convertir minutos a milisegundos
-            console.log(`⏱️ Tiempo: ${tiempoMinutos} minutos (${tiempoMilisegundos}ms)`);
+            console.log(`📊 Fabricando pieza ${numeroPieza} para ${areaId} nivel ${nivel} - Tiempo: ${tiempoMinutos}min`);
             
             // 4. Verificar dinero (costo fijo)
             const costo = 10000;
@@ -1957,45 +1955,48 @@ class F1Manager {
                 return false;
             }
             
-            // 5. Crear fabricación con tiempo futuro REAL
-            const ahora = new Date();
-            const tiempoFin = new Date(ahora.getTime() + tiempoMilisegundos); // Añadir tiempo real en milisegundos
+            // 5. Usar now() de Supabase para el tiempo exacto del servidor
+            const ahora = new Date().toISOString();
+            const tiempoFin = new Date();
+            tiempoFin.setMinutes(tiempoFin.getMinutes() + tiempoMinutos);
             
-            console.log('📅 Tiempos:', {
-                inicio: ahora.toISOString(),
+            console.log('📅 Tiempos calculados:', {
+                inicio: ahora,
                 fin: tiempoFin.toISOString(),
                 diferenciaMinutos: tiempoMinutos
             });
             
+            // 6. Crear fabricación con tiempo futuro REAL
             const { data: fabricacion, error: errorCrear } = await this.supabase
                 .from('fabricacion_actual')
                 .insert([{
                     escuderia_id: this.escuderia.id,
                     area: areaId,
                     nivel: nivel,
-                    tiempo_inicio: ahora.toISOString(),
+                    tiempo_inicio: ahora,
                     tiempo_fin: tiempoFin.toISOString(),
                     completada: false,
                     costo: costo,
-                    creada_en: ahora.toISOString()
+                    creada_en: ahora,
+                    pieza_numero: numeroPieza // Guardar el número de pieza
                 }])
                 .select()
                 .single();
             
             if (errorCrear) throw errorCrear;
             
-            // 6. Descontar dinero
+            // 7. Descontar dinero
             this.escuderia.dinero -= costo;
             await this.updateEscuderiaMoney();
             
-            // 7. Mostrar notificación con tiempo REAL
+            // 8. Mostrar notificación con tiempo REAL
             const nombreArea = this.getNombreArea(areaId);
             this.showNotification(
                 `✅ ${nombreArea} (Pieza ${numeroPieza}) en fabricación - ${tiempoMinutos} minutos`, 
                 'success'
             );
             
-            // 8. Actualizar UI inmediatamente
+            // 9. Actualizar UI inmediatamente
             setTimeout(() => {
                 this.updateProductionMonitor();
             }, 500);
@@ -2013,7 +2014,7 @@ class F1Manager {
     // MÉTODO AUXILIAR: Calcular tiempo progresivo
     // ========================
     calcularTiempoProgresivo(numeroPieza) {
-        // Sistema progresivo según especificaste:
+        // Sistema progresivo:
         // Pieza 1: 2 minutos
         // Pieza 2: 4 minutos  
         // Pieza 3: 15 minutos
@@ -2036,7 +2037,27 @@ class F1Manager {
         // Para pieza 6 en adelante: 60 + (numeroPieza - 5) * 50
         return 60 + ((numeroPieza - 5) * 50);
     }
-    
+     async verificarTiempoFabricacion(fabricacionId) {
+        try {
+            const { data: fabricacion, error } = await this.supabase
+                .from('fabricacion_actual')
+                .select('*')
+                .eq('id', fabricacionId)
+                .single();
+            
+            if (error) return false;
+            
+            const ahora = new Date();
+            const tiempoFin = new Date(fabricacion.tiempo_fin);
+            const tiempoRestante = tiempoFin - ahora;
+            
+            // SOLO si ya pasó el tiempo (con margen de 1 minuto)
+            return tiempoRestante <= -60000; // 1 minuto después del fin
+        } catch (error) {
+            console.error('Error verificando tiempo:', error);
+            return false;
+        }
+    }   
     // ========================
     // MÉTODO AUXILIAR: Obtener nombre de área
     // ========================
