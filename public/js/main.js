@@ -1496,7 +1496,96 @@ class F1Manager {
         console.log('⏱️ Timers automáticos iniciados');
     };
 
-
+    async cargarPiezasMontadas() {
+        console.log('🔧 Cargando piezas montadas...');
+        const contenedor = document.getElementById('grid-piezas-montadas');
+        if (!contenedor) {
+            console.log('❌ No se encontró el contenedor de piezas');
+            return;
+        }
+        
+        try {
+            // 1. Obtener stats del coche
+            const { data: stats } = await supabase
+                .from('coches_stats')
+                .select('*')
+                .eq('escuderia_id', this.escuderia.id)
+                .single();
+            
+            // 2. Obtener piezas montadas del almacén
+            const { data: piezasMontadas } = await supabase
+                .from('piezas_almacen')
+                .select('*')
+                .eq('escuderia_id', this.escuderia.id)
+                .eq('estado', 'montada');
+            
+            // 3. Crear mapeo área -> pieza montada
+            const piezasPorArea = {};
+            piezasMontadas?.forEach(p => {
+                piezasPorArea[p.area] = p;
+            });
+            
+            // 4. Generar 11 botones (uno por área)
+            const areas = [
+                { id: 'suelo', nombre: 'Suelo', icono: '🏎️' },
+                { id: 'motor', nombre: 'Motor', icono: '⚙️' },
+                { id: 'aleron_delantero', nombre: 'Alerón Del.', icono: '🪽' },
+                { id: 'caja_cambios', nombre: 'Caja Cambios', icono: '🔄' },
+                { id: 'pontones', nombre: 'Pontones', icono: '📦' },
+                { id: 'suspension', nombre: 'Suspensión', icono: '⚖️' },
+                { id: 'aleron_trasero', nombre: 'Alerón Tras.', icono: '🌪️' },
+                { id: 'chasis', nombre: 'Chasis', icono: '📊' },
+                { id: 'frenos', nombre: 'Frenos', icono: '🛑' },
+                { id: 'volante', nombre: 'Volante', icono: '🎮' },
+                { id: 'electronica', nombre: 'Electrónica', icono: '💡' }
+            ];
+            
+            let puntosTotales = 0;
+            let html = '';
+            
+            areas.forEach(area => {
+                const pieza = piezasPorArea[area.id];
+                
+                if (pieza) {
+                    // Botón con pieza montada
+                    puntosTotales += pieza.puntos_base || 0;
+                    html += `
+                        <div class="boton-area-montada" title="${area.nombre} - Nivel ${pieza.nivel}">
+                            <div class="icono-area">${area.icono}</div>
+                            <div class="nombre-area">${area.nombre}</div>
+                            <div class="nivel-pieza">Nivel ${pieza.nivel}</div>
+                            <div class="puntos-pieza">+${pieza.puntos_base} pts</div>
+                        </div>
+                    `;
+                } else {
+                    // Botón vacío
+                    html += `
+                        <div class="boton-area-vacia" onclick="irAlAlmacenDesdePiezas()" title="Sin pieza - Click para equipar">
+                            <div class="icono-area">${area.icono}</div>
+                            <div class="nombre-area">${area.nombre}</div>
+                            <div style="font-size: 0.7rem; color: #888; margin-top: 5px;">
+                                <i class="fas fa-plus"></i> Vacío
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            contenedor.innerHTML = html;
+            
+            // Actualizar total de puntos
+            const puntosElement = document.getElementById('puntos-totales-montadas');
+            if (puntosElement) {
+                puntosElement.textContent = puntosTotales;
+            }
+            
+            console.log(`✅ Piezas montadas cargadas: ${puntosTotales} puntos totales`);
+            
+        } catch (error) {
+            console.error('❌ Error cargando piezas montadas:', error);
+            contenedor.innerHTML = '<div style="color: #f00; text-align: center;">Error cargando piezas</div>';
+        }
+    }
     
     async esperarSupabase() {
         console.log('⏳ Esperando Supabase...');
@@ -4930,7 +5019,7 @@ class F1Manager {
                 await this.loadCarStatus();
                 await this.loadPilotosContratados();
                 await this.loadProximoGP();
-                await cargarPiezasMontadas();
+                await this.cargarPiezasMontadas();
             }
             
             // 5. Configurar eventos
