@@ -1938,17 +1938,42 @@ class F1Manager {
             return false;
         }
         
-        // 2. Verificar dinero
-        const costo = 10000; // Costo por pieza
+        // 2. Contar cuántas piezas ya has fabricado de esta área y nivel
+        let piezaNumero = 1; // Por defecto es la primera pieza
+        try {
+            const { data: piezasExistentes, error: errorPiezas } = await this.supabase
+                .from('almacen_piezas')
+                .select('id')
+                .eq('escuderia_id', this.escuderia.id)
+                .eq('area', areaId)
+                .eq('nivel', nivel);
+            
+            if (errorPiezas) throw errorPiezas;
+            
+            // La pieza número es la cantidad existente + 1
+            piezaNumero = (piezasExistentes?.length || 0) + 1;
+            console.log(`📊 Pieza número ${piezaNumero} para ${areaId} nivel ${nivel}`);
+            
+        } catch (error) {
+            console.error('Error contando piezas:', error);
+            // Continuamos con piezaNumero = 1
+        }
+        
+        // 3. Calcular tiempo PROGRESIVO basado en el número de pieza
+        const tiempoEnMinutos = this.calcularTiempoFabricacion(piezaNumero);
+        console.log(`⏱️ Tiempo calculado: ${tiempoEnMinutos} minutos (pieza ${piezaNumero})`);
+        
+        // 4. Verificar dinero (costo fijo o progresivo)
+        const costo = 10000; // Costo fijo por ahora
         if (this.escuderia.dinero < costo) {
             this.showNotification(`❌ Fondos insuficientes. Necesitas €${costo.toLocaleString()}`, 'error');
             return false;
         }
         
-        // 3. Crear fabricación en fabricacion_actual
+        // 5. Crear fabricación en fabricacion_actual
         try {
             const ahora = new Date();
-            const tiempoFin = new Date(ahora.getTime() + (30 * 60 * 1000)); // 30 minutos
+            const tiempoFin = new Date(ahora.getTime() + (tiempoEnMinutos * 60 * 1000));
             
             const { data: fabricacion, error } = await this.supabase
                 .from('fabricacion_actual')
@@ -1960,6 +1985,8 @@ class F1Manager {
                     tiempo_fin: tiempoFin.toISOString(),
                     completada: false,
                     costo: costo,
+                    pieza_numero: piezaNumero, // Guardamos el número de pieza
+                    tiempo_total_minutos: tiempoEnMinutos, // Guardamos el tiempo total
                     creada_en: ahora.toISOString()
                 }])
                 .select()
@@ -1967,14 +1994,18 @@ class F1Manager {
             
             if (error) throw error;
             
-            // 4. Descontar dinero
+            // 6. Descontar dinero
             this.escuderia.dinero -= costo;
             await this.updateEscuderiaMoney();
             
-            // 5. Actualizar UI
-            this.showNotification(`✅ Fabricación iniciada para ${this.getNombreArea(areaId)}`, 'success');
+            // 7. Mostrar notificación con tiempo REAL
+            const nombreArea = this.getNombreArea(areaId);
+            this.showNotification(
+                `✅ ${nombreArea} (Pieza ${piezaNumero}) en fabricación - ${tiempoEnMinutos} minutos`, 
+                'success'
+            );
             
-            // 6. Actualizar monitor de producción
+            // 8. Actualizar UI
             setTimeout(() => {
                 this.updateProductionMonitor();
             }, 500);
@@ -1986,6 +2017,38 @@ class F1Manager {
             this.showNotification(`❌ Error: ${error.message}`, 'error');
             return false;
         }
+    }
+    
+    // ========================
+    // MÉTODO PARA CALCULAR TIEMPOS PROGRESIVOS
+    // ========================
+    calcularTiempoFabricacion(piezaNumero) {
+        // Sistema progresivo según tu especificación:
+        // Pieza 1: 2 minutos
+        // Pieza 2: 4 minutos
+        // Pieza 3: 15 minutos
+        // Pieza 4: 30 minutos
+        // Pieza 5: 60 minutos
+        // Pieza 6-...: +50 minutos cada una
+        
+        const tiemposEspeciales = {
+            1: 2,    // Primera pieza: 2 minutos
+            2: 4,    // Segunda pieza: 4 minutos
+            3: 15,   // Tercera pieza: 15 minutos
+            4: 30,   // Cuarta pieza: 30 minutos
+            5: 60    // Quinta pieza: 60 minutos
+        };
+        
+        if (tiemposEspeciales[piezaNumero]) {
+            return tiemposEspeciales[piezaNumero];
+        }
+        
+        // Para piezas 6 en adelante: 60 + (piezaNumero - 5) * 50
+        // Ejemplo: 
+        // Pieza 6: 60 + (6-5)*50 = 110 minutos
+        // Pieza 7: 60 + (7-5)*50 = 160 minutos
+        // etc.
+        return 60 + ((piezaNumero - 5) * 50);
     }
     
     // ========================
@@ -6526,7 +6589,7 @@ class F1Manager {
         }
         
         try {
-            // Cargar fabricaciones activas DESDE LA TABLA CORRECTA
+            // Cargar fabricaciones activas
             const { data: fabricaciones, error } = await this.supabase
                 .from('fabricacion_actual')
                 .select('*')
@@ -6560,21 +6623,22 @@ class F1Manager {
                     
                     const nombreArea = this.getNombreArea(fabricacion.area);
                     const tiempoFormateado = this.formatTime(tiempoRestante);
+                    const piezaNum = fabricacion.pieza_numero || 1;
                     
                     html += `
                         <div class="produccion-slot ${lista ? 'produccion-lista' : 'produccion-activa'}" 
                              onclick="recogerPiezaSiLista('${fabricacion.id}', ${lista}, ${i})"
-                             title="${nombreArea} - Nivel ${fabricacion.nivel}">
+                             title="${nombreArea} - Pieza ${piezaNum} de nivel ${fabricacion.nivel}">
                             <div class="produccion-icon">
                                 ${lista ? '✅' : '🔄'}
                             </div>
                             <div class="produccion-info">
                                 <span class="produccion-nombre">${nombreArea}</span>
+                                <span class="produccion-pieza-num">Pieza ${piezaNum}</span>
                                 ${lista ? 
                                     `<span class="produccion-lista-text">¡LISTA!</span>` :
                                     `<span class="produccion-tiempo">${tiempoFormateado}</span>`
                                 }
-                                <span class="produccion-nivel">Nivel ${fabricacion.nivel}</span>
                             </div>
                         </div>
                     `;
@@ -6595,6 +6659,9 @@ class F1Manager {
             html += `</div>`;
             container.innerHTML = html;
             
+            // Iniciar timer para actualización en tiempo real
+            this.iniciarTimerProduccion();
+            
         } catch (error) {
             console.error("Error fatal en updateProductionMonitor:", error);
             container.innerHTML = `
@@ -6603,6 +6670,75 @@ class F1Manager {
                     <button onclick="window.f1Manager.updateProductionMonitor()">Reintentar</button>
                 </div>
             `;
+        }
+    }
+    
+    // ========================
+    // TIMER PARA ACTUALIZACIÓN EN TIEMPO REAL
+    // ========================
+    iniciarTimerProduccion() {
+        // Limpiar timer anterior si existe
+        if (this.productionUpdateTimer) {
+            clearInterval(this.productionUpdateTimer);
+        }
+        
+        // Actualizar cada segundo para tiempos en vivo
+        this.productionUpdateTimer = setInterval(() => {
+            this.actualizarTiemposEnVivo();
+        }, 1000);
+    }
+    
+    // ========================
+    // ACTUALIZAR TIEMPOS EN VIVO SIN RECARGAR TODO
+    // ========================
+    async actualizarTiemposEnVivo() {
+        const slots = document.querySelectorAll('.produccion-slot.produccion-activa');
+        if (slots.length === 0) return;
+        
+        try {
+            const { data: fabricaciones, error } = await this.supabase
+                .from('fabricacion_actual')
+                .select('id, tiempo_fin, area, pieza_numero')
+                .eq('escuderia_id', this.escuderia.id)
+                .eq('completada', false);
+            
+            if (error || !fabricaciones) return;
+            
+            // Actualizar cada slot activo
+            slots.forEach(slot => {
+                const fabricacionId = slot.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+                if (!fabricacionId) return;
+                
+                const fabricacion = fabricaciones.find(f => f.id === fabricacionId);
+                if (!fabricacion) return;
+                
+                const ahora = new Date();
+                const tiempoFin = new Date(fabricacion.tiempo_fin);
+                const tiempoRestante = tiempoFin - ahora;
+                
+                if (tiempoRestante <= 0) {
+                    // ¡LISTA!
+                    slot.classList.remove('produccion-activa');
+                    slot.classList.add('produccion-lista');
+                    slot.innerHTML = `
+                        <div class="produccion-icon">✅</div>
+                        <div class="produccion-info">
+                            <span class="produccion-nombre">${this.getNombreArea(fabricacion.area)}</span>
+                            <span class="produccion-pieza-num">Pieza ${fabricacion.pieza_numero || 1}</span>
+                            <span class="produccion-lista-text">¡LISTA!</span>
+                        </div>
+                    `;
+                } else {
+                    // Actualizar tiempo
+                    const tiempoElement = slot.querySelector('.produccion-tiempo');
+                    if (tiempoElement) {
+                        tiempoElement.textContent = this.formatTime(tiempoRestante);
+                    }
+                }
+            });
+            
+        } catch (error) {
+            console.error('Error actualizando tiempos en vivo:', error);
         }
     }
     
@@ -6655,10 +6791,20 @@ class F1Manager {
     }
     
     formatTime(milliseconds) {
-        const hours = Math.floor(milliseconds / (1000 * 60 * 60));
-        const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
-        return `${hours}h ${minutes}m ${seconds}s`;
+        if (milliseconds <= 0) return "00:00:00";
+        
+        const totalSegundos = Math.floor(milliseconds / 1000);
+        const horas = Math.floor(totalSegundos / 3600);
+        const minutos = Math.floor((totalSegundos % 3600) / 60);
+        const segundos = totalSegundos % 60;
+        
+        if (horas > 0) {
+            return `${horas}h ${minutos}m ${segundos}s`;
+        } else if (minutos > 0) {
+            return `${minutos}m ${segundos}s`;
+        } else {
+            return `${segundos}s`;
+        }
     }
     
     startTimers() {
@@ -6740,7 +6886,7 @@ class F1Manager {
         console.log("🔧 [DEBUG] Recogiendo pieza:", { fabricacionId, lista, slotIndex });
         
         if (!lista) {
-            // Mostrar información
+            // Mostrar información detallada
             try {
                 const { data: fabricacion } = await window.supabase
                     .from('fabricacion_actual')
@@ -6752,10 +6898,12 @@ class F1Manager {
                     const ahora = new Date();
                     const tiempoFin = new Date(fabricacion.tiempo_fin);
                     const tiempoRestante = tiempoFin - ahora;
-                    const tiempoFormateado = tiempoRestante > 0 ? 
-                        formatTime(tiempoRestante) : "Finalizando...";
                     
-                    alert(`🔄 ${fabricacion.area}\nNivel: ${fabricacion.nivel}\nTiempo restante: ${tiempoFormateado}`);
+                    const nombreArea = window.f1Manager?.getNombreArea(fabricacion.area) || fabricacion.area;
+                    const tiempoFormateado = tiempoRestante > 0 ? 
+                        window.f1Manager?.formatTime(tiempoRestante) : "Finalizando...";
+                    
+                    alert(`🔄 ${nombreArea}\nPieza ${fabricacion.pieza_numero || 1} de nivel ${fabricacion.nivel}\nTiempo restante: ${tiempoFormateado}`);
                 }
             } catch (error) {
                 console.error("Error obteniendo info:", error);
@@ -6774,40 +6922,65 @@ class F1Manager {
             
             if (fetchError) throw fetchError;
             
-            // 2. Crear pieza en almacen_piezas (TABLA CORRECTA)
+            // 2. Calcular puntos progresivos (más puntos para piezas más difíciles)
+            const puntosBase = calcularPuntosPorArea(fabricacion.area, fabricacion.nivel);
+            const bonusDificultad = fabricacion.pieza_numero * 2; // +2 puntos por cada pieza número
+            const puntosTotales = puntosBase + bonusDificultad;
+            
+            // 3. Crear pieza en almacen_piezas
             const { error: insertError } = await window.supabase
                 .from('almacen_piezas')
                 .insert([{
                     escuderia_id: fabricacion.escuderia_id,
                     area: fabricacion.area,
                     nivel: fabricacion.nivel || 1,
-                    puntos_base: calcularPuntosPorArea(fabricacion.area, fabricacion.nivel),
+                    puntos_base: puntosTotales,
                     calidad: 'Normal',
                     equipada: false,
                     fabricada_en: new Date().toISOString(),
-                    creada_en: new Date().toISOString()
+                    creada_en: new Date().toISOString(),
+                    pieza_numero: fabricacion.pieza_numero || 1
                 }]);
             
             if (insertError) throw insertError;
             
-            // 3. Marcar como completada
+            // 4. Marcar como completada
             await window.supabase
                 .from('fabricacion_actual')
                 .update({ completada: true })
                 .eq('id', fabricacionId);
             
-            // 4. Notificación
+            // 5. Notificación con información detallada
+            const nombreArea = window.f1Manager?.getNombreArea(fabricacion.area) || fabricacion.area;
             if (window.f1Manager && window.f1Manager.showNotification) {
-                window.f1Manager.showNotification(`✅ Pieza ${fabricacion.area} añadida al almacén`, 'success');
+                window.f1Manager.showNotification(
+                    `✅ ${nombreArea} (Pieza ${fabricacion.pieza_numero}) recogida\n+${puntosTotales} puntos técnicos`, 
+                    'success'
+                );
             }
             
-            // 5. Actualizar UI
+            // 6. Actualizar UI
             if (window.f1Manager) {
+                // Parar timer de actualización
+                if (window.f1Manager.productionUpdateTimer) {
+                    clearInterval(window.f1Manager.productionUpdateTimer);
+                }
+                
                 setTimeout(() => {
                     window.f1Manager.updateProductionMonitor();
-                    // Si está en almacén, recargar
+                    
+                    // Actualizar almacén si está abierto
                     if (window.tabManager && window.tabManager.currentTab === 'almacen') {
-                        window.tabManager.loadAlmacenPiezas();
+                        if (window.tabManager.loadAlmacenPiezas) {
+                            window.tabManager.loadAlmacenPiezas();
+                        }
+                    }
+                    
+                    // Actualizar piezas montadas si está en principal
+                    if (window.tabManager && window.tabManager.currentTab === 'principal') {
+                        if (window.f1Manager.cargarPiezasMontadas) {
+                            setTimeout(() => window.f1Manager.cargarPiezasMontadas(), 500);
+                        }
                     }
                 }, 500);
             }
