@@ -1514,10 +1514,10 @@ class F1Manager {
             
             // 2. Obtener piezas montadas del almacén
             const { data: piezasMontadas } = await supabase
-                .from('piezas_almacen')
+                .from('almacen_piezas')
                 .select('*')
                 .eq('escuderia_id', this.escuderia.id)
-                .eq('estado', 'montada');
+                .eq('equipada', true);
             
             // 3. Crear mapeo área -> pieza montada
             const piezasPorArea = {};
