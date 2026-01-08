@@ -1497,40 +1497,45 @@ class F1Manager {
     };
 
     async cargarPiezasMontadas() {
-        console.log('🎯 [DEBUG] Método cargarPiezasMontadas EJECUTADO');
+        console.log('🎯 Cargando piezas montadas...');
         
         const contenedor = document.getElementById('grid-piezas-montadas');
-        console.log('🎯 [DEBUG] Contenedor encontrado?', !!contenedor);
-        
-        if (!contenedor) {
-            console.error('❌ [DEBUG] NO EXISTE #grid-piezas-montadas');
-            return;
-        }
-        
-        console.log('🔧 Cargando piezas montadas...');
+        if (!contenedor) return;
         
         try {
-            // 1. Obtener stats del coche
-            const { data: stats } = await supabase
-                .from('coches_stats')
-                .select('*')
-                .eq('escuderia_id', this.escuderia.id)
-                .single();
-            
-            // 2. Obtener piezas montadas del almacén
+            // 1. Obtener piezas montadas
             const { data: piezasMontadas } = await supabase
                 .from('almacen_piezas')
                 .select('*')
                 .eq('escuderia_id', this.escuderia.id)
                 .eq('equipada', true);
             
+            // 2. MAPEO de nombres de la BD a IDs del código
+            const mapeoAreas = {
+                'Suelo y Difusor': 'suelo',
+                'Motor': 'motor',
+                'Aerodinámica': 'aerodinamica',
+                'Chasis': 'chasis',
+                'Suspensión': 'suspension',
+                'Frenos': 'frenos',
+                'Transmisión': 'transmision',
+                'Electrónica': 'electronica',
+                'Volante': 'volante',
+                'Pontones': 'pontones',
+                'Alerón Delantero': 'aleron_delantero',
+                'Alerón Trasero': 'aleron_trasero',
+                'Caja de Cambios': 'caja_cambios'
+            };
+            
             // 3. Crear mapeo área -> pieza montada
             const piezasPorArea = {};
             piezasMontadas?.forEach(p => {
-                piezasPorArea[p.area] = p;
+                // Convertir nombre de BD a ID del código
+                const areaId = mapeoAreas[p.area] || p.area.toLowerCase().replace(/ /g, '_');
+                piezasPorArea[areaId] = p;
             });
             
-            // 4. Generar 11 botones (uno por área)
+            // 4. Generar 11 botones (usando los IDs que espera tu código)
             const areas = [
                 { id: 'suelo', nombre: 'Suelo', icono: '🏎️' },
                 { id: 'motor', nombre: 'Motor', icono: '⚙️' },
@@ -1555,22 +1560,23 @@ class F1Manager {
                     // Botón con pieza montada
                     puntosTotales += pieza.puntos_base || 0;
                     html += `
-                        <div class="boton-area-montada" onclick="irAlAlmacenDesdePiezas()" title="${area.nombre} - Nivel ${pieza.nivel}">
+                        <div class="boton-area-montada" onclick="irAlAlmacenDesdePiezas()" 
+                             title="${pieza.area} - Nivel ${pieza.nivel} - ${pieza.calidad}">
                             <div class="icono-area">${area.icono}</div>
                             <div class="nombre-area">${area.nombre}</div>
                             <div class="nivel-pieza">Nivel ${pieza.nivel}</div>
                             <div class="puntos-pieza">+${pieza.puntos_base}</div>
+                            <div class="calidad-pieza" style="font-size:0.6rem;color:#aaa">${pieza.calidad}</div>
                         </div>
                     `;
                 } else {
                     // Botón vacío
                     html += `
-                        <div class="boton-area-vacia" onclick="irAlAlmacenDesdePiezas()" title="Sin pieza - Click para equipar">
+                        <div class="boton-area-vacia" onclick="irAlAlmacenDesdePiezas()" 
+                             title="Sin pieza - Click para equipar">
                             <div class="icono-area">+</div>
                             <div class="nombre-area">${area.nombre}</div>
-                            <div style="font-size: 0.7rem; color: #888; margin-top: 5px;">
-                                Vacío
-                            </div>
+                            <div style="font-size:0.7rem; color:#888; margin-top:5px;">Vacío</div>
                         </div>
                     `;
                 }
@@ -1584,29 +1590,33 @@ class F1Manager {
                 puntosElement.textContent = puntosTotales;
             }
             
-            console.log(`✅ Piezas montadas cargadas: ${puntosTotales} puntos totales`);
+            console.log(`✅ Piezas montadas cargadas: ${Object.keys(piezasPorArea).length} áreas equipadas`);
+            console.log(`📊 Puntos totales: ${puntosTotales}`);
             
         } catch (error) {
             console.error('❌ Error cargando piezas montadas:', error);
             // Mostrar botones vacíos como fallback
-            const areas = ['Suelo', 'Motor', 'Alerón Del.', 'Caja Cambios', 'Pontones', 
-                          'Suspensión', 'Alerón Tras.', 'Chasis', 'Frenos', 'Volante', 'Electrónica'];
-            
-            let html = '';
-            areas.forEach(area => {
-                html += `
-                    <div class="boton-area-vacia" onclick="irAlAlmacenDesdePiezas()" title="Sin pieza">
-                        <div class="icono-area">+</div>
-                        <div class="nombre-area">${area}</div>
-                        <div style="font-size: 0.7rem; color: #888; margin-top: 5px;">
-                            Vacío
-                        </div>
-                    </div>
-                `;
-            });
-            
-            contenedor.innerHTML = html;
+            this.mostrarBotonesVacios(contenedor);
         }
+    }
+    
+    // Función auxiliar para mostrar botones vacíos
+    mostrarBotonesVacios(contenedor) {
+        const areas = ['Suelo', 'Motor', 'Alerón Del.', 'Caja Cambios', 'Pontones', 
+                       'Suspensión', 'Alerón Tras.', 'Chasis', 'Frenos', 'Volante', 'Electrónica'];
+        
+        let html = '';
+        areas.forEach(area => {
+            html += `
+                <div class="boton-area-vacia" onclick="irAlAlmacenDesdePiezas()">
+                    <div class="icono-area">+</div>
+                    <div class="nombre-area">${area}</div>
+                    <div style="font-size:0.7rem; color:#888; margin-top:5px;">Vacío</div>
+                </div>
+            `;
+        });
+        
+        contenedor.innerHTML = html;
     }
     
     async esperarSupabase() {
