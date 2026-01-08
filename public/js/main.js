@@ -2655,9 +2655,9 @@ class F1Manager {
         }
         
         this.iniciarTimersAutomaticos();
-    }
     
-    iniciarTimersAutomaticos() {
+    
+    function iniciarTimersAutomaticos() {
         if (this.timersAutomaticos) {
             Object.values(this.timersAutomaticos).forEach(timer => {
                 clearInterval(timer);
