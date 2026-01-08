@@ -5728,22 +5728,19 @@ class F1Manager {
             
             console.log("Fabricación encontrada:", fabricacion);
             
-            // 2. Crear pieza en almacén (AÑADE TODOS LOS CAMPOS NECESARIOS)
+            // 2. Crear pieza en almacén - USAR TABLA CORRECTA: almacen_piezas
             const { error: insertError } = await window.supabase
-                .from('piezas_almacen')
+                .from('almacen_piezas')  // ← TABLA CORRECTA
                 .insert([{
                     escuderia_id: fabricacion.escuderia_id,
                     area: fabricacion.area,
                     nivel: fabricacion.nivel || 1,
-                    puntos_base: 10,
-                    calidad: 'Normal',
-                    equipada: false,
-                    estado: 'disponible',
+                    puntos_base: 10,  // Existe en la tabla
+                    calidad: 'Normal', // Existe en la tabla
+                    equipada: false,   // Existe en la tabla
                     fabricada_en: new Date().toISOString(),
-                    creada_en: new Date().toISOString(),
-                    // Si tu tabla tiene más campos, añádelos aquí
-                    nombre: `${fabricacion.area} Nivel ${fabricacion.nivel || 1}`,
-                    valor_venta: 5000 // o calcula según nivel
+                    creada_en: new Date().toISOString()
+                    // NO añadas 'nombre' ni 'valor_venta' - NO existen en la tabla
                 }]);
             
             if (insertError) {
@@ -5751,7 +5748,7 @@ class F1Manager {
                 throw insertError;
             }
             
-            console.log("✅ Pieza añadida al almacén");
+            console.log("✅ Pieza añadida al almacén (almacen_piezas)");
             
             // 3. Marcar como completada en fabricacion_actual
             const { error: updateError } = await window.supabase
@@ -5765,14 +5762,6 @@ class F1Manager {
             if (updateError) throw updateError;
             
             console.log("✅ Fabricación marcada como completada");
-            
-            // 4. Opcional: Actualizar estadísticas de la escudería
-            if (window.f1Manager && window.f1Manager.escuderia) {
-                // Incrementar contador de piezas fabricadas
-                await window.supabase.rpc('incrementar_piezas_fabricadas', {
-                    escuderia_id_param: window.f1Manager.escuderia.id
-                }).catch(e => console.log("No se pudo actualizar estadísticas:", e));
-            }
             
             // 5. Mostrar notificación de ÉXITO
             if (window.f1Manager && window.f1Manager.showNotification) {
