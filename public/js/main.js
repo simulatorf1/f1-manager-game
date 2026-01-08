@@ -4875,72 +4875,167 @@ class F1Manager {
             console.error('❌ No se encontró #pilotos-container');
             return;
         }
-    
-        // Calcular estrategas contratados
+        
         const estrategasContratados = this.pilotos || [];
         
-        // Actualizar contador en el header
+        // Actualizar contador
         const contadorElement = document.getElementById('contador-estrategas');
         if (contadorElement) {
             contadorElement.textContent = `${estrategasContratados.length}/4`;
         }
         
-        // HTML del panel compacto de estrategas
+        // HTML de la cuadrícula 2x2 minimalista
         let html = `
-            <div class="estrategas-compact-container">
-                <div class="estrategas-header-compact">
-                    <h3><i class="fas fa-users"></i> ESTRATEGAS</h3>
-                    <span class="contador-compact">${estrategasContratados.length}/4</span>
-                </div>
-                
-                <div class="estrategas-grid-compact">
+            <div class="estrategas-grid-minimal">
         `;
         
-        // Mostrar 4 huecos fijos (como una matriz 2x2)
+        // Mostrar 4 huecos (2 filas x 2 columnas)
         for (let i = 0; i < 4; i++) {
             const estratega = estrategasContratados[i];
             
             if (estratega) {
-                // Hueco con estratega contratado
+                // Botón con estratega contratado
                 html += `
-                    <div class="estratega-btn-compact contratado" title="${estratega.nombre || 'Estratega'} - ${estratega.especialidad || 'General'}">
-                        <div class="estratega-icon-compact">
+                    <div class="estratega-btn contratado" onclick="mostrarInfoEstratega(${i})">
+                        <div class="estratega-icon">
                             <i class="fas fa-user-tie"></i>
                         </div>
-                        <div class="estratega-info-mini">
-                            <span class="estratega-nombre-mini">${this.getIniciales(estratega.nombre)}</span>
-                            <span class="estratega-bono-mini">+${estratega.bonificacion_valor || 15}%</span>
+                        <div class="estratega-info">
+                            <span class="estratega-nombre">${estratega.nombre || 'Estratega'}</span>
+                            <span class="estratega-salario">€${(estratega.salario || 0).toLocaleString()}/mes</span>
+                            <span class="estratega-funcion">${estratega.especialidad || 'General'}</span>
                         </div>
+                        <div class="estratega-bono">+${estratega.bonificacion_valor || 0}%</div>
                     </div>
                 `;
             } else {
-                // Hueco vacío (mostrar como punto)
+                // Botón vacío para contratar
                 html += `
-                    <div class="estratega-btn-compact vacio" onclick="mostrarModalContratacion(${i + 1})" title="Hueco disponible - Click para contratar">
-                        <div class="estratega-icon-compact">
-                            <i class="fas fa-circle"></i>
+                    <div class="estratega-btn vacio" onclick="contratarNuevoEstratega(${i})">
+                        <div class="estratega-icon">
+                            <i class="fas fa-plus"></i>
                         </div>
-                        <div class="estratega-info-mini">
-                            <span class="estratega-nombre-mini">---</span>
-                            <span class="estratega-bono-mini">Vacío</span>
+                        <div class="estratega-info">
+                            <span class="estratega-nombre">Vacío</span>
+                            <span class="estratega-funcion">Click para contratar</span>
                         </div>
                     </div>
                 `;
             }
         }
         
-        html += `
-                </div>
-                
-                <div class="estrategas-footer-compact">
-                    <button class="btn-gestionar-compact" onclick="gestionarEstrategas()">
-                        <i class="fas fa-cog"></i> Gestionar
-                    </button>
-                </div>
-            </div>
-        `;
+        html += `</div>`;
         
         container.innerHTML = html;
+        
+        // Añadir estilos CSS
+        const styles = document.createElement('style');
+        styles.innerHTML = `
+            .estrategas-grid-minimal {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(2, 1fr);
+                gap: 10px;
+                height: 100%;
+            }
+            
+            .estratega-btn {
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                padding: 12px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                position: relative;
+                height: 110px;
+            }
+            
+            .estratega-btn.contratado {
+                border-color: rgba(0, 210, 190, 0.3);
+                background: rgba(0, 210, 190, 0.05);
+            }
+            
+            .estratega-btn.contratado:hover {
+                border-color: #00d2be;
+                background: rgba(0, 210, 190, 0.1);
+                transform: translateY(-2px);
+            }
+            
+            .estratega-btn.vacio {
+                border-color: rgba(255, 255, 255, 0.1);
+                background: rgba(255, 255, 255, 0.02);
+            }
+            
+            .estratega-btn.vacio:hover {
+                border-color: rgba(0, 210, 190, 0.5);
+                background: rgba(0, 210, 190, 0.08);
+                transform: translateY(-2px);
+            }
+            
+            .estratega-icon {
+                font-size: 1.5rem;
+                margin-bottom: 8px;
+                color: #00d2be;
+            }
+            
+            .estratega-btn.vacio .estratega-icon {
+                color: #888;
+            }
+            
+            .estratega-info {
+                text-align: center;
+                width: 100%;
+            }
+            
+            .estratega-nombre {
+                display: block;
+                font-weight: bold;
+                font-size: 0.9rem;
+                color: white;
+                margin-bottom: 3px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .estratega-salario {
+                display: block;
+                font-size: 0.75rem;
+                color: #4CAF50;
+                margin-bottom: 3px;
+            }
+            
+            .estratega-funcion {
+                display: block;
+                font-size: 0.7rem;
+                color: #aaa;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .estratega-bono {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background: rgba(0, 210, 190, 0.2);
+                color: #00d2be;
+                font-size: 0.7rem;
+                padding: 2px 6px;
+                border-radius: 10px;
+                font-weight: bold;
+            }
+        `;
+        
+        // Añadir estilos solo si no existen
+        if (!document.getElementById('estilos-estrategas')) {
+            styles.id = 'estilos-estrategas';
+            document.head.appendChild(styles);
+        }
     }
     
     // Añade este método auxiliar para obtener iniciales
@@ -5961,7 +6056,24 @@ class F1Manager {
             }
         }, 2000);
     };
-
+    // Añade esto al final de tu archivo, con las otras funciones globales
+    window.mostrarInfoEstratega = function(index) {
+        const estratega = window.f1Manager.pilotos[index];
+        if (estratega) {
+            alert(`📊 Estratega: ${estratega.nombre}\n💰 Salario: €${estratega.salario}/mes\n🎯 Función: ${estratega.especialidad}\n✨ Bono: +${estratega.bonificacion_valor}% puntos`);
+        }
+    };
+    
+    window.contratarNuevoEstratega = function(hueco) {
+        // Esto abriría tu sistema de contratación
+        if (window.tabManager) {
+            window.tabManager.switchTab('equipo'); // Asume que tienes pestaña "equipo"
+        } else {
+            // Fallback simple
+            alert(`Contratar nuevo estratega para hueco ${hueco + 1}\nRedirigiendo al mercado...`);
+            // Aquí implementarías tu lógica de contratación
+        }
+    };
     // Al final del archivo, con las otras funciones globales
     window.recogerPiezaTutorial = async function(fabricacionId, area) {
         try {
