@@ -4567,7 +4567,7 @@ class F1Manager {
                     <div class="footer-content">
                         <div class="footer-logo">
                             <i class="fas fa-flag-checkered"></i>
-                            <span>F1 Manager E-Strategy</span>
+                            <span>Structural Solidworks</span>
                         </div>
                         <div class="footer-links">
                             <a href="#"><i class="fas fa-question-circle"></i> Ayuda</a>
