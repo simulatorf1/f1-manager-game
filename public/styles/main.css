@@ -3305,6 +3305,301 @@ body {
        color: #00d2be !important;
        border-color: #00d2be !important;
    }
+
+   /* ==================== */
+   /* ALMACÉN CON BOTONES */
+   /* ==================== */
+   
+   .almacen-botones-container {
+       padding: 20px;
+       max-width: 1400px;
+       margin: 0 auto;
+   }
+   
+   .almacen-header-botones {
+       margin-bottom: 30px;
+       text-align: center;
+   }
+   
+   .almacen-header-botones h2 {
+       font-family: 'Orbitron', sans-serif;
+       font-size: 2rem;
+       color: white;
+       margin-bottom: 10px;
+   }
+   
+   .subtitulo-almacen {
+       color: #888;
+       font-size: 1rem;
+       max-width: 600px;
+       margin: 0 auto;
+       line-height: 1.5;
+   }
+   
+   /* Filas por área */
+   .fila-area-botones {
+       margin-bottom: 30px;
+       background: rgba(30, 30, 40, 0.6);
+       border-radius: 12px;
+       padding: 20px;
+       border: 1px solid rgba(255, 255, 255, 0.1);
+   }
+   
+   .area-header-botones {
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+       margin-bottom: 20px;
+       padding-bottom: 15px;
+       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+   }
+   
+   .area-icono-titulo {
+       display: flex;
+       align-items: center;
+       gap: 15px;
+   }
+   
+   .area-icono {
+       font-size: 1.8rem;
+       width: 50px;
+       height: 50px;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       background: rgba(255, 255, 255, 0.05);
+       border-radius: 10px;
+   }
+   
+   .area-nombre {
+       font-family: 'Orbitron', sans-serif;
+       font-size: 1.3rem;
+       color: white;
+       margin: 0;
+   }
+   
+   .area-contador {
+       text-align: right;
+   }
+   
+   .contador-equipadas {
+       display: block;
+       color: #4CAF50;
+       font-weight: bold;
+       font-size: 1rem;
+   }
+   
+   .contador-total {
+       display: block;
+       color: #888;
+       font-size: 0.9rem;
+   }
+   
+   /* Grid de botones */
+   .area-botones-grid {
+       display: flex;
+       flex-wrap: wrap;
+       gap: 12px;
+       min-height: 80px;
+   }
+   
+   /* Botones individuales */
+   .boton-pieza {
+       width: 70px;
+       height: 70px;
+       border: none;
+       border-radius: 10px;
+       cursor: pointer;
+       position: relative;
+       transition: all 0.3s ease;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       padding: 0;
+   }
+   
+   .boton-pieza:hover {
+       transform: translateY(-5px);
+       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+   }
+   
+   .boton-pieza.disponible {
+       border: 2px solid rgba(255, 255, 255, 0.3);
+   }
+   
+   .boton-pieza.equipada {
+       border: 3px solid #FFD700;
+       box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+   }
+   
+   .contenido-boton {
+       position: relative;
+       width: 100%;
+       height: 100%;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+   }
+   
+   .boton-pieza .fa-check {
+       position: absolute;
+       top: 5px;
+       right: 5px;
+       color: #FFD700;
+       font-size: 1rem;
+       text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+   }
+   
+   .info-mini {
+       position: absolute;
+       bottom: 5px;
+       left: 5px;
+   }
+   
+   .nivel-mini {
+       background: rgba(0, 0, 0, 0.7);
+       color: white;
+       font-size: 0.8rem;
+       font-weight: bold;
+       padding: 2px 6px;
+       border-radius: 10px;
+   }
+   
+   .badge-puntos {
+       position: absolute;
+       top: 5px;
+       left: 5px;
+       background: rgba(0, 0, 0, 0.8);
+       color: #FFD700;
+       font-size: 0.7rem;
+       font-weight: bold;
+       padding: 2px 5px;
+       border-radius: 8px;
+   }
+   
+   /* Sin piezas */
+   .sin-piezas-mensaje {
+       color: #666;
+       font-style: italic;
+       padding: 20px;
+       text-align: center;
+       width: 100%;
+   }
+   
+   /* Leyenda */
+   .almacen-leyenda-botones {
+       display: flex;
+       justify-content: center;
+       gap: 30px;
+       margin: 40px 0;
+       padding: 20px;
+       background: rgba(0, 0, 0, 0.3);
+       border-radius: 10px;
+   }
+   
+   .leyenda-item {
+       display: flex;
+       align-items: center;
+       gap: 10px;
+       color: #aaa;
+   }
+   
+   .leyenda-boton {
+       width: 30px;
+       height: 30px;
+       border-radius: 6px;
+   }
+   
+   .leyenda-boton.disponible {
+       background: rgba(100, 100, 255, 0.7);
+       border: 2px solid rgba(255, 255, 255, 0.3);
+   }
+   
+   .leyenda-boton.equipado {
+       background: rgba(100, 100, 255, 0.9);
+       border: 3px solid #FFD700;
+   }
+   
+   .leyenda-boton.vacio {
+       background: rgba(255, 255, 255, 0.05);
+       border: 2px dashed rgba(255, 255, 255, 0.2);
+   }
+   
+   /* Acciones */
+   .almacen-acciones {
+       text-align: center;
+       margin-top: 30px;
+   }
+   
+   .btn-vender-todas {
+       background: #dc3545;
+       color: white;
+       border: none;
+       padding: 15px 30px;
+       border-radius: 8px;
+       font-size: 1.1rem;
+       cursor: not-allowed;
+       opacity: 0.6;
+       font-family: 'Orbitron', sans-serif;
+   }
+   
+   /* Vacío */
+   .almacen-vacio-botones {
+       text-align: center;
+       padding: 60px 20px;
+       color: #666;
+   }
+   
+   .almacen-vacio-botones i {
+       margin-bottom: 20px;
+       opacity: 0.3;
+   }
+   
+   .btn-ir-taller {
+       margin-top: 20px;
+       padding: 12px 24px;
+       background: linear-gradient(135deg, #00d2be, #009688);
+       color: white;
+       border: none;
+       border-radius: 8px;
+       font-family: 'Orbitron', sans-serif;
+       cursor: pointer;
+       font-weight: bold;
+   }
+   
+   /* Error */
+   .error-almacen {
+       text-align: center;
+       padding: 40px;
+       color: #ff4444;
+   }
+   
+   /* Responsive */
+   @media (max-width: 768px) {
+       .almacen-botones-container {
+           padding: 10px;
+       }
+       
+       .area-header-botones {
+           flex-direction: column;
+           align-items: flex-start;
+           gap: 10px;
+       }
+       
+       .area-contador {
+           text-align: left;
+       }
+       
+       .boton-pieza {
+           width: 60px;
+           height: 60px;
+       }
+       
+       .almacen-leyenda-botones {
+           flex-direction: column;
+           gap: 15px;
+       }
+   }
    
    /* ========================
       ESTILOS PARA COUNTDOWN Y PRODUCCIÓN
