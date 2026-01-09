@@ -1525,6 +1525,467 @@ body {
 }
 
 /* ============================================
+   ALMACÉN - VERSIÓN PROFESIONAL CON BOTONES
+============================================ */
+
+.almacen-botones-container {
+    width: 100%;
+    padding: 20px;
+}
+
+.almacen-header-botones {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(30, 30, 40, 0.9));
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    border: 2px solid rgba(0, 210, 190, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.almacen-header-botones h2 {
+    font-family: var(--font-title);
+    font-size: 2.2rem;
+    color: white;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.almacen-header-botones h2 i {
+    color: var(--f1-accent);
+    font-size: 2.5rem;
+}
+
+.subtitulo-almacen {
+    color: #aaa;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    max-width: 800px;
+}
+
+/* ÁREAS DEL ALMACÉN */
+.fila-area-botones {
+    background: linear-gradient(135deg, rgba(42, 42, 56, 0.9), rgba(30, 30, 40, 0.95));
+    border-radius: 20px;
+    margin-bottom: 30px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.fila-area-botones:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+}
+
+.area-header-botones {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.area-icono-titulo {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.area-icono {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 3px solid;
+    font-size: 1.8rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.area-nombre {
+    font-family: var(--font-title);
+    font-size: 1.8rem;
+    color: white;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.area-contador {
+    display: flex;
+    gap: 20px;
+    font-family: var(--font-title);
+}
+
+.contador-equipadas {
+    background: linear-gradient(135deg, #00d2be, #009688);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.contador-total {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* GRID DE BOTONES - PROFESIONAL */
+.area-botones-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 25px;
+    padding: 30px;
+    justify-items: center;
+}
+
+/* BOTÓN DE PIEZA - ESTILO PROFESIONAL */
+.boton-pieza {
+    width: 160px;
+    height: 160px;
+    border-radius: 25px;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    font-family: var(--font-title);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.boton-pieza::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+    border-radius: 25px;
+    z-index: 1;
+}
+
+.boton-pieza:hover {
+    transform: translateY(-10px) scale(1.05);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    filter: brightness(1.2);
+}
+
+/* BOTÓN EQUIPADO (DORADO - VIP) */
+.boton-pieza.equipada {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #000;
+    border: 3px solid #FFA500;
+}
+
+.boton-pieza.equipada::after {
+    content: '✓';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    z-index: 3;
+}
+
+.boton-pieza.equipada:hover {
+    background: linear-gradient(135deg, #FFE55C, #FFB347);
+    border-color: #FFD700;
+}
+
+/* BOTÓN DISPONIBLE (COLOR DEL ÁREA) */
+.boton-pieza.disponible {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.boton-pieza.disponible:hover {
+    border-color: white;
+    transform: translateY(-10px) scale(1.05);
+}
+
+/* CONTENIDO DEL BOTÓN */
+.contenido-boton {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    position: relative;
+    z-index: 2;
+}
+
+.boton-pieza i {
+    font-size: 2.8rem;
+    margin-bottom: 5px;
+}
+
+.boton-pieza.equipada i {
+    color: #000;
+}
+
+.info-mini {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.nivel-mini {
+    font-size: 2.5rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.boton-pieza.equipada .nivel-mini {
+    color: #000;
+}
+
+.boton-pieza.disponible .nivel-mini {
+    color: white;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* BADGE DE PUNTOS */
+.badge-puntos {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    min-width: 60px;
+    text-align: center;
+    z-index: 3;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.boton-pieza.equipada .badge-puntos {
+    background: rgba(0, 0, 0, 0.8);
+    color: #FFD700;
+    border-color: #FFA500;
+}
+
+/* ESTADOS ESPECIALES */
+.boton-pieza:active {
+    transform: translateY(-5px) scale(0.98);
+    transition: transform 0.1s;
+}
+
+.boton-pieza.equipada:hover::before {
+    background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+}
+
+.boton-pieza.disponible:hover::before {
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+}
+
+/* RESPONSIVE PARA BOTONES */
+@media (max-width: 1200px) {
+    .area-botones-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+    
+    .boton-pieza {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .area-icono {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+    
+    .area-nombre {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .area-header-botones {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .area-contador {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .area-botones-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 15px;
+        padding: 20px;
+    }
+    
+    .boton-pieza {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .boton-pieza i {
+        font-size: 2.2rem;
+    }
+    
+    .nivel-mini {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .area-botones-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+    
+    .boton-pieza {
+        width: 100px;
+        height: 100px;
+        border-radius: 20px;
+    }
+    
+    .boton-pieza i {
+        font-size: 1.8rem;
+    }
+    
+    .nivel-mini {
+        font-size: 1.6rem;
+    }
+    
+    .badge-puntos {
+        font-size: 0.7rem;
+        padding: 3px 10px;
+        bottom: 8px;
+    }
+}
+
+/* ESTADO VACÍO DEL ALMACÉN */
+.almacen-vacio-botones {
+    text-align: center;
+    padding: 60px 20px;
+    background: linear-gradient(135deg, rgba(42, 42, 56, 0.8), rgba(30, 30, 40, 0.9));
+    border-radius: 20px;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    margin: 40px 0;
+}
+
+.almacen-vacio-botones i {
+    font-size: 5rem;
+    color: rgba(255, 255, 255, 0.2);
+    margin-bottom: 30px;
+    display: block;
+}
+
+.almacen-vacio-botones h3 {
+    font-family: var(--font-title);
+    font-size: 2rem;
+    color: white;
+    margin-bottom: 15px;
+}
+
+.almacen-vacio-botones p {
+    color: #aaa;
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto 30px;
+    line-height: 1.6;
+}
+
+.btn-ir-taller {
+    background: linear-gradient(135deg, var(--f1-red), #ff4444);
+    color: white;
+    border: none;
+    padding: 15px 35px;
+    border-radius: 30px;
+    font-family: var(--font-title);
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(225, 6, 0, 0.3);
+}
+
+.btn-ir-taller:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(225, 6, 0, 0.4);
+    background: linear-gradient(135deg, #ff4444, #ff3333);
+}
+
+/* EFECTO DE DESTELLO AL EQUIPAR */
+@keyframes brilloEquipar {
+    0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
+    70% { box-shadow: 0 0 0 20px rgba(255, 215, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+}
+
+.boton-pieza.equipando {
+    animation: brilloEquipar 0.8s ease;
+}
+
+/* EFECTO DE DESTELLO AL DESEQUIPAR */
+@keyframes brilloDesequipar {
+    0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+    70% { box-shadow: 0 0 0 20px rgba(255, 0, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+}
+
+.boton-pieza.desequipando {
+    animation: brilloDesequipar 0.8s ease;
+}
+
+/* INDICADOR DE PIEZA NUEVA (últimas 24h) */
+.boton-pieza.nueva::before {
+    content: 'NUEVA';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, #FF5722, #FF9800);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    z-index: 4;
+    transform: rotate(15deg);
+    box-shadow: 0 3px 10px rgba(255, 87, 34, 0.4);
+}
+
+
+/* ============================================
    RESPONSIVE
 ============================================ */
 @media (max-width: 1024px) {
