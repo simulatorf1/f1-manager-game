@@ -1974,7 +1974,7 @@ class F1Manager {
                     area: areaId,
                     nivel: nivel,
                     tiempo_inicio: ahora.toISOString(),
-                    tiempo_fin: tiempoFin.toISOString().replace('Z', ''),
+                    tiempo_fin: tiempoFin.toISOString(), // ← DEJA LA 'Z' INTACTA
                     completada: false,
                     costo: costo,
                     creada_en: ahora.toISOString()
@@ -6642,12 +6642,10 @@ class F1Manager {
             // Verificar tiempos REALES de cada fabricación
             const ahora = new Date();
             const fabricacionesConEstado = (fabricaciones || []).map(f => {
-                let tiempoFin = new Date(f.tiempo_fin);
-                if (f.tiempo_fin && f.tiempo_fin.endsWith('Z')) {
-                    tiempoFin = new Date(tiempoFin.getTime() - (new Date().getTimezoneOffset() * 60000));
-                }
+                // SIEMPRE interpretar como UTC
+                const tiempoFin = new Date(f.tiempo_fin);
                 const tiempoRestante = tiempoFin - ahora;
-                const lista = tiempoRestante <= 0; // SOLO lista si el tiempo restante es <= 0
+                const lista = tiempoRestante <= 0; // ← Comparación directa
                 
                 return {
                     ...f,
@@ -6787,8 +6785,8 @@ class F1Manager {
                 const fabricacion = fabricaciones.find(f => f.id === fabricacionId);
                 if (!fabricacion) return;
                 
-                const ahora = new Date();
-                const tiempoFin = new Date(fabricacion.tiempo_fin);
+                const ahora = new Date(); // Ya está en hora local
+                const tiempoFin = new Date(fabricacion.tiempo_fin); // Esto ya es UTC si guardaste con 'Z'
                 const tiempoRestante = tiempoFin - ahora;
                 
                 if (tiempoRestante <= 0) {
@@ -6973,8 +6971,8 @@ class F1Manager {
                     .single();
                     
                 if (fabricacion) {
-                    const ahora = new Date();
-                    const tiempoFin = new Date(fabricacion.tiempo_fin);
+                    const ahora = new Date(); // Ya está en hora local
+                    const tiempoFin = new Date(fabricacion.tiempo_fin); // Esto ya es UTC si guardaste con 'Z'
                     const tiempoRestante = tiempoFin - ahora;
                     const tiempoFormateado = tiempoRestante > 0 ? 
                         window.f1Manager?.formatTime(tiempoRestante) : "Finalizando...";
@@ -7431,7 +7429,7 @@ class F1Manager {
                     area: infoPieza.nombre, // ¡IMPORTANTE! Usar nombre completo
                     nivel: 1,
                     tiempo_inicio: tiempoInicio.toISOString(),
-                    tiempo_fin: tiempoFin.toISOString().replace('Z', ''),
+                    tiempo_fin: tiempoFin.toISOString(), // ← DEJA LA 'Z' INTACTA
                     completada: false,
                     costo: infoPieza.costo,
                     creada_en: tiempoInicio.toISOString()
