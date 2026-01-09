@@ -6640,12 +6640,15 @@ class F1Manager {
             console.log('📊 Fabricaciones activas encontradas:', fabricaciones?.length || 0);
             
             // Verificar tiempos REALES de cada fabricación
-            const ahora = new Date();
+            
+            const ahoraUTC = Date.now(); // UTC en milisegundos
             const fabricacionesConEstado = (fabricaciones || []).map(f => {
-                // SIEMPRE interpretar como UTC
-                const tiempoFin = new Date(f.tiempo_fin);
-                const tiempoRestante = tiempoFin - ahora;
-                const lista = tiempoRestante <= 0; // ← Comparación directa
+                // Asegurar que se interpreta como UTC
+                const tiempoFinStr = f.tiempo_fin.endsWith('Z') ? f.tiempo_fin : f.tiempo_fin + 'Z';
+                const tiempoFinUTC = new Date(tiempoFinStr).getTime();
+                
+                const tiempoRestante = tiempoFinUTC - ahoraUTC;
+                const lista = tiempoRestante <= 0;
                 
                 return {
                     ...f,
@@ -6785,9 +6788,10 @@ class F1Manager {
                 const fabricacion = fabricaciones.find(f => f.id === fabricacionId);
                 if (!fabricacion) return;
                 
-                const ahora = new Date(); // Ya está en hora local
-                const tiempoFin = new Date(fabricacion.tiempo_fin); // Esto ya es UTC si guardaste con 'Z'
-                const tiempoRestante = tiempoFin - ahora;
+                const ahoraUTC = Date.now();
+                const tiempoFinStr = fabricacion.tiempo_fin.endsWith('Z') ? fabricacion.tiempo_fin : fabricacion.tiempo_fin + 'Z';
+                const tiempoFinUTC = new Date(tiempoFinStr).getTime();
+                const tiempoRestante = tiempoFinUTC - ahoraUTC;
                 
                 if (tiempoRestante <= 0) {
                     // ¡LISTA!
