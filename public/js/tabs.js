@@ -845,7 +845,7 @@ class TabManager {
         const g = parseInt(colorHex.slice(3, 5), 16);
         const b = parseInt(colorHex.slice(5, 7), 16);
         return `rgba(${r}, ${g}, ${b}, ${factor})`;
-    },
+    }
     
     // Configurar eventos de los botones (añadir después del método anterior)
     configurarEventosBotonesAlmacen() {
