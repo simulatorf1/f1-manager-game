@@ -710,7 +710,7 @@ class TabManager {
     }
     
     async loadAlmacenPiezas() {
-        console.log('🔧 Cargando almacén con botones MEJORADOS...');
+        console.log('🔧 Cargando almacén con botones HORIZONTALES grandes...');
         const container = document.getElementById('areas-grid-botones');
         if (!container || !window.f1Manager?.escuderia?.id) {
             console.error('❌ No hay contenedor o escudería');
@@ -791,44 +791,47 @@ class TabManager {
                                 </div>
                             </div>
                             
-                            <div class="area-botones-grid-grande">
+                            <div class="area-botones-fila-horizontal">
                     `;
                     
-                    // UN BOTÓN GRANDE POR CADA PIEZA
+                    // BOTONES GRANDES EN FILA HORIZONTAL
                     piezasArea.forEach(pieza => {
                         const esEquipada = piezaEquipada && piezaEquipada.id === pieza.id;
                         const puntos = pieza.puntos_base || 10;
                         const nivel = pieza.nivel || 1;
                         
-                        // Clase especial si está equipada (solo puede haber una)
+                        // Clase especial si está equipada
                         const claseEquipada = esEquipada ? 'equipada-seleccionada' : '';
                         
                         html += `
-                            <div class="pieza-item-grande ${claseEquipada}" 
-                                 onclick="window.tabManager.equiparODesequiparPieza('${pieza.id}', ${esEquipada})">
-                                <div class="pieza-grande-cabecera">
-                                    <span class="pieza-nivel-grande">NIVEL ${nivel}</span>
-                                    ${esEquipada ? '<span class="pieza-equipada-badge">✓ EQUIPADA</span>' : ''}
+                            <button class="boton-pieza-grande ${claseEquipada}" 
+                                    data-pieza-id="${pieza.id}"
+                                    data-area="${areaConfig.id}"
+                                    data-nivel="${nivel}"
+                                    onclick="window.tabManager.equiparODesequiparPieza('${pieza.id}', ${esEquipada})"
+                                    title="${esEquipada ? 'EQUIPADA - Click para desequipar' : 'DISPONIBLE - Click para equipar'}">
+                                
+                                <div class="boton-pieza-cabecera">
+                                    <span class="badge-nivel">N${nivel}</span>
+                                    ${esEquipada ? '<span class="badge-equipada">✓</span>' : ''}
                                 </div>
                                 
-                                <div class="pieza-grande-icono" style="color: ${areaConfig.color}">
-                                    <i class="${areaConfig.icon} fa-2x"></i>
+                                <div class="boton-pieza-icono">
+                                    <i class="${areaConfig.icon} fa-lg"></i>
                                 </div>
                                 
-                                <div class="pieza-grande-info">
-                                    <span class="pieza-area-nombre">${areaConfig.name}</span>
-                                    <div class="pieza-puntos-grande">
+                                <div class="boton-pieza-info">
+                                    <div class="puntos-display">
                                         <i class="fas fa-star"></i>
-                                        <span>${puntos} pts</span>
+                                        <span>${puntos}</span>
                                     </div>
                                 </div>
                                 
-                                <div class="pieza-grande-estado">
-                                    ${esEquipada ? 
-                                        '<i class="fas fa-check-circle"></i> ACTIVA' : 
-                                        '<i class="fas fa-power-off"></i> DISPONIBLE'}
+                                <div class="boton-pieza-estado">
+                                    ${esEquipada ? 'ACTIVA' : 'DISPONIBLE'}
                                 </div>
-                            </div>
+                                
+                            </button>
                         `;
                     });
                     
@@ -840,7 +843,7 @@ class TabManager {
             });
     
             container.innerHTML = html;
-            console.log('✅ Almacén mejorado cargado con', Object.keys(piezasPorArea).length, 'áreas');
+            console.log('✅ Almacén horizontal cargado con', Object.keys(piezasPorArea).length, 'áreas');
     
         } catch (error) {
             console.error('❌ Error cargando almacén:', error);
