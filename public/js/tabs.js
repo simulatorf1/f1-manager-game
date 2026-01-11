@@ -710,7 +710,7 @@ class TabManager {
     }
     
     async loadAlmacenPiezas() {
-        console.log('🔧 Cargando almacén con botones...');
+        console.log('🔧 Cargando almacén con botones MEJORADOS...');
         const container = document.getElementById('areas-grid-botones');
         if (!container || !window.f1Manager?.escuderia?.id) {
             console.error('❌ No hay contenedor o escudería');
@@ -755,7 +755,7 @@ class TabManager {
                 piezasPorArea[pieza.area].push(pieza);
             });
     
-            // 2. Áreas conocidas (usa las tuyas o estas por defecto)
+            // 2. Áreas conocidas
             const areasConocidas = window.CAR_AREAS || [
                 { id: 'motor', name: 'Motor', color: '#FF5722', icon: 'fas fa-cogs' },
                 { id: 'chasis', name: 'Chasis', color: '#4CAF50', icon: 'fas fa-car' },
@@ -772,7 +772,9 @@ class TabManager {
                                   [];
                 
                 if (piezasArea.length > 0) {
-                    const equipadas = piezasArea.filter(p => p.equipada).length;
+                    // Encontrar la pieza equipada actualmente (solo una por área)
+                    const piezaEquipada = piezasArea.find(p => p.equipada);
+                    const equipadas = piezaEquipada ? 1 : 0;
                     
                     html += `
                         <div class="fila-area-botones">
@@ -784,37 +786,49 @@ class TabManager {
                                     <h3 class="area-nombre">${areaConfig.name}</h3>
                                 </div>
                                 <div class="area-contador">
-                                    <span class="contador-equipadas">${equipadas} equipada${equipadas !== 1 ? 's' : ''}</span>
                                     <span class="contador-total">${piezasArea.length} pieza${piezasArea.length !== 1 ? 's' : ''}</span>
+                                    ${equipadas > 0 ? '<span class="contador-equipadas">✓ 1 equipada</span>' : ''}
                                 </div>
                             </div>
                             
-                            <div class="area-botones-grid">
+                            <div class="area-botones-grid-grande">
                     `;
                     
-                    // UN BOTÓN POR CADA PIEZA
+                    // UN BOTÓN GRANDE POR CADA PIEZA
                     piezasArea.forEach(pieza => {
-                        const esEquipada = pieza.equipada;
+                        const esEquipada = piezaEquipada && piezaEquipada.id === pieza.id;
                         const puntos = pieza.puntos_base || 10;
                         const nivel = pieza.nivel || 1;
                         
+                        // Clase especial si está equipada (solo puede haber una)
+                        const claseEquipada = esEquipada ? 'equipada-seleccionada' : '';
+                        
                         html += `
-                            <button class="boton-pieza ${esEquipada ? 'equipada' : 'disponible'}" 
-                                    data-pieza-id="${pieza.id}"
-                                    data-area="${areaConfig.id}"
-                                    data-nivel="${nivel}"
-                                    onclick="window.tabManager.equiparODesequiparPieza('${pieza.id}', ${esEquipada})"
-                                    title="${areaConfig.name} - Nivel ${nivel} (${puntos} pts)
-    ${esEquipada ? '✓ EQUIPADA - Click para desequipar' : 'DISPONIBLE - Click para equipar'}"
-                                    style="background-color: ${this.ajustarColor(areaConfig.color, esEquipada ? 0.9 : 0.7)}">
-                                <div class="contenido-boton">
-                                    ${esEquipada ? '<i class="fas fa-check"></i>' : ''}
-                                    <div class="info-mini">
-                                        <span class="nivel-mini">${nivel}</span>
+                            <div class="pieza-item-grande ${claseEquipada}" 
+                                 onclick="window.tabManager.equiparODesequiparPieza('${pieza.id}', ${esEquipada})">
+                                <div class="pieza-grande-cabecera">
+                                    <span class="pieza-nivel-grande">NIVEL ${nivel}</span>
+                                    ${esEquipada ? '<span class="pieza-equipada-badge">✓ EQUIPADA</span>' : ''}
+                                </div>
+                                
+                                <div class="pieza-grande-icono" style="color: ${areaConfig.color}">
+                                    <i class="${areaConfig.icon} fa-2x"></i>
+                                </div>
+                                
+                                <div class="pieza-grande-info">
+                                    <span class="pieza-area-nombre">${areaConfig.name}</span>
+                                    <div class="pieza-puntos-grande">
+                                        <i class="fas fa-star"></i>
+                                        <span>${puntos} pts</span>
                                     </div>
                                 </div>
-                                <div class="badge-puntos">${puntos}</div>
-                            </button>
+                                
+                                <div class="pieza-grande-estado">
+                                    ${esEquipada ? 
+                                        '<i class="fas fa-check-circle"></i> ACTIVA' : 
+                                        '<i class="fas fa-power-off"></i> DISPONIBLE'}
+                                </div>
+                            </div>
                         `;
                     });
                     
@@ -826,7 +840,7 @@ class TabManager {
             });
     
             container.innerHTML = html;
-            console.log('✅ Almacén cargado con', Object.keys(piezasPorArea).length, 'áreas');
+            console.log('✅ Almacén mejorado cargado con', Object.keys(piezasPorArea).length, 'áreas');
     
         } catch (error) {
             console.error('❌ Error cargando almacén:', error);
