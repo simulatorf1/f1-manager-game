@@ -1711,7 +1711,233 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #ff4444;
 }
+/* === ESTILOS F1 PARA ALMACÉN === */
 
+.fila-area-f1 {
+    background: rgba(10, 10, 15, 0.8);
+    border-radius: 12px;
+    margin-bottom: 25px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.area-header-f1 {
+    display: flex;
+    align-items: center;
+    padding: 15px 25px;
+    background: linear-gradient(90deg, rgba(20, 20, 30, 0.9), rgba(15, 15, 25, 0.9));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 4px solid #FF1E00;
+}
+
+.area-icono-f1 {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px;
+    font-size: 24px;
+}
+
+.area-titulo-f1 {
+    flex-grow: 1;
+}
+
+.area-titulo-f1 h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, #fff, #aaa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.area-subtitulo {
+    font-size: 12px;
+    color: #888;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.area-equipada-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 15px;
+    border-radius: 20px;
+}
+
+.equipada-led {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #00ff00;
+    animation: pulse 2s infinite;
+}
+
+.equipada-led.off {
+    background: #ff0000;
+    animation: none;
+    opacity: 0.5;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* GRID DE PIEZAS */
+.piezas-grid-f1 {
+    display: flex;
+    gap: 20px;
+    padding: 25px;
+    overflow-x: auto;
+}
+
+/* CARD DE PIEZA F1 */
+.pieza-card-f1 {
+    flex: 0 0 auto;
+    width: 220px;
+    background: linear-gradient(145deg, #1a1a2e, #16213e);
+    border: 2px solid;
+    border-radius: 15px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.pieza-card-f1:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.pieza-card-f1.equipada {
+    border: 3px solid;
+    box-shadow: 0 0 30px rgba(255, 30, 0, 0.4);
+}
+
+.equipada-glow {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 17px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.pieza-header-f1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.pieza-nivel-f1 {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 20px;
+    color: white;
+    letter-spacing: 1px;
+}
+
+.pieza-puntos-f1 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.pieza-icono-f1 {
+    text-align: center;
+    margin: 25px 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pieza-info-f1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.pieza-fecha {
+    font-size: 11px;
+    color: #aaa;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.pieza-id {
+    font-size: 10px;
+    color: #666;
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+
+/* BOTONES DE ACCIÓN */
+.pieza-actions-f1 {
+    text-align: center;
+}
+
+.btn-equipar-f1 {
+    width: 100%;
+    padding: 12px;
+    background: #FF1E00;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-equipar-f1:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 30, 0, 0.6);
+}
+
+.btn-desequipar-f1 {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #aaa;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-desequipar-f1:hover {
+    background: rgba(255, 30, 0, 0.2);
+    color: #fff;
+    border-color: #FF1E00;
+}
 /* ============================================
    RESPONSIVE
 ============================================ */
