@@ -792,7 +792,7 @@ class TabManager {
                                     style="border-color: ${areaConfig.color};">
                                 
                                 <div class="pieza-cabecera">
-                                    <span class="pieza-nivel" style="background: ${areaConfig.color}">L${nivel}</span>
+                                    <span class="pieza-nivel" style="border-color: ${areaConfig.color}">L${nivel}</span>
                                     ${esEquipada ? '<span class="equipada-indicador">✓</span>' : ''}
                                 </div>
                                 
