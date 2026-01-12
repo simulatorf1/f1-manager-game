@@ -2501,3 +2501,229 @@ body {
         grid-column: 1 / -1;
     }
 }
+/* ============================================
+   ESTILOS PARA LOS BOTONES DEL ALMACÉN
+   (Para las clases que usa tabs.js)
+============================================ */
+
+.pieza-boton-almacen {
+    width: 140px;
+    height: 160px;
+    border: 2px solid;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    padding: 15px;
+    background: linear-gradient(145deg, rgba(30, 30, 40, 0.95), rgba(20, 20, 30, 0.95));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    margin: 5px;
+}
+
+/* Estado normal */
+.pieza-boton-almacen {
+    border-width: 2px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Estado equipado - EFECTO F1 LUMINOSO */
+.pieza-boton-almacen.equipada {
+    border-width: 4px;
+    animation: pulseF1 2s infinite;
+    box-shadow: 
+        0 0 20px currentColor,
+        0 0 40px rgba(225, 6, 0, 0.3),
+        0 10px 30px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(145deg, 
+        rgba(255, 255, 255, 0.05), 
+        rgba(225, 6, 0, 0.1));
+    transform: translateY(-5px);
+}
+
+@keyframes pulseF1 {
+    0%, 100% { 
+        box-shadow: 
+            0 0 20px currentColor,
+            0 0 40px rgba(225, 6, 0, 0.3),
+            0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    50% { 
+        box-shadow: 
+            0 0 30px currentColor,
+            0 0 60px rgba(225, 6, 0, 0.4),
+            0 15px 40px rgba(0, 0, 0, 0.6);
+    }
+}
+
+/* Hover effect */
+.pieza-boton-almacen:hover {
+    transform: translateY(-8px) scale(1.05);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    border-width: 3px;
+}
+
+/* Partes internas del botón */
+.pieza-cabecera {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.pieza-nivel {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 900;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    min-width: 45px;
+    text-align: center;
+    letter-spacing: 1px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.equipada-indicador {
+    width: 26px;
+    height: 26px;
+    background: linear-gradient(135deg, #00ff00, #00cc00);
+    color: #000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 0 15px #00ff00;
+    animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.pieza-icono-grande {
+    font-size: 42px;
+    margin: 15px 0;
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    filter: drop-shadow(0 0 5px currentColor);
+}
+
+.pieza-info {
+    text-align: center;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.pieza-puntos {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 15px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+}
+
+.pieza-puntos i {
+    color: #FFD700;
+    font-size: 16px;
+    text-shadow: 0 0 10px #FFD700;
+}
+
+.pieza-puntos span {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 18px;
+    color: #FFD700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+}
+
+.pieza-calidad {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.pieza-accion {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 10px;
+    border-radius: 0 0 13px 13px;
+    width: 100%;
+    text-align: center;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    position: relative;
+    z-index: 2;
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Color de la acción según estado */
+.pieza-boton-almacen:not(.equipada) .pieza-accion {
+    background: linear-gradient(90deg, rgba(225, 6, 0, 0.8), rgba(255, 68, 68, 0.8));
+    color: white;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+.pieza-boton-almacen.equipada .pieza-accion {
+    background: linear-gradient(90deg, #00ff00, #00cc00);
+    color: black;
+    font-weight: 900;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Efecto de rayas F1 en hover */
+.pieza-boton-almacen::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.15),
+        transparent
+    );
+    transition: left 0.7s ease;
+}
+
+.pieza-boton-almacen:hover::after {
+    left: 100%;
+}
+
+/* Contenedor de la fila de piezas */
+.piezas-fila-almacen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 20px;
+    justify-content: flex-start;
+}
+
+/* Asegurar que los botones no se deformen */
+.pieza-boton-almacen {
+    flex: 0 0 auto;
+}
