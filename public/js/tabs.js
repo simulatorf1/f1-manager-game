@@ -310,9 +310,6 @@ class TabManager {
             <div class="almacen-botones-container">
                 <div class="almacen-header-botones">
                     <h2><i class="fas fa-warehouse"></i> ALMACÉN</h2>
-                    <p class="subtitulo-almacen">
-                        Botones = piezas fabricadas. Click para EQUIPAR (dorado) / DESEQUIPAR.
-                    </p>
                 </div>
                 
                 <div class="areas-grid-botones" id="areas-grid-botones">
@@ -788,27 +785,16 @@ class TabManager {
                         html += `<button class="pieza-boton-almacen ${esEquipada ? 'equipada' : ''}" 
                                 onclick="window.tabManager.equiparPieza('${pieza.id}')"
                                 data-color="${areaConfig.color}"
-                                style="flex-shrink:0;min-width:75px;max-width:75px;height:85px;padding:15px;border:3px solid ${areaConfig.color};border-radius:15px;background:linear-gradient(145deg, rgba(20,20,30,0.95), rgba(10,10,20,0.95));color:white;display:flex;flex-direction:column;align-items:center;justify-content:space-between;cursor:pointer;${esEquipada ? 'box-shadow:0 0 25px ' + areaConfig.color + ', 0 0 50px ' + areaConfig.color + '80;' : 'box-shadow:0 8px 25px rgba(0,0,0,0.4);'}">
+                                style="flex-shrink:0;min-width:75px;max-width:75px;height:85px;padding:8px;border:2px solid ${areaConfig.color};border-radius:10px;background:linear-gradient(145deg, rgba(20,20,30,0.95), rgba(10,10,20,0.95));color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;${esEquipada ? 'box-shadow:0 0 15px ' + areaConfig.color + ', 0 0 30px ' + areaConfig.color + '80;' : 'box-shadow:0 4px 12px rgba(0,0,0,0.4);'}">
                             
-                            <div class="pieza-cabecera">
-                                <span class="pieza-nivel" style="background:${areaConfig.color};border-radius:10px;padding:2px 6px;font-weight:bold;color:white;font-size:0.7rem;">L${nivel}</span>
-                                ${esEquipada ? '<span class="equipada-indicador" style="color:#FFD700;font-size:1.2rem;">✓</span>' : ''}
-                            </div>
-                            
+                            <!-- Solo icono grande y nivel -->
                             <div class="pieza-icono-grande">
-                                <i class="${areaConfig.icon}" style="color:${areaConfig.color};font-size:1.5rem;"></i>
+                                <i class="${areaConfig.icon}" style="color:${areaConfig.color};font-size:2rem;"></i>
                             </div>
                             
-                            <div class="pieza-info">
-                                <div class="pieza-puntos">
-                                    <i class="fas fa-bolt" style="color:${areaConfig.color}"></i>
-                                    <span style="font-weight:bold;font-size:1.1rem;">${puntos}</span>
-                                </div>
-                                <div class="pieza-calidad" style="font-size:0.8rem;opacity:0.8;text-transform:uppercase;">${calidad}</div>
-                            </div>
-                            
-                            <div class="pieza-accion" style="font-weight:bold;font-size:0.7rem;text-transform:uppercase;padding:3px 6px;background:rgba(255,255,255,0.1);border-radius:6px;width:100%;text-align:center;">
-                                ${esEquipada ? 'EQUIPADA' : 'EQUIPAR'}
+                            <div style="margin-top:5px;">
+                                <span style="background:${areaConfig.color};border-radius:10px;padding:2px 6px;font-weight:bold;color:white;font-size:0.7rem;">L${nivel}</span>
+                                ${esEquipada ? '<span style="color:#FFD700;font-size:0.8rem;margin-left:3px;">✓</span>' : ''}
                             </div>
                         </button>`;
                     });
