@@ -6005,23 +6005,7 @@ class F1Manager {
                     location.reload();
                 });
 
-                // ====== AÑADE ESTO AQUÍ ======
-                // Cerrar sesión (botón visible)
-                document.getElementById('logout-btn-visible').addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    try {
-                        const supabaseClient = window.supabase;
-                        if (supabaseClient) {
-                            await supabaseClient.auth.signOut();
-                            console.log('✅ Sesión cerrada');
-                        }
-                        window.location.href = window.location.origin;
-                    } catch (error) {
-                        console.error('❌ Error cerrando sesión:', error);
-                        window.location.href = window.location.origin;
-                    }
-                });
-                // ====== FIN DE LO QUE AÑADES ======
+
                 
                 // Cerrar dropdown al hacer clic fuera
                 document.addEventListener('click', (e) => {
@@ -6055,6 +6039,32 @@ class F1Manager {
                     if (window.cargarContenidoPrincipal) {
                         window.cargarContenidoPrincipal();
                     }
+                    
+                    // ===== AÑADE ESTO DENTRO DEL TIMEOUT =====
+                    // Configurar evento para botón de cerrar sesión visible
+                    const logoutBtn = document.getElementById('logout-btn-visible');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', async (e) => {
+                            e.preventDefault();
+                            try {
+                                const supabaseClient = window.supabase;
+                                if (supabaseClient) {
+                                    await supabaseClient.auth.signOut();
+                                    console.log('✅ Sesión cerrada');
+                                    // Forzar recarga completa para ir al login
+                                    window.location.href = window.location.origin;
+                                }
+                            } catch (error) {
+                                console.error('❌ Error cerrando sesión:', error);
+                                // Si falla, recargar de todas formas
+                                window.location.href = window.location.origin;
+                            }
+                        });
+                    } else {
+                        console.error('❌ No se encontró el botón logout-btn-visible');
+                    }
+                    // ===== FIN DE LO QUE AÑADES =====
+                    
                 }, 1500);
             </script>
         `;
