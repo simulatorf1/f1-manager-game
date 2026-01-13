@@ -5774,7 +5774,7 @@ class F1Manager {
                                 <i class="fas fa-user"></i>
                                 <span>${this.user.email?.split('@')[0] || 'Usuario'}</span>
                             </button>
-                            <button class="logout-btn-visible" id="logout-btn-visible" title="Cerrar sesión">
+                            <button class="logout-btn-visible" id="logout-btn-visible" title="Cerrar sesión" onclick="console.log('DEBUG: Botón clickeado'); testLogout()">
                                 <i class="fas fa-sign-out-alt"></i> Salir
                             </button>
                         </div>
@@ -7223,7 +7223,24 @@ class F1Manager {
         };
         return (puntosBase[area] || 10) * (nivel || 1);
     }
-    
+    // Función de prueba para cerrar sesión
+    window.testLogout = async function() {
+        console.log('DEBUG: testLogout() ejecutado');
+        console.log('DEBUG: window.supabase existe?', !!window.supabase);
+        console.log('DEBUG: window.location.origin:', window.location.origin);
+        
+        try {
+            if (window.supabase) {
+                console.log('DEBUG: Intentando cerrar sesión...');
+                await window.supabase.auth.signOut();
+                console.log('DEBUG: Sesión cerrada, redirigiendo...');
+            }
+            window.location.href = window.location.origin;
+        } catch (error) {
+            console.error('DEBUG: Error:', error);
+            window.location.href = window.location.origin;
+        }
+    };
     // Función auxiliar para formatear tiempo
     function formatTime(milliseconds) {
         if (milliseconds <= 0) return "00:00:00";
