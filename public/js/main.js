@@ -5965,8 +5965,20 @@ class F1Manager {
                 
                 document.getElementById('logout-btn').addEventListener('click', async (e) => {
                     e.preventDefault();
-                    await supabase.auth.signOut();
-                    location.reload();
+                    try {
+                        // Usar window.supabase que es la instancia global
+                        const supabaseClient = window.supabase;
+                        if (supabaseClient) {
+                            await supabaseClient.auth.signOut();
+                            console.log('✅ Sesión cerrada');
+                        }
+                        // Forzar recarga completa para volver al login
+                        window.location.href = window.location.origin;
+                    } catch (error) {
+                        console.error('❌ Error cerrando sesión:', error);
+                        // Si falla, recargar de todas formas para limpiar
+                        window.location.href = window.location.origin;
+                    }
                 });
                 
                 document.getElementById('refresh-btn').addEventListener('click', (e) => {
