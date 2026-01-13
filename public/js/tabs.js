@@ -769,8 +769,7 @@ class TabManager {
                                     <i class="${areaConfig.icon}" style="color: ${areaConfig.color}"></i>
                                 </div>
                                 <div class="area-titulo-almacen">
-                                    <h3>${areaConfig.name}</h3>
-                                    <span>${piezasArea.length} piezas • ${piezaEquipada ? '1 equipada' : 'Sin equipar'}</span>
+                                    <h3>${areaConfig.name}</h3>                                
                                 </div>
                             </div>
                             
@@ -787,9 +786,9 @@ class TabManager {
                                 data-color="${areaConfig.color}"
                                 style="flex-shrink:0;min-width:75px;max-width:75px;height:85px;padding:8px;border:2px solid ${areaConfig.color};border-radius:10px;background:linear-gradient(145deg, rgba(20,20,30,0.95), rgba(10,10,20,0.95));color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;${esEquipada ? 'box-shadow:0 0 15px ' + areaConfig.color + ', 0 0 30px ' + areaConfig.color + '80;' : 'box-shadow:0 4px 12px rgba(0,0,0,0.4);'}">
                             
-                            <!-- Solo icono grande y nivel -->
-                            <div class="pieza-icono-grande">
-                                <i class="${areaConfig.icon}" style="color:${areaConfig.color};font-size:2rem;"></i>
+                            <!-- PUNTOS en lugar del icono -->
+                            <div class="pieza-icono-grande" style="font-size: 1.5rem; font-weight: bold; color: #FFD700; margin-bottom: 8px;">
+                                ${puntos} pts
                             </div>
                             
                             <div style="margin-top:5px;">
