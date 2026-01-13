@@ -4359,6 +4359,28 @@ class F1Manager {
                 overflow-x: hidden;
                 position: relative;
             }
+
+            .logout-btn-visible {
+                background: rgba(225, 6, 0, 0.2);
+                border: 1px solid rgba(225, 6, 0, 0.4);
+                color: #e10600;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-family: 'Orbitron', sans-serif;
+                font-size: 0.9rem;
+                font-weight: bold;
+                margin-left: 10px;
+                transition: all 0.3s;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+            
+            .logout-btn-visible:hover {
+                background: rgba(225, 6, 0, 0.3);
+                transform: translateY(-2px);
+            }
             </style>
         `;
         
@@ -5748,16 +5770,13 @@ class F1Manager {
                         </div>
                         
                         <div class="user-menu">
-                            <button class="user-btn" id="user-menu-btn">
+                            <button class="user-btn" id="user-btn">
                                 <i class="fas fa-user"></i>
                                 <span>${this.user.email?.split('@')[0] || 'Usuario'}</span>
-                                <i class="fas fa-chevron-down"></i>
                             </button>
-                            <div class="user-dropdown" id="user-dropdown">
-                                <a href="#" id="refresh-btn"><i class="fas fa-sync-alt"></i> Actualizar</a>
-                                <a href="#" id="settings-btn"><i class="fas fa-cog"></i> Configuración</a>
-                                <a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
-                            </div>
+                            <button class="logout-btn-visible" id="logout-btn-visible" title="Cerrar sesión">
+                                <i class="fas fa-sign-out-alt"></i> Salir
+                            </button>
                         </div>
                     </div>
                     
@@ -5985,6 +6004,24 @@ class F1Manager {
                     e.preventDefault();
                     location.reload();
                 });
+
+                // ====== AÑADE ESTO AQUÍ ======
+                // Cerrar sesión (botón visible)
+                document.getElementById('logout-btn-visible').addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    try {
+                        const supabaseClient = window.supabase;
+                        if (supabaseClient) {
+                            await supabaseClient.auth.signOut();
+                            console.log('✅ Sesión cerrada');
+                        }
+                        window.location.href = window.location.origin;
+                    } catch (error) {
+                        console.error('❌ Error cerrando sesión:', error);
+                        window.location.href = window.location.origin;
+                    }
+                });
+                // ====== FIN DE LO QUE AÑADES ======
                 
                 // Cerrar dropdown al hacer clic fuera
                 document.addEventListener('click', (e) => {
