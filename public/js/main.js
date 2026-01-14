@@ -3330,7 +3330,8 @@ class F1Manager {
                         ` : '<div class="spacer"></div>'}
                         
                         ${step.action ? `
-                            <button class="btn-tutorial-next-large hidden" id="btn-tutorial-next-large">
+                            <button class="btn-tutorial-next-large" id="btn-tutorial-next-large" 
+                                    style="${step.action === 'siguientePaso' ? '' : 'display: none;'}">
                                 ${step.action === 'comenzarJuegoReal' ? '¡EMPEZAR A COMPETIR!' : 'SIGUIENTE'}
                                 <i class="fas fa-arrow-right"></i>
                             </button>
@@ -7500,7 +7501,14 @@ class F1Manager {
                     window.tutorialManager.mostrarTutorialStep();
                 }
             }, 1500);
-            
+            // ========== AÑADE ESTO JUSTO ARRIBA DE LA LÍNEA setTimeout ==========
+            // Mostrar botón Siguiente
+            const nextBtn = document.getElementById('btn-tutorial-next-large');
+            if (nextBtn) {
+                nextBtn.style.display = 'flex';
+                nextBtn.disabled = false;
+            }
+            // ========== FIN DE LO QUE AÑADES ==========
         } catch (error) {
             console.error("Error completo contratando estratega:", error);
             alert("Error contratando estratega: " + (error.message || "Verifica la consola para más detalles"));
@@ -7649,7 +7657,14 @@ class F1Manager {
                     window.tutorialManager.mostrarTutorialStep();
                 }
             }, 1000);
-            
+            // ========== AÑADE ESTO JUSTO ARRIBA DE LA LÍNEA setTimeout ==========
+            // Mostrar botón Siguiente
+            const nextBtn = document.getElementById('btn-tutorial-next-large');
+            if (nextBtn) {
+                nextBtn.style.display = 'flex';
+                nextBtn.disabled = false;
+            }
+            // ========== FIN DE LO QUE AÑADES ==========
         } catch (error) {
             console.error("Error en fabricación REAL:", error);
             if (window.tutorialManager && window.tutorialManager.showNotification) {
@@ -7788,6 +7803,14 @@ class F1Manager {
                 window.tutorialManager.mostrarTutorialStep();
             }
         }, 2000);
+        // ========== AÑADE ESTO JUSTO ARRIBA DE LA LÍNEA setTimeout ==========
+        // Mostrar botón Siguiente
+        const nextBtn = document.getElementById('btn-tutorial-next-large');
+        if (nextBtn) {
+            nextBtn.style.display = 'flex';
+            nextBtn.disabled = false;
+        }
+        // ========== FIN DE LO QUE AÑADES ==========
     };
     
     window.tutorialSimularCarrera = function() {
