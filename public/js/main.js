@@ -1459,15 +1459,15 @@ class F1Manager {
         }
         
         // VERIFICACIÓN MEJORADA DEL TUTORIAL
-
-
         console.log('🔍 Verificando estado del tutorial...');
         
-        // 1. Recargar siempre la escudería para tener datos frescos de BD
-        if (this.escuderia) {
+        // 1. Primero, asegúrate de que loadUserData cargó la escudería completa
+        // Si no, recárgala incluyendo tutorial_completado
+        if (this.escuderia && !('tutorial_completado' in this.escuderia)) {
+            console.log('🔄 Recargando escudería con campo tutorial...');
             const { data: escuderiaCompleta, error } = await this.supabase
                 .from('escuderias')
-                .select('tutorial_completado, id, nombre')
+                .select('*')
                 .eq('id', this.escuderia.id)
                 .single();
             
@@ -1476,32 +1476,40 @@ class F1Manager {
             }
         }
         
-        // 2. Verificar SOLO LA BD para decidir
-        const tutorialCompletadoBD = this.escuderia?.tutorial_completado === true;
+        // 2. Verificar en ORDEN de prioridad:
+        const tutorialCompletadoBD = this.escuderia?.tutorial_completado;
+        const tutorialCompletadoLocal = localStorage.getItem('f1_tutorial_completado');
         
-        console.log('📊 Estado tutorial (BD):', {
+        console.log('📊 Estado tutorial:', {
             BD: tutorialCompletadoBD,
+            localStorage: tutorialCompletadoLocal,
             tieneEscudería: !!this.escuderia
         });
         
-        // 3. LÓGICA SIMPLE Y CORRECTA
-        if (this.escuderia && !tutorialCompletadoBD) {
-            console.log('🎯 MOSTRANDO TUTORIAL (primera vez - BD dice false)');
-            
-            // LIMPIAR localStorage para evitar conflictos
-            localStorage.removeItem('f1_tutorial_completado');
-            if (this.escuderia.id) {
-                localStorage.removeItem(`f1_tutorial_${this.escuderia.id}`);
-            }
-            
+        // 3. LÓGICA DECISIVA: ¿Mostrar tutorial?
+        // MOSTRAR tutorial solo si:
+        // - Hay escudería
+        // - Y NO está completado en BD
+        // - Y NO está completado en localStorage
+        
+        if (this.escuderia && !tutorialCompletadoBD && !tutorialCompletadoLocal) {
+            console.log('🎯 MOSTRANDO TUTORIAL (primera vez en este dispositivo)');
             this.mostrarTutorialInicial();
-        } else {
-            console.log('📊 CARGANDO DASHBOARD (tutorial ya completado en BD)');
+        } 
+        else if (!this.escuderia) {
+            console.log('🎯 MOSTRANDO TUTORIAL (no tiene escudería)');
+            this.mostrarTutorialInicial();
+        }
+        else {
+            console.log('📊 CARGANDO DASHBOARD (tutorial ya completado)');
             await this.cargarDashboardCompleto();
             await this.inicializarSistemasIntegrados();
+            
+            // Sincronizar localStorage si está en BD pero no en localStorage
+            if (tutorialCompletadoBD && !tutorialCompletadoLocal) {
+                localStorage.setItem('f1_tutorial_completado', 'true');
+            }
         }
-        
-
     }
     // ========================
     // MÉTODO PARA CARGAR PESTAÑA TALLER
