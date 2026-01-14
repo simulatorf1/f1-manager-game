@@ -1486,14 +1486,22 @@ class F1Manager {
             tieneEscudería: !!this.escuderia
         });
         
-        // 3. LÓGICA DECISIVA: ¿Mostrar tutorial?
+        // 3. LÓGICA DECISIVA CORREGIDA: ¿Mostrar tutorial?
         // MOSTRAR tutorial solo si:
         // - Hay escudería
-        // - Y NO está completado en BD
-        // - Y NO está completado en localStorage
+        // - Y NO está completado en BD (false o null)
         
-        if (this.escuderia && !tutorialCompletadoBD && !tutorialCompletadoLocal) {
-            console.log('🎯 MOSTRANDO TUTORIAL (primera vez en este dispositivo)');
+        // CORRECCIÓN: Siempre limpiar localStorage si BD dice false
+        if (tutorialCompletadoBD === false) {
+            localStorage.removeItem('f1_tutorial_completado');
+            if (this.escuderia?.id) {
+                localStorage.removeItem(`f1_tutorial_${this.escuderia.id}`);
+            }
+        }
+        
+        // DECISIÓN FINAL
+        if (this.escuderia && tutorialCompletadoBD === false) {
+            console.log('🎯 MOSTRANDO TUTORIAL (BD dice false)');
             this.mostrarTutorialInicial();
         } 
         else if (!this.escuderia) {
@@ -1501,12 +1509,12 @@ class F1Manager {
             this.mostrarTutorialInicial();
         }
         else {
-            console.log('📊 CARGANDO DASHBOARD (tutorial ya completado)');
+            console.log('📊 CARGANDO DASHBOARD (tutorial ya completado en BD o BD=true)');
             await this.cargarDashboardCompleto();
             await this.inicializarSistemasIntegrados();
             
-            // Sincronizar localStorage si está en BD pero no en localStorage
-            if (tutorialCompletadoBD && !tutorialCompletadoLocal) {
+            // Sincronizar localStorage si está en BD pero no en localStorage (para usuarios existentes)
+            if (tutorialCompletadoBD === true && !tutorialCompletadoLocal) {
                 localStorage.setItem('f1_tutorial_completado', 'true');
             }
         }
