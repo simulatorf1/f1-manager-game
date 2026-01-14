@@ -4419,42 +4419,23 @@ class F1Manager {
             if (nextBtn) {
                 nextBtn.onclick = async () => {
                     if (step.action === 'comenzarJuegoReal') {
-                        // 1. Guardar en localStorage inmediatamente
-                        localStorage.setItem('f1_tutorial_completado', 'true');
-                        
-                        // 2. Guardar en BD SÍ O SÍ
-                        if (this.escuderia && this.supabase) {
-                            try {
-                                const { error } = await this.supabase
-                                    .from('escuderias')
-                                    .update({ 
-                                        tutorial_completado: true,
-                                        actualizado_en: new Date().toISOString()
-                                    })
-                                    .eq('id', this.escuderia.id);
-                                
-                                if (error) {
-                                    console.error('❌ Error BD:', error);
-                                } else {
-                                    console.log('✅ Tutorial marcado TRUE en BD');
-                                }
-                            } catch (error) {
-                                console.error('❌ Error en BD:', error);
-                            }
-                        }
-                        
-                        // 3. Limpiar y cargar dashboard
+                        // Finalizar tutorial y cargar dashboard
                         document.body.innerHTML = '';
                         await this.cargarDashboardCompleto();
                         await this.inicializarSistemasIntegrados();
                         
-                        // 4. Mostrar notificación
-                        setTimeout(() => {
-                            this.showNotification('🎉 ¡Tutorial completado! ¡Bienvenido a F1 Manager!', 'success');
-                        }, 1000);
+                        // Marcar tutorial como completado
+                        localStorage.setItem('f1_tutorial_completado', 'true');
                         
+                        if (this.escuderia && this.supabase) {
+                            this.supabase
+                                .from('escuderias')
+                                .update({ tutorial_completado: true })
+                                .eq('id', this.escuderia.id)
+                                .catch(error => console.warn('No se pudo actualizar tutorial en BD:', error));
+                        }
                     } else {
-                        // Avanzar paso normal
+                        // Avanzar paso
                         if (this.tutorialStep < steps.length) {
                             this.tutorialStep++;
                             this.mostrarTutorialStep();
