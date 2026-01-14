@@ -2556,17 +2556,31 @@ class F1Manager {
     }
     
     async esperarSupabase() {
-        console.log('⏳ Esperando Supabase...');
+        console.log('⏳ Esperando Supabase y sesión de autenticación...');
         let intentos = 0;
-        while (intentos < 50) {
+        const maxIntentos = 50; // 5 segundos máximo
+    
+        while (intentos < maxIntentos) {
+            // 1. Esperar a que el cliente Supabase exista
             if (window.supabase && window.supabase.auth) {
-                console.log('✅ Supabase listo después de ' + (intentos * 100) + 'ms');
-                return window.supabase;
+                // 2. ¡CRUCIAL! Verificar que el cliente de auth tenga una sesión válida
+                try {
+                    const { data: { session } } = await window.supabase.auth.getSession();
+                    if (session) {
+                        console.log('✅ Supabase y sesión de auth listos después de ' + (intentos * 100) + 'ms');
+                        return window.supabase;
+                    } else {
+                        console.log('⚠️ Cliente Supabase listo, pero no hay sesión de usuario activa aún.');
+                    }
+                } catch (authError) {
+                    console.warn('⚠️ Error al verificar la sesión:', authError);
+                }
             }
+            // Esperar 100ms antes de intentar de nuevo
             await new Promise(resolve => setTimeout(resolve, 100));
             intentos++;
         }
-        console.error('❌ Supabase nunca se inicializó');
+        console.error('❌ Supabase nunca se inicializó correctamente con una sesión de usuario.');
         return null;
     }
     
