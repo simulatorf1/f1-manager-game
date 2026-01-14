@@ -3466,18 +3466,17 @@ class F1Manager {
             /* ========== BOTONES PASOS 2, 3, 4 - SIN ANIMACIONES, SIN CLIC ========== */
             .grid-btn-big {
                 background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.1); /* Más delgado - MODIFICADO */
-                border-radius: 8px; /* Más pequeño - MODIFICADO */
-                padding: 8px 6px; /* Más pequeño - MODIFICADO */
-                text-align: center;
-                cursor: default !important; /* No hacer clic - MODIFICADO */
-                min-height: 70px; /* Mucho más pequeño - MODIFICADO */
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                padding: 8px 10px; /* Más pequeño */
+                text-align: left;
+                cursor: default !important;
+                min-height: 60px; /* Mucho más pequeño */
                 display: flex;
-                flex-direction: column;
                 align-items: center;
-                justify-content: center;
+                gap: 12px;
             }
-            
+                        
             /* QUITAR HOVER Y TRANSICIONES - NUEVO */
             .grid-btn-big:hover {
                 transform: none !important;
@@ -3487,32 +3486,37 @@ class F1Manager {
             }
             
             .grid-icon {
-                font-size: 1.2rem; /* Más pequeño - MODIFICADO */
-                margin-bottom: 5px;
+                font-size: 1.2rem;
+                flex-shrink: 0;
+                width: 30px;
+                text-align: center;
             }
             
             .grid-title {
                 font-family: 'Orbitron', sans-serif;
-                font-size: 0.8rem; /* Más pequeño - MODIFICADO */
+                font-size: 0.85rem; /* Más pequeño */
                 font-weight: bold;
                 color: white;
-                margin-bottom: 3px;
+                margin-bottom: 2px;
             }
             
             .grid-desc {
                 color: #aaa;
-                font-size: 0.7rem; /* Más pequeño - MODIFICADO */
+                font-size: 0.7rem; /* Más pequeño */
                 line-height: 1.1;
+                display: block;
             }
             
             .area-grid-card {
                 background: rgba(42, 42, 56, 0.8);
-                border: 1px solid rgba(255, 255, 255, 0.1); /* Más delgado - MODIFICADO */
-                border-radius: 8px; /* Más pequeño - MODIFICADO */
-                padding: 8px; /* Más pequeño - MODIFICADO */
-                text-align: center;
-                min-height: 90px; /* Más pequeño - MODIFICADO */
-                cursor: default; /* No hacer clic - NUEVO */
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                padding: 8px; /* Más pequeño */
+                text-align: left;
+                min-height: 80px; /* Más pequeño */
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
             }
             
             /* QUITAR HOVER - NUEVO */
@@ -3522,39 +3526,47 @@ class F1Manager {
             }
             
             .area-grid-icon {
-                font-size: 1.5rem; /* Más pequeño - MODIFICADO */
-                margin-bottom: 5px;
+                font-size: 1.2rem; /* Más pequeño */
+                margin-top: 2px;
+                flex-shrink: 0;
+                width: 25px;
+            }
+            .area-grid-content {
+                flex: 1;
             }
             
             .area-grid-name {
                 font-family: 'Orbitron', sans-serif;
                 font-weight: bold;
                 color: white;
-                font-size: 0.8rem; /* Más pequeño - MODIFICADO */
+                font-size: 0.8rem; /* Más pequeño */
                 margin-bottom: 3px;
+                line-height: 1.1;
             }
             
             .area-grid-desc {
                 color: #aaa;
-                font-size: 0.7rem; /* Más pequeño - MODIFICADO */
+                font-size: 0.65rem; /* Más pequeño */
                 margin-bottom: 5px;
-                min-height: 30px; /* Más pequeño - MODIFICADO */
+                line-height: 1.1;
             }
             
             .area-grid-stats {
                 background: rgba(0, 210, 190, 0.1);
                 color: #00d2be;
-                padding: 3px 6px; /* Más pequeño - MODIFICADO */
-                border-radius: 10px; /* Más pequeño - MODIFICADO */
-                font-size: 0.7rem; /* Más pequeño - MODIFICADO */
+                padding: 2px 6px; /* Más pequeño */
+                border-radius: 10px;
+                font-size: 0.65rem; /* Más pequeño */
                 font-weight: bold;
+                display: inline-block;
             }
             
             .area-grid-sub {
                 color: #aaa;
-                font-size: 0.65rem; /* Más pequeño - MODIFICADO */
-                margin-top: 3px;
+                font-size: 0.6rem; /* Más pequeño */
+                margin-top: 2px;
                 font-style: italic;
+                display: block;
             }
             
             /* ========== PASO 5 - DÍA 1 DESTACADO ========== */
@@ -3582,13 +3594,14 @@ class F1Manager {
             }
             
             /* BOTONES DE ESTRATEGA - MÁS PEQUEÑOS Y CUADRADOS - MODIFICADO */
+
             .estratega-tutorial-card {
                 background: rgba(255, 255, 255, 0.05);
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 border-radius: 8px;
-                padding: 8px; /* Más pequeño - MODIFICADO */
-                text-align: center;
-                min-height: 120px; /* Más pequeño - MODIFICADO */
+                padding: 8px; /* Más pequeño */
+                text-align: left;
+                min-height: 110px; /* Más pequeño */
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
@@ -3596,37 +3609,39 @@ class F1Manager {
             }
             
             .estratega-icon-tut {
-                font-size: 1.5rem; /* Más pequeño - MODIFICADO */
+                font-size: 1.2rem; /* Más pequeño */
                 margin-bottom: 5px;
+                text-align: center;
             }
             
             .estratega-nombre-tut {
                 font-family: 'Orbitron', sans-serif;
-                font-size: 0.8rem; /* Más pequeño - MODIFICADO */
+                font-size: 0.75rem; /* Más pequeño */
                 font-weight: bold;
                 color: white;
-                margin-bottom: 5px;
+                margin-bottom: 3px;
+                line-height: 1.1;
             }
             
             .estratega-especialidad {
                 color: #aaa;
-                font-size: 0.7rem; /* Más pequeño - MODIFICADO */
-                margin-bottom: 8px;
+                font-size: 0.65rem; /* Más pequeño */
+                margin-bottom: 6px;
                 flex: 1;
+                line-height: 1.1;
             }
             
             .estratega-bono, .estratega-sueldo {
-                font-size: 0.7rem; /* Más pequeño - MODIFICADO */
-                margin: 3px 0;
+                font-size: 0.65rem; /* Más pequeño */
+                margin: 2px 0;
             }
             
             .estratega-ejemplo {
-                font-size: 0.65rem; /* Más pequeño - MODIFICADO */
+                font-size: 0.6rem; /* Más pequeño */
                 color: #888;
                 font-style: italic;
-                margin-top: 5px;
-            }
-            
+                margin-top: 4px;
+            }       
             /* BOTÓN DE ACCIÓN EN POSICIÓN FIJA - MODIFICADO */
             .tutorial-accion-practica {
                 display: none; /* Oculto inicialmente */
@@ -3661,9 +3676,9 @@ class F1Manager {
                 background: rgba(255, 255, 255, 0.05);
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 border-radius: 8px;
-                padding: 8px; /* Más pequeño - MODIFICADO */
-                text-align: center;
-                min-height: 120px; /* Más pequeño - MODIFICADO */
+                padding: 8px; /* Más pequeño */
+                text-align: left;
+                min-height: 110px; /* Más pequeño */
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
@@ -3671,37 +3686,40 @@ class F1Manager {
             }
             
             .fab-icon-tut {
-                font-size: 1.5rem; /* Más pequeño - MODIFICADO */
+                font-size: 1.2rem; /* Más pequeño */
                 margin-bottom: 5px;
+                text-align: center;
             }
             
             .fab-nombre-tut {
                 font-family: 'Orbitron', sans-serif;
-                font-size: 0.8rem; /* Más pequeño - MODIFICADO */
+                font-size: 0.75rem; /* Más pequeño */
                 font-weight: bold;
                 color: white;
-                margin-bottom: 5px;
+                margin-bottom: 3px;
+                line-height: 1.1;
             }
             
             .fab-desc-tut {
                 color: #aaa;
-                font-size: 0.7rem; /* Más pequeño - MODIFICADO */
-                margin-bottom: 8px;
+                font-size: 0.65rem; /* Más pequeño */
+                margin-bottom: 6px;
                 flex: 1;
+                line-height: 1.1;
             }
             
             .fab-puntos-tut, .fab-calidad-tut {
-                font-size: 0.7rem; /* Más pequeño - MODIFICADO */
-                margin: 3px 0;
+                font-size: 0.65rem; /* Más pequeño */
+                margin: 2px 0;
             }
             
             .fab-accion-tut {
                 background: rgba(0, 210, 190, 0.2);
                 color: #00d2be;
-                padding: 5px; /* Más pequeño - MODIFICADO */
-                border-radius: 6px;
-                font-size: 0.7rem; /* Más pequeño - MODIFICADO */
-                margin-top: 8px;
+                padding: 4px 6px; /* Más pequeño */
+                border-radius: 5px;
+                font-size: 0.65rem; /* Más pequeño */
+                margin-top: 6px;
                 border: 1px solid rgba(0, 210, 190, 0.5);
             }
             
@@ -3710,49 +3728,57 @@ class F1Manager {
                 background: rgba(255, 255, 255, 0.05);
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 border-radius: 8px;
-                padding: 8px; /* Más pequeño - MODIFICADO */
-                text-align: center;
-                min-height: 130px; /* Más pequeño - MODIFICADO */
+                padding: 8px; /* Más pequeño */
+                text-align: left;
+                min-height: 120px; /* Más pequeño */
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
             }
             
             .pronostico-icon-tut {
-                font-size: 1.5rem; /* Más pequeño - MODIFICADO */
+                font-size: 1.2rem; /* Más pequeño */
                 margin-bottom: 5px;
+                text-align: center;
             }
             
             .pronostico-nombre-tut {
                 font-family: 'Orbitron', sans-serif;
-                font-size: 0.8rem; /* Más pequeño - MODIFICADO */
+                font-size: 0.75rem; /* Más pequeño */
                 font-weight: bold;
                 color: white;
-                margin-bottom: 5px;
+                margin-bottom: 3px;
+                line-height: 1.1;
             }
             
             .pronostico-pregunta {
                 color: #aaa;
-                font-size: 0.7rem; /* Más pequeño - MODIFICADO */
+                font-size: 0.65rem; /* Más pequeño */
                 margin-bottom: 8px;
                 flex: 1;
+                line-height: 1.1;
             }
             
             .pronostico-opciones {
                 display: flex;
                 justify-content: center;
-                gap: 5px; /* Menor espacio - MODIFICADO */
-                margin: 8px 0;
+                gap: 4px; /* Menor espacio */
+                margin: 6px 0;
             }
             
             .opcion-tut {
                 background: rgba(255, 255, 255, 0.1);
-                padding: 4px 8px; /* Más pequeño - MODIFICADO */
-                border-radius: 15px;
+                padding: 3px 6px; /* Más pequeño */
+                border-radius: 12px;
                 cursor: pointer;
-                font-size: 0.7rem; /* Más pequeño - MODIFICADO */
-                min-width: 40px; /* Más pequeño - MODIFICADO */
+                font-size: 0.65rem; /* Más pequeño */
+                min-width: 35px; /* Más pequeño */
                 text-align: center;
+            }
+            
+            .pronostico-puntos {
+                font-size: 0.65rem; /* Más pequeño */
+                margin-top: 5px;
             }
             
             .opcion-tut.seleccionado {
@@ -3761,10 +3787,7 @@ class F1Manager {
                 font-weight: bold;
             }
             
-            .pronostico-puntos {
-                font-size: 0.7rem; /* Más pequeño - MODIFICADO */
-                margin-top: 5px;
-            }
+
             
             /* ========== PASO 8 - BOTÓN SIGUIENTE CONDICIONAL ========== */
             .btn-simular-carrera {
@@ -5297,65 +5320,71 @@ class F1Manager {
                     border-radius: 10px;
                     border: 1px solid #00d2be;
                 }
+                /* Reducir texto introductorio */
                 .simulacion-intro {
                     background: rgba(0, 210, 190, 0.1);
-                    border-radius: 15px;
-                    padding: 20px;
-                    margin-bottom: 25px;
-                    border: 2px solid #00d2be;
+                    border-radius: 10px;
+                    padding: 12px; /* Más pequeño */
+                    margin-bottom: 15px;
+                    border: 1px solid #00d2be;
                 }
                 
                 .intro-icon {
-                    font-size: 3rem;
+                    font-size: 1.5rem; /* Más pequeño */
                     text-align: center;
-                    margin-bottom: 15px;
+                    margin-bottom: 8px;
                 }
                 
                 .simulacion-pasos {
-                    margin: 15px 0;
-                    padding-left: 20px;
+                    margin: 8px 0;
+                    padding-left: 15px;
                 }
                 
                 .simulacion-pasos li {
-                    margin: 10px 0;
+                    margin: 5px 0;
                     color: #ddd;
+                    font-size: 0.75rem; /* Más pequeño */
+                    line-height: 1.2;
                 }
                 
                 .simulacion-nota {
                     font-style: italic;
                     color: #aaa;
-                    margin-top: 15px;
-                    font-size: 0.9rem;
+                    margin-top: 8px;
+                    font-size: 0.7rem; /* Más pequeño */
                 }
                 
+                /* Eliminar DÍA 1, DÍA 2, etc. y simplificar */
                 .simulacion-dia {
                     background: rgba(255, 255, 255, 0.05);
-                    border-radius: 10px;
-                    padding: 15px;
-                    margin-bottom: 20px;
-                    border-left: 5px solid #e10600;
+                    border-radius: 8px;
+                    padding: 10px; /* Más pequeño */
+                    margin-bottom: 12px;
+                    border-left: 3px solid #e10600;
                 }
                 
                 .dia-numero-simulacion {
                     background: #e10600;
                     color: white;
                     display: inline-block;
-                    padding: 5px 15px;
-                    border-radius: 20px;
+                    padding: 3px 8px; /* Más pequeño */
+                    border-radius: 12px;
                     font-weight: bold;
                     font-family: 'Orbitron', sans-serif;
+                    font-size: 0.75rem; /* Más pequeño */
                 }
                 
                 .dia-titulo-simulacion {
                     font-family: 'Orbitron', sans-serif;
-                    font-size: 1.3rem;
+                    font-size: 0.9rem; /* Más pequeño */
                     color: white;
-                    margin: 10px 0 5px 0;
+                    margin: 5px 0 3px 0;
                 }
                 
                 .dia-descripcion {
                     color: #ccc;
-                    font-size: 0.95rem;
+                    font-size: 0.75rem; /* Más pequeño */
+                    line-height: 1.2;
                 }
                 
                 .fab-calidad-tut {
