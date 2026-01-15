@@ -2807,7 +2807,7 @@ class F1Manager {
             {
                 title: "🎮 SIMULACIÓN SEMANAL",
                 content: `
-                    <div class="simulacion-intro" style="display: none;"> <!-- OCULTAR TODO -->
+                    <div class="simulacion-intro" style="display: none;">
                         <!-- Todo el contenido inicial se oculta -->
                     </div>
                     
@@ -2856,8 +2856,63 @@ class F1Manager {
                     }
                     // Inicializar selección de estratega
                     window.tutorialEstrategaSeleccionado = null;
+                    
+                    // FUNCIÓN PARA SELECCIONAR ESTRATEGA
+                    window.tutorialSeleccionarEstrategaPractico = function(id) {
+                        window.tutorialEstrategaSeleccionado = id;
+                        
+                        // Marcar como seleccionado visualmente
+                        document.querySelectorAll('.estratega-tutorial-card').forEach(card => {
+                            card.classList.remove('seleccionado');
+                        });
+                        const card = document.querySelector(`[data-estratega-id="${id}"]`);
+                        if (card) card.classList.add('seleccionado');
+                        
+                        // Mostrar botón de acción
+                        const accionDiv = document.getElementById('accion-contratar-tut');
+                        if (accionDiv) {
+                            accionDiv.style.display = 'block';
+                        }
+                    };
+                    
+                    // FUNCIÓN PARA CONTRATAR ESTRATEGA
+                    window.tutorialContratarEstratega = function() {
+                        if (!window.tutorialEstrategaSeleccionado) return;
+                        
+                        // Simular contratación
+                        const nombres = {
+                            1: "ANALISTA DE TIEMPOS",
+                            2: "METEORÓLOGO", 
+                            3: "EXPERTO FIABILIDAD"
+                        };
+                        
+                        // Mostrar mensaje de éxito
+                        alert(`✅ ¡Estratega contratado: ${nombres[window.tutorialEstrategaSeleccionado]}!`);
+                        
+                        // Guardar datos del tutorial
+                        if (window.tutorialData) {
+                            window.tutorialData.estrategaContratado = true;
+                            window.tutorialData.nombreEstratega = nombres[window.tutorialEstrategaSeleccionado];
+                            window.tutorialData.bonoEstratega = window.tutorialEstrategaSeleccionado === 1 ? 15 : 
+                                                               window.tutorialEstrategaSeleccionado === 2 ? 20 : 18;
+                        }
+                        
+                        // MOSTRAR BOTÓN SIGUIENTE
+                        const nextBtn = document.getElementById('btn-tutorial-next-large');
+                        if (nextBtn) {
+                            nextBtn.style.display = 'flex';
+                            nextBtn.style.alignItems = 'center';
+                            nextBtn.style.justifyContent = 'center';
+                        }
+                        
+                        // Ocultar botón de acción
+                        const accionDiv = document.getElementById('accion-contratar-tut');
+                        if (accionDiv) {
+                            accionDiv.style.display = 'none';
+                        }
+                    };
                 }
-            },
+            }
             
             // PASO 6: DÍA 2 - Fabricación
             {
@@ -2904,8 +2959,46 @@ class F1Manager {
                     }
                     // Inicializar selección de fabricación
                     window.tutorialFabricacionSeleccionada = null;
+                    
+                    // FUNCIÓN PARA SELECCIONAR FABRICACIÓN
+                    window.tutorialSeleccionarFabricacionPractica = function(area) {
+                        window.tutorialFabricacionSeleccionada = area;
+                        
+                        // Marcar como seleccionado visualmente
+                        document.querySelectorAll('.fabricacion-tutorial-card').forEach(card => {
+                            card.classList.remove('seleccionado');
+                        });
+                        const card = document.querySelector(`[data-area="${area}"]`);
+                        if (card) card.classList.add('seleccionado');
+                        
+                        // MOSTRAR BOTÓN SIGUIENTE INMEDIATAMENTE
+                        const nextBtn = document.getElementById('btn-tutorial-next-large');
+                        if (nextBtn) {
+                            nextBtn.style.display = 'flex';
+                            nextBtn.style.alignItems = 'center';
+                            nextBtn.style.justifyContent = 'center';
+                        }
+                        
+                        // Simular que ya fabricó
+                        const nombres = {
+                            'motor': 'Motor',
+                            'chasis': 'Chasis',
+                            'aerodinamica': 'Aerodinámica'
+                        };
+                        
+                        // Guardar datos del tutorial
+                        if (window.tutorialData) {
+                            window.tutorialData.piezaFabricando = true;
+                            window.tutorialData.nombrePieza = nombres[area];
+                            window.tutorialData.puntosPieza = area === 'motor' ? 15 : 
+                                                             area === 'chasis' ? 12 : 10;
+                        }
+                        
+                        // Mostrar mensaje
+                        alert(`✅ ¡Pieza de ${nombres[area]} en fabricación!`);
+                    };
                 }
-            },
+            }
             
             // PASO 7: DÍA 3-4 - Pronósticos
             {
@@ -2963,8 +3056,45 @@ class F1Manager {
                     }
                     // Inicializar pronósticos
                     window.tutorialPronosticos = {};
+                    
+                    // FUNCIÓN PARA SELECCIONAR OPCIÓN DE PRONÓSTICO
+                    window.tutorialSeleccionarOpcionPronostico = function(tipo, valor, elemento) {
+                        window.tutorialPronosticos[tipo] = valor;
+                        
+                        // Marcar como seleccionado visualmente
+                        document.querySelectorAll(`[data-tipo="${tipo}"]`).forEach(el => {
+                            el.classList.remove('seleccionado');
+                        });
+                        elemento.classList.add('seleccionado');
+                        
+                        // Verificar si ya seleccionó los 3 tipos
+                        const tiposRequeridos = ['bandera', 'abandonos', 'diferencia'];
+                        const todosSeleccionados = tiposRequeridos.every(tipo => window.tutorialPronosticos[tipo]);
+                        
+                        if (todosSeleccionados) {
+                            // Calcular aciertos simulados
+                            const aciertosSimulados = 2; // Simula 2 de 3 aciertos
+                            
+                            // Guardar datos del tutorial
+                            if (window.tutorialData) {
+                                window.tutorialData.aciertosPronosticos = aciertosSimulados;
+                                window.tutorialData.puntosBaseCalculados = aciertosSimulados * 10; // 10 pts por acierto
+                            }
+                            
+                            // MOSTRAR BOTÓN SIGUIENTE
+                            const nextBtn = document.getElementById('btn-tutorial-next-large');
+                            if (nextBtn) {
+                                nextBtn.style.display = 'flex';
+                                nextBtn.style.alignItems = 'center';
+                                nextBtn.style.justifyContent = 'center';
+                            }
+                            
+                            // Mostrar mensaje
+                            alert(`✅ ¡Pronósticos completados! (${aciertosSimulados} de 3 aciertos)`);
+                        }
+                    };
                 }
-            },
+            }
             // PASO 9: FIN DE SEMANA - Simulación carrera
             {
                 title: "📅 FIN DE SEMANA: CARRERA",
