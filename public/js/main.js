@@ -122,12 +122,13 @@ async function iniciarAplicacion() {
     };
     
     // Fuerza un progreso rápido
-    updateProgress(50, 'Iniciando sistema...');
-    setTimeout(() => updateProgress(100, 'Completando...'), 800);
+    updateProgress(30, 'Iniciando sistema...');
+    setTimeout(() => updateProgress(70, 'Conectando...'), 1000);   // 1 segundo
+    setTimeout(() => updateProgress(100, 'Completando...'), 2000); // 2 segundos
     setTimeout(() => {
         const loadingScreen = document.getElementById('f1-loading-screen');
         if (loadingScreen) loadingScreen.remove();
-    }, 1500);
+    }, 3000);  // 3 segundos total
     // ============ FIN DEL CÓDIGO A AÑADIR ============
     
     // Inicializar Supabase
