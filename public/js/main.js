@@ -2939,79 +2939,139 @@ class F1Manager {
                     </div>
                     
                     <div class="grid-3-columns">
-                        <div class="fabricacion-tutorial-card seleccionable" onclick="tutorialSeleccionarFabricacionPractica('motor')" data-area="motor">
+                        <div class="fabricacion-tutorial-card seleccionable" onclick="seleccionarFabricacionTutorial('motor')" data-area="motor">
                             <div class="fab-icon-tut">🏎️</div>
                             <div class="fab-nombre-tut">MOTOR</div>
                             <div class="fab-desc-tut">Aumenta potencia</div>
                             <div class="fab-puntos-tut">⭐ +15 puntos</div>
                         </div>
                         
-                        <div class="fabricacion-tutorial-card seleccionable" onclick="tutorialSeleccionarFabricacionPractica('chasis')" data-area="chasis">
+                        <div class="fabricacion-tutorial-card seleccionable" onclick="seleccionarFabricacionTutorial('chasis')" data-area="chasis">
                             <div class="fab-icon-tut">📊</div>
                             <div class="fab-nombre-tut">CHASIS</div>
                             <div class="fab-desc-tut">Mejora estructura</div>
                             <div class="fab-puntos-tut">⭐ +12 puntos</div>
                         </div>
                         
-                        <div class="fabricacion-tutorial-card seleccionable" onclick="tutorialSeleccionarFabricacionPractica('aerodinamica')" data-area="aerodinamica">
+                        <div class="fabricacion-tutorial-card seleccionable" onclick="seleccionarFabricacionTutorial('aerodinamica')" data-area="aerodinamica">
                             <div class="fab-icon-tut">🌀</div>
                             <div class="fab-nombre-tut">AERO</div>
                             <div class="fab-desc-tut">Optimiza flujo aire</div>
                             <div class="fab-puntos-tut">⭐ +10 puntos</div>
                         </div>
                     </div>
-                    
-                    <div class="tutorial-accion-practica" id="accion-fabricar-tut" style="display: none;">
-                        <!-- Botón aparecerá aquí cuando seleccione -->
-                    </div>
                 `,
-                action: null,
+                action: 'siguientePaso',
                 onLoad: function() {
-                    // Ocultar botón siguiente
                     const nextBtn = document.getElementById('btn-tutorial-next-large');
                     if (nextBtn) {
                         nextBtn.style.display = 'none';
                     }
-                    // Inicializar selección de fabricación
-                    window.tutorialFabricacionSeleccionada = null;
                     
-                    // FUNCIÓN PARA SELECCIONAR FABRICACIÓN
-                    window.tutorialSeleccionarFabricacionPractica = function(area) {
-                        window.tutorialFabricacionSeleccionada = area;
-                        
-                        // Marcar como seleccionado visualmente
+                    window.seleccionarFabricacionTutorial = function(area) {
                         document.querySelectorAll('.fabricacion-tutorial-card').forEach(card => {
                             card.classList.remove('seleccionado');
                         });
-                        const card = document.querySelector(`[data-area="${area}"]`);
-                        if (card) card.classList.add('seleccionado');
+                        document.querySelector(`[data-area="${area}"]`).classList.add('seleccionado');
                         
-                        // MOSTRAR BOTÓN SIGUIENTE INMEDIATAMENTE
+                        window.tutorialFabricacionSeleccionada = area;
+                        
                         const nextBtn = document.getElementById('btn-tutorial-next-large');
                         if (nextBtn) {
                             nextBtn.style.display = 'flex';
-                            nextBtn.style.alignItems = 'center';
-                            nextBtn.style.justifyContent = 'center';
                         }
-                        
-                        // Simular que ya fabricó
-                        const nombres = {
-                            'motor': 'Motor',
-                            'chasis': 'Chasis',
-                            'aerodinamica': 'Aerodinámica'
-                        };
-                        
-                        // Guardar datos del tutorial
-                        if (window.tutorialData) {
-                            window.tutorialData.piezaFabricando = true;
-                            window.tutorialData.nombrePieza = nombres[area];
-                            window.tutorialData.puntosPieza = area === 'motor' ? 15 : 
-                                                             area === 'chasis' ? 12 : 10;
-                        }
-                        
-                        // Mostrar mensaje
-                        alert(`✅ ¡Pieza de ${nombres[area]} en fabricación!`);
                     };
+                    
+                    // Guarda el onclick original
+                    const originalOnclick = nextBtn ? nextBtn.onclick : null;
+                    
+                    // Sobrescribe el onclick para el paso 6
+                    if (nextBtn) {
+                        nextBtn.onclick = async () => {
+                            if (!window.tutorialFabricacionSeleccionada) return;
+                            
+                            try {
+                                const nombres = {
+                                    'motor': 'Motor',
+                                    'chasis': 'Chasis',
+                                    'aerodinamica': 'Aerodinámica'
+                                };
+                                
+                                // FABRICACIÓN REAL EN BD
+                                const areaSeleccionada = window.tutorialFabricacionSeleccionada;
+                                const nombreArea = nombres[areaSeleccionada] || areaSeleccionada;
+                                const nivelAFabricar = 1; // Nivel inicial
+                                
+                                // 1. Verificar límite de fabricaciones
+                                const { data: fabricacionesActivas, error: errorLimite } = await supabase
+                                    .from('fabricacion_actual')
+                                    .select('id')
+                                    .eq('escuderia_id', window.tutorialManager.escuderia.id)
+                                    .eq('completada', false);
+                                
+                                if (errorLimite) throw errorLimite;
+                                
+                                if (fabricacionesActivas && fabricacionesActivas.length >= 4) {
+                                    alert('❌ Límite alcanzado (máximo 4 fabricaciones simultáneas)');
+                                    return;
+                                }
+                                
+                                // 2. Calcular tiempo progresivo
+                                const tiempoMinutos = 2; // Primera pieza: 2 minutos
+                                const tiempoMilisegundos = tiempoMinutos * 60 * 1000;
+                                
+                                // 3. Verificar dinero
+                                const costo = 10000;
+                                if (window.tutorialManager.escuderia.dinero < costo) {
+                                    alert(`❌ Fondos insuficientes. Necesitas €${costo.toLocaleString()}`);
+                                    return;
+                                }
+                                
+                                // 4. Crear fabricación
+                                const ahora = new Date();
+                                const tiempoFin = new Date(ahora.getTime() + tiempoMilisegundos);
+                                
+                                const { data: fabricacion, error: errorCrear } = await supabase
+                                    .from('fabricacion_actual')
+                                    .insert([{
+                                        escuderia_id: window.tutorialManager.escuderia.id,
+                                        area: areaSeleccionada,
+                                        nivel: nivelAFabricar,
+                                        tiempo_inicio: ahora.toISOString(),
+                                        tiempo_fin: tiempoFin.toISOString(),
+                                        completada: false,
+                                        costo: costo,
+                                        creada_en: ahora.toISOString()
+                                    }])
+                                    .select()
+                                    .single();
+                                
+                                if (errorCrear) throw errorCrear;
+                                
+                                // 5. Descontar dinero
+                                window.tutorialManager.escuderia.dinero -= costo;
+                                await window.tutorialManager.updateEscuderiaMoney();
+                                
+                                // 6. Guardar datos del tutorial
+                                if (window.tutorialData) {
+                                    window.tutorialData.piezaFabricando = true;
+                                    window.tutorialData.nombrePieza = nombreArea;
+                                    window.tutorialData.puntosPieza = areaSeleccionada === 'motor' ? 15 : 
+                                                                     areaSeleccionada === 'chasis' ? 12 : 10;
+                                }
+                                
+                                // 7. Avanzar al siguiente paso
+                                if (window.tutorialManager && window.tutorialManager.tutorialStep < 11) {
+                                    window.tutorialManager.tutorialStep++;
+                                    window.tutorialManager.mostrarTutorialStep();
+                                }
+                                
+                            } catch (error) {
+                                console.error('Error fabricando pieza:', error);
+                                alert('Error fabricando pieza: ' + error.message);
+                            }
+                        };
+                    }
                 }
             },
             
