@@ -3406,61 +3406,55 @@ class F1Manager {
             
             // PASO 9: LUNES - Resultados
             {
-                title: "📅 LUNES: RESULTADOS Y GANANCIAS",
+                title: "📅 RESULTADOS SEMANALES",
                 content: `
-                    <div class="dia-info">
-                        <div class="dia-numero">LUNES</div>
-                        <div class="dia-titulo">RESULTADOS Y PAGOS</div>
-                    </div>
-                    
-                    <p>Resultados de tu primera semana simulada:</p>
-                    
-                    <div class="resultados-grid">
-                        <div class="resultado-card ${(window.tutorialData?.aciertosPronosticos || 0) > 0 ? 'ganancia' : 'error'}">
-                            <div class="resultado-icon">${(window.tutorialData?.aciertosPronosticos || 0) > 0 ? '✅' : '❌'}</div>
-                            <div class="resultado-titulo">PRONÓSTICOS</div>
-                            <div class="resultado-detalle">
-                                ${(() => {
-                                    const aciertos = window.tutorialData?.aciertosPronosticos || 0;
-                                    const total = 3; // Siempre 3 pronósticos en el tutorial
-                                    
-                                    if (aciertos > 0) {
-                                        return `${aciertos} de ${total} pronósticos acertados`;
-                                    } else {
-                                        return 'Sin aciertos esta semana';
-                                    }
-                                })()}
+                    <div class="resultados-grid-compact">
+                        <div class="resultado-card-compact ${(window.tutorialData?.aciertosPronosticos || 0) > 0 ? 'ganancia' : 'error'}">
+                            <div class="resultado-icon-compact">${(window.tutorialData?.aciertosPronosticos || 0) > 0 ? '✅' : '❌'}</div>
+                            <div class="resultado-content-compact">
+                                <div class="resultado-titulo-compact">PRONÓSTICOS</div>
+                                <div class="resultado-detalle-compact">
+                                    ${(() => {
+                                        const aciertos = window.tutorialData?.aciertosPronosticos || 0;
+                                        const total = 3;
+                                        return aciertos > 0 ? 
+                                            `${aciertos}/${total} aciertos` : 
+                                            'Sin aciertos';
+                                    })()}
+                                </div>
+                                <div class="resultado-puntos-compact">+${window.tutorialData?.puntosBaseCalculados || 0}</div>
                             </div>
-                            <div class="resultado-puntos">+${window.tutorialData?.puntosBaseCalculados || 0} pts</div>
                         </div>
                         
                         ${window.tutorialData?.estrategaContratado ? `
-                        <div class="resultado-card bono">
-                            <div class="resultado-icon">👥</div>
-                            <div class="resultado-titulo">BONO ESTRATEGA</div>
-                            <div class="resultado-detalle">${window.tutorialData.nombreEstratega || 'Estratega'} (+${window.tutorialData.bonoEstratega || 15}%)</div>
-                            <div class="resultado-puntos">+${(() => {
-                                const puntosBase = window.tutorialData?.puntosBaseCalculados || 0;
-                                const bono = window.tutorialData?.bonoEstratega || 15;
-                                return Math.round(puntosBase * (bono / 100));
-                            })()} pts extra</div>
+                        <div class="resultado-card-compact bono">
+                            <div class="resultado-icon-compact">👥</div>
+                            <div class="resultado-content-compact">
+                                <div class="resultado-titulo-compact">BONO</div>
+                                <div class="resultado-detalle-compact">${window.tutorialData.nombreEstratega || ''}</div>
+                                <div class="resultado-puntos-compact">+${(() => {
+                                    const puntosBase = window.tutorialData?.puntosBaseCalculados || 0;
+                                    const bono = window.tutorialData?.bonoEstratega || 15;
+                                    return Math.round(puntosBase * (bono / 100));
+                                })()}</div>
+                            </div>
                         </div>
                         ` : ''}
                         
                         ${window.tutorialData?.piezaFabricando ? `
-                        <div class="resultado-card pieza">
-                            <div class="resultado-icon">🔧</div>
-                            <div class="resultado-titulo">PIEZA FABRICADA</div>
-                            <div class="resultado-detalle">${window.tutorialData.nombrePieza || 'Pieza'}</div>
-                            <div class="resultado-puntos">+${window.tutorialData?.puntosPieza || 15} pts técnicos</div>
+                        <div class="resultado-card-compact pieza">
+                            <div class="resultado-icon-compact">🔧</div>
+                            <div class="resultado-content-compact">
+                                <div class="resultado-titulo-compact">PIEZA</div>
+                                <div class="resultado-detalle-compact">${window.tutorialData.nombrePieza || ''}</div>
+                                <div class="resultado-puntos-compact">+${window.tutorialData?.puntosPieza || 15}</div>
+                            </div>
                         </div>
                         ` : ''}
                     </div>
                     
-                    <div class="total-ganancias">
-                        <div class="total-titulo">TOTAL SEMANAL:</div>
-                        <div class="total-puntos">${(() => {
-                            // Calcular puntos totales dinámicamente
+                    <div class="total-ganancias-compact">
+                        <div class="total-puntos-compact">${(() => {
                             const puntosBase = window.tutorialData?.puntosBaseCalculados || 0;
                             let puntosBono = 0;
                             
@@ -3473,10 +3467,9 @@ class F1Manager {
                                 (window.tutorialData?.puntosPieza || 15) : 0;
                             
                             const total = puntosBase + puntosBono + puntosPieza;
-                            return total.toFixed(1);
+                            return total;
                         })()} PUNTOS</div>
-                        <div class="total-dinero">= ${(() => {
-                            // Calcular dinero (1 punto = 100€)
+                        <div class="total-dinero-compact">= ${(() => {
                             const puntosBase = window.tutorialData?.puntosBaseCalculados || 0;
                             let puntosBono = 0;
                             
@@ -3489,45 +3482,15 @@ class F1Manager {
                                 (window.tutorialData?.puntosPieza || 15) : 0;
                             
                             const totalPuntos = puntosBase + puntosBono + puntosPieza;
-                            const dinero = totalPuntos * 100; // 1 punto = 100€
+                            const dinero = totalPuntos * 100;
                             return dinero.toLocaleString() + '€';
                         })()}</div>
-                        <div class="total-conversion">(1 punto = 100€)</div>
                     </div>
                     
-                    <div class="nuevo-presupuesto">
-                        <div class="presupuesto-inicial">Presupuesto inicial: 5,000,000€</div>
-                        <div class="presupuesto-ganancia">+ Ganancias: ${(() => {
-                            const puntosBase = window.tutorialData?.puntosBaseCalculados || 0;
-                            let puntosBono = 0;
-                            
-                            if (window.tutorialData?.estrategaContratado && puntosBase > 0) {
-                                const bono = window.tutorialData?.bonoEstratega || 15;
-                                puntosBono = Math.round(puntosBase * (bono / 100));
-                            }
-                            
-                            const puntosPieza = window.tutorialData?.piezaFabricando ? 
-                                (window.tutorialData?.puntosPieza || 15) : 0;
-                            
-                            const totalPuntos = puntosBase + puntosBono + puntosPieza;
-                            return (totalPuntos * 100).toLocaleString() + '€';
-                        })()}</div>
-                        <div class="presupuesto-gastos">- Gastos: ${(() => {
-                            // Gastos dinámicos
-                            let gastos = 0;
-                            if (window.tutorialData?.estrategaContratado) {
-                                gastos += 150000; // Salario estratega
-                            }
-                            if (window.tutorialData?.piezaFabricando) {
-                                gastos += 50000; // Costo fabricación
-                            }
-                            return gastos.toLocaleString() + '€';
-                        })()}</div>
-                        <div class="presupuesto-final">Nuevo presupuesto: <strong>${(() => {
-                            // Presupuesto final dinámico
+                    <div class="presupuesto-final-compact">
+                        <div>Nuevo presupuesto:</div>
+                        <div class="presupuesto-valor-compact">${(() => {
                             const inicial = 5000000;
-                            
-                            // Calcular ganancias
                             const puntosBase = window.tutorialData?.puntosBaseCalculados || 0;
                             let puntosBono = 0;
                             
@@ -3542,7 +3505,6 @@ class F1Manager {
                             const totalPuntos = puntosBase + puntosBono + puntosPieza;
                             const ganancias = totalPuntos * 100;
                             
-                            // Calcular gastos
                             let gastos = 0;
                             if (window.tutorialData?.estrategaContratado) {
                                 gastos += 150000;
@@ -3553,13 +3515,150 @@ class F1Manager {
                             
                             const final = inicial + ganancias - gastos;
                             return final.toLocaleString() + '€';
-                        })()}</strong></div>
+                        })()}</div>
                     </div>
                 `,
-                action: 'siguientePaso'
+                action: 'siguientePaso',
+                onLoad: function() {
+                    // Añadir estilos compactos INLINE para evitar CSS nuevo
+                    const style = document.createElement('style');
+                    style.innerHTML = `
+                        .resultados-grid-compact {
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 6px;
+                            margin: 10px 0;
+                        }
+                        
+                        .resultado-card-compact {
+                            background: rgba(255, 255, 255, 0.04);
+                            border-radius: 6px;
+                            padding: 6px;
+                            display: flex;
+                            align-items: center;
+                            min-height: 60px;
+                        }
+                        
+                        .resultado-card-compact.ganancia { border-top: 3px solid #4CAF50; }
+                        .resultado-card-compact.bono { border-top: 3px solid #00d2be; }
+                        .resultado-card-compact.pieza { border-top: 3px solid #ff9800; }
+                        
+                        .resultado-icon-compact {
+                            font-size: 1.2rem;
+                            margin-right: 8px;
+                            flex-shrink: 0;
+                        }
+                        
+                        .resultado-content-compact {
+                            flex: 1;
+                        }
+                        
+                        .resultado-titulo-compact {
+                            font-size: 0.7rem;
+                            font-weight: bold;
+                            color: white;
+                            margin-bottom: 2px;
+                        }
+                        
+                        .resultado-detalle-compact {
+                            color: #aaa;
+                            font-size: 0.65rem;
+                            margin-bottom: 3px;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                        }
+                        
+                        .resultado-puntos-compact {
+                            font-size: 0.8rem;
+                            font-weight: bold;
+                            color: #ffd700;
+                        }
+                        
+                        .total-ganancias-compact {
+                            background: rgba(255, 215, 0, 0.08);
+                            border-radius: 8px;
+                            padding: 8px;
+                            text-align: center;
+                            margin: 10px 0;
+                            border: 1px solid rgba(255, 215, 0, 0.2);
+                        }
+                        
+                        .total-puntos-compact {
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            color: #ffd700;
+                            margin-bottom: 3px;
+                        }
+                        
+                        .total-dinero-compact {
+                            font-size: 0.9rem;
+                            color: #4CAF50;
+                        }
+                        
+                        .presupuesto-final-compact {
+                            background: rgba(0, 0, 0, 0.3);
+                            border-radius: 8px;
+                            padding: 8px;
+                            margin-top: 10px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            font-size: 0.8rem;
+                            color: #aaa;
+                        }
+                        
+                        .presupuesto-valor-compact {
+                            color: white;
+                            font-weight: bold;
+                            font-size: 0.9rem;
+                        }
+                        
+                        /* Para el paso 9, eliminar botón anterior */
+                        .tutorial-actions-bottom .btn-tutorial-prev {
+                            display: none !important;
+                        }
+                        
+                        /* Ajustar grid para móviles */
+                        @media (max-width: 600px) {
+                            .resultados-grid-compact {
+                                grid-template-columns: 1fr;
+                                gap: 4px;
+                            }
+                            
+                            .resultado-card-compact {
+                                min-height: 50px;
+                                padding: 4px;
+                            }
+                            
+                            .resultado-icon-compact {
+                                font-size: 1rem;
+                                margin-right: 6px;
+                            }
+                            
+                            .resultado-titulo-compact {
+                                font-size: 0.65rem;
+                            }
+                            
+                            .resultado-detalle-compact {
+                                font-size: 0.6rem;
+                            }
+                            
+                            .resultado-puntos-compact {
+                                font-size: 0.75rem;
+                            }
+                        }
+                    `;
+                    
+                    // Añadir estilos solo si no existen
+                    if (!document.getElementById('estilos-paso9-compact')) {
+                        style.id = 'estilos-paso9-compact';
+                        document.head.appendChild(style);
+                    }
+                }
             },
             
-            // PASO 11: Tutorial completado
+            // PASO 10: Tutorial completado
             {
                 title: "🏁 ¡TUTORIAL COMPLETADO!",
                 content: `
