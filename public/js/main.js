@@ -3538,7 +3538,7 @@ class F1Manager {
                     
                     <!-- Botones (FIJO ABAJO) -->
                     <div class="tutorial-actions-bottom">
-                        ${this.tutorialStep > 1 ? `
+                        ${this.tutorialStep > 1 && this.tutorialStep !== 8 ? `
                             <button class="btn-tutorial-prev" id="btn-tutorial-prev">
                                 <i class="fas fa-arrow-left"></i> ANTERIOR
                             </button>
