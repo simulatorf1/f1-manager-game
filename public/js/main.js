@@ -2836,6 +2836,7 @@ class F1Manager {
                     </div>
                 `,
                 action: 'siguientePaso',
+
                 onLoad: function() {
                     const nextBtn = document.getElementById('btn-tutorial-next-large');
                     if (nextBtn) {
@@ -2848,16 +2849,84 @@ class F1Manager {
                         });
                         document.querySelector(`[data-estratega-id="${id}"]`).classList.add('seleccionado');
                         
+                        window.tutorialEstrategaSeleccionado = id;
+                        
                         const nextBtn = document.getElementById('btn-tutorial-next-large');
                         if (nextBtn) {
                             nextBtn.style.display = 'flex';
                         }
-                        
-                        if (window.tutorialData) {
-                            window.tutorialData.estrategaContratado = true;
-                        }
                     };
-                }
+                    
+                    // Guarda el onclick original
+                    const originalOnclick = nextBtn ? nextBtn.onclick : null;
+                    
+                    // Sobrescribe el onclick para el paso 5
+                    if (nextBtn) {
+                        nextBtn.onclick = async () => {
+                            if (!window.tutorialEstrategaSeleccionado) return;
+                            
+                            // CONTRATACIÓN REAL EN BD - usa el código original
+                            try {
+                                const nombres = {
+                                    1: "ANALISTA DE TIEMPOS",
+                                    2: "METEORÓLOGO", 
+                                    3: "EXPERTO FIABILIDAD"
+                                };
+                                
+                                const especialidades = {
+                                    1: "Tiempos",
+                                    2: "Meteorología",
+                                    3: "Fiabilidad"
+                                };
+                                
+                                const bonificaciones = {
+                                    1: { tipo: 'puntos_extra', valor: 15 },
+                                    2: { tipo: 'puntos_extra', valor: 20 },
+                                    3: { tipo: 'puntos_extra', valor: 18 }
+                                };
+                                
+                                // Insertar en ingenieros_contratados
+                                const { error } = await supabase
+                                    .from('ingenieros_contratados')
+                                    .insert([{
+                                        escuderia_id: window.tutorialManager.escuderia.id,
+                                        ingeniero_id: window.tutorialEstrategaSeleccionado,
+                                        nombre: nombres[window.tutorialEstrategaSeleccionado],
+                                        salario: 250000,
+                                        especialidad: especialidades[window.tutorialEstrategaSeleccionado],
+                                        bonificacion_tipo: bonificaciones[window.tutorialEstrategaSeleccionado].tipo,
+                                        bonificacion_valor: bonificaciones[window.tutorialEstrategaSeleccionado].valor,
+                                        activo: true,
+                                        contratado_en: new Date().toISOString()
+                                    }]);
+                                
+                                if (error) throw error;
+                                
+                                // Guardar datos del tutorial
+                                if (window.tutorialData) {
+                                    window.tutorialData.estrategaContratado = true;
+                                    window.tutorialData.nombreEstratega = nombres[window.tutorialEstrategaSeleccionado];
+                                    window.tutorialData.bonoEstratega = window.tutorialEstrategaSeleccionado === 1 ? 15 : 
+                                                                       window.tutorialEstrategaSeleccionado === 2 ? 20 : 18;
+                                }
+                                
+                                // Descontar dinero
+                                window.tutorialManager.escuderia.dinero -= 250000;
+                                await window.tutorialManager.updateEscuderiaMoney();
+                                
+                                // Avanzar al siguiente paso
+                                if (window.tutorialManager && window.tutorialManager.tutorialStep < 11) {
+                                    window.tutorialManager.tutorialStep++;
+                                    window.tutorialManager.mostrarTutorialStep();
+                                }
+                                
+                            } catch (error) {
+                                console.error('Error contratando estratega:', error);
+                                alert('Error contratando estratega: ' + error.message);
+                            }
+                        };
+                    }
+                },
             },
             
             // PASO 6: DÍA 2 - Fabricación
