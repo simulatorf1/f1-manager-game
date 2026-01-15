@@ -2807,18 +2807,8 @@ class F1Manager {
             {
                 title: "🎮 SIMULACIÓN SEMANAL",
                 content: `
-                    <div class="simulacion-intro">
-                        <div class="intro-icon">🔄</div>
-                        <h3>¡Comienza tu aventura!</h3>
-                        <p>Vamos a simular una semana completa:</p>
-                        <ul class="simulacion-pasos">
-                            <li><strong>Día 1:</strong> Contrata tu primer estratega</li>
-                            <li><strong>Día 2:</strong> Fabrica tu primera pieza</li>
-                            <li><strong>Día 3:</strong> Haz pronósticos para la carrera</li>
-                            <li><strong>Fin de semana:</strong> Se simulará la carrera</li>
-                            <li><strong>Lunes:</strong> Verás resultados y ganancias</li>
-                        </ul>
-                        <p class="simulacion-nota">En el juego real, cada paso tiene tiempo real</p>
+                    <div class="simulacion-intro" style="display: none;"> <!-- OCULTAR TODO -->
+                        <!-- Todo el contenido inicial se oculta -->
                     </div>
                     
                     <div class="simulacion-dia">
@@ -2826,6 +2816,7 @@ class F1Manager {
                         <p class="dia-descripcion">Selecciona tu primer estratega. Cada uno te da bonificaciones diferentes:</p>
                     </div>
                     
+                    <!-- Mantener solo el grid de estrategas -->
                     <div class="grid-3-columns">
                         <div class="estratega-tutorial-card seleccionable" onclick="tutorialSeleccionarEstrategaPractico(1)">
                             <div class="estratega-icon-tut">⏱️</div>
@@ -3438,13 +3429,15 @@ class F1Manager {
                 background: rgba(255, 255, 255, 0.05);
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 border-radius: 8px;
-                padding: 8px 10px; /* Más pequeño */
+                padding: 6px 8px; /* Más pequeño */
                 text-align: left;
                 cursor: default !important;
                 min-height: 60px; /* Mucho más pequeño */
                 display: flex;
                 align-items: center;
+                pointer-events: none !important;
                 gap: 12px;
+                min-height: 50px !important;
             }
                         
             /* QUITAR HOVER Y TRANSICIONES - NUEVO */
@@ -3456,15 +3449,15 @@ class F1Manager {
             }
             
             .grid-icon {
-                font-size: 1.2rem;
+                font-size: 1rem;
                 flex-shrink: 0;
-                width: 30px;
+                width: 25px;
                 text-align: center;
             }
             
             .grid-title {
                 font-family: 'Orbitron', sans-serif;
-                font-size: 0.85rem; /* Más pequeño */
+                font-size: 0.75rem; /* Más pequeño */
                 font-weight: bold;
                 color: white;
                 margin-bottom: 2px;
@@ -3481,9 +3474,9 @@ class F1Manager {
                 background: rgba(42, 42, 56, 0.8);
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 border-radius: 8px;
-                padding: 8px; /* Más pequeño */
+                padding: 6px !important; /* Reducir padding */
                 text-align: left;
-                min-height: 80px; /* Más pequeño */
+                min-height: 70px !important; /* Reducir altura */
                 display: flex;
                 align-items: flex-start;
                 gap: 10px;
@@ -3509,26 +3502,27 @@ class F1Manager {
                 font-family: 'Orbitron', sans-serif;
                 font-weight: bold;
                 color: white;
-                font-size: 0.8rem; /* Más pequeño */
-                margin-bottom: 3px;
+                font-size: 0.75rem !important; /* Más pequeño */
+                margin-bottom: 2px !important;
                 line-height: 1.1;
             }
             
             .area-grid-desc {
                 color: #aaa;
-                font-size: 0.65rem; /* Más pequeño */
-                margin-bottom: 5px;
+                font-size: 0.65rem !important;
+                margin-bottom: 4px !important;
                 line-height: 1.1;
             }
             
             .area-grid-stats {
                 background: rgba(0, 210, 190, 0.1);
                 color: #00d2be;
-                padding: 2px 6px; /* Más pequeño */
+                padding: 2px 6px !important;
                 border-radius: 10px;
                 font-size: 0.65rem; /* Más pequeño */
                 font-weight: bold;
-                display: inline-block;
+                margin-left: 8px !important; /* Separar de la descripción */
+                display: inline-block !important; /* Cambiar a inline */
             }
             
             .area-grid-sub {
@@ -4302,9 +4296,33 @@ class F1Manager {
                     max-height: calc(80vh - 130px);
                 }
                 
-                .grid-6-columns, .grid-4-columns, .grid-3-columns {
-                    grid-template-columns: 1fr;
-                    gap: 6px;
+                .grid-4-columns {
+                    grid-template-columns: repeat(2, 1fr) !important; /* Mantener 2 columnas */
+                    gap: 6px !important;
+                }
+                
+                .area-grid-card {
+                    min-height: 60px !important;
+                    padding: 4px !important;
+                }
+                
+                .area-grid-icon {
+                    font-size: 1rem !important;
+                    width: 20px !important;
+                }
+                
+                .area-grid-name {
+                    font-size: 0.7rem !important;
+                }
+                
+                .area-grid-desc {
+                    font-size: 0.6rem !important;
+                    display: inline !important; /* Hacer inline para que vaya junto con stats */
+                }
+                
+                .area-grid-stats {
+                    font-size: 0.6rem !important;
+                    padding: 1px 4px !important;
                 }
                 
                 .grid-btn-big, .area-grid-card, .estratega-tutorial-card, 
@@ -4398,6 +4416,28 @@ class F1Manager {
                     bottom: 55px;
                     left: 10px;
                     right: 10px;
+                }
+                .grid-4-columns {
+                    grid-template-columns: repeat(2, 1fr) !important; /* Mantener 2 columnas */
+                    gap: 4px !important;
+                }
+                
+                .area-grid-card {
+                    min-height: 50px !important;
+                    padding: 3px !important;
+                }
+                
+                .area-grid-name {
+                    font-size: 0.65rem !important;
+                }
+                
+                .area-grid-desc {
+                    font-size: 0.55rem !important;
+                }
+                
+                .area-grid-stats {
+                    font-size: 0.55rem !important;
+                    padding: 1px 3px !important;
                 }
             }
             
@@ -7344,7 +7384,7 @@ class F1Manager {
         ];
         
         container.innerHTML = estrategas.map(e => `
-            <div class="estratega-tutorial-card seleccionable" onclick="tutorialSeleccionarEstrategaPractico(${e.id})">
+            <div class="estratega-tutorial-card seleccionable">
                 <div class="estratega-icon-tut">${e.icono}</div>
                 <div class="estratega-nombre-tut">${e.nombre}</div>
                 <div class="estratega-especialidad">${e.especialidad}</div>
