@@ -1380,14 +1380,8 @@ const tallerStyles = `
     }
     
     @media (max-width: 900px) {
-        .grid-6-columns { 
-            grid-template-columns: repeat(2, 1fr) !important; 
-        }
-        .grid-4-columns { 
-            grid-template-columns: repeat(2, 1fr) !important; 
-        }
-        .grid-3-columns { 
-            grid-template-columns: repeat(3, 1fr) !important; 
+        .grid-8-fabricacion {
+            grid-template-columns: repeat(2, 1fr);
         }
     }
     
@@ -2813,7 +2807,25 @@ class F1Manager {
             {
                 title: "🎮 SIMULACIÓN SEMANAL",
                 content: `
-                    <p class="dia-descripcion">Selecciona tu primer estratega. Cada uno te da bonificaciones diferentes:</p>
+                    <div class="simulacion-intro">
+                        <div class="intro-icon">🔄</div>
+                        <h3>¡Comienza tu aventura!</h3>
+                        <p>Vamos a simular una semana completa:</p>
+                        <ul class="simulacion-pasos">
+                            <li><strong>Día 1:</strong> Contrata tu primer estratega</li>
+                            <li><strong>Día 2:</strong> Fabrica tu primera pieza</li>
+                            <li><strong>Día 3:</strong> Haz pronósticos para la carrera</li>
+                            <li><strong>Fin de semana:</strong> Se simulará la carrera</li>
+                            <li><strong>Lunes:</strong> Verás resultados y ganancias</li>
+                        </ul>
+                        <p class="simulacion-nota">En el juego real, cada paso tiene tiempo real</p>
+                    </div>
+                    
+                    <div class="simulacion-dia">
+                        <div class="dia-titulo-simulacion">CONTRATA TU PRIMER ESTRATEGA</div>
+                        <p class="dia-descripcion">Selecciona tu primer estratega. Cada uno te da bonificaciones diferentes:</p>
+                    </div>
+                    
                     <div class="grid-3-columns">
                         <div class="estratega-tutorial-card seleccionable" onclick="tutorialSeleccionarEstrategaPractico(1)">
                             <div class="estratega-icon-tut">⏱️</div>
@@ -2849,26 +2861,30 @@ class F1Manager {
           
                 title: "🔧 FABRICAR PIEZA",
                 content: `
-                    <p class="dia-descripcion">Elige un área para fabricar tu primera pieza:</p>
+                    <div class="simulacion-dia">
+                        <div class="dia-titulo-simulacion">FABRICA TU PRIMERA PIEZA</div>
+                        <p class="dia-descripcion">Elige un área para fabricar tu primera pieza:</p>
+                    </div>
+                    
                     <div class="grid-3-columns">
                         <div class="fabricacion-tutorial-card seleccionable" onclick="tutorialSeleccionarFabricacionPractica('motor')">
                             <div class="fab-icon-tut">🏎️</div>
                             <div class="fab-nombre-tut">MOTOR</div>
-
+                            <div class="fab-desc-tut">Aumenta potencia</div>
                             <div class="fab-puntos-tut">⭐ +15 puntos</div>
                         </div>
                         
                         <div class="fabricacion-tutorial-card seleccionable" onclick="tutorialSeleccionarFabricacionPractica('chasis')">
                             <div class="fab-icon-tut">📊</div>
                             <div class="fab-nombre-tut">CHASIS</div>
-
+                            <div class="fab-desc-tut">Mejora estructura</div>
                             <div class="fab-puntos-tut">⭐ +12 puntos</div>
                         </div>
                         
                         <div class="fabricacion-tutorial-card seleccionable" onclick="tutorialSeleccionarFabricacionPractica('aerodinamica')">
                             <div class="fab-icon-tut">🌀</div>
                             <div class="fab-nombre-tut">AERO</div>
-
+                            <div class="fab-desc-tut">Optimiza flujo aire</div>
                             <div class="fab-puntos-tut">⭐ +10 puntos</div>
                         </div>
                     </div>
@@ -2885,7 +2901,10 @@ class F1Manager {
             {
                 title: "🎯 HACER PRONÓSTICOS",
                 content: `
-                    <p class="dia-descripcion">Selecciona tus predicciones:</p>
+                    <div class="simulacion-dia">
+                        <div class="dia-titulo-simulacion">PRONÓSTICOS DE CARRERA</div>
+                        <p class="dia-descripcion">Selecciona tus predicciones (marca una opción en cada categoría):</p>
+                    </div>
                     
                     <div class="grid-3-columns">
                         <div class="pronostico-tutorial-card">
@@ -2901,7 +2920,7 @@ class F1Manager {
                         <div class="pronostico-tutorial-card">
                             <div class="pronostico-icon-tut">🚗</div>
                             <div class="pronostico-nombre-tut">ABANDONOS</div>
-                            <div class="pronostico-pregunta">¿Cuántos no terminan?</div>
+                            <div class="pronostico-pregunta">¿Cuántos no terminarán?</div>
                             <div class="pronostico-opciones">
                                 <div class="opcion-tut seleccionable-pronostico" data-tipo="abandonos" data-valor="0-2" onclick="tutorialSeleccionarOpcionPronostico('abandonos', '0-2', this)">0-2</div>
                                 <div class="opcion-tut seleccionable-pronostico" data-tipo="abandonos" data-valor="3-5" onclick="tutorialSeleccionarOpcionPronostico('abandonos', '3-5', this)">3-5</div>
@@ -2912,7 +2931,7 @@ class F1Manager {
                         <div class="pronostico-tutorial-card">
                             <div class="pronostico-icon-tut">⏱️</div>
                             <div class="pronostico-nombre-tut">DIFERENCIA 1º-2º</div>
-                            <div class="pronostico-pregunta">Tiempo 1º y 2º</div>
+                            <div class="pronostico-pregunta">Tiempo entre 1º y 2º</div>
                             <div class="pronostico-opciones">
                                 <div class="opcion-tut seleccionable-pronostico" data-tipo="diferencia" data-valor="<1s" onclick="tutorialSeleccionarOpcionPronostico('diferencia', '<1s', this)"><1s</div>
                                 <div class="opcion-tut seleccionable-pronostico" data-tipo="diferencia" data-valor="1-5s" onclick="tutorialSeleccionarOpcionPronostico('diferencia', '1-5s', this)">1-5s</div>
@@ -4284,7 +4303,7 @@ class F1Manager {
                 }
                 
                 .grid-6-columns, .grid-4-columns, .grid-3-columns {
-                    grid-template-columns: repeat(2, 1fr) !important; 
+                    grid-template-columns: 1fr;
                     gap: 6px;
                 }
                 
@@ -7345,15 +7364,6 @@ class F1Manager {
         if (accionBtn) accionBtn.style.display = 'block';
         
         window.tutorialData.estrategaSeleccionado = id;
-        const actionBtn = document.getElementById('accion-contratar-tut');
-        if (actionBtn) {
-            actionBtn.style.display = 'block';
-            actionBtn.innerHTML = `
-                <button class="btn-tutorial-accion-grande" onclick="tutorialEjecutarContratacion()">
-                    <i class="fas fa-file-contract"></i> CONTRATAR ESTRATEGA
-                </button>
-            `;
-        }
     };
     // Función global para fabricar desde los botones del taller
     // Función global CORREGIDA
@@ -7545,16 +7555,6 @@ class F1Manager {
         if (accionBtn) accionBtn.style.display = 'block';
         
         window.tutorialData.areaSeleccionada = area;
-        const actionBtn = document.getElementById('accion-fabricar-tut');
-        if (actionBtn) {
-            actionBtn.style.display = 'block';
-            actionBtn.innerHTML = `
-                <button class="btn-tutorial-accion-grande" onclick="tutorialEjecutarFabricacion()">
-                    <i class="fas fa-hammer"></i> FABRICAR PIEZA
-                </button>
-            `;
-        }
-        
     };
     
     window.tutorialEjecutarFabricacion = async function() {
@@ -7938,26 +7938,6 @@ class F1Manager {
         
         console.log('Pronóstico seleccionado:', tipo, '=', valor);
         console.log('Todos los pronósticos:', window.tutorialData.pronosticosSeleccionados);
-        // VERIFICAR si ya se seleccionaron las 3 opciones
-        const selecciones = window.tutorialData.pronosticosSeleccionados || {};
-        selecciones[tipo] = valor;
-        window.tutorialData.pronosticosSeleccionados = selecciones;
-        
-        const count = Object.keys(selecciones).length;
-        
-        // Si ya hay 3 selecciones, mostrar botón
-        if (count >= 3) {
-            const actionBtn = document.getElementById('accion-pronostico-tut');
-            if (actionBtn) {
-                actionBtn.style.display = 'block';
-                actionBtn.innerHTML = `
-                    <button class="btn-tutorial-accion-grande" onclick="tutorialEjecutarPronostico()">
-                        <i class="fas fa-paper-plane"></i> ENVIAR PRONÓSTICOS
-                    </button>
-                `;
-            }
-        }
-        
     };
     
     // Función para ejecutar pronóstico
