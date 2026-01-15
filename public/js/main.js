@@ -2886,9 +2886,6 @@ class F1Manager {
                             3: "EXPERTO FIABILIDAD"
                         };
                         
-                        // ELIMINA LA ALERTA - NO MOSTRAR MENSAJE EMERGENTE
-                        // alert(`✅ ¡Estratega contratado: ${nombres[window.tutorialEstrategaSeleccionado]}!`);
-                        
                         // Guardar datos del tutorial
                         if (window.tutorialData) {
                             window.tutorialData.estrategaContratado = true;
@@ -2897,15 +2894,15 @@ class F1Manager {
                                                                window.tutorialEstrategaSeleccionado === 2 ? 20 : 18;
                         }
                         
-                        // MOSTRAR BOTÓN SIGUIENTE Y CONFIGURARLO CORRECTAMENTE
+                        // MOSTRAR BOTÓN SIGUIENTE Y CONFIGURAR EVENTO
                         const nextBtn = document.getElementById('btn-tutorial-next-large');
                         if (nextBtn) {
                             nextBtn.style.display = 'flex';
                             nextBtn.style.alignItems = 'center';
                             nextBtn.style.justifyContent = 'center';
                             
-                            // AÑADIR EL EVENTO PARA AVANZAR
-                            nextBtn.onclick = async () => {
+                            // Configurar evento para avanzar al siguiente paso
+                            nextBtn.onclick = () => {
                                 if (window.tutorialManager && window.tutorialManager.tutorialStep < 11) {
                                     window.tutorialManager.tutorialStep++;
                                     window.tutorialManager.mostrarTutorialStep();
@@ -2918,6 +2915,7 @@ class F1Manager {
                         if (accionDiv) {
                             accionDiv.style.display = 'none';
                         }
+
                     };
 
                 }
@@ -3457,8 +3455,8 @@ class F1Manager {
                         ` : '<div class="spacer"></div>'}
                         
                         ${step.action ? `
-                            <button class="btn-tutorial-next-large" id="btn-tutorial-next-large" 
-                                    style="${step.action === 'siguientePaso' ? '' : 'display: none;'}">
+                            <button class="btn-tutorial-next-large" id="btn-tutorial-next-large" style="display: none;">
+                            
                                 ${step.action === 'comenzarJuegoReal' ? '¡EMPEZAR A COMPETIR!' : 'SIGUIENTE'}
                                 <i class="fas fa-arrow-right"></i>
                             </button>
