@@ -3194,17 +3194,29 @@ class F1Manager {
             },
             // PASO 8: FIN DE SEMANA - Simulación carrera
             {
-                title: "📅 FIN DE SEMANA: CARRERA",
+                title: "📅 SIMULACIÓN DE CARRERA",
                 content: `
-                    <div class="dia-info">
-                        <div class="dia-numero">FIN DE SEMANA</div>
-                        <div class="dia-titulo">SÁBADO-DOMINGO - COMPETICIÓN</div>
+                    <div class="simulacion-header" style="text-align: center; margin-bottom: 15px;">
+                        <div style="
+                            background: rgba(225, 6, 0, 0.2);
+                            color: #e10600;
+                            display: inline-block;
+                            padding: 5px 15px;
+                            border-radius: 15px;
+                            font-family: 'Orbitron', sans-serif;
+                            font-size: 0.9rem;
+                            font-weight: bold;
+                            margin-bottom: 8px;
+                        ">
+                            FIN DE SEMANA
+                        </div>
+                        <p style="color: #ccc; font-size: 0.9rem; margin: 0;">
+                            Verifica tus pronósticos con los datos reales de carrera
+                        </p>
                     </div>
                     
-                    <p>La carrera se desarrolla y se verifican tus pronósticos con datos reales:</p>
-                    
                     <button class="btn-simular-carrera" onclick="tutorialSimularCarrera()" id="btn-simular-carrera-tutorial">
-                        <i class="fas fa-play-circle"></i> SIMULAR DESARROLLO DE CARRERA
+                        <i class="fas fa-play-circle"></i> SIMULAR CARRERA
                     </button>
                     
                     <div id="resultado-simulacion" style="display: none;">
@@ -3215,13 +3227,9 @@ class F1Manager {
                 onLoad: function() {
                     const nextBtn = document.getElementById('btn-tutorial-next-large');
                     if (nextBtn) {
-                        nextBtn.style.display = 'none'; // Ocultar botón Siguiente inicialmente
+                        nextBtn.style.display = 'none';
                     }
                     
-                    // Guardar el onclick original
-                    const originalOnclick = nextBtn ? nextBtn.onclick : null;
-                    
-                    // Definir función para simular carrera CON COMPARACIÓN REAL
                     window.tutorialSimularCarrera = async function() {
                         const btnSimular = document.getElementById('btn-simular-carrera-tutorial');
                         if (btnSimular) {
@@ -3229,36 +3237,31 @@ class F1Manager {
                             btnSimular.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SIMULANDO...';
                         }
                         
-                        // 1. SIMULAR DATOS REALES DE LA CARRERA
-                        // Estos son los resultados "reales" que ocurrieron en la carrera simulada
+                        // Datos reales simulados
                         const datosRealesCarrera = {
-                            bandera: Math.random() > 0.5 ? 'si' : 'no', // 50% de probabilidad
-                            abandonos: Math.random() > 0.6 ? '0-2' : Math.random() > 0.3 ? '3-5' : 'mas5', // Probabilidades diferentes
-                            diferencia: Math.random() > 0.7 ? '<1s' : Math.random() > 0.4 ? '1-5s' : '>5s' // Más probable 1-5s
+                            bandera: Math.random() > 0.5 ? 'si' : 'no',
+                            abandonos: Math.random() > 0.6 ? '0-2' : Math.random() > 0.3 ? '3-5' : 'mas5',
+                            diferencia: Math.random() > 0.7 ? '<1s' : Math.random() > 0.4 ? '1-5s' : '>5s'
                         };
                         
-                        // 2. OBTENER PRONÓSTICOS DEL USUARIO (del paso 7)
                         const pronosticosUsuario = window.tutorialPronosticos || {};
                         
-                        // 3. VERIFICAR QUE EL USUARIO SELECCIONÓ TODOS LOS PRONÓSTICOS
                         if (!pronosticosUsuario.bandera || !pronosticosUsuario.abandonos || !pronosticosUsuario.diferencia) {
-                            alert('❌ Error: No se encontraron todos tus pronósticos. Vuelve al paso 7 y selecciona los 3 pronósticos.');
+                            alert('❌ Error: No se encontraron todos tus pronósticos.');
                             if (btnSimular) {
                                 btnSimular.disabled = false;
-                                btnSimular.innerHTML = '<i class="fas fa-play-circle"></i> SIMULAR DESARROLLO DE CARRERA';
+                                btnSimular.innerHTML = '<i class="fas fa-play-circle"></i> SIMULAR CARRERA';
                             }
                             return;
                         }
                         
-                        // 4. CALCULAR ACIERTOS Y PUNTOS
+                        // Calcular aciertos
                         let aciertosTotales = 0;
                         let puntosTotales = 0;
                         let detalleResultados = [];
-                        
-                        // Sistema de puntos: 10 puntos por acierto
                         const PUNTOS_POR_ACIERTO = 10;
                         
-                        // a) BANDERA AMARILLA
+                        // Bandera amarilla
                         const aciertoBandera = pronosticosUsuario.bandera === datosRealesCarrera.bandera;
                         const puntosBandera = aciertoBandera ? PUNTOS_POR_ACIERTO : 0;
                         if (aciertoBandera) aciertosTotales++;
@@ -3272,7 +3275,7 @@ class F1Manager {
                             puntos: puntosBandera
                         });
                         
-                        // b) ABANDONOS
+                        // Abandonos
                         const aciertoAbandonos = pronosticosUsuario.abandonos === datosRealesCarrera.abandonos;
                         const puntosAbandonos = aciertoAbandonos ? PUNTOS_POR_ACIERTO : 0;
                         if (aciertoAbandonos) aciertosTotales++;
@@ -3286,7 +3289,7 @@ class F1Manager {
                             puntos: puntosAbandonos
                         });
                         
-                        // c) DIFERENCIA 1º-2º
+                        // Diferencia
                         const aciertoDiferencia = pronosticosUsuario.diferencia === datosRealesCarrera.diferencia;
                         const puntosDiferencia = aciertoDiferencia ? PUNTOS_POR_ACIERTO : 0;
                         if (aciertoDiferencia) aciertosTotales++;
@@ -3300,123 +3303,121 @@ class F1Manager {
                             puntos: puntosDiferencia
                         });
                         
-                        // 5. GUARDAR DATOS PARA EL SIGUIENTE PASO
+                        // Guardar datos
                         if (window.tutorialData) {
                             window.tutorialData.aciertosPronosticos = aciertosTotales;
                             window.tutorialData.puntosBaseCalculados = puntosTotales;
-                            // También guardar los resultados detallados
                             window.tutorialData.detalleResultados = detalleResultados;
-                            // Guardar los datos reales para mostrarlos
                             window.tutorialData.datosRealesCarrera = datosRealesCarrera;
                         }
                         
-                        // 6. MOSTRAR RESULTADOS DETALLADOS
+                        // Mostrar resultados compactos
                         const resultadoDiv = document.getElementById('resultado-simulacion');
                         if (resultadoDiv) {
                             resultadoDiv.style.display = 'block';
                             
-                            // Generar HTML detallado
                             let htmlResultados = `
-                                <div class="simulacion-resultado" style="
-                                    background: rgba(0, 210, 190, 0.1);
-                                    border: 1px solid #00d2be;
-                                    border-radius: 10px;
-                                    padding: 15px;
-                                    margin-top: 15px;
-                                ">
-                                    <div style="font-size: 2rem; margin-bottom: 10px; text-align: center;">🏁</div>
-                                    <h4 style="color: #00d2be; margin-bottom: 15px; text-align: center;">¡RESULTADOS DE LA CARRERA!</h4>
-                                    
-                                    <div style="margin-bottom: 15px;">
+                                <div class="resultados-compactos" style="margin-top: 15px;">
+                                    <div style="
+                                        background: rgba(0, 210, 190, 0.1);
+                                        border: 1px solid #00d2be;
+                                        border-radius: 8px;
+                                        padding: 12px;
+                                    ">
                             `;
                             
-                            // Mostrar cada resultado
+                            // Encabezado más pequeño
+                            htmlResultados += `
+                                <div style="text-align: center; margin-bottom: 10px;">
+                                    <div style="font-size: 1.5rem;">🏁</div>
+                                    <div style="color: #00d2be; font-size: 0.9rem; font-weight: bold;">
+                                        Resultados de simulación
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Resultados individuales más compactos
+                            const nombresCortos = {
+                                'bandera': 'Bandera',
+                                'abandonos': 'Abandonos', 
+                                'diferencia': 'Diferencia'
+                            };
+                            
                             detalleResultados.forEach(resultado => {
-                                const nombres = {
-                                    'bandera': 'Bandera amarilla',
-                                    'abandonos': 'Abandonos', 
-                                    'diferencia': 'Diferencia 1º-2º'
-                                };
-                                
                                 const icono = resultado.acierto ? '✅' : '❌';
                                 const color = resultado.acierto ? '#4CAF50' : '#f44336';
-                                const textoAcierto = resultado.acierto ? 'ACIERTO' : 'FALLO';
+                                const texto = resultado.acierto ? 'Acertado' : 'Fallado';
                                 
                                 htmlResultados += `
                                     <div style="
-                                        background: rgba(255, 255, 255, 0.05);
-                                        border-radius: 8px;
-                                        padding: 10px;
-                                        margin-bottom: 8px;
-                                        border-left: 4px solid ${color};
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: center;
+                                        padding: 6px 8px;
+                                        margin-bottom: 4px;
+                                        background: rgba(255, 255, 255, 0.03);
+                                        border-radius: 5px;
+                                        font-size: 0.8rem;
                                     ">
-                                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <div>
-                                                <strong style="color: #fff;">${nombres[resultado.tipo]}</strong><br>
-                                                <span style="color: #aaa; font-size: 0.9rem;">
-                                                    Tu pronóstico: <strong>${resultado.pronostico}</strong> | 
-                                                    Real: <strong>${resultado.real}</strong>
-                                                </span>
-                                            </div>
-                                            <div style="text-align: right;">
-                                                <div style="color: ${color}; font-weight: bold;">${icono} ${textoAcierto}</div>
-                                                <div style="color: #FFD700; font-weight: bold;">+${resultado.puntos} pts</div>
-                                            </div>
+                                        <div style="flex: 1;">
+                                            <span style="color: #fff; font-weight: bold;">${nombresCortos[resultado.tipo]}:</span>
+                                            <span style="color: #aaa; margin-left: 5px;">
+                                                ${resultado.pronostico} → ${resultado.real}
+                                            </span>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <span style="color: ${color}; margin-right: 8px;">${icono} ${texto}</span>
+                                            <span style="color: #FFD700; font-weight: bold;">+${resultado.puntos}</span>
                                         </div>
                                     </div>
                                 `;
                             });
                             
+                            // Total más compacto
                             htmlResultados += `
                                     </div>
                                     
                                     <div style="
-                                        background: rgba(255, 215, 0, 0.1);
-                                        border: 1px solid #FFD700;
+                                        background: rgba(255, 215, 0, 0.08);
+                                        border: 1px solid rgba(255, 215, 0, 0.3);
                                         border-radius: 8px;
-                                        padding: 12px;
-                                        text-align: center;
+                                        padding: 10px;
                                         margin-top: 10px;
+                                        text-align: center;
                                     ">
+                                        <div style="color: #fff; font-size: 0.9rem; margin-bottom: 4px;">
+                                            <strong>${aciertosTotales} de 3</strong> pronósticos acertados
+                                        </div>
                                         <div style="color: #FFD700; font-size: 1.2rem; font-weight: bold;">
-                                            ${aciertosTotales} de 3 pronósticos acertados
+                                            ${puntosTotales} PUNTOS
                                         </div>
-                                        <div style="color: #4CAF50; font-size: 1.5rem; font-weight: bold; margin-top: 5px;">
-                                            Total: ${puntosTotales} PUNTOS
-                                        </div>
-                                        <div style="color: #aaa; font-size: 0.9rem; margin-top: 5px;">
-                                            (${puntosTotales} puntos × 100€ = ${puntosTotales * 100}€)
+                                        <div style="color: #aaa; font-size: 0.7rem; margin-top: 4px;">
+                                            = ${puntosTotales * 100}€
                                         </div>
                                     </div>
-                                    
-                                    <p style="color: #aaa; font-size: 0.9rem; text-align: center; margin-top: 15px;">
-                                        ¡Excelente trabajo! Continúa para ver tus ganancias totales.
-                                    </p>
                                 </div>
                             `;
                             
                             resultadoDiv.innerHTML = htmlResultados;
                         }
                         
-                        // 7. MOSTRAR BOTÓN SIGUIENTE
+                        // Mostrar botón Siguiente
                         if (nextBtn) {
                             nextBtn.style.display = 'flex';
                         }
                         
-                        // 8. RESTAURAR BOTÓN SIMULAR
+                        // Restaurar botón
                         if (btnSimular) {
                             setTimeout(() => {
                                 btnSimular.disabled = false;
-                                btnSimular.innerHTML = '<i class="fas fa-check-circle"></i> CARRERA SIMULADA ✓';
+                                btnSimular.innerHTML = '<i class="fas fa-check-circle"></i> SIMULACIÓN COMPLETADA';
                                 btnSimular.style.background = 'linear-gradient(135deg, #4CAF50, #388E3C)';
                             }, 500);
                         }
                     };
                     
-                    // Sobrescribir el onclick para el paso 8
                     if (nextBtn) {
                         nextBtn.onclick = async () => {
-                            // Avanzar al siguiente paso
                             if (window.tutorialManager && window.tutorialManager.tutorialStep < 11) {
                                 window.tutorialManager.tutorialStep++;
                                 window.tutorialManager.mostrarTutorialStep();
@@ -3426,7 +3427,7 @@ class F1Manager {
                 }
             },
             
-            // PASO 10: LUNES - Resultados
+            // PASO 9: LUNES - Resultados
             {
                 title: "📅 LUNES: RESULTADOS Y GANANCIAS",
                 content: `
