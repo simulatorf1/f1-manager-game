@@ -6392,6 +6392,10 @@ class F1Manager {
     
     async cargarDashboardCompleto() {
         console.log('📊 Cargando dashboard COMPLETO con CSS...');
+        // ===== PREVENIR FLASH DE CONTENIDO ANTIGUO =====
+        // Ocultar todo mientras se carga
+        document.body.style.opacity = '0';
+        document.body.style.transition = 'opacity 0.3s';
         
         if (!this.escuderia) {
             console.error('❌ No hay escudería para cargar dashboard');
@@ -6891,6 +6895,9 @@ class F1Manager {
             
             console.log('✅ Dashboard cargado correctamente con CSS');
         }, 1000);
+        setTimeout(() => {
+            document.body.style.opacity = '1';
+        }, 300);
     }
         
     async loadProximoGP() {
