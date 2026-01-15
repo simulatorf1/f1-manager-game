@@ -3090,8 +3090,8 @@ class F1Manager {
                             <div class="pronostico-nombre-tut">BANDERA AMARILLA</div>
                             <div class="pronostico-pregunta">¿Habrá neutralización?</div>
                             <div class="pronostico-opciones">
-                                <div class="opcion-tut seleccionable-pronostico" data-tipo="bandera" data-valor="si" onclick="tutorialSeleccionarOpcionPronostico('bandera', 'si', this)">SÍ</div>
-                                <div class="opcion-tut seleccionable-pronostico" data-tipo="bandera" data-valor="no" onclick="tutorialSeleccionarOpcionPronostico('bandera', 'no', this)">NO</div>
+                                <div class="opcion-tut seleccionable-pronostico" data-tipo="bandera" data-valor="si" onclick="seleccionarPronosticoTutorial('bandera', 'si', this)">SÍ</div>
+                                <div class="opcion-tut seleccionable-pronostico" data-tipo="bandera" data-valor="no" onclick="seleccionarPronosticoTutorial('bandera', 'no', this)">NO</div>
                             </div>
                         </div>
                         
@@ -3100,9 +3100,9 @@ class F1Manager {
                             <div class="pronostico-nombre-tut">ABANDONOS</div>
                             <div class="pronostico-pregunta">¿Cuántos no terminarán?</div>
                             <div class="pronostico-opciones">
-                                <div class="opcion-tut seleccionable-pronostico" data-tipo="abandonos" data-valor="0-2" onclick="tutorialSeleccionarOpcionPronostico('abandonos', '0-2', this)">0-2</div>
-                                <div class="opcion-tut seleccionable-pronostico" data-tipo="abandonos" data-valor="3-5" onclick="tutorialSeleccionarOpcionPronostico('abandonos', '3-5', this)">3-5</div>
-                                <div class="opcion-tut seleccionable-pronostico" data-tipo="abandonos" data-valor="mas5" onclick="tutorialSeleccionarOpcionPronostico('abandonos', 'mas5', this)">>5</div>
+                                <div class="opcion-tut seleccionable-pronostico" data-tipo="abandonos" data-valor="0-2" onclick="seleccionarPronosticoTutorial('abandonos', '0-2', this)">0-2</div>
+                                <div class="opcion-tut seleccionable-pronostico" data-tipo="abandonos" data-valor="3-5" onclick="seleccionarPronosticoTutorial('abandonos', '3-5', this)">3-5</div>
+                                <div class="opcion-tut seleccionable-pronostico" data-tipo="abandonos" data-valor="mas5" onclick="seleccionarPronosticoTutorial('abandonos', 'mas5', this)">>5</div>
                             </div>
                         </div>
                         
@@ -3111,29 +3111,24 @@ class F1Manager {
                             <div class="pronostico-nombre-tut">DIFERENCIA 1º-2º</div>
                             <div class="pronostico-pregunta">Tiempo entre 1º y 2º</div>
                             <div class="pronostico-opciones">
-                                <div class="opcion-tut seleccionable-pronostico" data-tipo="diferencia" data-valor="<1s" onclick="tutorialSeleccionarOpcionPronostico('diferencia', '<1s', this)"><1s</div>
-                                <div class="opcion-tut seleccionable-pronostico" data-tipo="diferencia" data-valor="1-5s" onclick="tutorialSeleccionarOpcionPronostico('diferencia', '1-5s', this)">1-5s</div>
-                                <div class="opcion-tut seleccionable-pronostico" data-tipo="diferencia" data-valor=">5s" onclick="tutorialSeleccionarOpcionPronostico('diferencia', '>5s', this)">>5s</div>
+                                <div class="opcion-tut seleccionable-pronostico" data-tipo="diferencia" data-valor="<1s" onclick="seleccionarPronosticoTutorial('diferencia', '<1s', this)"><1s</div>
+                                <div class="opcion-tut seleccionable-pronostico" data-tipo="diferencia" data-valor="1-5s" onclick="seleccionarPronosticoTutorial('diferencia', '1-5s', this)">1-5s</div>
+                                <div class="opcion-tut seleccionable-pronostico" data-tipo="diferencia" data-valor=">5s" onclick="seleccionarPronosticoTutorial('diferencia', '>5s', this)">>5s</div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="tutorial-accion-practica" id="accion-pronostico-tut" style="display: none;">
-                        <!-- Botón aparecerá aquí cuando seleccione -->
-                    </div>
                 `,
-                action: null,
+                action: 'siguientePaso',
                 onLoad: function() {
-                    // Ocultar botón siguiente
                     const nextBtn = document.getElementById('btn-tutorial-next-large');
                     if (nextBtn) {
                         nextBtn.style.display = 'none';
                     }
+                    
                     // Inicializar pronósticos
                     window.tutorialPronosticos = {};
                     
-                    // FUNCIÓN PARA SELECCIONAR OPCIÓN DE PRONÓSTICO
-                    window.tutorialSeleccionarOpcionPronostico = function(tipo, valor, elemento) {
+                    window.seleccionarPronosticoTutorial = function(tipo, valor, elemento) {
                         window.tutorialPronosticos[tipo] = valor;
                         
                         // Marcar como seleccionado visualmente
@@ -3147,27 +3142,47 @@ class F1Manager {
                         const todosSeleccionados = tiposRequeridos.every(tipo => window.tutorialPronosticos[tipo]);
                         
                         if (todosSeleccionados) {
-                            // Calcular aciertos simulados
-                            const aciertosSimulados = 2; // Simula 2 de 3 aciertos
-                            
-                            // Guardar datos del tutorial
-                            if (window.tutorialData) {
-                                window.tutorialData.aciertosPronosticos = aciertosSimulados;
-                                window.tutorialData.puntosBaseCalculados = aciertosSimulados * 10; // 10 pts por acierto
-                            }
-                            
-                            // MOSTRAR BOTÓN SIGUIENTE
                             const nextBtn = document.getElementById('btn-tutorial-next-large');
                             if (nextBtn) {
                                 nextBtn.style.display = 'flex';
-                                nextBtn.style.alignItems = 'center';
-                                nextBtn.style.justifyContent = 'center';
                             }
-                            
-                            // Mostrar mensaje
-                            alert(`✅ ¡Pronósticos completados! (${aciertosSimulados} de 3 aciertos)`);
                         }
                     };
+                    
+                    // Sobrescribe el onclick para el paso 7
+                    if (nextBtn) {
+                        nextBtn.onclick = async () => {
+                            // Verificar que se completaron los 3 pronósticos
+                            const tiposRequeridos = ['bandera', 'abandonos', 'diferencia'];
+                            const todosSeleccionados = tiposRequeridos.every(tipo => window.tutorialPronosticos[tipo]);
+                            
+                            if (!todosSeleccionados) {
+                                alert('Debes completar los 3 pronósticos antes de continuar');
+                                return;
+                            }
+                            
+                            try {
+                                // Calcular aciertos simulados (en tutorial son siempre 2 de 3)
+                                const aciertosSimulados = 2;
+                                
+                                // Guardar datos del tutorial
+                                if (window.tutorialData) {
+                                    window.tutorialData.aciertosPronosticos = aciertosSimulados;
+                                    window.tutorialData.puntosBaseCalculados = aciertosSimulados * 10;
+                                }
+                                
+                                // Avanzar al siguiente paso
+                                if (window.tutorialManager && window.tutorialManager.tutorialStep < 11) {
+                                    window.tutorialManager.tutorialStep++;
+                                    window.tutorialManager.mostrarTutorialStep();
+                                }
+                                
+                            } catch (error) {
+                                console.error('Error guardando pronósticos:', error);
+                                alert('Error guardando pronósticos: ' + error.message);
+                            }
+                        };
+                    }
                 }
             },
             // PASO 9: FIN DE SEMANA - Simulación carrera
