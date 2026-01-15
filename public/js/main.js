@@ -3196,30 +3196,11 @@ class F1Manager {
             {
                 title: "📅 SIMULACIÓN DE CARRERA",
                 content: `
-                    <div class="simulacion-header" style="text-align: center; margin-bottom: 15px;">
-                        <div style="
-                            background: rgba(225, 6, 0, 0.2);
-                            color: #e10600;
-                            display: inline-block;
-                            padding: 5px 15px;
-                            border-radius: 15px;
-                            font-family: 'Orbitron', sans-serif;
-                            font-size: 0.9rem;
-                            font-weight: bold;
-                            margin-bottom: 8px;
-                        ">
-                            FIN DE SEMANA
-                        </div>
-                        <p style="color: #ccc; font-size: 0.9rem; margin: 0;">
-                            Verifica tus pronósticos con los datos reales de carrera
-                        </p>
-                    </div>
-                    
                     <button class="btn-simular-carrera" onclick="tutorialSimularCarrera()" id="btn-simular-carrera-tutorial">
                         <i class="fas fa-play-circle"></i> SIMULAR CARRERA
                     </button>
                     
-                    <div id="resultado-simulacion" style="display: none;">
+                    <div id="resultado-simulacion" style="display: none; margin-top: 15px;">
                         <!-- Resultados aparecerán aquí -->
                     </div>
                 `,
@@ -3230,24 +3211,32 @@ class F1Manager {
                         nextBtn.style.display = 'none';
                     }
                     
+                    let simulacionEjecutada = false; // Para evitar múltiples clics
+                    
                     window.tutorialSimularCarrera = async function() {
+                        // Evitar múltiples ejecuciones
+                        if (simulacionEjecutada) return;
+                        simulacionEjecutada = true;
+                        
                         const btnSimular = document.getElementById('btn-simular-carrera-tutorial');
                         if (btnSimular) {
                             btnSimular.disabled = true;
                             btnSimular.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SIMULANDO...';
                         }
                         
-                        // Datos reales simulados
+                        // Datos reales FIJOS (no aleatorios cada vez)
+                        // Esto asegura resultados consistentes
                         const datosRealesCarrera = {
-                            bandera: Math.random() > 0.5 ? 'si' : 'no',
-                            abandonos: Math.random() > 0.6 ? '0-2' : Math.random() > 0.3 ? '3-5' : 'mas5',
-                            diferencia: Math.random() > 0.7 ? '<1s' : Math.random() > 0.4 ? '1-5s' : '>5s'
+                            bandera: 'si',      // Siempre habrá bandera amarilla
+                            abandonos: '3-5',   // Siempre 3-5 abandonos  
+                            diferencia: '1-5s'  // Siempre diferencia 1-5s
                         };
                         
                         const pronosticosUsuario = window.tutorialPronosticos || {};
                         
                         if (!pronosticosUsuario.bandera || !pronosticosUsuario.abandonos || !pronosticosUsuario.diferencia) {
                             alert('❌ Error: No se encontraron todos tus pronósticos.');
+                            simulacionEjecutada = false;
                             if (btnSimular) {
                                 btnSimular.disabled = false;
                                 btnSimular.innerHTML = '<i class="fas fa-play-circle"></i> SIMULAR CARRERA';
@@ -3311,32 +3300,21 @@ class F1Manager {
                             window.tutorialData.datosRealesCarrera = datosRealesCarrera;
                         }
                         
-                        // Mostrar resultados compactos
+                        // Mostrar resultados
                         const resultadoDiv = document.getElementById('resultado-simulacion');
                         if (resultadoDiv) {
                             resultadoDiv.style.display = 'block';
                             
                             let htmlResultados = `
-                                <div class="resultados-compactos" style="margin-top: 15px;">
-                                    <div style="
-                                        background: rgba(0, 210, 190, 0.1);
-                                        border: 1px solid #00d2be;
-                                        border-radius: 8px;
-                                        padding: 12px;
-                                    ">
+                                <div style="
+                                    background: rgba(0, 210, 190, 0.08);
+                                    border: 1px solid rgba(0, 210, 190, 0.3);
+                                    border-radius: 8px;
+                                    padding: 10px;
+                                ">
                             `;
                             
-                            // Encabezado más pequeño
-                            htmlResultados += `
-                                <div style="text-align: center; margin-bottom: 10px;">
-                                    <div style="font-size: 1.5rem;">🏁</div>
-                                    <div style="color: #00d2be; font-size: 0.9rem; font-weight: bold;">
-                                        Resultados de simulación
-                                    </div>
-                                </div>
-                            `;
-                            
-                            // Resultados individuales más compactos
+                            // Resultados individuales super compactos
                             const nombresCortos = {
                                 'bandera': 'Bandera',
                                 'abandonos': 'Abandonos', 
@@ -3346,53 +3324,53 @@ class F1Manager {
                             detalleResultados.forEach(resultado => {
                                 const icono = resultado.acierto ? '✅' : '❌';
                                 const color = resultado.acierto ? '#4CAF50' : '#f44336';
-                                const texto = resultado.acierto ? 'Acertado' : 'Fallado';
                                 
                                 htmlResultados += `
                                     <div style="
                                         display: flex;
                                         justify-content: space-between;
                                         align-items: center;
-                                        padding: 6px 8px;
-                                        margin-bottom: 4px;
-                                        background: rgba(255, 255, 255, 0.03);
-                                        border-radius: 5px;
-                                        font-size: 0.8rem;
+                                        padding: 4px 6px;
+                                        margin-bottom: 3px;
+                                        background: rgba(255, 255, 255, 0.02);
+                                        border-radius: 4px;
+                                        font-size: 0.75rem;
                                     ">
-                                        <div style="flex: 1;">
-                                            <span style="color: #fff; font-weight: bold;">${nombresCortos[resultado.tipo]}:</span>
-                                            <span style="color: #aaa; margin-left: 5px;">
-                                                ${resultado.pronostico} → ${resultado.real}
+                                        <div>
+                                            <span style="color: #aaa;">${nombresCortos[resultado.tipo]}:</span>
+                                            <span style="color: #fff; margin: 0 5px; font-weight: bold;">
+                                                ${resultado.pronostico}
+                                            </span>
+                                            <span style="color: #888;">→</span>
+                                            <span style="color: #00d2be; margin-left: 5px; font-weight: bold;">
+                                                ${resultado.real}
                                             </span>
                                         </div>
-                                        <div style="text-align: right;">
-                                            <span style="color: ${color}; margin-right: 8px;">${icono} ${texto}</span>
+                                        <div>
+                                            <span style="color: ${color}; margin-right: 6px;">${icono}</span>
                                             <span style="color: #FFD700; font-weight: bold;">+${resultado.puntos}</span>
                                         </div>
                                     </div>
                                 `;
                             });
                             
-                            // Total más compacto
+                            // Total compacto
                             htmlResultados += `
-                                    </div>
-                                    
                                     <div style="
-                                        background: rgba(255, 215, 0, 0.08);
-                                        border: 1px solid rgba(255, 215, 0, 0.3);
-                                        border-radius: 8px;
-                                        padding: 10px;
-                                        margin-top: 10px;
-                                        text-align: center;
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: center;
+                                        padding: 6px 8px;
+                                        margin-top: 6px;
+                                        background: rgba(255, 215, 0, 0.05);
+                                        border-radius: 5px;
+                                        border-top: 1px solid rgba(255, 215, 0, 0.2);
                                     ">
-                                        <div style="color: #fff; font-size: 0.9rem; margin-bottom: 4px;">
-                                            <strong>${aciertosTotales} de 3</strong> pronósticos acertados
+                                        <div style="color: #fff; font-size: 0.8rem;">
+                                            <strong>${aciertosTotales}/3</strong> aciertos
                                         </div>
-                                        <div style="color: #FFD700; font-size: 1.2rem; font-weight: bold;">
-                                            ${puntosTotales} PUNTOS
-                                        </div>
-                                        <div style="color: #aaa; font-size: 0.7rem; margin-top: 4px;">
-                                            = ${puntosTotales * 100}€
+                                        <div style="color: #FFD700; font-size: 1rem; font-weight: bold;">
+                                            ${puntosTotales} pts
                                         </div>
                                     </div>
                                 </div>
@@ -3406,10 +3384,9 @@ class F1Manager {
                             nextBtn.style.display = 'flex';
                         }
                         
-                        // Restaurar botón
+                        // Cambiar botón a estado completado
                         if (btnSimular) {
                             setTimeout(() => {
-                                btnSimular.disabled = false;
                                 btnSimular.innerHTML = '<i class="fas fa-check-circle"></i> SIMULACIÓN COMPLETADA';
                                 btnSimular.style.background = 'linear-gradient(135deg, #4CAF50, #388E3C)';
                             }, 500);
