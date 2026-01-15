@@ -5910,17 +5910,207 @@ class F1Manager {
         });
     }
     
+
+    
     async finalizarTutorial() {
         console.log('✅ Finalizando tutorial...');
         
-        try {
-            // 1. Marcar en localStorage (con ID específico de la escudería)
-            localStorage.setItem(`f1_tutorial_${this.escuderia?.id}`, 'true');
-            localStorage.setItem('f1_tutorial_completado', 'true'); // Mantener compatibilidad
-            console.log('💾 Tutorial marcado como completado en localStorage');
+        // 1. Mostrar pantalla de carga F1
+        document.body.innerHTML = `
+            <div id="f1-loading-screen" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 99999;
+                font-family: 'Orbitron', sans-serif;
+            ">
+                <!-- Logo F1 estilo moderno -->
+                <div style="
+                    margin-bottom: 40px;
+                    text-align: center;
+                ">
+                    <div style="
+                        color: #e10600;
+                        font-size: 4rem;
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                        text-shadow: 0 0 20px rgba(225, 6, 0, 0.7);
+                        letter-spacing: 2px;
+                    ">
+                        F1
+                    </div>
+                    <div style="
+                        color: #ffffff;
+                        font-size: 1.2rem;
+                        letter-spacing: 3px;
+                        font-weight: 300;
+                    ">
+                        STRATEGY MANAGER
+                    </div>
+                </div>
+                
+                <!-- Mensaje de carga -->
+                <div style="
+                    color: #ffffff;
+                    font-size: 1.5rem;
+                    margin-bottom: 30px;
+                    text-align: center;
+                    font-weight: 500;
+                    letter-spacing: 1px;
+                ">
+                    CARGANDO ESCUDERÍA
+                </div>
+                
+                <!-- Barra de progreso estilo F1 -->
+                <div style="
+                    width: 80%;
+                    max-width: 500px;
+                    background: rgba(255, 255, 255, 0.1);
+                    height: 8px;
+                    border-radius: 4px;
+                    overflow: hidden;
+                    margin-bottom: 20px;
+                    position: relative;
+                ">
+                    <div id="f1-progress-bar" style="
+                        width: 0%;
+                        height: 100%;
+                        background: linear-gradient(90deg, #e10600, #ff4444);
+                        border-radius: 4px;
+                        transition: width 0.5s ease;
+                        position: relative;
+                        box-shadow: 0 0 10px rgba(225, 6, 0, 0.5);
+                    ">
+                        <!-- Efecto de luz animada -->
+                        <div style="
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            width: 20%;
+                            height: 100%;
+                            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+                            animation: shine 2s infinite;
+                            transform: skewX(-20deg);
+                        "></div>
+                    </div>
+                </div>
+                
+                <!-- Contador de progreso -->
+                <div style="
+                    color: #00d2be;
+                    font-size: 1.2rem;
+                    font-weight: bold;
+                    margin-top: 15px;
+                    font-family: 'Orbitron', sans-serif;
+                ">
+                    <span id="f1-progress-text">0%</span>
+                </div>
+                
+                <!-- Mensaje dinámico -->
+                <div id="f1-loading-message" style="
+                    color: #888;
+                    font-size: 0.9rem;
+                    margin-top: 25px;
+                    text-align: center;
+                    max-width: 500px;
+                    padding: 0 20px;
+                    font-family: 'Roboto', sans-serif;
+                ">
+                    Preparando tu escudería para la competición...
+                </div>
+                
+                <!-- Spinner sutil -->
+                <div style="
+                    margin-top: 30px;
+                    color: #e10600;
+                    font-size: 1.5rem;
+                    animation: spin 1.5s linear infinite;
+                ">
+                    🏎️
+                </div>
+            </div>
             
-            // 2. Actualizar en la base de datos - ¡ESPERAR a que se complete!
+            <style>
+                @keyframes shine {
+                    0% { left: -20%; }
+                    100% { left: 100%; }
+                }
+                
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                
+                /* Asegurar que ocupe toda la pantalla */
+                html, body {
+                    margin: 0;
+                    padding: 0;
+                    overflow: hidden;
+                }
+                
+                /* Responsive */
+                @media (max-width: 768px) {
+                    #f1-loading-screen div:first-child div:first-child {
+                        font-size: 3rem;
+                    }
+                    
+                    #f1-loading-screen div:first-child div:last-child {
+                        font-size: 1rem;
+                    }
+                    
+                    #f1-loading-screen > div:nth-child(3) {
+                        font-size: 1.2rem;
+                    }
+                }
+                
+                @media (max-width: 480px) {
+                    #f1-loading-screen div:first-child div:first-child {
+                        font-size: 2.5rem;
+                    }
+                    
+                    #f1-loading-screen > div:nth-child(3) {
+                        font-size: 1rem;
+                    }
+                    
+                    #f1-progress-bar {
+                        height: 6px;
+                    }
+                }
+            </style>
+        `;
+        
+        try {
+            // 2. Animar la barra de progreso
+            const progressBar = document.getElementById('f1-progress-bar');
+            const progressText = document.getElementById('f1-progress-text');
+            const loadingMessage = document.getElementById('f1-loading-message');
+            
+            // Función para actualizar progreso
+            const updateProgress = (percentage, message) => {
+                if (progressBar) progressBar.style.width = `${percentage}%`;
+                if (progressText) progressText.textContent = `${percentage}%`;
+                if (loadingMessage && message) loadingMessage.textContent = message;
+            };
+            
+            // Simular progreso
+            updateProgress(10, "Guardando progreso del tutorial...");
+            
+            // 3. Marcar en localStorage (con ID específico de la escudería)
+            localStorage.setItem(`f1_tutorial_${this.escuderia?.id}`, 'true');
+            localStorage.setItem('f1_tutorial_completado', 'true');
+            console.log('💾 Tutorial marcado como completado en localStorage');
+            updateProgress(25, "Progreso guardado localmente...");
+            
+            // 4. Actualizar en la base de datos
             if (this.escuderia && this.supabase) {
+                updateProgress(40, "Actualizando base de datos...");
                 console.log('📝 Actualizando BD con tutorial_completado = true...');
                 
                 const { error } = await this.supabase
@@ -5932,14 +6122,16 @@ class F1Manager {
                 
                 if (error) {
                     console.error('❌ Error actualizando tutorial en BD:', error);
-                    // Mostrar error pero continuar
+                    updateProgress(60, "⚠️ Error en base de datos, continuando...");
                     this.showNotification('⚠️ Error guardando progreso, pero continuando...', 'warning');
                 } else {
                     console.log('✅ Tutorial marcado como TRUE en BD');
+                    updateProgress(60, "Base de datos actualizada correctamente...");
                 }
             }
             
-            // 3. Recargar datos de la escudería para obtener el nuevo estado
+            // 5. Recargar datos de la escudería
+            updateProgress(75, "Recargando datos de la escudería...");
             if (this.escuderia && this.supabase) {
                 const { data: escuderiaActualizada, error } = await this.supabase
                     .from('escuderias')
@@ -5953,10 +6145,16 @@ class F1Manager {
                 }
             }
             
-            // 4. Limpiar pantalla y cargar dashboard
+            // 6. Preparar dashboard
+            updateProgress(90, "Preparando dashboard principal...");
+            
+            // 7. Limpiar pantalla y cargar dashboard
+            updateProgress(100, "¡Escudería lista! Redirigiendo...");
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
             document.body.innerHTML = '';
             
-            // 5. Cargar dashboard (estas funciones deben ser async)
+            // 8. Cargar dashboard
             if (this.cargarDashboardCompleto) {
                 await this.cargarDashboardCompleto();
             }
@@ -5965,7 +6163,7 @@ class F1Manager {
                 await this.inicializarSistemasIntegrados();
             }
             
-            // 6. Mostrar notificación de bienvenida
+            // 9. Mostrar notificación de bienvenida
             setTimeout(() => {
                 if (this.showNotification) {
                     this.showNotification('🎉 ¡Tutorial completado! ¡Bienvenido a F1 Manager!', 'success');
@@ -5974,11 +6172,42 @@ class F1Manager {
             
         } catch (error) {
             console.error('❌ Error fatal en finalizarTutorial:', error);
-            // Si falla todo, al menos intentar cargar el dashboard
-            document.body.innerHTML = '';
-            if (this.cargarDashboardCompleto) {
-                await this.cargarDashboardCompleto();
-            }
+            // Si falla todo, mostrar error y recargar
+            document.body.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    background: #15151e;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    color: white;
+                    text-align: center;
+                    padding: 20px;
+                    font-family: 'Roboto', sans-serif;
+                ">
+                    <div style="color: #e10600; font-size: 4rem; margin-bottom: 20px;">❌</div>
+                    <h2 style="color: #e10600; margin-bottom: 15px;">Error al cargar</h2>
+                    <p style="color: #ccc; margin-bottom: 20px;">Hubo un problema al cargar tu escudería.</p>
+                    <button onclick="location.reload()" style="
+                        padding: 12px 30px;
+                        background: #e10600;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        font-family: 'Orbitron', sans-serif;
+                        font-weight: bold;
+                        cursor: pointer;
+                        font-size: 1rem;
+                    ">
+                        Reintentar
+                    </button>
+                </div>
+            `;
         }
     }
     
