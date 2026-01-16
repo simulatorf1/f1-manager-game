@@ -55,30 +55,104 @@ async function iniciarAplicacion() {
         document.head.appendChild(viewportMeta);
     }
     
-    // Añadir estilos para prevenir gestos no deseados
-    const preventZoomStyles = document.createElement('style');
-    preventZoomStyles.id = 'prevent-zoom-styles';
-    preventZoomStyles.textContent = `
+    // Añadir estilos para forzar contenido horizontal en móviles
+    const horizontalStyles = document.createElement('style');
+    horizontalStyles.id = 'horizontal-styles';
+    horizontalStyles.textContent = `
+        /* =========================================== */
+        /* FORZAR CONTENIDO HORIZONTAL EN MÓVILES/TABLETS */
+        /* =========================================== */
+        
+        @media (max-width: 1024px) and (orientation: portrait) {
+            /* Rotar todo el body para simular landscape */
+            body {
+                transform: rotate(90deg);
+                transform-origin: left top;
+                width: 100vh;
+                height: 100vw;
+                overflow-x: hidden;
+                position: fixed;
+                top: 0;
+                left: 100vw;
+            }
+            
+            /* Ajustar el contenedor principal */
+            #app {
+                width: 100vh;
+                height: 100vw;
+                position: absolute;
+                top: 0;
+                left: 0;
+                transform: rotate(0deg);
+            }
+            
+            /* Asegurar que todo el contenido sea visible */
+            .dashboard-content, .tutorial-container, .login-screen, .register-screen {
+                width: 100% !important;
+                height: 100% !important;
+                max-width: none !important;
+                max-height: none !important;
+            }
+            
+            /* Ajustar grids para orientación horizontal */
+            .three-columns-layout {
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+            }
+            
+            .grid-6-columns, .grid-4-columns, .grid-3-columns {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+            }
+        }
+        
+        @media (max-width: 1024px) and (orientation: landscape) {
+            /* Ya está en landscape, solo ajustar */
+            body {
+                overflow-x: auto !important;
+            }
+            
+            .dashboard-content {
+                min-width: 1024px !important;
+            }
+        }
+        
+        /* Prevenir zoom y gestos no deseados */
         html, body {
             touch-action: manipulation;
             overscroll-behavior: none;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+            min-height: 100vh;
         }
         
         * {
             -webkit-tap-highlight-color: transparent;
         }
+        
+        /* Asegurar que los contenedores sean responsivos */
+        .dashboard-content {
+            min-height: 600px;
+        }
+        
+        /* Ajustar tabs para móviles */
+        @media (max-width: 768px) {
+            .tabs-navigation {
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+            }
+            
+            .tab-btn {
+                min-width: 100px !important;
+                padding: 10px 15px !important;
+            }
+        }
     `;
-    if (!document.getElementById('prevent-zoom-styles')) {
-        document.head.appendChild(preventZoomStyles);
+    if (!document.getElementById('horizontal-styles')) {
+        document.head.appendChild(horizontalStyles);
     }
-    // FIN DEL CÓDIGO A AÑADIR
+    // FIN DEL CÓDIGO A AÑADIR    
 
     // ============ AÑADE ESTO JUSTO AQUÍ ============
     // Estilos para móvil en horizontal
