@@ -6531,17 +6531,60 @@ class F1Manager {
     
     async cargarDashboardCompleto() {
         console.log('📊 Cargando dashboard COMPLETO con CSS...');
-        // BLOQUEAR A LANDSCAPE SOLO PARA EL DASHBOARD
+        // DETECTAR MÓVIL
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        if (isMobile && screen.orientation && screen.orientation.lock) {
-            try {
-                await screen.orientation.lock('landscape');
-                console.log('📱 Dashboard bloqueado en landscape');
-            } catch (err) {
-                console.log('No se pudo bloquear orientación:', err);
-            }
-        }
         
+        if (isMobile) {
+            // INTENTAR BLOQUEAR CON JavaScript (puede fallar)
+            if (screen.orientation && screen.orientation.lock) {
+                try {
+                    await screen.orientation.lock('landscape');
+                    console.log('📱 Dashboard bloqueado en landscape (API)');
+                } catch (err) {
+                    console.log('API de orientación falló, usando CSS:', err);
+                }
+            }
+            
+            // FORZAR LANDSCAPE CON CSS (siempre funciona)
+            const forceLandscapeCSS = document.createElement('style');
+            forceLandscapeCSS.id = 'force-landscape-css';
+            forceLandscapeCSS.textContent = `
+                /* Forzar landscape en móviles */
+                @media screen and (max-width: 1024px) {
+                    html, body {
+                        width: 100vh !important;
+                        height: 100vw !important;
+                        overflow-x: hidden !important;
+                        transform: rotate(90deg) !important;
+                        transform-origin: 0 0 !important;
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 100vw !important;
+                    }
+                    
+                    #app {
+                        width: 100vw !important;
+                        height: 100vh !important;
+                        transform: rotate(0deg) !important;
+                    }
+                    
+                    .dashboard-content {
+                        height: calc(100vh - 120px) !important;
+                        overflow-y: auto !important;
+                    }
+                    
+                    .three-columns-layout {
+                        height: 30vh !important;
+                    }
+                    
+                    .grid-11-columns {
+                        grid-template-columns: repeat(11, 1fr) !important;
+                        height: 80px !important;
+                    }
+                }
+            `;
+            document.head.appendChild(forceLandscapeCSS);
+        }
         
         if (!this.escuderia) {
             console.error('❌ No hay escudería para cargar dashboard');
