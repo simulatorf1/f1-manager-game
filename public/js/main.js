@@ -55,230 +55,32 @@ async function iniciarAplicacion() {
         document.head.appendChild(viewportMeta);
     }
     
-    // Añadir estilos para forzar orientación horizontal CON MÁRGENES
-    const horizontalStyles = document.createElement('style');
-    horizontalStyles.id = 'horizontal-styles';
-    horizontalStyles.textContent = `
-        /* =========================================== */
-        /* CONTENEDOR HORIZONTAL CON MÁRGENES */
-        /* =========================================== */
-        
-        @media (max-width: 1024px) and (orientation: portrait) {
-            /* Contenedor principal que mantiene todo dentro */
-            body {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                overflow: hidden !important;
-                background: #0a0a0f !important;
-                display: flex !important;
-                justify-content: center !important;
-                align-items: center !important;
-                padding: 15px !important; /* MARGENES ALREDEDOR */
-            }
-            
-            /* Contenedor horizontal con márgenes */
-            #app, .tutorial-container, .login-screen, .register-screen {
-                transform: rotate(90deg);
-                transform-origin: center center;
-                width: calc(100vh - 30px) !important; /* Resta márgenes */
-                height: calc(100vw - 30px) !important; /* Resta márgenes */
-                max-width: calc(100vh - 30px) !important;
-                max-height: calc(100vw - 30px) !important;
-                position: relative !important;
-                margin: 0 auto !important;
-                overflow: hidden !important;
-                border-radius: 10px;
-                box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            }
-            
-            /* Asegurar que el contenido interno no se rote */
-            #app > *, .tutorial-container > *, .login-container, .register-container {
-                transform: rotate(-90deg);
-                transform-origin: center center;
-                width: 100% !important;
-                height: 100% !important;
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
-            }
-            
-            /* Mensaje para recordar orientación */
-            body::before {
-                content: "Modo horizontal activado";
-                position: fixed;
-                bottom: 5px;
-                left: 50%;
-                transform: translateX(-50%) rotate(90deg);
-                background: rgba(0, 210, 190, 0.2);
-                color: #00d2be;
-                padding: 5px 15px;
-                border-radius: 15px;
-                font-size: 0.7rem;
-                font-family: 'Orbitron', sans-serif;
-                z-index: 10000;
-                pointer-events: none;
-                opacity: 0.7;
-            }
-        }
-        
-        /* Ya está en landscape - solo ajustar márgenes */
-        @media (max-width: 1024px) and (orientation: landscape) {
-            body {
-                padding: 10px !important;
-                overflow: auto !important;
-            }
-            
-            #app, .tutorial-container, .login-screen, .register-screen {
-                width: 100% !important;
-                max-width: 100% !important;
-                margin: 0 auto !important;
-            }
-        }
-        
-        /* Prevenir zoom y gestos no deseados */
+    // Añadir estilos para prevenir gestos no deseados
+    const preventZoomStyles = document.createElement('style');
+    preventZoomStyles.id = 'prevent-zoom-styles';
+    preventZoomStyles.textContent = `
         html, body {
             touch-action: manipulation;
             overscroll-behavior: none;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
-            margin: 0;
-            padding: 0;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
         
         * {
             -webkit-tap-highlight-color: transparent;
         }
-        
-        /* Scroll suave solo en contenido principal */
-        .dashboard-content, .tutorial-content-wrapper {
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        /* Ajustar tabs para móviles */
-        @media (max-width: 768px) {
-            .tabs-navigation {
-                overflow-x: auto !important;
-                white-space: nowrap !important;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            .tab-btn {
-                min-width: 90px !important;
-                padding: 8px 12px !important;
-                font-size: 0.8rem !important;
-            }
-            
-            /* Aumentar área táctil en móviles */
-            button, .btn, [onclick] {
-                min-height: 44px !important;
-                min-width: 44px !important;
-            }
-        }
-        
-        /* Márgenes específicos para diferentes pantallas */
-        @media (max-height: 600px) and (max-width: 1024px) {
-            /* Pantallas muy cortas */
-            body {
-                padding: 8px !important;
-            }
-            
-            #app, .tutorial-container {
-                width: calc(100vh - 16px) !important;
-                height: calc(100vw - 16px) !important;
-            }
-        }
-        
-        @media (min-height: 800px) and (max-width: 1024px) {
-            /* Tablets grandes */
-            body {
-                padding: 20px !important;
-            }
-            
-            #app, .tutorial-container {
-                width: calc(100vh - 40px) !important;
-                height: calc(100vw - 40px) !important;
-            }
-        }
     `;
-    if (!document.getElementById('horizontal-styles')) {
-        document.head.appendChild(horizontalStyles);
+    if (!document.getElementById('prevent-zoom-styles')) {
+        document.head.appendChild(preventZoomStyles);
     }
     // FIN DEL CÓDIGO A AÑADIR
 
-    // ============ AÑADE ESTO JUSTO AQUÍ ============
-    // Estilos para móvil en horizontal
-    const mobileLandscapeStyles = document.createElement('style');
-    mobileLandscapeStyles.id = 'mobile-landscape-styles';
-    mobileLandscapeStyles.textContent = `
-        @media screen and (max-width: 768px) and (orientation: landscape) {
-            #app {
-                transform: rotate(0deg);
-                width: 100vh;
-                height: 100vw;
-                transform-origin: center center;
-            }
-            
-            .dashboard-content {
-                flex-direction: row !important;
-                flex-wrap: wrap;
-            }
-            
-            .three-columns-layout {
-                flex-direction: row !important;
-                height: auto !important;
-                max-height: 60vh;
-            }
-            
-            .col-estrategas, .col-countdown, .col-fabrica {
-                flex: 1 1 auto !important;
-                min-width: 30% !important;
-                max-width: 32% !important;
-                margin-bottom: 10px;
-            }
-            
-            .grid-11-columns {
-                grid-template-columns: repeat(6, 1fr) !important;
-                grid-template-rows: repeat(2, 1fr) !important;
-                height: auto !important;
-                min-height: 120px;
-            }
-        }
-    `;
-    if (!document.getElementById('mobile-landscape-styles')) {
-        document.head.appendChild(mobileLandscapeStyles);
-    }
-    // ============ FIN DEL CÓDIGO A AÑADIR ============    
-
-    // Después del código del zoom, añade esto:
-    // Forzar orientación horizontal en móviles
-    const lockOrientation = () => {
-        if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(err => {
-                console.log('No se pudo bloquear orientación:', err);
-            });
-        } else if (screen.lockOrientation) {
-            screen.lockOrientation('landscape');
-        } else if (screen.mozLockOrientation) {
-            screen.mozLockOrientation('landscape');
-        } else if (screen.msLockOrientation) {
-            screen.msLockOrientation('landscape');
-        }
-    };
     
-    // Intentar bloquear al cargar
-    if (window.innerWidth < 768) { // Solo en móviles
-        setTimeout(lockOrientation, 500);
-        
-        // También bloquear cuando cambie la orientación
-        window.addEventListener('orientationchange', function() {
-            setTimeout(lockOrientation, 100);
-        });
-    }    
     
     // MOSTRAR PANTALLA DE CARGA F1 INMEDIATAMENTE
     // Copia EXACTAMENTE el mismo código HTML del finalizarTutorial()
