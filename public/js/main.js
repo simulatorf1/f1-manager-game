@@ -80,7 +80,75 @@ async function iniciarAplicacion() {
     }
     // FIN DEL CÓDIGO A AÑADIR
 
+    // ============ AÑADE ESTO JUSTO AQUÍ ============
+    // Estilos para móvil en horizontal
+    const mobileLandscapeStyles = document.createElement('style');
+    mobileLandscapeStyles.id = 'mobile-landscape-styles';
+    mobileLandscapeStyles.textContent = `
+        @media screen and (max-width: 768px) and (orientation: landscape) {
+            #app {
+                transform: rotate(0deg);
+                width: 100vh;
+                height: 100vw;
+                transform-origin: center center;
+            }
+            
+            .dashboard-content {
+                flex-direction: row !important;
+                flex-wrap: wrap;
+            }
+            
+            .three-columns-layout {
+                flex-direction: row !important;
+                height: auto !important;
+                max-height: 60vh;
+            }
+            
+            .col-estrategas, .col-countdown, .col-fabrica {
+                flex: 1 1 auto !important;
+                min-width: 30% !important;
+                max-width: 32% !important;
+                margin-bottom: 10px;
+            }
+            
+            .grid-11-columns {
+                grid-template-columns: repeat(6, 1fr) !important;
+                grid-template-rows: repeat(2, 1fr) !important;
+                height: auto !important;
+                min-height: 120px;
+            }
+        }
+    `;
+    if (!document.getElementById('mobile-landscape-styles')) {
+        document.head.appendChild(mobileLandscapeStyles);
+    }
+    // ============ FIN DEL CÓDIGO A AÑADIR ============    
+
+    // Después del código del zoom, añade esto:
+    // Forzar orientación horizontal en móviles
+    const lockOrientation = () => {
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(err => {
+                console.log('No se pudo bloquear orientación:', err);
+            });
+        } else if (screen.lockOrientation) {
+            screen.lockOrientation('landscape');
+        } else if (screen.mozLockOrientation) {
+            screen.mozLockOrientation('landscape');
+        } else if (screen.msLockOrientation) {
+            screen.msLockOrientation('landscape');
+        }
+    };
     
+    // Intentar bloquear al cargar
+    if (window.innerWidth < 768) { // Solo en móviles
+        setTimeout(lockOrientation, 500);
+        
+        // También bloquear cuando cambie la orientación
+        window.addEventListener('orientationchange', function() {
+            setTimeout(lockOrientation, 100);
+        });
+    }    
     
     // MOSTRAR PANTALLA DE CARGA F1 INMEDIATAMENTE
     // Copia EXACTAMENTE el mismo código HTML del finalizarTutorial()
