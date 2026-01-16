@@ -6535,55 +6535,72 @@ class F1Manager {
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         
         if (isMobile) {
-            // INTENTAR BLOQUEAR CON JavaScript (puede fallar)
-            if (screen.orientation && screen.orientation.lock) {
-                try {
-                    await screen.orientation.lock('landscape');
-                    console.log('📱 Dashboard bloqueado en landscape (API)');
-                } catch (err) {
-                    console.log('API de orientación falló, usando CSS:', err);
-                }
-            }
-            
-            // FORZAR LANDSCAPE CON CSS (siempre funciona)
+            // FORZAR LANDSCAPE CON CSS (CORREGIDO)
             const forceLandscapeCSS = document.createElement('style');
             forceLandscapeCSS.id = 'force-landscape-css';
             forceLandscapeCSS.textContent = `
-                /* Forzar landscape en móviles */
-                @media screen and (max-width: 1024px) {
-                    html, body {
+                /* Forzar landscape en móviles - SOLO para portrait */
+                @media screen and (orientation: portrait) and (max-width: 1024px) {
+                    html {
+                        transform: rotate(-90deg) !important;
+                        transform-origin: left top !important;
                         width: 100vh !important;
                         height: 100vw !important;
                         overflow-x: hidden !important;
+                        position: absolute !important;
+                        top: 100% !important;
+                        left: 0 !important;
+                    }
+                    
+                    body {
+                        width: 100vw !important;
+                        height: 100vh !important;
                         transform: rotate(90deg) !important;
-                        transform-origin: 0 0 !important;
+                        transform-origin: center center !important;
                         position: fixed !important;
-                        top: 0 !important;
-                        left: 100vw !important;
                     }
                     
                     #app {
                         width: 100vw !important;
                         height: 100vh !important;
-                        transform: rotate(0deg) !important;
                     }
-                    
-                    .dashboard-content {
-                        height: calc(100vh - 120px) !important;
-                        overflow-y: auto !important;
-                    }
-                    
+                }
+                
+                /* Ajustar contenido para landscape */
+                @media screen and (max-width: 1024px) and (orientation: landscape),
+                       screen and (max-width: 1024px) and (orientation: portrait) {
                     .three-columns-layout {
                         height: 30vh !important;
+                        min-height: 180px !important;
                     }
                     
                     .grid-11-columns {
                         grid-template-columns: repeat(11, 1fr) !important;
                         height: 80px !important;
+                        gap: 5px !important;
+                    }
+                    
+                    .boton-area-montada, .boton-area-vacia {
+                        height: 70px !important;
+                        min-height: 70px !important;
+                        padding: 5px 3px !important;
+                    }
+                    
+                    .nombre-area {
+                        font-size: 0.7rem !important;
                     }
                 }
             `;
             document.head.appendChild(forceLandscapeCSS);
+            
+            // También intentar con API
+            if (screen.orientation && screen.orientation.lock) {
+                try {
+                    await screen.orientation.lock('landscape');
+                } catch (err) {
+                    console.log('API de orientación no disponible');
+                }
+            }
         }
         
         if (!this.escuderia) {
