@@ -2795,9 +2795,56 @@ class F1Manager {
                         <div class="area-grid-card">
                             <div class="area-grid-icon">🏎️</div>
                             <div class="area-grid-content">
+                                <div class="area-grid-name">SUELO Y DIFUSOR</div>
+                                <div class="area-grid-desc">Adherencia</div>
+                            </div>
+                        </div>
+                        
+                        <div class="area-grid-card">
+                            <div class="area-grid-icon">⚙️</div>
+                            <div class="area-grid-content">
                                 <div class="area-grid-name">MOTOR</div>
                                 <div class="area-grid-desc">Potencia</div>
-                                
+                            </div>
+                        </div>
+                        
+                        <div class="area-grid-card">
+                            <div class="area-grid-icon">🪽</div>
+                            <div class="area-grid-content">
+                                <div class="area-grid-name">ALERÓN DELANTERO</div>
+                                <div class="area-grid-desc">Aerodinámica frontal</div>
+                            </div>
+                        </div>
+                        
+                        <div class="area-grid-card">
+                            <div class="area-grid-icon">🔄</div>
+                            <div class="area-grid-content">
+                                <div class="area-grid-name">CAJA DE CAMBIOS</div>
+                                <div class="area-grid-desc">Transmisión</div>
+                            </div>
+                        </div>
+                        
+                        <div class="area-grid-card">
+                            <div class="area-grid-icon">📦</div>
+                            <div class="area-grid-content">
+                                <div class="area-grid-name">PONTONES</div>
+                                <div class="area-grid-desc">Enfriamiento</div>
+                            </div>
+                        </div>
+                        
+                        <div class="area-grid-card">
+                            <div class="area-grid-icon">⚖️</div>
+                            <div class="area-grid-content">
+                                <div class="area-grid-name">SUSPENSIÓN</div>
+                                <div class="area-grid-desc">Estabilidad</div>
+                            </div>
+                        </div>
+                        
+                        <div class="area-grid-card">
+                            <div class="area-grid-icon">🌪️</div>
+                            <div class="area-grid-content">
+                                <div class="area-grid-name">ALERÓN TRASERO</div>
+                                <div class="area-grid-desc">Aerodinámica trasera</div>
                             </div>
                         </div>
                         
@@ -2806,34 +2853,6 @@ class F1Manager {
                             <div class="area-grid-content">
                                 <div class="area-grid-name">CHASIS</div>
                                 <div class="area-grid-desc">Estructura</div>
-                                
-                            </div>
-                        </div>
-                        
-                        <div class="area-grid-card">
-                            <div class="area-grid-icon">🌀</div>
-                            <div class="area-grid-content">
-                                <div class="area-grid-name">AERO</div>
-                                <div class="area-grid-desc">Flujo de aire</div>
-                                
-                            </div>
-                        </div>
-                        
-                        <div class="area-grid-card">
-                            <div class="area-grid-icon">⚙️</div>
-                            <div class="area-grid-content">
-                                <div class="area-grid-name">SUSPENSIÓN</div>
-                                <div class="area-grid-desc">Estabilidad</div>
-                                
-                            </div>
-                        </div>
-                        
-                        <div class="area-grid-card">
-                            <div class="area-grid-icon">🔄</div>
-                            <div class="area-grid-content">
-                                <div class="area-grid-name">TRANSMISIÓN</div>
-                                <div class="area-grid-desc">Cambios</div>
-                                
                             </div>
                         </div>
                         
@@ -2842,7 +2861,14 @@ class F1Manager {
                             <div class="area-grid-content">
                                 <div class="area-grid-name">FRENOS</div>
                                 <div class="area-grid-desc">Detención</div>
-                                
+                            </div>
+                        </div>
+                        
+                        <div class="area-grid-card">
+                            <div class="area-grid-icon">🎮</div>
+                            <div class="area-grid-content">
+                                <div class="area-grid-name">VOLANTE</div>
+                                <div class="area-grid-desc">Control</div>
                             </div>
                         </div>
                         
@@ -2851,16 +2877,6 @@ class F1Manager {
                             <div class="area-grid-content">
                                 <div class="area-grid-name">ELECTRÓNICA</div>
                                 <div class="area-grid-desc">Sistemas</div>
-                                
-                            </div>
-                        </div>
-                        
-                        <div class="area-grid-card">
-                            <div class="area-grid-icon">🎮</div>
-                            <div class="area-grid-content">
-                                <div class="area-grid-name">CONTROL</div>
-                                <div class="area-grid-desc">Manejo</div>
-                                
                             </div>
                         </div>
                     </div>
