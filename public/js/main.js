@@ -6531,6 +6531,17 @@ class F1Manager {
     
     async cargarDashboardCompleto() {
         console.log('📊 Cargando dashboard COMPLETO con CSS...');
+        // BLOQUEAR A LANDSCAPE SOLO PARA EL DASHBOARD
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile && screen.orientation && screen.orientation.lock) {
+            try {
+                await screen.orientation.lock('landscape');
+                console.log('📱 Dashboard bloqueado en landscape');
+            } catch (err) {
+                console.log('No se pudo bloquear orientación:', err);
+            }
+        }
+        
         
         if (!this.escuderia) {
             console.error('❌ No hay escudería para cargar dashboard');
