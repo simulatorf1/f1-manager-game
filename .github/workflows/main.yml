@@ -49,10 +49,38 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Upload APK
+      - name: Compress APK before upload
+        run: |
+          cd android/app/build/outputs/apk/debug
+          # Comprimir el APK para reducir tamaño y mejorar upload
+          gzip -c app-debug.apk > app-debug.apk.gz
+          echo "Original APK size: $(du -h app-debug.apk | cut -f1)"
+          echo "Compressed APK size: $(du -h app-debug.apk.gz | cut -f1)"
+
+      - name: Upload APK (Compressed)
         uses: actions/upload-artifact@v4
         with:
-          name: F1-Manager-App
+          name: F1-Manager-App-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk.gz
+          retention-days: 7
+          if-no-files-found: error
+          overwrite: true
+          compression-level: 0  # Ya está comprimido con gzip
+
+      - name: Upload APK (Original) como fallback
+        if: failure()  # Solo si falla la versión comprimida
+        uses: actions/upload-artifact@v4
+        with:
+          name: F1-Manager-App-APK-Raw
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Display APK info
+        run: |
+          cd android/app/build/outputs/apk/debug
+          echo "APK generado: $(pwd)/app-debug.apk"
+          echo "Tamaño: $(du -h app-debug.apk | cut -f1)"
+          echo "Para descargar: ve a la pestaña 'Artifacts' en esta ejecución de Actions"
