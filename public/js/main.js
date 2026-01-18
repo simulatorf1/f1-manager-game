@@ -6530,20 +6530,20 @@ class F1Manager {
     // DASHBOARD COMPLETO (VERSIÓN OPTIMIZADA - UNA SOLA FILA)
     // ========================
     async cargarDashboardCompleto() {
-        console.log('📊 Cargando dashboard OPTIMIZADO (una fila)...');
+        console.log('📊 Cargando dashboard COMPLETO con estilo compacto...');
         
         if (!this.escuderia) {
             console.error('❌ No hay escudería para cargar dashboard');
             return;
         }
         
-        // PRIMERO: Inyectar estilos en el HEAD si no existen
-        if (!document.getElementById('dashboard-styles')) {
+        // PRIMERO: Inyectar estilos compactos en el HEAD si no existen
+        if (!document.getElementById('dashboard-styles-compacto')) {
             const style = document.createElement('style');
-            style.id = 'dashboard-styles';
+            style.id = 'dashboard-styles-compacto';
             style.innerHTML = `
                 /* ==================== */
-                /* ESTILOS OPTIMIZADOS - UNA SOLA FILA */
+                /* ESTILOS COMPACTOS - UNA SOLA FILA */
                 /* ==================== */
                 .dashboard-header-compacto {
                     display: flex;
@@ -6652,6 +6652,9 @@ class F1Manager {
                     border-color: #e10600;
                 }
                 
+                /* ==================== */
+                /* CONTENIDO PRINCIPAL COMPACTO */
+                /* ==================== */
                 .contenido-principal-compacto {
                     padding: 15px;
                     height: calc(100vh - 50px - 30px);
@@ -6918,7 +6921,80 @@ class F1Manager {
                     gap: 5px;
                 }
                 
-                /* ESTILOS PARA PIEZAS MONTADAS (CRÍTICO) */
+                .grid-piezas-compacto {
+                    display: grid;
+                    grid-template-columns: repeat(11, 1fr);
+                    gap: 6px;
+                }
+                
+                .pieza-boton-compacto {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1.5px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 6px;
+                    padding: 6px 4px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    min-height: 65px;
+                }
+                
+                .pieza-boton-compacto:hover {
+                    border-color: rgba(0, 210, 190, 0.4);
+                    background: rgba(0, 210, 190, 0.05);
+                }
+                
+                .pieza-montada-compacto {
+                    border-color: rgba(0, 210, 190, 0.25);
+                    background: rgba(0, 210, 190, 0.04);
+                }
+                
+                .pieza-icono-compacto {
+                    font-size: 0.9rem;
+                    color: #00d2be;
+                    margin-bottom: 3px;
+                }
+                
+                .pieza-nombre-compacto {
+                    font-weight: bold;
+                    font-size: 0.65rem;
+                    color: white;
+                    margin-bottom: 2px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    text-align: center;
+                    width: 100%;
+                }
+                
+                .pieza-nivel-compacto {
+                    font-size: 0.6rem;
+                    color: #4CAF50;
+                    font-weight: bold;
+                }
+                
+                .footer-compacto {
+                    background: rgba(21, 21, 30, 0.95);
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
+                    padding: 8px 15px;
+                    height: 30px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    flex-shrink: 0;
+                }
+                
+                .user-info-compacto {
+                    font-size: 0.8rem;
+                    color: #aaa;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                
+                /* Estilos de las piezas montadas (del original) */
                 .grid-11-columns {
                     display: grid !important;
                     grid-template-columns: repeat(11, 1fr) !important;
@@ -7012,73 +7088,19 @@ class F1Manager {
                     line-height: 1;
                 }
                 
-                .pieza-boton-compacto {
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1.5px solid rgba(255, 255, 255, 0.08);
-                    border-radius: 6px;
-                    padding: 6px 4px;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    min-height: 65px;
-                }
-                
-                .pieza-boton-compacto:hover {
-                    border-color: rgba(0, 210, 190, 0.4);
-                    background: rgba(0, 210, 190, 0.05);
-                }
-                
-                .pieza-montada-compacto {
-                    border-color: rgba(0, 210, 190, 0.25);
-                    background: rgba(0, 210, 190, 0.04);
-                }
-                
-                .pieza-icono-compacto {
-                    font-size: 0.9rem;
-                    color: #00d2be;
-                    margin-bottom: 3px;
-                }
-                
-                .pieza-nombre-compacto {
+                .total-puntos-montadas {
+                    background: rgba(255, 215, 0, 0.1);
+                    border: 1px solid #FFD700;
+                    border-radius: 20px;
+                    padding: 5px 15px;
+                    color: #FFD700;
                     font-weight: bold;
-                    font-size: 0.65rem;
-                    color: white;
-                    margin-bottom: 2px;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    text-align: center;
-                    width: 100%;
-                }
-                
-                .pieza-nivel-compacto {
-                    font-size: 0.6rem;
-                    color: #4CAF50;
-                    font-weight: bold;
-                }
-                
-                .footer-compacto {
-                    background: rgba(21, 21, 30, 0.95);
-                    border-top: 1px solid rgba(255, 255, 255, 0.1);
-                    padding: 8px 15px;
-                    height: 30px;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    flex-shrink: 0;
-                }
-                
-                .user-info-compacto {
-                    font-size: 0.8rem;
-                    color: #aaa;
                     display: flex;
                     align-items: center;
-                    gap: 8px;
+                    gap: 5px;
                 }
                 
+                /* Scrollbar personalizado */
                 ::-webkit-scrollbar {
                     width: 6px;
                 }
@@ -7096,60 +7118,24 @@ class F1Manager {
                 ::-webkit-scrollbar-thumb:hover {
                     background: rgba(0, 210, 190, 0.5);
                 }
-                
-                @media (max-width: 1200px) {
-                    .grid-3-compacto {
-                        grid-template-columns: 280px 1fr 1fr;
-                        height: 250px;
-                    }
-                    
-                    .grid-11-columns {
-                        grid-template-columns: repeat(5, 1fr);
-                    }
-                }
-                
-                @media (max-width: 768px) {
-                    .dashboard-header-compacto {
-                        flex-direction: column;
-                        height: auto;
-                        padding: 10px;
-                        gap: 10px;
-                    }
-                    
-                    .header-left-compacto,
-                    .tabs-compactas,
-                    .header-right-compacto {
-                        width: 100%;
-                        justify-content: center;
-                    }
-                    
-                    .grid-3-compacto {
-                        grid-template-columns: 1fr;
-                        height: auto;
-                    }
-                    
-                    .tarjeta-compacta {
-                        height: 200px;
-                    }
-                }
             `;
             document.head.appendChild(style);
         }
         
-        // 1. Crear el HTML COMPACTO con la funcionalidad del que funciona
+        // 1. Crear el HTML con estructura compacta pero manteniendo IDs y funcionalidad original
         document.body.innerHTML = `
-            <div id="app-compacto">
-                <!-- Header compacto (UNA SOLA FILA) -->
+            <div id="app">
+                <!-- Header compacto (una fila) -->
                 <header class="dashboard-header-compacto">
                     <!-- Izquierda: Logo y dinero -->
                     <div class="header-left-compacto">
                         <div class="logo-compacto">
                             <i class="fas fa-flag-checkered"></i>
-                            <span id="escuderia-nombre-compacto">${this.escuderia.nombre}</span>
+                            <span id="escuderia-nombre">${this.escuderia.nombre}</span>
                         </div>
                         <div class="money-display-compacto">
                             <i class="fas fa-coins"></i>
-                            <span id="money-value-compacto">€${this.escuderia?.dinero?.toLocaleString() || '0'}</span>
+                            <span id="money-value">€${this.escuderia?.dinero?.toLocaleString() || '0'}</span>
                         </div>
                     </div>
                     
@@ -7175,79 +7161,75 @@ class F1Manager {
                         </button>
                     </nav>
                     
-                    <!-- Derecha: Botón salir -->
+                    <!-- Derecha: Botón salir (MISMO ID y funcionalidad que el original) -->
                     <div class="header-right-compacto">
-                        <button class="logout-btn-compacto" id="logout-btn-compacto" title="Cerrar sesión">
+                        <button class="logout-btn-compacto" id="logout-btn-visible" title="Cerrar sesión">
                             <i class="fas fa-sign-out-alt"></i> Salir
                         </button>
                     </div>
                 </header>
                 
-                <!-- Contenido Principal -->
+                <!-- Main Content (estructura compacta) -->
                 <main class="contenido-principal-compacto">
                     <!-- Tab Principal -->
-                    <div id="tab-principal" class="tab-content-compacto active">
-                        <!-- Grid de 3 columnas ultra compacto -->
+                    <div id="tab-principal" class="tab-content active">
+                        <!-- Grid de 3 columnas compacto -->
                         <div class="grid-3-compacto">
-                            <!-- Columna 1: Estrategas Compactos -->
+                            <!-- Columna 1: Estrategas compacto -->
                             <div class="tarjeta-compacta">
                                 <div class="tarjeta-header-compacto">
                                     <h3><i class="fas fa-users"></i> ESTRATEGAS</h3>
-                                    <span class="badge-compacto" id="contador-estrategas-compacto">0/4</span>
+                                    <div class="badge-compacto" id="contador-estrategas">0/4</div>
                                 </div>
-                                <div id="estrategas-container-compacto" class="estrategas-container-compacto">
-                                    <!-- Estrategas cargados dinámicamente -->
+                                <div class="estrategas-container-compacto" id="pilotos-container">
+                                    <!-- Contenido dinámico (mismo ID que original) -->
+                                    <div class="estratega-item-compacto" style="justify-content: center; color: #888; font-size: 0.8rem;">
+                                        <i class="fas fa-spinner fa-spin"></i> Cargando...
+                                    </div>
                                 </div>
                                 <button class="btn-contratar-compacto" onclick="gestionarEstrategas()" style="margin-top: 8px;">
-                                    <i class="fas fa-plus"></i> GESTIONAR ESTRATEGAS
+                                    <i class="fas fa-plus"></i> Gestionar Estrategas
                                 </button>
                             </div>
                             
-                            <!-- Columna 2: Countdown y GP -->
+                            <!-- Columna 2: Countdown compacto -->
                             <div class="tarjeta-compacta">
                                 <div class="tarjeta-header-compacto">
                                     <h3><i class="fas fa-clock"></i> PRÓXIMA CARRERA</h3>
-                                    <span class="badge-compacto">EN VIVO</span>
+                                    <div class="badge-compacto" id="estado-carrera">EN VIVO</div>
                                 </div>
-                                <div class="countdown-compacto">
+                                <div class="countdown-compacto" id="countdown-container">
                                     <div class="timer-compacto">
                                         <div class="time-block-compacto">
-                                            <span class="time-number-compacto" id="hours-compacto">00</span>
-                                            <span class="time-label-compacto">Horas</span>
+                                            <div class="time-number-compacto" id="hours">00</div>
+                                            <div class="time-label-compacto">Horas</div>
                                         </div>
-                                        <div style="color: #00d2be; font-size: 1.2rem;">:</div>
                                         <div class="time-block-compacto">
-                                            <span class="time-number-compacto" id="minutes-compacto">00</span>
-                                            <span class="time-label-compacto">Minutos</span>
+                                            <div class="time-number-compacto" id="minutes">00</div>
+                                            <div class="time-label-compacto">Min</div>
                                         </div>
-                                        <div style="color: #00d2be; font-size: 1.2rem;">:</div>
                                         <div class="time-block-compacto">
-                                            <span class="time-number-compacto" id="seconds-compacto">00</span>
-                                            <span class="time-label-compacto">Segundos</span>
+                                            <div class="time-number-compacto" id="seconds">00</div>
+                                            <div class="time-label-compacto">Seg</div>
                                         </div>
                                     </div>
                                     <div class="gp-info-compacto">
-                                        <div class="gp-nombre-compacto" id="gp-nombre-compacto">Cargando próximo GP...</div>
-                                        <div class="gp-datos-compacto">
-                                            <div><i class="far fa-calendar"></i> <span id="gp-fecha-compacto">Fecha por confirmar</span></div>
-                                            <div><i class="fas fa-map-marker-alt"></i> <span id="gp-circuito-compacto">Circuito por confirmar</span></div>
-                                        </div>
-                                        <button class="btn-apostar-compacto" id="btn-apostar-compacto">
+                                        <div class="gp-nombre-compacto" id="gp-nombre">Cargando próximo GP...</div>
+                                        <div class="gp-datos-compacto" id="gp-datos">Fecha por confirmar</div>
+                                        <button class="btn-apostar-compacto" id="btn-apostar">
                                             <i class="fas fa-coins"></i> HACER APUESTA
                                         </button>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Columna 3: Monitor de Fábrica -->
+                            <!-- Columna 3: Producción compacto -->
                             <div class="tarjeta-compacta">
                                 <div class="tarjeta-header-compacto">
                                     <h3><i class="fas fa-industry"></i> PRODUCCIÓN</h3>
-                                    <div id="alerta-almacen-compacto" class="badge-compacto" style="background: rgba(255, 152, 0, 0.2); color: #ff9800; display: none;">
-                                        <i class="fas fa-bell"></i> ¡Nuevas!
-                                    </div>
+                                    <div class="badge-compacto" id="contador-produccion">0/4</div>
                                 </div>
-                                <div class="produccion-grid-compacto" id="produccion-grid-compacto">
+                                <div class="produccion-grid-compacto" id="produccion-slots">
                                     <div class="slot-produccion-compacto" data-slot="0" onclick="irAlTallerDesdeProduccion()">
                                         <div class="slot-icono-compacto"><i class="fas fa-plus"></i></div>
                                         <div class="slot-texto-compacto">Slot 1</div>
@@ -7268,178 +7250,149 @@ class F1Manager {
                             </div>
                         </div>
                         
-                        <!-- Piezas Montadas en el Coche -->
+                        <!-- Piezas Montadas (mismo estilo que original pero en contenedor compacto) -->
                         <div class="piezas-montadas-compacto">
                             <div class="piezas-header-compacto">
                                 <h3><i class="fas fa-car"></i> PIEZAS MONTADAS EN EL COCHE</h3>
                                 <div class="puntos-totales-compacto">
                                     <i class="fas fa-star"></i>
-                                    <span>Puntos: <strong id="puntos-totales-montadas-compacto">0</strong></span>
+                                    <span>Puntos totales: <strong id="puntos-totales-montadas">0</strong></span>
                                 </div>
                             </div>
-                            
-                            <div id="grid-piezas-montadas-compacto" class="grid-11-columns">
-                                <!-- Se generarán dinámicamente 11 botones -->
+                            <div id="grid-piezas-montadas" class="grid-11-columns">
+                                <!-- Se generarán dinámicamente 11 botones (igual que original) -->
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Otras pestañas -->
-                    <div id="tab-taller" class="tab-content-compacto"></div>
-                    <div id="tab-almacen" class="tab-content-compacto"></div>
-                    <div id="tab-mercado" class="tab-content-compacto"></div>
-                    <div id="tab-presupuesto" class="tab-content-compacto"></div>
-                    <div id="tab-clasificacion" class="tab-content-compacto"></div>
+                    <!-- Otras pestañas (VACÍAS - se cargarán dinámicamente como en el original) -->
+                    <div id="tab-taller" class="tab-content"></div>
+                    <div id="tab-almacen" class="tab-content"></div>
+                    <div id="tab-mercado" class="tab-content"></div>
+                    <div id="tab-presupuesto" class="tab-content"></div>
+                    <div id="tab-clasificacion" class="tab-content"></div>
                 </main>
                 
                 <!-- Footer compacto -->
                 <footer class="footer-compacto">
                     <div class="user-info-compacto">
-                        <i class="fas fa-user"></i>
-                        <span>${this.user.email}</span>
+                        <i class="fas fa-user-circle"></i>
+                        <span>${this.user.email?.split('@')[0] || 'Usuario'}</span>
                     </div>
-                    <div style="color: #666; font-size: 0.7rem;">F1 Manager v1.0.0</div>
+                    <div style="font-size: 0.7rem; color: #666;">
+                        F1 Manager v1.0
+                    </div>
                 </footer>
             </div>
-            
-            <!-- Scripts con la funcionalidad del código que funciona -->
-            <script>
-                // Sistema de pestañas
-                window.tabManager = {
-                    setup: function() {
-                        const tabButtons = document.querySelectorAll('.tab-btn-compacto');
-                        const tabContents = document.querySelectorAll('.tab-content-compacto');
-                        
-                        tabButtons.forEach(button => {
-                            button.addEventListener('click', () => {
-                                const tabId = button.getAttribute('data-tab');
-                                this.switchTab(tabId);
-                            });
-                        });
-                    },
-                    
-                    switchTab: function(tabId) {
-                        // Ocultar todos los contenidos
-                        document.querySelectorAll('.tab-content-compacto').forEach(content => {
-                            content.classList.remove('active');
-                        });
-                        
-                        // Desactivar todos los botones
-                        document.querySelectorAll('.tab-btn-compacto').forEach(btn => {
-                            btn.classList.remove('active');
-                        });
-                        
-                        // Mostrar contenido seleccionado
-                        const selectedTab = document.getElementById('tab-' + tabId);
-                        if (selectedTab) {
-                            selectedTab.classList.add('active');
-                        }
-                        
-                        // Activar botón seleccionado
-                        const selectedBtn = document.querySelector('[data-tab="' + tabId + '"]');
-                        if (selectedBtn) {
-                            selectedBtn.classList.add('active');
-                        }
-                        
-                        // Si es la pestaña principal, recargar contenido
-                        if (tabId === 'principal' && window.cargarContenidoPrincipalCompacto) {
-                            setTimeout(() => {
-                                window.cargarContenidoPrincipalCompacto();
-                            }, 100);
-                        }
-                        
-                        // Si es la pestaña taller, cargarla
-                        if (tabId === 'taller' && window.f1Manager && window.f1Manager.cargarTabTaller) {
-                            setTimeout(() => {
-                                window.f1Manager.cargarTabTaller();
-                            }, 100);
-                        }
-                    }
-                };
-                
-                // Función para cargar contenido principal (versión compacta)
-                window.cargarContenidoPrincipalCompacto = async function() {
-                    if (window.f1Manager) {
-                        // Cargar piezas montadas
-                        if (window.f1Manager.cargarPiezasMontadas) {
-                            await window.f1Manager.cargarPiezasMontadas();
-                        }
-                        // Cargar estrategas
-                        if (window.f1Manager.loadPilotosContratados) {
-                            await window.f1Manager.loadPilotosContratados();
-                        }
-                        // Cargar producción
-                        if (window.f1Manager.updateProductionMonitor) {
-                            window.f1Manager.updateProductionMonitor();
-                        }
-                    }
-                };
-                
-                // Configurar evento para botón de cerrar sesión
-                const logoutBtn = document.getElementById('logout-btn-compacto');
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', async (e) => {
-                        e.preventDefault();
-                        try {
-                            const supabaseClient = window.supabase;
-                            if (supabaseClient) {
-                                await supabaseClient.auth.signOut();
-                                console.log('✅ Sesión cerrada');
-                                window.location.href = window.location.origin;
-                            }
-                        } catch (error) {
-                            console.error('❌ Error cerrando sesión:', error);
-                            window.location.href = window.location.origin;
-                        }
-                    });
-                }
-                
-                // Configurar pestañas
-                setTimeout(() => {
-                    if (window.tabManager && window.tabManager.setup) {
-                        window.tabManager.setup();
-                    }
-                }, 100);
-                
-                // Función para ir al taller
-                window.irAlTallerDesdeProduccion = function() {
-                    if (window.tabManager) {
-                        window.tabManager.switchTab('taller');
-                    }
-                };
-                
-                // Función para gestionar estrategas (placeholder)
-                window.gestionarEstrategas = function() {
-                    alert('Funcionalidad de gestión de estrategas en desarrollo');
-                };
-            </script>
         `;
         
-        // 2. INICIALIZAR SISTEMAS CRÍTICOS INMEDIATAMENTE
+        // 2. INICIALIZAR SISTEMAS CRÍTICOS INMEDIATAMENTE (MISMA LÓGICA DEL ORIGINAL)
         setTimeout(async () => {
             console.log('🔧 Inicializando sistemas críticos del dashboard...');
             
-            // Configurar sistema de pestañas
-            setTimeout(() => {
-                if (window.tabManager && window.tabManager.setup) {
-                    window.tabManager.setup();
+            // A. Asegurar que fabricacionManager existe (IGUAL QUE ORIGINAL)
+            if (!window.fabricacionManager && window.FabricacionManager) {
+                window.fabricacionManager = new window.FabricacionManager();
+                if (this.escuderia) {
+                    await window.fabricacionManager.inicializar(this.escuderia.id);
                 }
-            }, 100);
+            }
             
-            // 3. Cargar datos iniciales
+            // B. Configurar sistema de pestañas CON LA FUNCIÓN DE RECARGA (IGUAL QUE ORIGINAL)
+            setTimeout(() => {
+                // Configurar eventos de tabs para cambiar completamente la página
+                document.querySelectorAll('.tab-btn-compacto').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const tabId = e.currentTarget.dataset.tab;
+                        
+                        // Remover activo de todos
+                        document.querySelectorAll('.tab-btn-compacto').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        
+                        // Activar tab seleccionado
+                        e.currentTarget.classList.add('active');
+                        const tabElement = document.getElementById(`tab-${tabId}`);
+                        if (tabElement) {
+                            tabElement.classList.add('active');
+                        }
+                        
+                        // Cargar contenido específico de cada tab (IGUAL QUE ORIGINAL)
+                        switch(tabId) {
+                            case 'principal':
+                                if (window.f1Manager && window.cargarContenidoPrincipal) {
+                                    window.cargarContenidoPrincipal();
+                                }
+                                break;
+                            case 'taller':
+                                if (window.f1Manager && window.f1Manager.cargarTabTaller) {
+                                    window.f1Manager.cargarTabTaller();
+                                }
+                                break;
+                            case 'almacen':
+                                if (window.almacenManager && window.almacenManager.cargarTabAlmacen) {
+                                    window.almacenManager.cargarTabAlmacen();
+                                }
+                                break;
+                            case 'mercado':
+                                // Implementar si existe
+                                break;
+                            case 'presupuesto':
+                                // Implementar si existe
+                                break;
+                            case 'clasificacion':
+                                // Implementar si existe
+                                break;
+                        }
+                    });
+                });
+                
+                // Configurar funciones globales (IGUAL QUE ORIGINAL)
+                window.irAlTallerDesdeProduccion = function() {
+                    document.querySelector('[data-tab="taller"]').click();
+                };
+                
+                window.gestionarEstrategas = function() {
+                    if (window.f1Manager && window.f1Manager.mostrarModalContratacion) {
+                        window.f1Manager.mostrarModalContratacion();
+                    }
+                };
+                
+            }, 400);
+            
+            // 3. Configurar eventos (IGUAL QUE ORIGINAL)
+            // Configurar evento para botón de cerrar sesión visible
+            const logoutBtn = document.getElementById('logout-btn-visible');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    try {
+                        const supabaseClient = window.supabase;
+                        if (supabaseClient) {
+                            await supabaseClient.auth.signOut();
+                            console.log('✅ Sesión cerrada');
+                            window.location.href = window.location.origin;
+                        }
+                    } catch (error) {
+                        console.error('❌ Error cerrando sesión:', error);
+                        window.location.href = window.location.origin;
+                    }
+                });
+            }
+            
+            // Cargar datos iniciales (IGUAL QUE ORIGINAL)
             const supabase = await this.esperarSupabase();
             if (supabase) {
-                await this.loadCarStats();
+                await this.loadCarStatus();
                 await this.loadPilotosContratados();
+                await this.loadProximoGP();
                 
-                // 4. Cargar piezas montadas INMEDIATAMENTE
+                // Cargar piezas montadas INMEDIATAMENTE
                 setTimeout(async () => {
                     await this.cargarPiezasMontadas();
                 }, 500);
             }
             
-            console.log('✅ Dashboard cargado correctamente con diseño compacto');
-            
+            console.log('✅ Dashboard cargado correctamente con estilo compacto');
             // QUITAR LA PANTALLA DE CARGA
             setTimeout(() => {
                 const loadingScreen = document.getElementById('f1-loading-screen');
@@ -7448,7 +7401,34 @@ class F1Manager {
                 }
             }, 500);
         }, 1000);
-    }    
+        
+        // =============================================
+        // ¡¡IMPORTANTE!! Esta función se debe mantener IGUAL
+        // =============================================
+        setTimeout(() => {
+            window.cargarContenidoPrincipal = async function() {
+                if (window.f1Manager) {
+                    // Cargar piezas montadas
+                    if (window.f1Manager.cargarPiezasMontadas) {
+                        await window.f1Manager.cargarPiezasMontadas();
+                    }
+                    // Cargar estrategas
+                    if (window.f1Manager.loadPilotosContratados) {
+                        await window.f1Manager.loadPilotosContratados();
+                    }
+                    // Cargar producción
+                    if (window.f1Manager.updateProductionMonitor) {
+                        window.f1Manager.updateProductionMonitor();
+                    }
+                }
+            };
+            
+            // Ejecutar al cargar por primera vez
+            if (window.cargarContenidoPrincipal) {
+                window.cargarContenidoPrincipal();
+            }
+        }, 1500);
+    }
 
 
     
