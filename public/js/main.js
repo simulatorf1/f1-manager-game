@@ -6548,8 +6548,8 @@ class F1Manager {
                 #app {
                     display: flex;
                     flex-direction: column;
-                    height: 100vh; /* ← Usa height, NO min-height */
-                    overflow: hidden; /* ← hidden aquí, el scroll estará en dashboard-content */
+                    min-height: 100vh; /* ← CAMBIAR height por min-height */
+                    overflow: visible; /* ← CAMBIAR hidden por visible o auto */
                 }
                 
                 html, body {
