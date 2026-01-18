@@ -6849,7 +6849,7 @@ class F1Manager {
                     padding: 8px 15px;
                     height: 30px;
                     display: flex;
-                    justify-content: space-between;
+                    justify-content: space-between; /* ← Esto pone usuario a la izq, botón a la der */
                     align-items: center;
                     flex-shrink: 0;
                 }
@@ -6990,11 +6990,7 @@ class F1Manager {
                     </nav>
                     
                     <!-- Derecha: Botón salir (manteniendo ID original) -->
-                    <div class="header-right-compacto">
-                        <button class="logout-btn-compacto" id="logout-btn-visible" title="Cerrar sesión">
-                            <i class="fas fa-sign-out-alt"></i> Salir
-                        </button>
-                    </div>
+
                 </header>
                 
                 <!-- Main Content - MANTENIENDO ESTRUCTURA ORIGINAL -->
@@ -7197,6 +7193,21 @@ class F1Manager {
                         <i class="fas fa-user-circle"></i>
                         <span>${this.user.email?.split('@')[0] || 'Usuario'}</span>
                     </div>
+                    <!-- AÑADE EL BOTÓN AQUÍ -->
+                    <button class="logout-btn-compacto" id="logout-btn-visible" title="Cerrar sesión" style="
+                        background: rgba(225, 6, 0, 0.1);
+                        border: 1px solid rgba(225, 6, 0, 0.3);
+                        color: #e10600;
+                        padding: 4px 10px;
+                        border-radius: 8px;
+                        font-size: 0.8rem;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 5px;
+                    ">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </button>
                     <div style="font-size: 0.7rem; color: #666;">
                         F1 Manager v1.0
                     </div>
