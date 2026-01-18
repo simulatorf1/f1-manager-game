@@ -1209,15 +1209,16 @@ const produccionStyles = `
         background: rgba(255, 255, 255, 0.03);
         border: 1.5px solid rgba(255, 255, 255, 0.08);
         border-radius: 6px;
-        padding: 2px 1px !important;
+        padding: 8px 8px !important;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         transition: all 0.2s ease;
-        height:  90px !important;
-        min-height: 90px !important;   
+        height:  70px !important;
+        min-height: 70px !important;  
+        margin-bottom: 2px !important; 
     }
     
     .produccion-slot:hover {
