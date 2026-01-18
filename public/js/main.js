@@ -6529,9 +6529,8 @@ class F1Manager {
     // ========================
     // DASHBOARD COMPLETO (VERSIÓN OPTIMIZADA - UNA SOLA FILA)
     // ========================
-    
     async cargarDashboardCompleto() {
-        console.log('📊 Cargando dashboard COMPLETO con CSS...');
+        console.log('📊 Cargando dashboard OPTIMIZADO (una fila)...');
         
         if (!this.escuderia) {
             console.error('❌ No hay escudería para cargar dashboard');
@@ -6544,8 +6543,382 @@ class F1Manager {
             style.id = 'dashboard-styles';
             style.innerHTML = `
                 /* ==================== */
-                /* ESTILOS PARA PIEZAS MONTADAS */
+                /* ESTILOS OPTIMIZADOS - UNA SOLA FILA */
                 /* ==================== */
+                .dashboard-header-compacto {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    background: rgba(21, 21, 30, 0.95);
+                    border-bottom: 2px solid rgba(0, 210, 190, 0.3);
+                    padding: 8px 15px;
+                    height: 50px;
+                    flex-shrink: 0;
+                }
+                
+                .header-left-compacto {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                    flex: 1;
+                }
+                
+                .logo-compacto {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-family: 'Orbitron', sans-serif;
+                    font-weight: bold;
+                    color: #00d2be;
+                    font-size: 1rem;
+                    white-space: nowrap;
+                }
+                
+                .money-display-compacto {
+                    background: rgba(255, 215, 0, 0.1);
+                    border: 1px solid rgba(255, 215, 0, 0.3);
+                    border-radius: 15px;
+                    padding: 5px 12px;
+                    font-family: 'Orbitron', sans-serif;
+                    font-weight: bold;
+                    color: #FFD700;
+                    font-size: 0.9rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    white-space: nowrap;
+                }
+                
+                .tabs-compactas {
+                    display: flex;
+                    gap: 5px;
+                    flex: 2;
+                    justify-content: center;
+                    min-width: 0;
+                }
+                
+                .tab-btn-compacto {
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 8px;
+                    padding: 6px 12px;
+                    color: #aaa;
+                    font-family: 'Roboto', sans-serif;
+                    font-size: 0.8rem;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    white-space: nowrap;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    flex-shrink: 0;
+                }
+                
+                .tab-btn-compacto.active {
+                    background: rgba(0, 210, 190, 0.2);
+                    border-color: #00d2be;
+                    color: white;
+                    font-weight: bold;
+                }
+                
+                .tab-btn-compacto:hover:not(.active) {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-color: rgba(255, 255, 255, 0.2);
+                }
+                
+                .header-right-compacto {
+                    flex: 1;
+                    display: flex;
+                    justify-content: flex-end;
+                }
+                
+                .logout-btn-compacto {
+                    background: rgba(225, 6, 0, 0.1);
+                    border: 1px solid rgba(225, 6, 0, 0.3);
+                    color: #e10600;
+                    padding: 6px 12px;
+                    border-radius: 8px;
+                    font-size: 0.8rem;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    transition: all 0.2s;
+                    white-space: nowrap;
+                }
+                
+                .logout-btn-compacto:hover {
+                    background: rgba(225, 6, 0, 0.2);
+                    border-color: #e10600;
+                }
+                
+                .contenido-principal-compacto {
+                    padding: 15px;
+                    height: calc(100vh - 50px - 30px);
+                    overflow-y: auto;
+                }
+                
+                .grid-3-compacto {
+                    display: grid;
+                    grid-template-columns: 320px 1fr 1fr;
+                    gap: 15px;
+                    margin-bottom: 15px;
+                    height: 280px;
+                }
+                
+                .tarjeta-compacta {
+                    background: rgba(30, 30, 40, 0.8);
+                    border: 1px solid rgba(0, 210, 190, 0.3);
+                    border-radius: 8px;
+                    padding: 10px;
+                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                }
+                
+                .tarjeta-header-compacto {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                    padding-bottom: 5px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    flex-shrink: 0;
+                }
+                
+                .tarjeta-header-compacto h3 {
+                    margin: 0;
+                    font-size: 0.9rem;
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                }
+                
+                .badge-compacto {
+                    background: rgba(0, 210, 190, 0.2);
+                    color: #00d2be;
+                    padding: 2px 8px;
+                    border-radius: 10px;
+                    font-size: 0.7rem;
+                    font-weight: bold;
+                }
+                
+                .estrategas-container-compacto {
+                    flex: 1;
+                    overflow-y: auto;
+                    padding-right: 5px;
+                    max-height: 200px;
+                }
+                
+                .estratega-item-compacto {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 6px;
+                    padding: 8px;
+                    margin-bottom: 6px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.2s;
+                }
+                
+                .estratega-item-compacto:hover {
+                    background: rgba(0, 210, 190, 0.05);
+                    border-color: rgba(0, 210, 190, 0.2);
+                }
+                
+                .estratega-icono-compacto {
+                    font-size: 0.9rem;
+                    color: #00d2be;
+                    width: 20px;
+                    text-align: center;
+                }
+                
+                .estratega-info-compacto {
+                    flex: 1;
+                    min-width: 0;
+                }
+                
+                .estratega-nombre-compacto {
+                    font-weight: bold;
+                    font-size: 0.8rem;
+                    color: white;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                
+                .estratega-especialidad-compacto {
+                    font-size: 0.7rem;
+                    color: #aaa;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                
+                .btn-contratar-compacto {
+                    background: rgba(0, 210, 190, 0.1);
+                    border: 1px solid rgba(0, 210, 190, 0.4);
+                    color: #00d2be;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 0.7rem;
+                    cursor: pointer;
+                    white-space: nowrap;
+                    flex-shrink: 0;
+                }
+                
+                .countdown-compacto {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100%;
+                }
+                
+                .timer-compacto {
+                    display: flex;
+                    gap: 10px;
+                    margin-bottom: 10px;
+                }
+                
+                .time-block-compacto {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                }
+                
+                .time-number-compacto {
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 1.5rem;
+                    font-weight: bold;
+                    color: #00d2be;
+                    background: rgba(0, 0, 0, 0.3);
+                    padding: 5px 10px;
+                    border-radius: 5px;
+                    min-width: 40px;
+                    text-align: center;
+                }
+                
+                .time-label-compacto {
+                    font-size: 0.6rem;
+                    color: #aaa;
+                    margin-top: 2px;
+                }
+                
+                .gp-info-compacto {
+                    text-align: center;
+                    margin-top: 10px;
+                }
+                
+                .gp-nombre-compacto {
+                    font-size: 0.9rem;
+                    color: white;
+                    margin-bottom: 5px;
+                }
+                
+                .gp-datos-compacto {
+                    font-size: 0.7rem;
+                    color: #aaa;
+                    margin-bottom: 8px;
+                }
+                
+                .btn-apostar-compacto {
+                    background: linear-gradient(135deg, #e10600, #ff4444);
+                    color: white;
+                    border: none;
+                    border-radius: 5px;
+                    padding: 6px 12px;
+                    font-size: 0.8rem;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 5px;
+                    width: 100%;
+                }
+                
+                .produccion-grid-compacto {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    grid-template-rows: repeat(2, 1fr);
+                    gap: 8px;
+                    height: 100%;
+                    padding: 5px;
+                }
+                
+                .slot-produccion-compacto {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1.5px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 6px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    padding: 8px 5px;
+                }
+                
+                .slot-produccion-compacto:hover {
+                    border-color: rgba(0, 210, 190, 0.4);
+                    background: rgba(0, 210, 190, 0.05);
+                }
+                
+                .slot-icono-compacto {
+                    font-size: 1rem;
+                    color: #00d2be;
+                    margin-bottom: 3px;
+                }
+                
+                .slot-texto-compacto {
+                    font-size: 0.7rem;
+                    color: #888;
+                    text-align: center;
+                    line-height: 1.1;
+                }
+                
+                .slot-activo-compacto {
+                    border-color: rgba(76, 175, 80, 0.3);
+                    background: rgba(76, 175, 80, 0.1);
+                }
+                
+                .piezas-montadas-compacto {
+                    margin-top: 15px;
+                }
+                
+                .piezas-header-compacto {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                }
+                
+                .piezas-header-compacto h3 {
+                    margin: 0;
+                    font-size: 0.9rem;
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                }
+                
+                .puntos-totales-compacto {
+                    background: rgba(255, 215, 0, 0.1);
+                    border: 1px solid #FFD700;
+                    border-radius: 15px;
+                    padding: 3px 10px;
+                    color: #FFD700;
+                    font-weight: bold;
+                    font-size: 0.8rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                }
+                
+                /* ESTILOS PARA PIEZAS MONTADAS (CRÍTICO) */
                 .grid-11-columns {
                     display: grid !important;
                     grid-template-columns: repeat(11, 1fr) !important;
@@ -6615,7 +6988,7 @@ class F1Manager {
                     color: white;
                     margin-bottom: 2px;
                     white-space: nowrap;
-                            overflow: hidden;
+                    overflow: hidden;
                     text-overflow: ellipsis;
                     line-height: 1.1;
                     text-align: center;
@@ -6639,254 +7012,303 @@ class F1Manager {
                     line-height: 1;
                 }
                 
-                .total-puntos-montadas {
-                    background: rgba(255, 215, 0, 0.1);
-                    border: 1px solid #FFD700;
-                    border-radius: 20px;
-                    padding: 5px 15px;
-                    color: #FFD700;
+                .pieza-boton-compacto {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1.5px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 6px;
+                    padding: 6px 4px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    min-height: 65px;
+                }
+                
+                .pieza-boton-compacto:hover {
+                    border-color: rgba(0, 210, 190, 0.4);
+                    background: rgba(0, 210, 190, 0.05);
+                }
+                
+                .pieza-montada-compacto {
+                    border-color: rgba(0, 210, 190, 0.25);
+                    background: rgba(0, 210, 190, 0.04);
+                }
+                
+                .pieza-icono-compacto {
+                    font-size: 0.9rem;
+                    color: #00d2be;
+                    margin-bottom: 3px;
+                }
+                
+                .pieza-nombre-compacto {
                     font-weight: bold;
+                    font-size: 0.65rem;
+                    color: white;
+                    margin-bottom: 2px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    text-align: center;
+                    width: 100%;
+                }
+                
+                .pieza-nivel-compacto {
+                    font-size: 0.6rem;
+                    color: #4CAF50;
+                    font-weight: bold;
+                }
+                
+                .footer-compacto {
+                    background: rgba(21, 21, 30, 0.95);
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
+                    padding: 8px 15px;
+                    height: 30px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    flex-shrink: 0;
+                }
+                
+                .user-info-compacto {
+                    font-size: 0.8rem;
+                    color: #aaa;
                     display: flex;
                     align-items: center;
-                    gap: 5px;
+                    gap: 8px;
+                }
+                
+                ::-webkit-scrollbar {
+                    width: 6px;
+                }
+                
+                ::-webkit-scrollbar-track {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 3px;
+                }
+                
+                ::-webkit-scrollbar-thumb {
+                    background: rgba(0, 210, 190, 0.3);
+                    border-radius: 3px;
+                }
+                
+                ::-webkit-scrollbar-thumb:hover {
+                    background: rgba(0, 210, 190, 0.5);
+                }
+                
+                @media (max-width: 1200px) {
+                    .grid-3-compacto {
+                        grid-template-columns: 280px 1fr 1fr;
+                        height: 250px;
+                    }
+                    
+                    .grid-11-columns {
+                        grid-template-columns: repeat(5, 1fr);
+                    }
+                }
+                
+                @media (max-width: 768px) {
+                    .dashboard-header-compacto {
+                        flex-direction: column;
+                        height: auto;
+                        padding: 10px;
+                        gap: 10px;
+                    }
+                    
+                    .header-left-compacto,
+                    .tabs-compactas,
+                    .header-right-compacto {
+                        width: 100%;
+                        justify-content: center;
+                    }
+                    
+                    .grid-3-compacto {
+                        grid-template-columns: 1fr;
+                        height: auto;
+                    }
+                    
+                    .tarjeta-compacta {
+                        height: 200px;
+                    }
                 }
             `;
             document.head.appendChild(style);
         }
         
-        // 1. Crear el HTML COMPLETO (igual al que funciona)
+        // 1. Crear el HTML COMPACTO con la funcionalidad del que funciona
         document.body.innerHTML = `
-            <div id="app">
-                <!-- Header -->
-                <header class="dashboard-header">
-                    <div class="header-top">
-                        <div class="logo-section">
-                            <div class="logo">
-                                <i class="fas fa-flag-checkered"></i>
-                                <span id="escuderia-nombre">${this.escuderia.nombre}</span>
-                            </div>
-                            <span class="team-tag">#F1MANAGER</span>
+            <div id="app-compacto">
+                <!-- Header compacto (UNA SOLA FILA) -->
+                <header class="dashboard-header-compacto">
+                    <!-- Izquierda: Logo y dinero -->
+                    <div class="header-left-compacto">
+                        <div class="logo-compacto">
+                            <i class="fas fa-flag-checkered"></i>
+                            <span id="escuderia-nombre-compacto">${this.escuderia.nombre}</span>
                         </div>
-                        
-                        <div class="stats-header">
-                            <div class="stat-card money">
-                                <i class="fas fa-coins"></i>
-                                <div>
-                                    <span class="stat-label">FONDOS</span>
-                                    <span class="stat-value" id="money-value">€${this.escuderia?.dinero?.toLocaleString() || '0'}</span>
-                                </div>
-                            </div>
-                            <div class="stat-card points">
-                                <i class="fas fa-trophy"></i>
-                                <div>
-                                    <span class="stat-label">PUNTOS</span>
-                                    <span class="stat-value" id="points-value">${this.escuderia.puntos || 0}</span>
-                                </div>
-                            </div>
-                            <div class="stat-card ranking">
-                                <i class="fas fa-medal"></i>
-                                <div>
-                                    <span class="stat-label">RANKING</span>
-                                    <span class="stat-value" id="ranking-value">#${this.escuderia.ranking || '-'}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="user-menu">
-                            <button class="user-btn" id="user-btn">
-                                <i class="fas fa-user"></i>
-                                <span>${this.user.email?.split('@')[0] || 'Usuario'}</span>
-                            </button>
-                            <button class="logout-btn-visible" id="logout-btn-visible" title="Cerrar sesión">
-                                <i class="fas fa-sign-out-alt"></i> Salir
-                            </button>
+                        <div class="money-display-compacto">
+                            <i class="fas fa-coins"></i>
+                            <span id="money-value-compacto">€${this.escuderia?.dinero?.toLocaleString() || '0'}</span>
                         </div>
                     </div>
                     
-                    <!-- Tabs Navigation -->
-                    <nav class="tabs-navigation">
-                        <button class="tab-btn active" data-tab="principal">
+                    <!-- Centro: Tabs -->
+                    <nav class="tabs-compactas">
+                        <button class="tab-btn-compacto active" data-tab="principal">
                             <i class="fas fa-home"></i> Principal
                         </button>
-                        <button class="tab-btn" data-tab="taller">
+                        <button class="tab-btn-compacto" data-tab="taller">
                             <i class="fas fa-tools"></i> Taller
                         </button>
-                        <button class="tab-btn" data-tab="almacen">
+                        <button class="tab-btn-compacto" data-tab="almacen">
                             <i class="fas fa-warehouse"></i> Almacén
                         </button>
-                        <button class="tab-btn" data-tab="mercado">
+                        <button class="tab-btn-compacto" data-tab="mercado">
                             <i class="fas fa-shopping-cart"></i> Mercado
                         </button>
-                        <button class="tab-btn" data-tab="presupuesto">
+                        <button class="tab-btn-compacto" data-tab="presupuesto">
                             <i class="fas fa-chart-pie"></i> Presupuesto
                         </button>
-                        <button class="tab-btn" data-tab="clasificacion">
+                        <button class="tab-btn-compacto" data-tab="clasificacion">
                             <i class="fas fa-medal"></i> Clasificación
                         </button>
                     </nav>
+                    
+                    <!-- Derecha: Botón salir -->
+                    <div class="header-right-compacto">
+                        <button class="logout-btn-compacto" id="logout-btn-compacto" title="Cerrar sesión">
+                            <i class="fas fa-sign-out-alt"></i> Salir
+                        </button>
+                    </div>
                 </header>
                 
-                <!-- Main Content -->
-                <main class="dashboard-content">
+                <!-- Contenido Principal -->
+                <main class="contenido-principal-compacto">
                     <!-- Tab Principal -->
-                    <div id="tab-principal" class="tab-content active">
-                        <!-- Three Columns Layout -->
-                        <div class="three-columns-layout" style="display: flex; flex-direction: row; gap: 20px; margin: 20px 0; width: 100%; height: 380px; align-items: stretch;">
-                            
+                    <div id="tab-principal" class="tab-content-compacto active">
+                        <!-- Grid de 3 columnas ultra compacto -->
+                        <div class="grid-3-compacto">
                             <!-- Columna 1: Estrategas Compactos -->
-                            <div class="col-estrategas" style="flex: 0 0 320px; height: 100%; background: rgba(30,30,40,0.8); border-radius: 10px; border: 1px solid rgba(0,210,190,0.3); padding: 10px;">
-                                <section class="panel-pilotos compacto" style="height: 100%; display: flex; flex-direction: column;">
-                                    <div class="section-header" style="padding-bottom: 8px;">
-                                        <h2 style="margin: 0; font-size: 1.1rem;"><i class="fas fa-users"></i> ESTRATEGAS</h2>
-                                        <span class="badge" id="contador-estrategas">0/4</span>
-                                    </div>
-                                    <div id="pilotos-container" class="pilotos-container" style="flex: 1; overflow: hidden;">
-                                        <!-- Contenido dinámico -->
-                                    </div>
-                                    <button class="btn-contratar-todos" onclick="gestionarEstrategas()" style="
-                                        margin-top: 8px;
-                                        padding: 6px 10px;
-                                        background: rgba(0,210,190,0.1);
-                                        border: 1px solid rgba(0,210,190,0.4);
-                                        color: #00d2be;
-                                        border-radius: 5px;
-                                        font-size: 0.75rem;
-                                        cursor: pointer;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        gap: 5px;
-                                    ">
-                                        <i class="fas fa-plus"></i> GESTIONAR ESTRATEGAS
-                                    </button>
-                                </section>
+                            <div class="tarjeta-compacta">
+                                <div class="tarjeta-header-compacto">
+                                    <h3><i class="fas fa-users"></i> ESTRATEGAS</h3>
+                                    <span class="badge-compacto" id="contador-estrategas-compacto">0/4</span>
+                                </div>
+                                <div id="estrategas-container-compacto" class="estrategas-container-compacto">
+                                    <!-- Estrategas cargados dinámicamente -->
+                                </div>
+                                <button class="btn-contratar-compacto" onclick="gestionarEstrategas()" style="margin-top: 8px;">
+                                    <i class="fas fa-plus"></i> GESTIONAR ESTRATEGAS
+                                </button>
                             </div>
                             
                             <!-- Columna 2: Countdown y GP -->
-                            <div class="col-countdown" style="flex: 1; min-width: 0; height: 100%; background: rgba(30,30,40,0.8); border-radius: 10px; border: 1px solid rgba(0,210,190,0.3); padding: 15px;">
-                                <div class="countdown-section" style="height: 100%; display: flex; flex-direction: column;">
-                                    <div class="section-header">
-                                        <h2><i class="fas fa-clock"></i> PRÓXIMA CARRERA</h2>
-                                        <span class="tag upcoming">EN VIVO</span>
+                            <div class="tarjeta-compacta">
+                                <div class="tarjeta-header-compacto">
+                                    <h3><i class="fas fa-clock"></i> PRÓXIMA CARRERA</h3>
+                                    <span class="badge-compacto">EN VIVO</span>
+                                </div>
+                                <div class="countdown-compacto">
+                                    <div class="timer-compacto">
+                                        <div class="time-block-compacto">
+                                            <span class="time-number-compacto" id="hours-compacto">00</span>
+                                            <span class="time-label-compacto">Horas</span>
+                                        </div>
+                                        <div style="color: #00d2be; font-size: 1.2rem;">:</div>
+                                        <div class="time-block-compacto">
+                                            <span class="time-number-compacto" id="minutes-compacto">00</span>
+                                            <span class="time-label-compacto">Minutos</span>
+                                        </div>
+                                        <div style="color: #00d2be; font-size: 1.2rem;">:</div>
+                                        <div class="time-block-compacto">
+                                            <span class="time-number-compacto" id="seconds-compacto">00</span>
+                                            <span class="time-label-compacto">Segundos</span>
+                                        </div>
                                     </div>
-                                    <div id="countdown-container" style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                                        <div class="countdown-timer">
-                                            <div class="time-block">
-                                                <span class="time-number" id="hours">00</span>
-                                                <span class="time-label">Horas</span>
-                                            </div>
-                                            <div class="time-separator">:</div>
-                                            <div class="time-block">
-                                                <span class="time-number" id="minutes">00</span>
-                                                <span class="time-label">Minutos</span>
-                                            </div>
-                                            <div class="time-separator">:</div>
-                                            <div class="time-block">
-                                                <span class="time-number" id="seconds">00</span>
-                                                <span class="time-label">Segundos</span>
-                                            </div>
+                                    <div class="gp-info-compacto">
+                                        <div class="gp-nombre-compacto" id="gp-nombre-compacto">Cargando próximo GP...</div>
+                                        <div class="gp-datos-compacto">
+                                            <div><i class="far fa-calendar"></i> <span id="gp-fecha-compacto">Fecha por confirmar</span></div>
+                                            <div><i class="fas fa-map-marker-alt"></i> <span id="gp-circuito-compacto">Circuito por confirmar</span></div>
                                         </div>
-                                        <div class="proximo-gp">
-                                            <h3 id="gp-nombre">Cargando próximo GP...</h3>
-                                            <div class="gp-info">
-                                                <div class="gp-date">
-                                                    <i class="far fa-calendar"></i>
-                                                    <span id="gp-fecha">Fecha por confirmar</span>
-                                                </div>
-                                                <div class="gp-circuit">
-                                                    <i class="fas fa-map-marker-alt"></i>
-                                                    <span id="gp-circuito">Circuito por confirmar</span>
-                                                </div>
-                                            </div>
-                                            <button class="btn-primary" id="btn-apostar">
-                                                <i class="fas fa-coins"></i> HACER APUESTA
-                                            </button>
-                                        </div>
+                                        <button class="btn-apostar-compacto" id="btn-apostar-compacto">
+                                            <i class="fas fa-coins"></i> HACER APUESTA
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Columna 3: Monitor de Fábrica -->
-                            <div class="col-fabrica" style="flex: 1; min-width: 0; height: 100%; background: rgba(30,30,40,0.8); border-radius: 10px; border: 1px solid rgba(0,210,190,0.3); padding: 15px;">
-                                <div class="monitor-fabrica" style="height: 100%; display: flex; flex-direction: column;">
-                                    <div class="section-header">
-                                        <h2><i class="fas fa-industry"></i> PRODUCCIÓN</h2>
-                                        <div id="alerta-almacen" class="alerta-almacen" style="display: none;">
-                                            <i class="fas fa-bell"></i>
-                                            <span>¡Piezas nuevas en almacén!</span>
-                                        </div>
+                            <div class="tarjeta-compacta">
+                                <div class="tarjeta-header-compacto">
+                                    <h3><i class="fas fa-industry"></i> PRODUCCIÓN</h3>
+                                    <div id="alerta-almacen-compacto" class="badge-compacto" style="background: rgba(255, 152, 0, 0.2); color: #ff9800; display: none;">
+                                        <i class="fas fa-bell"></i> ¡Nuevas!
                                     </div>
-                                    <div id="produccion-actual" class="produccion-actual" style="flex: 1; overflow-y: auto; padding-right: 5px;">
-                                        <!-- Grid de 4 slots como estrategas -->
-                                        <div id="produccion-slots" class="produccion-slots">
-                                            <div class="produccion-slot" data-slot="0" onclick="irAlTallerDesdeProduccion()">
-                                                <div class="slot-content">
-                                                    <i class="fas fa-plus"></i>
-                                                    <span>Slot 1</span>
-                                                </div>
-                                            </div>
-                                            <div class="produccion-slot" data-slot="1" onclick="irAlTallerDesdeProduccion()">
-                                                <div class="slot-content">
-                                                    <i class="fas fa-plus"></i>
-                                                    <span>Slot 2</span>
-                                                </div>
-                                            </div>
-                                            <div class="produccion-slot" data-slot="2" onclick="irAlTallerDesdeProduccion()">
-                                                <div class="slot-content">
-                                                    <i class="fas fa-plus"></i>
-                                                    <span>Slot 3</span>
-                                                </div>
-                                            </div>
-                                            <div class="produccion-slot" data-slot="3" onclick="irAlTallerDesdeProduccion()">
-                                                <div class="slot-content">
-                                                    <i class="fas fa-plus"></i>
-                                                    <span>Slot 4</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                </div>
+                                <div class="produccion-grid-compacto" id="produccion-grid-compacto">
+                                    <div class="slot-produccion-compacto" data-slot="0" onclick="irAlTallerDesdeProduccion()">
+                                        <div class="slot-icono-compacto"><i class="fas fa-plus"></i></div>
+                                        <div class="slot-texto-compacto">Slot 1</div>
+                                    </div>
+                                    <div class="slot-produccion-compacto" data-slot="1" onclick="irAlTallerDesdeProduccion()">
+                                        <div class="slot-icono-compacto"><i class="fas fa-plus"></i></div>
+                                        <div class="slot-texto-compacto">Slot 2</div>
+                                    </div>
+                                    <div class="slot-produccion-compacto" data-slot="2" onclick="irAlTallerDesdeProduccion()">
+                                        <div class="slot-icono-compacto"><i class="fas fa-plus"></i></div>
+                                        <div class="slot-texto-compacto">Slot 3</div>
+                                    </div>
+                                    <div class="slot-produccion-compacto" data-slot="3" onclick="irAlTallerDesdeProduccion()">
+                                        <div class="slot-icono-compacto"><i class="fas fa-plus"></i></div>
+                                        <div class="slot-texto-compacto">Slot 4</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Piezas Montadas en el Coche -->
-                        <section class="piezas-montadas">
-                            <div class="section-header">
-                                <h2><i class="fas fa-car"></i> PIEZAS MONTADAS EN EL COCHE</h2>
-                                <div class="total-puntos-montadas">
+                        <div class="piezas-montadas-compacto">
+                            <div class="piezas-header-compacto">
+                                <h3><i class="fas fa-car"></i> PIEZAS MONTADAS EN EL COCHE</h3>
+                                <div class="puntos-totales-compacto">
                                     <i class="fas fa-star"></i>
-                                    <span>Puntos totales: <strong id="puntos-totales-montadas">0</strong></span>
+                                    <span>Puntos: <strong id="puntos-totales-montadas-compacto">0</strong></span>
                                 </div>
                             </div>
                             
-                            <div id="grid-piezas-montadas" class="grid-11-columns">
+                            <div id="grid-piezas-montadas-compacto" class="grid-11-columns">
                                 <!-- Se generarán dinámicamente 11 botones -->
                             </div>
-                        </section>
+                        </div>
                     </div>
                     
                     <!-- Otras pestañas -->
-                    <div id="tab-taller" class="tab-content"></div>
-                    <div id="tab-almacen" class="tab-content"></div>
-                    <div id="tab-mercado" class="tab-content"></div>
-                    <div id="tab-presupuesto" class="tab-content"></div>
-                    <div id="tab-clasificacion" class="tab-content"></div>
+                    <div id="tab-taller" class="tab-content-compacto"></div>
+                    <div id="tab-almacen" class="tab-content-compacto"></div>
+                    <div id="tab-mercado" class="tab-content-compacto"></div>
+                    <div id="tab-presupuesto" class="tab-content-compacto"></div>
+                    <div id="tab-clasificacion" class="tab-content-compacto"></div>
                 </main>
                 
-                <!-- Footer -->
-                <footer class="dashboard-footer">
-                    <div class="footer-content">
+                <!-- Footer compacto -->
+                <footer class="footer-compacto">
+                    <div class="user-info-compacto">
+                        <i class="fas fa-user"></i>
+                        <span>${this.user.email}</span>
                     </div>
+                    <div style="color: #666; font-size: 0.7rem;">F1 Manager v1.0.0</div>
                 </footer>
             </div>
             
-            <!-- Scripts -->
+            <!-- Scripts con la funcionalidad del código que funciona -->
             <script>
-                // Añadir sistema de pestañas que falta
+                // Sistema de pestañas
                 window.tabManager = {
                     setup: function() {
-                        const tabButtons = document.querySelectorAll('.tab-btn');
-                        const tabContents = document.querySelectorAll('.tab-content');
+                        const tabButtons = document.querySelectorAll('.tab-btn-compacto');
+                        const tabContents = document.querySelectorAll('.tab-content-compacto');
                         
                         tabButtons.forEach(button => {
                             button.addEventListener('click', () => {
@@ -6898,12 +7320,12 @@ class F1Manager {
                     
                     switchTab: function(tabId) {
                         // Ocultar todos los contenidos
-                        document.querySelectorAll('.tab-content').forEach(content => {
+                        document.querySelectorAll('.tab-content-compacto').forEach(content => {
                             content.classList.remove('active');
                         });
                         
                         // Desactivar todos los botones
-                        document.querySelectorAll('.tab-btn').forEach(btn => {
+                        document.querySelectorAll('.tab-btn-compacto').forEach(btn => {
                             btn.classList.remove('active');
                         });
                         
@@ -6920,9 +7342,9 @@ class F1Manager {
                         }
                         
                         // Si es la pestaña principal, recargar contenido
-                        if (tabId === 'principal' && window.cargarContenidoPrincipal) {
+                        if (tabId === 'principal' && window.cargarContenidoPrincipalCompacto) {
                             setTimeout(() => {
-                                window.cargarContenidoPrincipal();
+                                window.cargarContenidoPrincipalCompacto();
                             }, 100);
                         }
                         
@@ -6935,8 +7357,8 @@ class F1Manager {
                     }
                 };
                 
-                // Función para cargar contenido principal
-                window.cargarContenidoPrincipal = async function() {
+                // Función para cargar contenido principal (versión compacta)
+                window.cargarContenidoPrincipalCompacto = async function() {
                     if (window.f1Manager) {
                         // Cargar piezas montadas
                         if (window.f1Manager.cargarPiezasMontadas) {
@@ -6954,7 +7376,7 @@ class F1Manager {
                 };
                 
                 // Configurar evento para botón de cerrar sesión
-                const logoutBtn = document.getElementById('logout-btn-visible');
+                const logoutBtn = document.getElementById('logout-btn-compacto');
                 if (logoutBtn) {
                     logoutBtn.addEventListener('click', async (e) => {
                         e.preventDefault();
@@ -6978,6 +7400,18 @@ class F1Manager {
                         window.tabManager.setup();
                     }
                 }, 100);
+                
+                // Función para ir al taller
+                window.irAlTallerDesdeProduccion = function() {
+                    if (window.tabManager) {
+                        window.tabManager.switchTab('taller');
+                    }
+                };
+                
+                // Función para gestionar estrategas (placeholder)
+                window.gestionarEstrategas = function() {
+                    alert('Funcionalidad de gestión de estrategas en desarrollo');
+                };
             </script>
         `;
         
@@ -7004,29 +7438,19 @@ class F1Manager {
                 }, 500);
             }
             
-            console.log('✅ Dashboard cargado correctamente');
+            console.log('✅ Dashboard cargado correctamente con diseño compacto');
+            
+            // QUITAR LA PANTALLA DE CARGA
+            setTimeout(() => {
+                const loadingScreen = document.getElementById('f1-loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.remove();
+                }
+            }, 500);
         }, 1000);
-    }
-    
-    // ========================
-    // NUEVO MÉTODO PARA CARGAR CONTENIDO PRINCIPAL COMPACTO
-    // ========================
-    async cargarContenidoPrincipalCompacto() {
-        console.log('📊 Cargando contenido principal compacto...');
-        
-        // 1. Cargar estrategas
-        await this.loadPilotosContratados();
-        this.updatePilotosUICompacto();
-        
-        // 2. Cargar producción
-        this.updateProductionMonitorCompacto();
-        
-        // 3. Cargar piezas montadas
-        await this.cargarPiezasMontadasCompacto();
-        
-        // 4. Configurar countdown (misma funcionalidad)
-        this.iniciarCountdownCompacto();
-    }
+    }    
+
+
     
     // ========================
     // MÉTODO PARA ACTUALIZAR UI DE ESTRATEGAS (COMPACTO)
