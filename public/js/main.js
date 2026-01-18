@@ -7888,7 +7888,7 @@ class F1Manager {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
                 grid-template-rows: repeat(2, 1fr);
-                gap: 8px !important; /* Menor espacio */
+                gap: 6px !important; /* Menor espacio */
                 height: 100%;
                 padding: 2px;
             }
@@ -7905,7 +7905,7 @@ class F1Manager {
                 cursor: pointer;
                 transition: all 0.2s ease;
                 position: relative;
-                height: 85px !important; /* Altura reducida */
+                height: 65px !important; /* Altura reducida */
                 min-height: 85px !important;
             }
             
