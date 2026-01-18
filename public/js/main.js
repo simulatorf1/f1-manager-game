@@ -6659,18 +6659,18 @@ class F1Manager {
                 /* CONTENIDO PRINCIPAL - Manteniendo IDs originales */
                 /* ==================== */
                 .dashboard-content {
-                    padding: 15px;
+                    padding: 10px; /* ← Menos padding general */
                     height: calc(100vh - 50px - 30px);
                     overflow-y: auto;
                 }
                 
-                /* Grid de 3 columnas con las dimensiones del original */
+                /* Grid de 3 columnas MÁS COMPACTO */
                 .three-columns-layout {
                     display: grid;
-                    grid-template-columns: 320px 1fr 1fr;
-                    gap: 15px;
-                    margin: 20px 0;
-                    height: 380px;
+                    grid-template-columns: 280px 1fr 1fr; /* ← Más estrecho */
+                    gap: 10px; /* ← Menos gap */
+                    margin: 10px 0; /* ← Menos margen */
+                    height: 220px; /* ← MUCHO MÁS BAJO */
                     align-items: stretch;
                 }
                 
@@ -6678,8 +6678,8 @@ class F1Manager {
                 .col-estrategas, .col-countdown, .col-fabrica {
                     background: rgba(30, 30, 40, 0.8);
                     border: 1px solid rgba(0, 210, 190, 0.3);
-                    border-radius: 10px;
-                    padding: 15px;
+                    border-radius: 8px; /* ← Reducir un poco */
+                    padding: 8px; /* ← MUCHO MENOS PADDING */
                     height: 100%;
                     display: flex;
                     flex-direction: column;
@@ -6725,9 +6725,9 @@ class F1Manager {
                 .grid-11-columns {
                     display: grid !important;
                     grid-template-columns: repeat(11, 1fr) !important;
-                    gap: 6px !important;
-                    margin-top: 10px !important;
-                    height: 100px !important;
+                    gap: 4px !important; /* ← Menos espacio entre botones */
+                    margin-top: 8px !important; /* ← Menos margen arriba */
+                    height: 70px !important; /* ← Altura reducida */
                     align-items: stretch !important;
                     width: 100% !important;
                 }
@@ -6736,15 +6736,15 @@ class F1Manager {
                     background: rgba(255, 255, 255, 0.03) !important;
                     border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
                     border-radius: 6px !important;
-                    padding: 6px 4px !important;
+                    padding: 4px 3px !important; /* ← Menos padding */
                     display: flex !important;
                     flex-direction: column !important;
                     align-items: center !important;
                     justify-content: center !important;
                     cursor: pointer !important;
                     transition: all 0.2s ease !important;
-                    height: 85px !important;
-                    min-height: 85px !important;
+                    height: 60px !important; /* ← MUCHO MÁS BAJO */
+                    min-height: 60px !important; /* ← MUCHO MÁS BAJO */
                 }
                 
                 .boton-area-montada {
@@ -6770,10 +6770,10 @@ class F1Manager {
                 }
                 
                 .icono-area {
-                    font-size: 1rem !important;
-                    margin-bottom: 5px !important;
+                    font-size: 0.8rem !important; /* ← Más pequeño */
+                    margin-bottom: 3px !important; /* ← Menos espacio abajo */
                     color: #00d2be;
-                    height: 20px;
+                    height: 16px; /* ← Más bajo */
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -6787,20 +6787,20 @@ class F1Manager {
                 .nombre-area {
                     display: block;
                     font-weight: bold;
-                    font-size: 0.7rem !important;
+                    font-size: 0.6rem !important; /* ← Más pequeño */
                     color: white;
-                    margin-bottom: 2px;
+                    margin-bottom: 1px; /* ← Menos margen */
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
-                    line-height: 1.1;
+                    line-height: 1; /* ← Menos interlineado */
                     text-align: center;
                     width: 100%;
                 }
                 
                 .nivel-pieza {
                     display: block;
-                    font-size: 0.6rem !important;
+                    font-size: 0.55rem !important; /* ← Más pequeño */
                     color: #4CAF50;
                     margin-bottom: 1px;
                     line-height: 1;
@@ -6940,18 +6940,18 @@ class F1Manager {
                                         <!-- Contenido dinámico -->
                                     </div>
                                     <button class="btn-contratar-todos" onclick="gestionarEstrategas()" style="
-                                        margin-top: 8px;
-                                        padding: 6px 10px;
+                                        margin-top: 5px; /* ← Menos margen arriba */
+                                        padding: 4px 8px; /* ← Menos padding */
                                         background: rgba(0,210,190,0.1);
                                         border: 1px solid rgba(0,210,190,0.4);
                                         color: #00d2be;
-                                        border-radius: 5px;
-                                        font-size: 0.75rem;
+                                        border-radius: 4px; /* ← Radio más pequeño */
+                                        font-size: 0.7rem; /* ← Texto más pequeño */
                                         cursor: pointer;
                                         display: flex;
                                         align-items: center;
                                         justify-content: center;
-                                        gap: 5px;
+                                        gap: 4px; /* ← Menos espacio entre icono y texto */
                                     ">
                                         <i class="fas fa-plus"></i> GESTIONAR ESTRATEGAS
                                     </button>
