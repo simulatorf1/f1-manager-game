@@ -6875,11 +6875,11 @@ class F1Manager {
                 /* Responsive - PARA MÓVIL */
                 @media (max-width: 768px) {
                     .dashboard-header-compacto {
-                        flex-direction: column; /* ← Pone logo, tabs y logout en columna */
-                        height: auto; /* ← Altura automática */
-                        padding: 10px;
-                        gap: 10px;
-                        padding-bottom: 40px; /* ← ESPACIO PARA FOOTER */
+                        flex-direction: column;
+                        height: auto;
+                        padding: 8px 10px; /* ← Reducir padding */
+                        gap: 8px; /* ← Reducir gap */
+                        padding-bottom: 10px; /* ← REDUCIR A 10px (era 40px) */
                     }
                     
                     .header-left-compacto,
@@ -6889,16 +6889,14 @@ class F1Manager {
                         justify-content: center;
                     }
                     
-                    /* El grid de 3 columnas pasa a 1 columna en móvil */
                     .three-columns-layout {
-                        grid-template-columns: 1fr !important; /* ← 1 columna en móvil */
-                        height: auto !important; /* ← Altura automática */
-                        gap: 15px !important;
+                        grid-template-columns: 1fr !important;
+                        height: auto !important; /* ← Ya está bien */
+                        gap: 10px !important; /* ← Reducir gap */
                     }
                     
-                    /* Cada columna ocupa todo el ancho */
                     .col-estrategas, .col-countdown, .col-fabrica {
-                        height: 220px !important; /* ← Altura fija para cada bloque */
+                        height: 200px !important; /* ← REDUCIR DE 220px a 200px */
                     }
                     
                     /* Las piezas montadas en 5 columnas en móvil */
