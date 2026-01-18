@@ -6548,8 +6548,15 @@ class F1Manager {
                 #app {
                     display: flex;
                     flex-direction: column;
-                    min-height: 100vh;
-                    overflow: visible;
+                    height: 100vh; /* ← Usa height, NO min-height */
+                    overflow: hidden; /* ← hidden aquí, el scroll estará en dashboard-content */
+                }
+                
+                html, body {
+                    height: 100%;
+                    overflow: auto;
+                    margin: 0;
+                    padding: 0;
                 }
                 .dashboard-header-compacto {
                     display: flex;
@@ -6665,9 +6672,10 @@ class F1Manager {
                 /* CONTENIDO PRINCIPAL - Manteniendo IDs originales */
                 /* ==================== */
                 .dashboard-content {
-                    padding: 10px; /* ← Menos padding general */
-                    min-height: calc(100vh - 50px - 30px);
-                    overflow-y: auto;
+                    padding: 10px;
+                    flex: 1; /* ← AÑADE ESTO */
+                    overflow-y: auto; /* ← Esto SÍ aquí */
+                    min-height: 0; /* ← IMPORTANTE para que funcione flex:1 */
                 }
                 
                 /* Grid de 3 columnas MÁS COMPACTO */
