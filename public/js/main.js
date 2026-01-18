@@ -6879,6 +6879,7 @@ class F1Manager {
                         height: auto; /* ← Altura automática */
                         padding: 10px;
                         gap: 10px;
+                        padding-bottom: 40px; /* ← ESPACIO PARA FOOTER */
                     }
                     
                     .header-left-compacto,
