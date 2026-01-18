@@ -6692,7 +6692,7 @@ class F1Manager {
                     grid-template-columns: 280px 1fr 1fr; /* ← Más estrecho */
                     gap: 10px; /* ← Menos gap */
                     margin: 10px 0; /* ← Menos margen */
-                    height: 180px; /* ← MUCHO MÁS BAJO */
+                    height: 220px; /* ← MUCHO MÁS BAJO */
                     align-items: stretch;
                 }
                 
@@ -6702,9 +6702,8 @@ class F1Manager {
                     border: 1px solid rgba(0, 210, 190, 0.3);
                     border-radius: 8px; /* ← Reducir un poco */
                     padding: 8px; /* ← MUCHO MENOS PADDING */
-                    height: auto;
+                    height: 100%;
                     display: flex;
-                    min-height: 180px;
                     flex-direction: column;
                 }
                 
