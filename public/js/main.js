@@ -1216,8 +1216,8 @@ const produccionStyles = `
         justify-content: center;
         cursor: pointer;
         transition: all 0.2s ease;
-        height:  70px !important;
-        min-height: 70px !important;  
+        height:  80px !important;
+        min-height: 80px !important;  
         margin-bottom: 2px !important; 
     }
     
