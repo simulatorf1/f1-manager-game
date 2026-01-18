@@ -1195,12 +1195,14 @@ const produccionStyles = `
     /* Grid de producción como estrategas */
     .produccion-slots {
         display: grid;
-        grid-template-rows: 65px 65px !important;  /* ← CAMBIA ESTO */
-        gap: 8px;
-        height: 150px !important;  /* ← CAMBIA ESTO */
-        grid-template-rows: 45px 45px !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-rows: 60px 60px !important;
+
         padding: 2px;     
-        min-height: 150px !important;  /* ← AÑADE ESTO */      
+
+        gap: 5px !important;
+        height: 150px !important; /* ← La altura que elegiste */
+        min-width: 300px !important; /* ← NUEVO: ancho mínimo */
     }
     
     .produccion-slot {
