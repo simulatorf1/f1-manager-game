@@ -6545,6 +6545,12 @@ class F1Manager {
                 /* ==================== */
                 /* ESTILOS COMPACTOS CON FUNCIONALIDAD ORIGINAL */
                 /* ==================== */
+                #app {
+                    display: flex;
+                    flex-direction: column;
+                    min-height: 100vh;
+                    overflow: visible;
+                }
                 .dashboard-header-compacto {
                     display: flex;
                     align-items: center;
@@ -6660,7 +6666,7 @@ class F1Manager {
                 /* ==================== */
                 .dashboard-content {
                     padding: 10px; /* ← Menos padding general */
-                    height: calc(100vh - 50px - 30px);
+                    min-height: calc(100vh - 50px - 30px);
                     overflow-y: auto;
                 }
                 
@@ -6856,7 +6862,68 @@ class F1Manager {
                 .tab-content.active {
                     display: block;
                 }
-                
+                /* Responsive - PARA MÓVIL */
+                @media (max-width: 768px) {
+                    .dashboard-header-compacto {
+                        flex-direction: column; /* ← Pone logo, tabs y logout en columna */
+                        height: auto; /* ← Altura automática */
+                        padding: 10px;
+                        gap: 10px;
+                    }
+                    
+                    .header-left-compacto,
+                    .tabs-compactas,
+                    .header-right-compacto {
+                        width: 100%;
+                        justify-content: center;
+                    }
+                    
+                    /* El grid de 3 columnas pasa a 1 columna en móvil */
+                    .three-columns-layout {
+                        grid-template-columns: 1fr !important; /* ← 1 columna en móvil */
+                        height: auto !important; /* ← Altura automática */
+                        gap: 15px !important;
+                    }
+                    
+                    /* Cada columna ocupa todo el ancho */
+                    .col-estrategas, .col-countdown, .col-fabrica {
+                        height: 220px !important; /* ← Altura fija para cada bloque */
+                    }
+                    
+                    /* Las piezas montadas en 5 columnas en móvil */
+                    .grid-11-columns {
+                        grid-template-columns: repeat(5, 1fr) !important; /* ← 5 columnas en móvil */
+                        height: auto !important; /* ← Altura automática */
+                        min-height: 140px !important; /* ← Mínimo para que se vea bien */
+                    }
+                    
+                    .boton-area-montada, .boton-area-vacia {
+                        height: 70px !important; /* ← Un poco más alto en móvil */
+                        min-height: 70px !important;
+                    }
+                    
+                    /* Tabs en móvil: scroll horizontal si no caben */
+                    .tabs-compactas {
+                        overflow-x: auto;
+                        justify-content: flex-start;
+                        padding-bottom: 5px;
+                    }
+                    
+                    .tab-btn-compacto {
+                        flex-shrink: 0; /* ← Evita que los botones se encojan */
+                    }
+                }
+                /* Para tablets y pantallas medianas */
+                @media (max-width: 1200px) {
+                    .three-columns-layout {
+                        grid-template-columns: 280px 1fr 1fr; /* ← Columnas un poco más estrechas */
+                        height: 250px; /* ← Un poco más bajo en tablet */
+                    }
+                    
+                    .grid-11-columns {
+                        grid-template-columns: repeat(6, 1fr) !important; /* ← 6 columnas en tablet */
+                    }
+                }
                 /* Scrollbar */
                 ::-webkit-scrollbar {
                     width: 6px;
