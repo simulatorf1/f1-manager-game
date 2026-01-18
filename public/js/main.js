@@ -6546,12 +6546,10 @@ class F1Manager {
                 /* ESTILOS COMPACTOS CON FUNCIONALIDAD ORIGINAL */
                 /* ==================== */
                 #app {
-
+                    display: flex;
                     flex-direction: column;
-                    min-height: 100vh; /* ← CAMBIAR height por min-height */
-                    overflow: visible; /* ← CAMBIAR hidden por visible o auto */
-                    display: block !important; /* Cambiar flex por block */
-                    position: relative !important;
+                    height: 100vh; /* ← Usa height, NO min-height */
+                    overflow: hidden; /* ← hidden aquí, el scroll estará en dashboard-content */
                 }
                 
                 html, body {
@@ -6569,9 +6567,6 @@ class F1Manager {
                     padding: 8px 15px;
                     height: 50px;
                     flex-shrink: 0;
-                    position: sticky;
-                    top: 0;
-                    z-index: 100;
                 }
                 
                 /* Contenedor izquierdo: Logo y dinero */
@@ -6679,11 +6674,10 @@ class F1Manager {
                 .dashboard-content {
                     padding: 10px;
                     flex: 1;
+                    overflow-y: auto;
+                    min-height: 0;
+                    /* Añade esto: */
                     position: relative;
-                    height: auto !important;
-                    min-height: calc(100vh - 150px) !important; /* Resta header y footer */
-                    overflow: visible !important;
-                    padding-bottom: 20px;
                 }
                 
                 /* Grid de 3 columnas MÁS COMPACTO */
@@ -6692,7 +6686,7 @@ class F1Manager {
                     grid-template-columns: 280px 1fr 1fr; /* ← Más estrecho */
                     gap: 10px; /* ← Menos gap */
                     margin: 10px 0; /* ← Menos margen */
-                    height: 150px; /* ← MUCHO MÁS BAJO */
+                    height: 220px; /* ← MUCHO MÁS BAJO */
                     align-items: stretch;
                 }
                 
@@ -6702,7 +6696,7 @@ class F1Manager {
                     border: 1px solid rgba(0, 210, 190, 0.3);
                     border-radius: 8px; /* ← Reducir un poco */
                     padding: 8px; /* ← MUCHO MENOS PADDING */
-                    height: 140px;
+                    height: 100%;
                     display: flex;
                     flex-direction: column;
                 }
@@ -6860,10 +6854,6 @@ class F1Manager {
                     justify-content: space-between; /* ← Esto pone usuario a la izq, botón a la der */
                     align-items: center;
                     flex-shrink: 0;
-                    position: relative !important;
-                    bottom: 0 !important;
-                    width: 100%;
-                    z-index: 99;
                 }
                 
                 .user-info-compacto {
@@ -6885,14 +6875,11 @@ class F1Manager {
                 /* Responsive - PARA MÓVIL */
                 @media (max-width: 768px) {
                     .dashboard-header-compacto {
-                        flex-direction: column;
-                        height: auto;
-                        padding: 8px 10px; /* ← Reducir padding */
-                        gap: 8px; /* ← Reducir gap */
-                        position: sticky;
-                        top: 0;
-                        z-index: 100;
-                        padding-bottom: 10px; /* ← REDUCIR A 10px (era 40px) */
+                        flex-direction: column; /* ← Pone logo, tabs y logout en columna */
+                        height: auto; /* ← Altura automática */
+                        padding: 10px;
+                        gap: 10px;
+                        padding-bottom: 40px; /* ← ESPACIO PARA FOOTER */
                     }
                     
                     .header-left-compacto,
@@ -6902,14 +6889,16 @@ class F1Manager {
                         justify-content: center;
                     }
                     
+                    /* El grid de 3 columnas pasa a 1 columna en móvil */
                     .three-columns-layout {
-                        grid-template-columns: 1fr !important;
-                        height: auto !important; /* ← Ya está bien */
-                        gap: 10px !important; /* ← Reducir gap */
+                        grid-template-columns: 1fr !important; /* ← 1 columna en móvil */
+                        height: auto !important; /* ← Altura automática */
+                        gap: 15px !important;
                     }
                     
+                    /* Cada columna ocupa todo el ancho */
                     .col-estrategas, .col-countdown, .col-fabrica {
-                        height: 200px !important; /* ← REDUCIR DE 220px a 200px */
+                        height: 220px !important; /* ← Altura fija para cada bloque */
                     }
                     
                     /* Las piezas montadas en 5 columnas en móvil */
