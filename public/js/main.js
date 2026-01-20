@@ -231,7 +231,7 @@ function mostrarPantallaLogin() {
         <div class="login-screen">
             <div class="login-container">
                 <div class="login-header">
-                    <h1>MOTORSPORT Dennis</h1>
+                    <h1>MOTORSPORT Manager</h1>
                     <p>Gestiona tu escudería de MotorSport</p>
                 </div>
                 
