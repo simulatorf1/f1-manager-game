@@ -6885,6 +6885,17 @@ class F1Manager {
                         gap: 10px;
                         padding-bottom: 40px; /* ← ESPACIO PARA FOOTER */
                     }
+                    .produccion-slots {
+                        grid-template-columns: repeat(2, 1fr) !important; /* ← Mantener 2 columnas */
+                        grid-template-rows: 80px 80px !important; /* ← Mantener 2 filas */
+                        height: 170px !important; /* ← Altura fija igual que desktop */
+                        min-height: 170px !important; /* ← Mínima igual */
+                    }
+                    
+                    .produccion-slot {
+                        height: 80px !important; /* ← Altura fija */
+                        min-height: 80px !important;
+                    }
                     
                     .header-left-compacto,
                     .tabs-compactas,
