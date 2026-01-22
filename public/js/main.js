@@ -7403,51 +7403,7 @@ class F1Manager {
         }, 1000);
     }
     
-    // ========================
-    // MÉTODO PARA ACTUALIZAR UI DE ESTRATEGAS (COMPACTO)
-    // ========================
-    updatePilotosUICompacto() {
-        const container = document.getElementById('estrategas-container-compacto');
-        const contador = document.getElementById('contador-estrategas-compacto');
-        
-        if (!container) return;
-        
-        if (!this.pilotos || this.pilotos.length === 0) {
-            container.innerHTML = `
-                <div class="estratega-item-compacto" style="justify-content: center; color: #888; font-size: 0.8rem;">
-                    <i class="fas fa-user-plus"></i> Sin estrategas
-                </div>
-            `;
-            if (contador) contador.textContent = '0/4';
-            return;
-        }
-        
-        // Mostrar hasta 4 estrategas (scroll si hay más)
-        let html = '';
-        this.pilotos.slice(0, 6).forEach(piloto => {
-            html += `
-                <div class="estratega-item-compacto">
-                    <div class="estratega-icono-compacto">
-                        ${this.getIconoEspecialidad(piloto.especialidad)}
-                    </div>
-                    <div class="estratega-info-compacto">
-                        <div class="estratega-nombre-compacto" title="${piloto.nombre}">
-                            ${piloto.nombre}
-                        </div>
-                        <div class="estratega-especialidad-compacto" title="${piloto.especialidad || 'General'}">
-                            ${piloto.especialidad || 'General'}
-                        </div>
-                    </div>
-                    <div style="font-size: 0.7rem; color: #FFD700; font-weight: bold; flex-shrink: 0;">
-                        ${piloto.bonificacion_valor || 0}%
-                    </div>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-        if (contador) contador.textContent = `${this.pilotos.length}/4`;
-    }
+
     
     getIconoEspecialidad(especialidad) {
         const iconos = {
