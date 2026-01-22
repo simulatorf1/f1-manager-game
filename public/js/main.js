@@ -7448,36 +7448,12 @@ class F1Manager {
                                 <!-- ELIMINAMOS el botón de abajo, ya está arriba -->
                             </div>
                             
-                            <!-- Columna 2: Countdown y GP - MANTENIENDO IDs ORIGINALES -->
+
+                            <!-- Columna 2: Countdown F1 NUEVO - CON DISEÑO COMPLETO -->
                             <div class="col-countdown">
-                                <div class="countdown-section">
-                                    <div class="section-header">
-                                        <h2><i class="fas fa-clock"></i> PRÓXIMA CARRERA</h2>
-                                        <span class="badge" id="estado-carrera">EN VIVO</span>
-                                    </div>
-                                    <div id="countdown-container" style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                                        <div class="countdown-timer">
-                                            <div class="time-block">
-                                                <span class="time-number" id="hours">00</span>
-                                                <span class="time-label">Horas</span>
-                                            </div>
-                                            <div class="time-separator">:</div>
-                                            <div class="time-block">
-                                                <span class="time-number" id="minutes">00</span>
-                                                <span class="time-label">Minutos</span>
-                                            </div>
-                                            <div class="time-separator">:</div>
-                                            <div class="time-block">
-                                                <span class="time-number" id="seconds">00</span>
-                                                <span class="time-label">Segundos</span>
-                                            </div>
-                                        </div>
-                                        <div class="proximo-gp">
-               
-                                        </div>
-                                    </div>
-                                </div>
+                                ${countdownHTML}
                             </div>
+
                             
                             <!-- Columna 3: Monitor de Fábrica - MANTENIENDO IDs ORIGINALES -->
                             <div class="col-fabrica">
