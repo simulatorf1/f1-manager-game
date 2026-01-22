@@ -7322,7 +7322,6 @@ class F1Manager {
 
         // ========================
         // CONFIGURAR EVENTOS DEL DASHBOARD
-        // ========================
         // CONFIGURAR EVENTOS DEL DASHBOARD
         // ========================
         
@@ -7336,7 +7335,7 @@ class F1Manager {
                     this.showNotification('Error al cerrar sesión', 'error');
                 } else {
                     console.log('✅ Sesión cerrada, recargando...');
-                    location.reload(); // Esto llevará al login
+                    location.reload();
                 }
             } catch (error) {
                 console.error('❌ Error inesperado:', error);
@@ -7344,18 +7343,19 @@ class F1Manager {
             }
         });
         
-        // 2. INICIALIZAR SISTEMAS CRÍTICOS - VERSIÓN CORREGIDA (SIN DUPLICACIONES)
+        // 2. ¡ELIMINAR TODOS LOS setTimeout ANIDADOS!
+        // En su lugar, usar un sistema de inicialización secuencial
         // ============================================================================
-        console.log('🔧 Programando inicialización crítica del dashboard...');
         
-        // Usar un flag para evitar ejecuciones múltiples
-        if (!window._dashboardCriticalSystemsInitialized) {
-            window._dashboardCriticalSystemsInitialized = true;
+        // Flag GLOBAL para evitar múltiples ejecuciones
+        if (!window._appFullyInitialized) {
+            console.log('🚀 INICIALIZACIÓN ÚNICA Y CENTRALIZADA');
             
-            setTimeout(async () => {
-                console.log('🔧 Inicializando sistemas críticos del dashboard (una sola vez)...');
+            // Paso 1: Asegurar que el DOM está listo
+            const initializeDashboard = async () => {
+                console.log('🔧 Paso 1: Configuración de sistemas...');
                 
-                // A. Asegurar que fabricacionManager existe (solo si no existe)
+                // A. fabricacionManager - solo si no existe
                 if (!window.fabricacionManager && window.FabricacionManager) {
                     window.fabricacionManager = new window.FabricacionManager();
                     if (this.escuderia) {
@@ -7363,74 +7363,77 @@ class F1Manager {
                     }
                 }
                 
-                // B. Configurar sistema de pestañas - SOLO SI NO ESTÁ CONFIGURADO
-                if (window.tabManager && window.tabManager.setup && !window.tabManager._alreadySetup) {
-                    console.log('📑 Configurando sistema de pestañas (primera vez)...');
+                // B. tabManager - solo UNA vez
+                if (window.tabManager && !window.tabManager._initialized) {
+                    console.log('📑 Configurando pestañas (solo una vez)...');
                     
-                    // Guardar el switchTab original
-                    const originalSwitchTab = window.tabManager.switchTab;
-                    
-                    // Sobrescribir para que recargue contenido al volver a principal
+                    // Sobrescribir switchTab para evitar loops
+                    const originalSwitchTab = window.tabManager.switchTab.bind(window.tabManager);
                     window.tabManager.switchTab = function(tabId) {
-                        // Llamar al original
-                        originalSwitchTab.call(this, tabId);
-                        
-                        // Si es la pestaña principal, recargar contenido
-                        if (tabId === 'principal') {
-                            // Solo recargar si no estamos ya en esa pestaña
-                            if (this.currentTab !== 'principal') {
+                        // Solo cambiar si es diferente
+                        if (this.currentTab !== tabId) {
+                            originalSwitchTab(tabId);
+                            
+                            // Recargar principal solo si venimos de otra pestaña
+                            if (tabId === 'principal' && this.currentTab !== 'principal') {
                                 setTimeout(() => {
-                                    if (window.cargarContenidoPrincipal) {
+                                    if (window.cargarContenidoPrincipal && typeof window.cargarContenidoPrincipal === 'function') {
                                         window.cargarContenidoPrincipal();
                                     }
-                                }, 100);
+                                }, 150);
                             }
                         }
                     };
                     
-                    // Marcar como configurado y ejecutar setup
-                    window.tabManager._alreadySetup = true;
+                    window.tabManager._initialized = true;
                     window.tabManager.setup();
-                } else {
-                    console.log('📑 Sistema de pestañas ya estaba configurado, omitiendo...');
                 }
                 
-                // 3. Cargar datos iniciales - SOLO SI NO SE CARGARON ANTES
-                if (!window._dashboardDataLoaded) {
-                    console.log('📊 Cargando datos del dashboard...');
-                    const supabase = await this.esperarSupabase();
-                    if (supabase) {
-                        // Cargar SOLO lo que no se haya cargado antes
-                        if (!this.carStats) await this.loadCarStatus();
-                        if (!this.pilotos || this.pilotos.length === 0) await this.loadPilotosContratados();
-                        await this.loadProximoGP();
-                        
-                        // Marcar como cargado
-                        window._dashboardDataLoaded = true;
+                // Paso 2: Cargar datos (solo si no están cargados)
+                if (!this._dataLoaded) {
+                    console.log('📊 Paso 2: Cargando datos del dashboard...');
+                    
+                    await this.loadCarStatus();
+                    await this.loadPilotosContratados();
+                    await this.loadProximoGP();
+                    
+                    this._dataLoaded = true;
+                }
+                
+                // Paso 3: Actualizar UI FINAL (una sola vez)
+                console.log('🎨 Paso 3: Actualizando UI final...');
+                
+                // A. Actualizar pilotos/estrategas
+                if (typeof this.updatePilotosUI === 'function') {
+                    this.updatePilotosUI();
+                }
+                
+                // B. Cargar piezas montadas (retraso mínimo para que el DOM esté listo)
+                setTimeout(async () => {
+                    if (typeof this.cargarPiezasMontadas === 'function' && !this._piezasCargadas) {
+                        await this.cargarPiezasMontadas();
+                        this._piezasCargadas = true;
                     }
-                }
-                
-                // 4. Cargar piezas montadas - CON FLAG PARA EVITAR DUPLICACIONES
-                if (!window._piezasMontadasCargadas) {
-                    console.log('🧩 Cargando piezas montadas...');
-                    await this.cargarPiezasMontadas();
-                    window._piezasMontadasCargadas = true;
-                }
-                
-                console.log('✅ Dashboard compacto cargado correctamente con toda la funcionalidad');
-                
-                // QUITAR LA PANTALLA DE CARGA
-                setTimeout(() => {
+                    
+                    // C. Quitar pantalla de carga
                     const loadingScreen = document.getElementById('f1-loading-screen');
                     if (loadingScreen) {
-                        console.log('🎬 Eliminando pantalla de carga...');
-                        loadingScreen.remove();
+                        loadingScreen.style.opacity = '0';
+                        setTimeout(() => loadingScreen.remove(), 500);
                     }
-                }, 500);
-                
-            }, 1000); // Retraso inicial reducido a 1 segundo
+                    
+                    // Marcar como completamente inicializado
+                    window._appFullyInitialized = true;
+                    console.log('✅ INICIALIZACIÓN COMPLETADA - No más cambios de estilo');
+                    
+                }, 300);
+            };
+            
+            // Ejecutar después de que TODO lo demás haya terminado
+            setTimeout(initializeDashboard, 800);
+            
         } else {
-            console.log('⚠️ Sistemas críticos ya inicializados, omitiendo...');
+            console.log('⚠️ La app ya está completamente inicializada, omitiendo...');
         }
     }
     
