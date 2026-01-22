@@ -7823,228 +7823,75 @@ class F1Manager {
     
     updatePilotosUI() {
         const container = document.getElementById('pilotos-container');
-        if (!container) {
-            console.error('❌ No se encontró #pilotos-container');
+        if (!container) return;
+        
+        if (!this.pilotos || this.pilotos.length === 0) {
+            container.innerHTML = `
+                <div class="produccion-slots">
+                    ${Array.from({length: 4}).map(() => `
+                        <div class="produccion-slot" onclick="cargarTab('equipo')">
+                            <div class="slot-content">
+                                <div class="produccion-icon">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                                <div class="produccion-info">
+                                    <span class="produccion-nombre">Vacío</span>
+                                    <span class="produccion-tiempo">Contratar</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            const countElement = document.getElementById('estrategas-count');
+            if (countElement) countElement.textContent = `0/4`;
             return;
         }
         
-        const estrategasContratados = this.pilotos || [];
-        
-        // Actualizar contador
-        const contadorElement = document.getElementById('contador-estrategas');
-        if (contadorElement) {
-            contadorElement.textContent = `${estrategasContratados.length}/4`;
-        }
-        
-        // HTML de la cuadrícula 2x2 minimalista
-        let html = `
-            <div class="estrategas-grid-minimal">
-        `;
-        
-        // Mostrar 4 huecos (2 filas x 2 columnas)
-        for (let i = 0; i < 4; i++) {
-            const estratega = estrategasContratados[i];
-            
-            if (estratega) {
-                // Botón con estratega contratado
-                html += `
-                    <div class="estratega-btn contratado" onclick="mostrarInfoEstratega(${i})">
-                        <div class="estratega-icon">
-                            <i class="fas fa-user-tie"></i>
-                        </div>
-                        <div class="estratega-info">
-                            <span class="estratega-nombre">${estratega.nombre || 'Estratega'}</span>
-                            <span class="estratega-salario">€${(estratega.salario || 0).toLocaleString()}/mes</span>
-                            <span class="estratega-funcion">${estratega.especialidad || 'General'}</span>
-                        </div>
-                        <div class="estratega-bono">+${estratega.bonificacion_valor || 0}%</div>
-                    </div>
-                `;
-            } else {
-                // Botón vacío para contratar
-                html += `
-                    <div class="estratega-btn vacio" onclick="contratarNuevoEstratega(${i})">
-                        <div class="estratega-icon">
-                            <i class="fas fa-plus"></i>
-                        </div>
-                        <div class="estratega-info">
-                            <span class="estratega-nombre">Vacío</span>
-                            <span class="estratega-funcion">Click para contratar</span>
+        // SOLO APARIENCIA DE PRODUCCIÓN, FUNCIONALIDAD ORIGINAL
+        container.innerHTML = `
+            <div class="produccion-slots">
+                ${this.pilotos.map(piloto => `
+                    <div class="produccion-slot" onclick="cargarTab('equipo')">
+                        <div class="slot-content">
+                            <div class="produccion-icon">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div class="produccion-info">
+                                <span class="produccion-nombre">${piloto.nombre?.substring(0, 12) || 'Estratega'}</span>
+                                <span class="produccion-tiempo">${piloto.especialidad || 'General'}</span>
+                                ${piloto.bonificacion_valor ? `
+                                <span class="produccion-tiempo" style="color: #FFD700;">
+                                    +${piloto.bonificacion_valor}%
+                                </span>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
-                `;
-            }
-        }
-        
-        html += `</div>`;
-        
-        container.innerHTML = html;
-        
-        // Añadir estilos CSS
-        const styles = document.createElement('style');
-        styles.innerHTML = `
-            .estrategas-grid-minimal {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                grid-template-rows: repeat(2, 1fr);
-                gap: 6px !important; /* Menor espacio */
-                height: 100%;
-                padding: 2px;
-            }
-            
-            .estratega-btn {
-                background: rgba(255, 255, 255, 0.03) !important;
-                border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
-                border-radius: 6px !important;
-                padding: 8px 6px !important; /* Más compacto */
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                position: relative;
-                height: 65px !important; /* Altura reducida */
-                min-height: 85px !important;
-            }
-            
-            .estratega-btn.contratado {
-                border-color: rgba(0, 210, 190, 0.25) !important;
-                background: rgba(0, 210, 190, 0.04) !important;
-            }
-            
-            .estratega-btn.contratado:hover {
-                border-color: rgba(0, 210, 190, 0.5) !important;
-                background: rgba(0, 210, 190, 0.08) !important;
-                transform: translateY(-1px);
-            }
-            
-            .estratega-btn.vacio {
-                border-style: dashed !important;
-                border-color: rgba(255, 255, 255, 0.1) !important;
-                background: rgba(255, 255, 255, 0.015) !important;
-            }
-            
-            .estratega-btn.vacio:hover {
-                border-color: rgba(0, 210, 190, 0.4) !important;
-                background: rgba(0, 210, 190, 0.05) !important;
-            }
-            
-            .estratega-icon {
-                font-size: 1.1rem !important; /* Más pequeño */
-                margin-bottom: 5px !important;
-                color: #00d2be;
-                height: 22px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            
-            .estratega-btn.vacio .estratega-icon {
-                color: #666;
-                font-size: 1rem !important;
-            }
-            
-            .estratega-info {
-                text-align: center;
-                width: 100%;
-                overflow: hidden;
-            }
-            
-            .estratega-nombre {
-                display: block;
-                font-weight: bold;
-                font-size: 0.75rem !important; /* Más pequeño */
-                color: white;
-                margin-bottom: 2px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                line-height: 1.1;
-            }
-            
-            .estratega-salario {
-                display: block;
-                font-size: 0.65rem !important; /* Más pequeño */
-                color: #4CAF50;
-                margin-bottom: 1px;
-                line-height: 1;
-            }
-            
-            .estratega-funcion {
-                display: block;
-                font-size: 0.6rem !important; /* Más pequeño */
-                color: #888;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                line-height: 1;
-            }
-            
-            .estratega-bono {
-                position: absolute;
-                top: 4px;
-                right: 4px;
-                background: rgba(0, 210, 190, 0.15);
-                color: #00d2be;
-                font-size: 0.6rem !important; /* Más pequeño */
-                padding: 1px 4px;
-                border-radius: 8px;
-                font-weight: bold;
-                line-height: 1;
-            }
-            
-            /* Ajustar section header */
-            .section-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 10px !important;
-                padding-bottom: 8px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            }
-            
-            .section-header h2 {
-                margin: 0 !important;
-                font-size: 1.1rem !important;
-                font-weight: 600;
-            }
-            
-            .section-header .badge {
-                background: rgba(0, 210, 190, 0.15);
-                color: #00d2be;
-                padding: 3px 8px;
-                border-radius: 10px;
-                font-size: 0.8rem;
-                font-weight: bold;
-            }
-            
-            /* Ajustar las otras columnas para más equilibrio */
-            .col-countdown, .col-fabrica {
-                padding: 10px !important; /* Reducir padding general */
-            }
-            
-            /* Mejorar scroll en producción */
-            .produccion-actual {
-                max-height: 220px;
-                overflow-y: auto;
-                padding-right: 3px;
-            }
-            
-            .produccion-actual::-webkit-scrollbar {
-                width: 4px;
-            }
-            
-            .produccion-actual::-webkit-scrollbar-thumb {
-                background: rgba(0, 210, 190, 0.3);
-                border-radius: 2px;
-            }
+                `).join('')}
+                
+                <!-- Slots vacíos si hay menos de 4 - MANTIENE CLIC A EQUIPO -->
+                ${Array.from({length: Math.max(0, 4 - this.pilotos.length)}).map(() => `
+                    <div class="produccion-slot" onclick="cargarTab('equipo')">
+                        <div class="slot-content">
+                            <div class="produccion-icon">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div class="produccion-info">
+                                <span class="produccion-nombre">Vacío</span>
+                                <span class="produccion-tiempo">Contratar</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
         `;
         
-        // Añadir estilos solo si no existen
-        if (!document.getElementById('estilos-estrategas')) {
-            styles.id = 'estilos-estrategas';
-            document.head.appendChild(styles);
+        // Actualizar contador (funcionalidad original)
+        const countElement = document.getElementById('estrategas-count');
+        if (countElement) {
+            countElement.textContent = `${this.pilotos.length}/4`;
         }
     }
     
