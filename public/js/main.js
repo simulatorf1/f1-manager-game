@@ -6539,7 +6539,15 @@ class F1Manager {
             return;
         }
         // ============================================
-        // AÑADE AQUÍ LA FUNCIÓN formatearFecha
+        // ============================================
+        // 1. PRIMERO: Cargar el próximo GP desde la BD
+        // ============================================
+        console.log('📅 Cargando próximo GP...');
+        await this.cargarProximoGP();
+        console.log('✅ Próximo GP cargado:', this.proximoGP?.nombre || 'No hay carreras');
+        
+        // ============================================
+        // 2. LUEGO: Añade la función formatearFecha
         // ============================================
         function formatearFecha(fechaStr) {
             if (!fechaStr) return 'Fecha no definida';
@@ -6552,10 +6560,9 @@ class F1Manager {
             };
             return fecha.toLocaleDateString('es-ES', opciones);
         }
-        // ============================================
         
         // ============================================
-        // LUEGO AÑADE EL HTML DEL COUNTDOWN
+        // 3. AHORA SÍ: Definir countdownHTML
         // ============================================
         const countdownHTML = `
             <div class="countdown-f1-container">
