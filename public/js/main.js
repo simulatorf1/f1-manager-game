@@ -1589,40 +1589,30 @@ class F1Manager {
     async init() {
         console.log('🔧 Inicializando juego...');
         
-        // 1. Cargar datos básicos PRIMERO
-        console.log('📥 Cargando datos del usuario...');
+        // 1. Cargar datos PRIMERO
         await this.loadUserData();
-        
-        console.log('👥 Cargando ingenieros contratados...');
         await this.loadPilotosContratados();
-        
-        console.log('🚗 Cargando stats del coche...');
         await this.cargarCarStats();
         
-        // 2. Generar HTML con estilos COMPLETOS (una sola vez)
-        console.log('📊 Generando dashboard estable...');
+        // 2. Generar dashboard CON FUNCIONALIDAD
         await this.cargarDashboardCompleto(); // ← Esta nueva versión
         
-        // 3. Configurar pestañas (solo una vez)
-        if (window.tabManager && window.tabManager.setup) {
-            window.tabManager.setup();
-        }
-        
-        // 4. Actualizar UI con datos (una sola vez, después de todo)
-        console.log('🎨 Actualizando UI con datos...');
+        // 3. Actualizar UI con datos
         if (this.updatePilotosUI) this.updatePilotosUI();
         if (this.cargarPiezasMontadas) await this.cargarPiezasMontadas();
+        if (this.updateProductionMonitor) await this.updateProductionMonitor();
+        if (this.loadProximoGP) await this.loadProximoGP();
         
-        // 5. Inicializar otros sistemas
+        // 4. Inicializar otros sistemas
         await this.inicializarSistemasIntegrados();
         
-        // 6. Quitar pantalla de carga
+        // 5. Quitar pantalla de carga
         setTimeout(() => {
             const loadingScreen = document.getElementById('f1-loading-screen');
             if (loadingScreen) loadingScreen.remove();
         }, 500);
         
-        console.log('✅ Juego inicializado - Sin flashing');
+        console.log('✅ Juego inicializado con toda la funcionalidad');
     }
     
     // Añade este método nuevo:
@@ -6542,17 +6532,17 @@ class F1Manager {
     // DASHBOARD COMPLETO (VERSIÓN OPTIMIZADA - UNA SOLA FILA)
     // ========================
     async cargarDashboardCompleto() {
-        console.log('📊 Generando HTML del dashboard (VERSIÓN ESTABLE SIN FLASHING)...');
+        console.log('📊 Generando dashboard COMPLETO con toda la funcionalidad...');
         
         if (!this.escuderia) {
             console.error('❌ No hay escudería para cargar dashboard');
             return;
         }
         
-        // PRIMERO: Inyectar TODOS los estilos DE UNA VEZ
+        // 1. INYECTAR ESTILOS COMPLETOS
         const estilosCompletos = `
             /* ==================== */
-            /* ESTILOS COMPLETOS - TODOS JUNTOS PARA EVITAR FLASHING */
+            /* ESTILOS COMPLETOS CON FUNCIONALIDAD */
             /* ==================== */
             
             /* RESET Y BASES */
@@ -6563,12 +6553,12 @@ class F1Manager {
                 -webkit-tap-highlight-color: transparent;
             }
             
-            body {
+            html, body {
+                height: 100%;
+                overflow: auto; /* ← PERMITIR SCROLL */
                 background: #0a0a0f;
                 color: white;
                 font-family: 'Roboto', sans-serif;
-                overflow-x: hidden;
-                min-height: 100vh;
             }
             
             #app {
@@ -6577,7 +6567,7 @@ class F1Manager {
                 flex-direction: column;
             }
             
-            /* HEADER COMPACTO */
+            /* HEADER */
             .dashboard-header-compacto {
                 display: flex;
                 align-items: center;
@@ -6587,6 +6577,9 @@ class F1Manager {
                 padding: 8px 15px;
                 height: 50px;
                 flex-shrink: 0;
+                position: sticky;
+                top: 0;
+                z-index: 100;
             }
             
             .header-left-compacto {
@@ -6622,7 +6615,7 @@ class F1Manager {
                 white-space: nowrap;
             }
             
-            /* TABS */
+            /* TABS CONECTADAS */
             .tabs-compactas {
                 display: flex;
                 gap: 5px;
@@ -6655,6 +6648,11 @@ class F1Manager {
                 font-weight: bold;
             }
             
+            .tab-btn-compacto:hover:not(.active) {
+                background: rgba(255, 255, 255, 0.1);
+                border-color: rgba(255, 255, 255, 0.2);
+            }
+            
             /* BOTÓN SALIR */
             .logout-btn-compacto {
                 background: rgba(225, 6, 0, 0.1);
@@ -6671,11 +6669,16 @@ class F1Manager {
                 white-space: nowrap;
             }
             
-            /* CONTENIDO PRINCIPAL */
+            .logout-btn-compacto:hover {
+                background: rgba(225, 6, 0, 0.2);
+                border-color: #e10600;
+            }
+            
+            /* CONTENIDO CON SCROLL */
             .dashboard-content {
                 padding: 10px;
                 flex: 1;
-                overflow-y: auto;
+                overflow-y: auto; /* ← SCROLL VERTICAL */
                 min-height: 0;
             }
             
@@ -6694,11 +6697,11 @@ class F1Manager {
                 border: 1px solid rgba(0, 210, 190, 0.3);
                 border-radius: 8px;
                 padding: 8px;
-                height: 270px !important;
+                height: 270px;
                 display: flex;
                 flex-direction: column;
-                min-height: 270px !important;
-                overflow: hidden !important;
+                min-height: 270px;
+                overflow: hidden;
             }
             
             /* ENCABEZADOS */
@@ -6729,7 +6732,14 @@ class F1Manager {
                 font-weight: bold;
             }
             
-            /* PRODUCCIÓN/ESTRATEGAS - EL DISEÑO QUE QUERÍAS */
+            /* CONTENEDOR DE ESTRATEGAS CON SCROLL */
+            .pilotos-container {
+                flex: 1;
+                overflow-y: auto; /* ← SCROLL DENTRO DE ESTRATEGAS */
+                padding-right: 5px;
+            }
+            
+            /* SISTEMA DE PRODUCCIÓN/ESTRATEGAS CONECTADO */
             .produccion-slots {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
@@ -6800,35 +6810,72 @@ class F1Manager {
                 line-height: 1;
             }
             
+            /* SISTEMA DE FABRICACIÓN CONECTADO */
+            #produccion-monitor {
+                flex: 1;
+                overflow-y: auto;
+                padding: 5px;
+            }
+            
             /* PIEZAS MONTADAS */
             .grid-11-columns {
-                display: grid !important;
-                grid-template-columns: repeat(11, 1fr) !important;
-                gap: 4px !important;
-                margin-top: 8px !important;
-                height: 70px !important;
-                align-items: stretch !important;
-                width: 100% !important;
+                display: grid;
+                grid-template-columns: repeat(11, 1fr);
+                gap: 4px;
+                margin-top: 8px;
+                height: 70px;
+                align-items: stretch;
+                width: 100%;
             }
             
             .boton-area-montada, .boton-area-vacia {
-                background: rgba(255, 255, 255, 0.03) !important;
-                border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
-                border-radius: 6px !important;
-                padding: 4px 3px !important;
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                justify-content: center !important;
-                cursor: pointer !important;
-                transition: all 0.2s ease !important;
-                height: 60px !important;
-                min-height: 60px !important;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1.5px solid rgba(255, 255, 255, 0.08);
+                border-radius: 6px;
+                padding: 4px 3px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                height: 60px;
+                min-height: 60px;
             }
             
             .boton-area-montada {
-                border-color: rgba(0, 210, 190, 0.25) !important;
-                background: rgba(0, 210, 190, 0.04) !important;
+                border-color: rgba(0, 210, 190, 0.25);
+                background: rgba(0, 210, 190, 0.04);
+            }
+            
+            .boton-area-montada:hover {
+                border-color: rgba(0, 210, 190, 0.5);
+                background: rgba(0, 210, 190, 0.08);
+                transform: translateY(-1px);
+            }
+            
+            .boton-area-vacia {
+                border-style: dashed;
+                border-color: rgba(255, 255, 255, 0.1);
+                background: rgba(255, 255, 255, 0.015);
+            }
+            
+            .boton-area-vacia:hover {
+                border-color: rgba(0, 210, 190, 0.4);
+                background: rgba(0, 210, 190, 0.05);
+            }
+            
+            .total-puntos-montadas {
+                background: rgba(255, 215, 0, 0.1);
+                border: 1px solid #FFD700;
+                border-radius: 15px;
+                padding: 4px 12px;
+                color: #FFD700;
+                font-weight: bold;
+                font-size: 0.8rem;
+                display: flex;
+                align-items: center;
+                gap: 5px;
             }
             
             /* FOOTER */
@@ -6851,7 +6898,17 @@ class F1Manager {
                 gap: 8px;
             }
             
-            /* MEDIA QUERIES - TODAS JUNTAS */
+            /* CONTENIDO DE PESTAÑAS */
+            .tab-content {
+                display: none;
+                min-height: 400px; /* ← ALTURA MÍNIMA PARA SCROLL */
+            }
+            
+            .tab-content.active {
+                display: block;
+            }
+            
+            /* MEDIA QUERIES */
             @media (max-width: 768px) {
                 .dashboard-header-compacto {
                     flex-direction: column;
@@ -6861,13 +6918,13 @@ class F1Manager {
                 }
                 
                 .three-columns-layout {
-                    grid-template-columns: 1fr !important;
-                    height: auto !important;
-                    gap: 15px !important;
+                    grid-template-columns: 1fr;
+                    height: auto;
+                    gap: 15px;
                 }
                 
                 .col-estrategas, .col-countdown, .col-fabrica {
-                    height: 220px !important;
+                    height: 220px;
                 }
                 
                 .produccion-slots {
@@ -6882,9 +6939,15 @@ class F1Manager {
                 }
                 
                 .grid-11-columns {
-                    grid-template-columns: repeat(5, 1fr) !important;
-                    height: auto !important;
-                    min-height: 140px !important;
+                    grid-template-columns: repeat(5, 1fr);
+                    height: auto;
+                    min-height: 140px;
+                }
+                
+                /* SCROLL EN MÓVIL */
+                html, body {
+                    overflow-x: hidden;
+                    position: relative;
                 }
             }
             
@@ -6896,8 +6959,8 @@ class F1Manager {
             }
             
             .produccion-lista {
-                border-color: #4CAF50 !important;
-                background: rgba(76, 175, 80, 0.15) !important;
+                border-color: #4CAF50;
+                background: rgba(76, 175, 80, 0.15);
                 animation: pulse-green 2s infinite;
             }
             
@@ -6917,16 +6980,16 @@ class F1Manager {
             }
         `;
         
-        // Inyectar estilos UNA sola vez
+        // Inyectar estilos
         const style = document.createElement('style');
-        style.id = 'estilos-completos-dashboard';
+        style.id = 'estilos-completos-funcionales';
         style.textContent = estilosCompletos;
         document.head.appendChild(style);
         
-        // SEGUNDO: Generar el HTML
+        // 2. GENERAR HTML
         document.body.innerHTML = `
             <div id="app">
-                <!-- Header compacto -->
+                <!-- Header -->
                 <header class="dashboard-header-compacto">
                     <div class="header-left-compacto">
                         <div class="logo-compacto">
@@ -6939,29 +7002,29 @@ class F1Manager {
                         </div>
                     </div>
                     
-                    <!-- Centro: Tabs -->
+                    <!-- Tabs CON EVENTOS -->
                     <nav class="tabs-compactas">
-                        <button class="tab-btn-compacto active" data-tab="principal">
+                        <button class="tab-btn-compacto active" data-tab="principal" onclick="cargarTab('principal')">
                             <i class="fas fa-home"></i> Principal
                         </button>
-                        <button class="tab-btn-compacto" data-tab="taller">
+                        <button class="tab-btn-compacto" data-tab="taller" onclick="cargarTab('taller')">
                             <i class="fas fa-tools"></i> Taller
                         </button>
-                        <button class="tab-btn-compacto" data-tab="almacen">
+                        <button class="tab-btn-compacto" data-tab="almacen" onclick="cargarTab('almacen')">
                             <i class="fas fa-warehouse"></i> Almacén
                         </button>
-                        <button class="tab-btn-compacto" data-tab="mercado">
+                        <button class="tab-btn-compacto" data-tab="mercado" onclick="cargarTab('mercado')">
                             <i class="fas fa-shopping-cart"></i> Mercado
                         </button>
-                        <button class="tab-btn-compacto" data-tab="presupuesto">
+                        <button class="tab-btn-compacto" data-tab="presupuesto" onclick="cargarTab('presupuesto')">
                             <i class="fas fa-chart-pie"></i> Presupuesto
                         </button>
-                        <button class="tab-btn-compacto" data-tab="clasificacion">
+                        <button class="tab-btn-compacto" data-tab="clasificacion" onclick="cargarTab('clasificacion')">
                             <i class="fas fa-medal"></i> Clasificación
                         </button>
                     </nav>
                     
-                    <!-- Derecha: Botón salir -->
+                    <!-- Botón salir -->
                     <div class="header-right-compacto">
                         <button class="logout-btn-compacto" id="logout-btn-visible">
                             <i class="fas fa-sign-out-alt"></i> Salir
@@ -6971,39 +7034,43 @@ class F1Manager {
                 
                 <!-- Main Content -->
                 <main class="dashboard-content">
+                    <!-- Pestaña Principal (ACTIVA) -->
                     <div id="tab-principal" class="tab-content active">
                         <div class="three-columns-layout">
+                            <!-- ESTRATEGAS (CON CLICK A EQUIPO) -->
                             <div class="col-estrategas">
                                 <div class="section-header">
                                     <h2><i class="fas fa-users"></i> ESTRATEGAS</h2>
                                     <span class="badge" id="contador-estrategas">0/4</span>
                                 </div>
                                 <div class="pilotos-container" id="pilotos-container">
-                                    <!-- Aquí va updatePilotosUI() -->
+                                    <!-- updatePilotosUI() llenará esto -->
                                 </div>
                             </div>
                             
+                            <!-- COUNTDOWN -->
                             <div class="col-countdown">
                                 <div class="section-header">
                                     <h2><i class="fas fa-clock"></i> PRÓXIMO GP</h2>
                                 </div>
                                 <div id="countdown-container">
-                                    <!-- Countdown -->
+                                    <!-- loadProximoGP() llenará esto -->
                                 </div>
                             </div>
                             
+                            <!-- FABRICACIÓN (CON MONITOR) -->
                             <div class="col-fabrica">
                                 <div class="section-header">
                                     <h2><i class="fas fa-industry"></i> FABRICACIÓN</h2>
                                     <span class="badge" id="contador-fabricaciones">0/4</span>
                                 </div>
                                 <div id="produccion-monitor">
-                                    <!-- Monitor de fabricación -->
+                                    <!-- updateProductionMonitor() llenará esto -->
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Piezas montadas -->
+                        <!-- Piezas montadas (CON CLICK A ALMACÉN) -->
                         <div class="section-header" style="margin-top: 15px;">
                             <h2><i class="fas fa-car"></i> PIEZAS MONTADAS</h2>
                             <div class="total-puntos-montadas">
@@ -7011,8 +7078,8 @@ class F1Manager {
                                 <span id="puntos-totales-montadas">0</span> pts
                             </div>
                         </div>
-                        <div class="grid-11-columns" id="grid-piezas-montadas">
-                            <!-- Aquí va cargarPiezasMontadas() -->
+                        <div class="grid-11-columns" id="grid-piezas-montadas" onclick="cargarTab('almacen')">
+                            <!-- cargarPiezasMontadas() llenará esto -->
                         </div>
                     </div>
                     
@@ -7030,14 +7097,24 @@ class F1Manager {
                         <i class="fas fa-user"></i>
                         <span>${this.user?.email || 'Usuario'}</span>
                     </div>
-                    <div class="footer-right"></div>
+                    <div class="footer-right">
+                        <span style="font-size: 0.7rem; color: #666;">v1.0.0</span>
+                    </div>
                 </footer>
             </div>
         `;
         
-        console.log('✅ Dashboard generado con estilos estables (sin flashing)');
+        console.log('✅ Dashboard generado con funcionalidad completa');
         
-        // TERCERO: Configurar el botón de logout (solo esto aquí)
+        // 3. CONFIGURAR EVENTOS BÁSICOS
+        this.configurarEventosBasicos();
+    }
+    
+    // Añade este método NUEVO a tu clase F1Manager:
+    configurarEventosBasicos() {
+        console.log('🔗 Configurando eventos básicos del dashboard...');
+        
+        // 1. Botón de logout
         const logoutBtn = document.getElementById('logout-btn-visible');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', async () => {
@@ -7051,6 +7128,22 @@ class F1Manager {
                 }
             });
         }
+        
+        // 2. Configurar sistema de pestañas si existe
+        if (window.tabManager && window.tabManager.setup) {
+            console.log('📑 Configurando sistema de pestañas...');
+            window.tabManager.setup();
+        }
+        
+        // 3. Hacer que cargarTab() sea global (si no lo es)
+        if (!window.cargarTab && window.tabManager && window.tabManager.switchTab) {
+            window.cargarTab = (tabId) => {
+                window.tabManager.switchTab(tabId);
+            };
+            console.log('✅ Función cargarTab() disponible globalmente');
+        }
+        
+        console.log('✅ Eventos básicos configurados');
     }
     
 
