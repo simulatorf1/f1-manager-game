@@ -6538,7 +6538,114 @@ class F1Manager {
             console.error('❌ No hay escudería para cargar dashboard');
             return;
         }
+        // ============================================
+        // AÑADE AQUÍ LA FUNCIÓN formatearFecha
+        // ============================================
+        function formatearFecha(fechaStr) {
+            if (!fechaStr) return 'Fecha no definida';
+            const fecha = new Date(fechaStr);
+            const opciones = { 
+                weekday: 'long', 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            };
+            return fecha.toLocaleDateString('es-ES', opciones);
+        }
+        // ============================================
         
+        // ============================================
+        // LUEGO AÑADE EL HTML DEL COUNTDOWN
+        // ============================================
+        const countdownHTML = `
+            <div class="countdown-f1-container">
+                <!-- Encabezado con botón Calendario -->
+                <div class="countdown-header-f1">
+                    <div class="countdown-title">
+                        <i class="fas fa-flag-checkered"></i>
+                        <h2>PRÓXIMA CARRERA</h2>
+                        <div class="badge-gp">GP ${this.proximoGP?.pais || ''}</div>
+                    </div>
+                    <button class="btn-calendario-mini" id="btn-calendario" title="Ver calendario completo">
+                        <i class="fas fa-calendar-alt"></i>
+                        CALENDARIO
+                    </button>
+                </div>
+                
+                <!-- Información de la carrera -->
+                <div class="carrera-info-f1">
+                    <div class="carrera-nombre-f1">
+                        <i class="fas fa-trophy"></i>
+                        <span id="nombre-carrera">${this.proximoGP?.nombre || 'No hay carreras programadas'}</span>
+                    </div>
+                    <div class="carrera-detalles-f1">
+                        <div class="detalle-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>${this.proximoGP?.circuito || 'Circuito no definido'}</span>
+                        </div>
+                        <div class="detalle-item">
+                            <i class="fas fa-calendar-day"></i>
+                            <span id="fecha-carrera">${this.proximoGP ? formatearFecha(this.proximoGP.fecha_inicio) : 'Fecha no definida'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Countdown principal -->
+                <div class="countdown-main-f1">
+                    <div class="countdown-label">CIERRE DE APUESTAS EN:</div>
+                    
+                    <div class="timer-container-f1">
+                        <!-- Días -->
+                        <div class="time-unit-f1">
+                            <div class="time-value-f1" id="countdown-dias">--</div>
+                            <div class="time-label-f1">DÍAS</div>
+                        </div>
+                        
+                        <div class="time-separator-f1">:</div>
+                        
+                        <!-- Horas -->
+                        <div class="time-unit-f1">
+                            <div class="time-value-f1" id="countdown-horas">--</div>
+                            <div class="time-label-f1">HORAS</div>
+                        </div>
+                        
+                        <div class="time-separator-f1">:</div>
+                        
+                        <!-- Minutos -->
+                        <div class="time-unit-f1">
+                            <div class="time-value-f1" id="countdown-minutos">--</div>
+                            <div class="time-label-f1">MIN</div>
+                        </div>
+                        
+                        <div class="time-separator-f1">:</div>
+                        
+                        <!-- Segundos -->
+                        <div class="time-unit-f1">
+                            <div class="time-value-f1" id="countdown-segundos">--</div>
+                            <div class="time-label-f1">SEG</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Estado de apuestas -->
+                <div class="estado-apuestas" id="estado-apuestas">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Cargando estado...</span>
+                </div>
+                
+                <!-- Botón Enviar Pronóstico -->
+                <button class="btn-pronostico-f1" id="btn-enviar-pronostico">
+                    <i class="fas fa-paper-plane"></i>
+                    ENVIAR PRONÓSTICO
+                </button>
+                
+                <!-- Nota informativa -->
+                <div class="countdown-nota">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Las apuestas cierran 48 horas antes del inicio de la carrera</span>
+                </div>
+            </div>
+        `;
         // PRIMERO: Inyectar estilos COMPACTOS en el HEAD si no existen
         if (!document.getElementById('dashboard-styles')) {
             const style = document.createElement('style');
@@ -6669,7 +6776,306 @@ class F1Manager {
                     background: rgba(225, 6, 0, 0.2);
                     border-color: #e10600;
                 }
+
+                /* ==================== */
+                /* ESTILOS F1 PARA COUNTDOWN */
+                /* ==================== */
+                .countdown-f1-container {
+                    background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+                    border: 3px solid #e10600;
+                    border-radius: 15px;
+                    padding: 15px;
+                    box-shadow: 0 10px 30px rgba(225, 6, 0, 0.3);
+                    height: 270px;
+                    display: flex;
+                    flex-direction: column;
+                }
                 
+                /* Encabezado */
+                .countdown-header-f1 {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                    padding-bottom: 10px;
+                    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+                }
+                
+                .countdown-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                
+                .countdown-title h2 {
+                    color: white;
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 1.1rem;
+                    margin: 0;
+                    letter-spacing: 1px;
+                }
+                
+                .countdown-title i {
+                    color: #e10600;
+                    font-size: 1.2rem;
+                }
+                
+                .badge-gp {
+                    background: linear-gradient(135deg, #e10600, #ff4444);
+                    color: white;
+                    padding: 3px 10px;
+                    border-radius: 15px;
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 0.7rem;
+                    font-weight: bold;
+                    letter-spacing: 1px;
+                }
+                
+                /* Botón Calendario */
+                .btn-calendario-mini {
+                    background: rgba(0, 210, 190, 0.1);
+                    border: 2px solid #00d2be;
+                    color: #00d2be;
+                    padding: 6px 12px;
+                    border-radius: 20px;
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 0.7rem;
+                    font-weight: bold;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    transition: all 0.3s;
+                }
+                
+                .btn-calendario-mini:hover {
+                    background: rgba(0, 210, 190, 0.2);
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(0, 210, 190, 0.3);
+                }
+                
+                /* Información de la carrera */
+                .carrera-info-f1 {
+                    margin-bottom: 15px;
+                }
+                
+                .carrera-nombre-f1 {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    margin-bottom: 8px;
+                }
+                
+                .carrera-nombre-f1 i {
+                    color: #FFD700;
+                    font-size: 1rem;
+                }
+                
+                .carrera-nombre-f1 span {
+                    color: white;
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 0.9rem;
+                    font-weight: bold;
+                }
+                
+                .carrera-detalles-f1 {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                }
+                
+                .detalle-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #aaa;
+                    font-size: 0.75rem;
+                }
+                
+                .detalle-item i {
+                    width: 16px;
+                    text-align: center;
+                    color: #00d2be;
+                }
+                
+                /* Countdown principal */
+                .countdown-main-f1 {
+                    text-align: center;
+                    margin: 10px 0;
+                }
+                
+                .countdown-label {
+                    color: #888;
+                    font-size: 0.7rem;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    margin-bottom: 10px;
+                    font-family: 'Orbitron', sans-serif;
+                }
+                
+                .timer-container-f1 {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 8px;
+                    margin: 10px 0;
+                }
+                
+                .time-unit-f1 {
+                    text-align: center;
+                    min-width: 50px;
+                }
+                
+                .time-value-f1 {
+                    background: linear-gradient(135deg, #e10600, #ff4444);
+                    color: white;
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 1.8rem;
+                    font-weight: bold;
+                    padding: 8px 5px;
+                    border-radius: 8px;
+                    box-shadow: 0 5px 15px rgba(225, 6, 0, 0.4);
+                    margin-bottom: 3px;
+                    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+                }
+                
+                .time-label-f1 {
+                    color: #aaa;
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 0.6rem;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+                
+                .time-separator-f1 {
+                    color: #e10600;
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 1.8rem;
+                    font-weight: bold;
+                    margin: 0 -2px;
+                    text-shadow: 0 0 10px rgba(225, 6, 0, 0.7);
+                }
+                
+                /* Estado apuestas */
+                .estado-apuestas {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    padding: 8px;
+                    border-radius: 10px;
+                    margin: 10px 0;
+                    font-size: 0.8rem;
+                    font-family: 'Orbitron', sans-serif;
+                    font-weight: bold;
+                }
+                
+                .estado-apuestas.abierto {
+                    background: rgba(76, 175, 80, 0.1);
+                    border: 2px solid #4CAF50;
+                    color: #4CAF50;
+                }
+                
+                .estado-apuestas.cerrado {
+                    background: rgba(244, 67, 54, 0.1);
+                    border: 2px solid #f44336;
+                    color: #f44336;
+                }
+                
+                .estado-apuestas i {
+                    font-size: 0.9rem;
+                }
+                
+                /* Botón Pronóstico */
+                .btn-pronostico-f1 {
+                    background: linear-gradient(135deg, #00d2be, #009688);
+                    border: none;
+                    color: white;
+                    padding: 12px;
+                    border-radius: 10px;
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 0.9rem;
+                    font-weight: bold;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    margin: 10px 0;
+                    transition: all 0.3s;
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                }
+                
+                .btn-pronostico-f1:hover:not(:disabled) {
+                    transform: translateY(-3px);
+                    box-shadow: 0 10px 20px rgba(0, 210, 190, 0.4);
+                    background: linear-gradient(135deg, #00e6cc, #00a895);
+                }
+                
+                .btn-pronostico-f1:disabled {
+                    background: linear-gradient(135deg, #666, #888);
+                    cursor: not-allowed;
+                    opacity: 0.7;
+                }
+                
+                /* Nota informativa */
+                .countdown-nota {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    color: #888;
+                    font-size: 0.65rem;
+                    margin-top: 5px;
+                    text-align: center;
+                    font-style: italic;
+                }
+                
+                .countdown-nota i {
+                    color: #00d2be;
+                    font-size: 0.8rem;
+                }
+                
+                /* Animación para el countdown */
+                @keyframes pulse-f1 {
+                    0% { text-shadow: 0 0 5px rgba(225, 6, 0, 0.5); }
+                    50% { text-shadow: 0 0 20px rgba(225, 6, 0, 0.9); }
+                    100% { text-shadow: 0 0 5px rgba(225, 6, 0, 0.5); }
+                }
+                
+                .time-value-f1 {
+                    animation: pulse-f1 2s infinite;
+                }
+                
+                /* Responsive */
+                @media (max-width: 768px) {
+                    .timer-container-f1 {
+                        gap: 5px;
+                    }
+                    
+                    .time-unit-f1 {
+                        min-width: 45px;
+                    }
+                    
+                    .time-value-f1 {
+                        font-size: 1.5rem;
+                        padding: 6px 4px;
+                    }
+                    
+                    .time-separator-f1 {
+                        font-size: 1.5rem;
+                    }
+                    
+                    .countdown-title h2 {
+                        font-size: 1rem;
+                    }
+                    
+                    .btn-calendario-mini {
+                        padding: 5px 10px;
+                        font-size: 0.65rem;
+                    }
+                }
                 /* ==================== */
                 /* CONTENIDO PRINCIPAL - Manteniendo IDs originales */
                 /* ==================== */
@@ -7534,91 +7940,107 @@ class F1Manager {
     // ========================
     // MÉTODO PARA COUNTDOWN (COMPACTO) CON DATOS REALES
     // ========================
+    // ========================
+    // MÉTODO PARA COUNTDOWN COMPLETO CON DISEÑO F1
+    // ========================
     async iniciarCountdownCompacto() {
-        console.log('⏱️ Iniciando countdown con datos reales...');
+        console.log('🏎️ Iniciando countdown estilo F1...');
         
-        // Primero cargar el próximo GP si no está cargado
+        // Cargar próximo GP si no está cargado
         if (!this.proximoGP) {
             await this.cargarProximoGP();
         }
         
-        // Obtener elementos del DOM
-        const horasElem = document.getElementById('hours-compacto');
-        const minutosElem = document.getElementById('minutes-compacto');
-        const segundosElem = document.getElementById('seconds-compacto');
-        
-        // Si no hay elementos o no hay próximo GP, salir
-        if (!horasElem || !minutosElem || !segundosElem) {
-            console.error('❌ Elementos del countdown no encontrados');
-            return;
-        }
-        
+        // Si no hay próximo GP, mostrar mensaje
         if (!this.proximoGP) {
-            // No hay próximas carreras
-            horasElem.textContent = '--';
-            minutosElem.textContent = '--';
-            segundosElem.textContent = '--';
-            
-            // También puedes actualizar otros elementos
-            const gpNombreElem = document.getElementById('gp-nombre-compacto');
-            const gpPaisElem = document.getElementById('gp-pais-compacto');
-            
-            if (gpNombreElem) gpNombreElem.textContent = 'Sin carreras';
-            if (gpPaisElem) gpPaisElem.textContent = '';
-            
+            console.log('❌ No hay próximas carreras');
             return;
         }
+        
+        // Crear fecha de carrera (48 horas antes)
+        const fechaCarrera = new Date(this.proximoGP.fecha_inicio);
+        fechaCarrera.setHours(14, 0, 0, 0); // Hora de carrera: 14:00
+        const fechaLimiteApuestas = new Date(fechaCarrera);
+        fechaLimiteApuestas.setHours(fechaCarrera.getHours() - 48); // 48 horas antes
+        
+        console.log('📅 Fechas:', {
+            carrera: fechaCarrera,
+            limiteApuestas: fechaLimiteApuestas,
+            ahora: new Date()
+        });
+        
+        // Función para formatear fecha
+        const formatearFecha = (fecha) => {
+            const opciones = { 
+                weekday: 'long', 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            };
+            return fecha.toLocaleDateString('es-ES', opciones);
+        };
         
         // Función para actualizar el countdown
         const actualizarCountdown = () => {
             const ahora = new Date();
+            const diferencia = fechaLimiteApuestas - ahora;
             
-            // Convertir fecha_inicio (string) a objeto Date
-            // fecha_inicio es tipo "YYYY-MM-DD"
-            const fechaCarreraStr = this.proximoGP.fecha_inicio;
-            const fechaCarrera = new Date(fechaCarreraStr + 'T14:00:00'); // Asumir 14:00 como hora de carrera
-            
-            const diferencia = fechaCarrera - ahora;
+            // Elementos del DOM
+            const diasElem = document.getElementById('countdown-dias');
+            const horasElem = document.getElementById('countdown-horas');
+            const minutosElem = document.getElementById('countdown-minutos');
+            const segundosElem = document.getElementById('countdown-segundos');
+            const btnPronostico = document.getElementById('btn-enviar-pronostico');
+            const estadoApuestasElem = document.getElementById('estado-apuestas');
             
             if (diferencia > 0) {
-                const horas = Math.floor(diferencia / (1000 * 60 * 60));
+                // Calcular tiempo restante
+                const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24));
+                const horas = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
                 const segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
                 
-                horasElem.textContent = horas.toString().padStart(2, '0');
-                minutosElem.textContent = minutos.toString().padStart(2, '0');
-                segundosElem.textContent = segundos.toString().padStart(2, '0');
+                // Actualizar elementos
+                if (diasElem) diasElem.textContent = dias.toString().padStart(2, '0');
+                if (horasElem) horasElem.textContent = horas.toString().padStart(2, '0');
+                if (minutosElem) minutosElem.textContent = minutos.toString().padStart(2, '0');
+                if (segundosElem) segundosElem.textContent = segundos.toString().padStart(2, '0');
                 
-                // Opcional: Actualizar otros elementos
-                const gpNombreElem = document.getElementById('gp-nombre-compacto');
-                const gpPaisElem = document.getElementById('gp-pais-compacto');
-                const apuestasStatusElem = document.getElementById('apuestas-status-compacto');
+                // Botón activado
+                if (btnPronostico) {
+                    btnPronostico.disabled = false;
+                    btnPronostico.innerHTML = '<i class="fas fa-paper-plane"></i> ENVIAR PRONÓSTICO';
+                }
                 
-                if (gpNombreElem) gpNombreElem.textContent = this.proximoGP.nombre;
-                if (gpPaisElem) gpPaisElem.textContent = this.proximoGP.pais || '';
-                
-                // Mostrar estado de apuestas
-                if (apuestasStatusElem) {
-                    if (this.proximoGP.cerrado_apuestas) {
-                        apuestasStatusElem.innerHTML = '<i class="fas fa-lock"></i> Cerradas';
-                        apuestasStatusElem.className = 'apuestas-status cerrado';
-                    } else {
-                        apuestasStatusElem.innerHTML = '<i class="fas fa-lock-open"></i> Abiertas';
-                        apuestasStatusElem.className = 'apuestas-status abierto';
-                    }
+                // Estado apuestas
+                if (estadoApuestasElem) {
+                    estadoApuestasElem.innerHTML = `
+                        <i class="fas fa-lock-open"></i>
+                        <span>APUESTAS ABIERTAS • Cierre en ${dias}d ${horas}h</span>
+                    `;
+                    estadoApuestasElem.className = 'estado-apuestas abierto';
                 }
                 
             } else {
-                // La carrera ya empezó o terminó
-                horasElem.textContent = '00';
-                minutosElem.textContent = '00';
-                segundosElem.textContent = '00';
+                // Tiempo agotado
+                if (diasElem) diasElem.textContent = '00';
+                if (horasElem) horasElem.textContent = '00';
+                if (minutosElem) minutosElem.textContent = '00';
+                if (segundosElem) segundosElem.textContent = '00';
                 
-                // Marcar como cerrado
-                const apuestasStatusElem = document.getElementById('apuestas-status-compacto');
-                if (apuestasStatusElem) {
-                    apuestasStatusElem.innerHTML = '<i class="fas fa-flag-checkered"></i> En curso';
-                    apuestasStatusElem.className = 'apuestas-status en-curso';
+                // Botón desactivado
+                if (btnPronostico) {
+                    btnPronostico.disabled = true;
+                    btnPronostico.innerHTML = '<i class="fas fa-lock"></i> APUESTAS CERRADAS';
+                }
+                
+                // Estado apuestas
+                if (estadoApuestasElem) {
+                    estadoApuestasElem.innerHTML = `
+                        <i class="fas fa-lock"></i>
+                        <span>APUESTAS CERRADAS • Esperando resultados</span>
+                    `;
+                    estadoApuestasElem.className = 'estado-apuestas cerrado';
                 }
             }
         };
@@ -7626,8 +8048,6 @@ class F1Manager {
         // Iniciar el countdown
         actualizarCountdown();
         const intervalId = setInterval(actualizarCountdown, 1000);
-        
-        // Guardar el ID del intervalo por si necesitas limpiarlo después
         this.countdownInterval = intervalId;
     }
     
@@ -9780,6 +10200,55 @@ iniciarAplicacion();
             window.tabManager.switchTab('equipo'); // Asumiendo que tienes una pestaña "equipo"
         } else {
             window.mostrarModalContratacion(1);
+        }
+    };
+
+    // ========================
+    // EVENTOS GLOBALES PARA EL COUNTDOWN
+    // ========================
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('🎮 Configurando eventos del countdown...');
+        
+        const btnPronostico = document.getElementById('btn-enviar-pronostico');
+        const btnCalendario = document.getElementById('btn-calendario');
+        
+        if (btnPronostico) {
+            console.log('✅ Botón pronóstico encontrado');
+            btnPronostico.addEventListener('click', () => {
+                console.log('📤 Click en Enviar Pronóstico');
+                
+                // Redirigir a la pestaña de pronósticos
+                const tabPronosticos = document.querySelector('[data-tab="pronosticos"]');
+                if (tabPronosticos) {
+                    tabPronosticos.click();
+                    console.log('📍 Cambiando a pestaña pronósticos');
+                } else {
+                    // Si no existe la pestaña, buscar alternativas
+                    const tabApuestas = document.querySelector('[data-tab="apuestas"]');
+                    if (tabApuestas) {
+                        tabApuestas.click();
+                    } else {
+                        alert('🚀 Redirigiendo a pronósticos...\n\n(Para probar: ve a la pestaña "PRONÓSTICOS" en el menú)');
+                    }
+                }
+            });
+        } else {
+            console.log('⚠️ Botón pronóstico NO encontrado');
+        }
+        
+        if (btnCalendario) {
+            console.log('✅ Botón calendario encontrado');
+            btnCalendario.addEventListener('click', () => {
+                console.log('📅 Click en Calendario');
+                
+                // Por ahora solo un placeholder
+                alert('📅 CALENDARIO F1 2026\n\nFuncionalidad en desarrollo...\n\nPróximamente podrás:\n• Ver todas las carreras\n• Filtrar por temporada\n• Ver resultados pasados\n• Planificar estrategias');
+                
+                // Aquí pondrás la lógica real para mostrar el calendario
+                // Por ejemplo: window.f1Manager.mostrarCalendario();
+            });
+        } else {
+            console.log('⚠️ Botón calendario NO encontrado');
         }
     };
     // Función para recoger piezas y actualizar almacén
