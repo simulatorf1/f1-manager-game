@@ -7323,6 +7323,8 @@ class F1Manager {
         // ========================
         // CONFIGURAR EVENTOS DEL DASHBOARD
         // ========================
+        // CONFIGURAR EVENTOS DEL DASHBOARD
+        // ========================
         
         // 1. Evento para cerrar sesión
         document.getElementById('logout-btn-visible').addEventListener('click', async () => {
@@ -7342,21 +7344,29 @@ class F1Manager {
             }
         });
         
-        // 2. INICIALIZAR SISTEMAS CRÍTICOS INMEDIATAMENTE (MISMA FUNCIONALIDAD ORIGINAL)
-        setTimeout(async () => {
-            console.log('🔧 Inicializando sistemas críticos del dashboard...');
+        // 2. INICIALIZAR SISTEMAS CRÍTICOS - VERSIÓN CORREGIDA (SIN DUPLICACIONES)
+        // ============================================================================
+        console.log('🔧 Programando inicialización crítica del dashboard...');
+        
+        // Usar un flag para evitar ejecuciones múltiples
+        if (!window._dashboardCriticalSystemsInitialized) {
+            window._dashboardCriticalSystemsInitialized = true;
             
-            // A. Asegurar que fabricacionManager existe
-            if (!window.fabricacionManager && window.FabricacionManager) {
-                window.fabricacionManager = new window.FabricacionManager();
-                if (this.escuderia) {
-                    await window.fabricacionManager.inicializar(this.escuderia.id);
+            setTimeout(async () => {
+                console.log('🔧 Inicializando sistemas críticos del dashboard (una sola vez)...');
+                
+                // A. Asegurar que fabricacionManager existe (solo si no existe)
+                if (!window.fabricacionManager && window.FabricacionManager) {
+                    window.fabricacionManager = new window.FabricacionManager();
+                    if (this.escuderia) {
+                        await window.fabricacionManager.inicializar(this.escuderia.id);
+                    }
                 }
-            }
-            
-            // B. Configurar sistema de pestañas CON LA FUNCIÓN DE RECARGA (MISMA LÓGICA ORIGINAL)
-            setTimeout(() => {
-                if (window.tabManager && window.tabManager.setup) {
+                
+                // B. Configurar sistema de pestañas - SOLO SI NO ESTÁ CONFIGURADO
+                if (window.tabManager && window.tabManager.setup && !window.tabManager._alreadySetup) {
+                    console.log('📑 Configurando sistema de pestañas (primera vez)...');
+                    
                     // Guardar el switchTab original
                     const originalSwitchTab = window.tabManager.switchTab;
                     
@@ -7367,40 +7377,61 @@ class F1Manager {
                         
                         // Si es la pestaña principal, recargar contenido
                         if (tabId === 'principal') {
-                            setTimeout(() => {
-                                if (window.cargarContenidoPrincipal) {
-                                    window.cargarContenidoPrincipal();
-                                }
-                            }, 100);
+                            // Solo recargar si no estamos ya en esa pestaña
+                            if (this.currentTab !== 'principal') {
+                                setTimeout(() => {
+                                    if (window.cargarContenidoPrincipal) {
+                                        window.cargarContenidoPrincipal();
+                                    }
+                                }, 100);
+                            }
                         }
                     };
                     
+                    // Marcar como configurado y ejecutar setup
+                    window.tabManager._alreadySetup = true;
                     window.tabManager.setup();
+                } else {
+                    console.log('📑 Sistema de pestañas ya estaba configurado, omitiendo...');
                 }
-            }, 400);
-            
-            // 3. Cargar datos iniciales (MISMA FUNCIONALIDAD ORIGINAL)
-            const supabase = await this.esperarSupabase();
-            if (supabase) {
-                await this.loadCarStatus();
-                await this.loadPilotosContratados();
-                await this.loadProximoGP();
                 
-                // 4. Cargar piezas montadas INMEDIATAMENTE
-                setTimeout(async () => {
-                    await this.cargarPiezasMontadas();
-                }, 500);
-            }
-            
-            console.log('✅ Dashboard compacto cargado correctamente con toda la funcionalidad');
-            // QUITAR LA PANTALLA DE CARGA
-            setTimeout(() => {
-                const loadingScreen = document.getElementById('f1-loading-screen');
-                if (loadingScreen) {
-                    loadingScreen.remove();
+                // 3. Cargar datos iniciales - SOLO SI NO SE CARGARON ANTES
+                if (!window._dashboardDataLoaded) {
+                    console.log('📊 Cargando datos del dashboard...');
+                    const supabase = await this.esperarSupabase();
+                    if (supabase) {
+                        // Cargar SOLO lo que no se haya cargado antes
+                        if (!this.carStats) await this.loadCarStatus();
+                        if (!this.pilotos || this.pilotos.length === 0) await this.loadPilotosContratados();
+                        await this.loadProximoGP();
+                        
+                        // Marcar como cargado
+                        window._dashboardDataLoaded = true;
+                    }
                 }
-            }, 500);
-        }, 1000);
+                
+                // 4. Cargar piezas montadas - CON FLAG PARA EVITAR DUPLICACIONES
+                if (!window._piezasMontadasCargadas) {
+                    console.log('🧩 Cargando piezas montadas...');
+                    await this.cargarPiezasMontadas();
+                    window._piezasMontadasCargadas = true;
+                }
+                
+                console.log('✅ Dashboard compacto cargado correctamente con toda la funcionalidad');
+                
+                // QUITAR LA PANTALLA DE CARGA
+                setTimeout(() => {
+                    const loadingScreen = document.getElementById('f1-loading-screen');
+                    if (loadingScreen) {
+                        console.log('🎬 Eliminando pantalla de carga...');
+                        loadingScreen.remove();
+                    }
+                }, 500);
+                
+            }, 1000); // Retraso inicial reducido a 1 segundo
+        } else {
+            console.log('⚠️ Sistemas críticos ya inicializados, omitiendo...');
+        }
     }
     
 
