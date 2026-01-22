@@ -7098,10 +7098,7 @@ class F1Manager {
                                                 cursor: pointer;
                                                 padding: 8px 5px;
                                             ">
-                                                <div class="slot-content">
-                                                    <i class="fas fa-plus" style="color: #00d2be; margin-bottom: 3px;"></i>
-                                                    <span style="font-size: 0.7rem; color: #888;">Area Técnica</span>
-                                                </div>
+
                                             </div>
 
       
@@ -7117,10 +7114,7 @@ class F1Manager {
                                                 cursor: pointer;
                                                 padding: 8px 5px;
                                             ">
-                                                <div class="slot-content">
-                                                    <i class="fas fa-plus" style="color: #00d2be; margin-bottom: 3px;"></i>
-                                                    <span style="font-size: 0.7rem; color: #888;">Slot 3</span>
-                                                </div>
+   
                                             </div>
                                             <div class="produccion-slot" data-slot="3" onclick="irAlTallerDesdeProduccion()" style="
                                                 background: rgba(255, 255, 255, 0.03);
@@ -7133,10 +7127,7 @@ class F1Manager {
                                                 cursor: pointer;
                                                 padding: 8px 5px;
                                             ">
-                                                <div class="slot-content">
-                                                    <i class="fas fa-plus" style="color: #00d2be; margin-bottom: 3px;"></i>
-                                                    <span style="font-size: 0.7rem; color: #888;">Slot 4</span>
-                                                </div>
+
                                             </div>
                                         </div>
                                     </div>
