@@ -6583,12 +6583,10 @@ class F1Manager {
                         <i class="fas fa-trophy"></i>
                         <span id="nombre-carrera">${this.proximoGP?.nombre || 'No hay carreras programadas'}</span>
                     </div>
-                    <div class="carrera-detalles-f1" style="display: flex; align-items: center; gap: 10px; margin: 5px 0;">
-                        <i class="fas fa-map-marker-alt" style="color: #00d2be;"></i>
-                        <span style="color: #aaa; font-size: 0.75rem;">${this.proximoGP?.circuito || 'Circuito'}</span>
-                        <span style="color: #666; margin: 0 5px;">•</span>
-                        <i class="fas fa-calendar-day" style="color: #00d2be;"></i>
-                        <span id="fecha-carrera" style="color: #aaa; font-size: 0.75rem;">${this.proximoGP ? formatearFecha(this.proximoGP.fecha_inicio) : 'Fecha'}</span>
+                    <div class="carrera-detalles-f1" style="display: flex; align-items: center; gap: 5px; margin: 3px 0; color: #aaa; font-size: 0.7rem;">
+                        <span>${this.proximoGP?.circuito || 'Circuito'}</span>
+                        <span style="color: #666;">•</span>
+                        <span id="fecha-carrera">${this.proximoGP ? formatearFecha(this.proximoGP.fecha_inicio) : 'Fecha'}</span>
                     </div>
                 </div>
                 
@@ -6786,11 +6784,12 @@ class F1Manager {
                     background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
                     border: 3px solid #e10600;
                     border-radius: 15px;
-                    padding: 10px;
+                    padding: 12px;
                     box-shadow: 0 10px 30px rgba(225, 6, 0, 0.3);
-                    height: 220px;
+                    height: 240px;
                     display: flex;
                     flex-direction: column;
+                    min-height: 240px; /* ← AÑADE ESTO */
                 }
                 
                 /* Encabezado */
@@ -6919,8 +6918,8 @@ class F1Manager {
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    gap: 8px;
-                    margin: 10px 0;
+                    gap: 5px; /* Menos gap */
+                    margin: 8px 0; /* Margen adecuado */
                 }
                 
                 .time-unit-f1 {
