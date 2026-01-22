@@ -6857,14 +6857,14 @@ class F1Manager {
                 
                 /* Información de la carrera */
                 .carrera-info-f1 {
-                    margin-bottom: 15px;
+                    margin-bottom: 5px;
                 }
                 
                 .carrera-nombre-f1 {
                     display: flex;
                     align-items: center;
                     gap: 10px;
-                    margin-bottom: 4px;
+                    margin-bottom: 2px;
                 }
                 
                 .carrera-nombre-f1 i {
