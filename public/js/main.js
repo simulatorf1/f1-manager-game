@@ -46,6 +46,304 @@ function initSupabase() {
 // ========================
 async function iniciarAplicacion() {
     console.log('🚀 Iniciando aplicación F1 Manager...');
+    // AÑADE ESTO AL INICIO - CARGAR TODOS LOS ESTILOS DE UNA VEZ
+    if (!document.getElementById('f1-all-styles')) {
+        const allStyles = document.createElement('style');
+        allStyles.id = 'f1-all-styles';
+        // Fusiona produccionStyles + tallerStyles + dashboard-styles
+        allStyles.textContent = `
+            ${produccionStyles}
+            ${tallerStyles}
+            
+            /* ==================== */
+            /* ESTILOS COMPACTOS CON FUNCIONALIDAD ORIGINAL */
+            /* ==================== */
+            #app {
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+                overflow: hidden;
+            }
+            
+            html, body {
+                height: 100%;
+                overflow: auto;
+                margin: 0;
+                padding: 0;
+            }
+            
+            /* Header */
+            .dashboard-header-compacto {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: rgba(21, 21, 30, 0.95);
+                border-bottom: 2px solid rgba(0, 210, 190, 0.3);
+                padding: 8px 15px;
+                height: 50px;
+                flex-shrink: 0;
+            }
+            
+            /* Tabs */
+            .tabs-compactas {
+                display: flex;
+                gap: 5px;
+                flex: 2;
+                justify-content: center;
+                min-width: 0;
+            }
+            
+            .tab-btn-compacto {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                padding: 6px 12px;
+                color: #aaa;
+                font-family: 'Roboto', sans-serif;
+                font-size: 0.8rem;
+                cursor: pointer;
+                transition: all 0.2s;
+                white-space: nowrap;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                flex-shrink: 0;
+            }
+            
+            .tab-btn-compacto.active {
+                background: rgba(0, 210, 190, 0.2);
+                border-color: #00d2be;
+                color: white;
+                font-weight: bold;
+            }
+            
+            /* Contenido principal */
+            .dashboard-content {
+                padding: 10px;
+                flex: 1;
+                overflow-y: auto;
+                min-height: 0;
+                position: relative;
+            }
+            
+            /* Grid de 3 columnas */
+            .three-columns-layout {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 10px;
+                margin: 10px 0;
+                height: 280px;
+            }
+            
+            /* Columnas */
+            .col-estrategas, .col-countdown, .col-fabrica {
+                background: rgba(30, 30, 40, 0.8);
+                border: 1px solid rgba(0, 210, 190, 0.3);
+                border-radius: 8px;
+                padding: 8px;
+                height: 270px !important;
+                display: flex;
+                flex-direction: column;
+                min-height: 270px !important;
+                overflow: hidden !important;
+            }
+            
+            /* ==================== */
+            /* ESTILOS DE PRODUCCIÓN (SISTEMA ORIGINAL) */
+            /* ==================== */
+            .produccion-slots {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr) !important;
+                grid-template-rows: 80px 80px !important;
+                row-gap: 10px !important;
+                align-content: start !important;
+                padding: 5px;
+                gap: 5px !important;
+                height: 170px !important;
+                min-width: 300px !important;
+            }
+            
+            .produccion-slot {
+                background: rgba(255, 255, 255, 0.03);
+                border: 1.5px solid rgba(255, 255, 255, 0.08);
+                border-radius: 6px;
+                padding: 8px 8px !important;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                height: 80px !important;
+                min-height: 80px !important;
+                margin-bottom: 2px !important;
+            }
+            
+            .produccion-slot:hover {
+                border-color: rgba(0, 210, 190, 0.4);
+                background: rgba(0, 210, 190, 0.05);
+                transform: translateY(-1px);
+            }
+            
+            .slot-content {
+                text-align: center;
+                width: 100%;
+            }
+            
+            .slot-content i {
+                font-size: 1.1rem;
+                color: #00d2be;
+                margin-bottom: 5px;
+            }
+            
+            .slot-content span {
+                display: block;
+                font-size: 0.75rem;
+                color: #888;
+                line-height: 1.1;
+            }
+            
+            .produccion-activa {
+                border-color: rgba(0, 210, 190, 0.25);
+                background: rgba(0, 210, 190, 0.04);
+            }
+            
+            .produccion-lista {
+                border-color: #4CAF50 !important;
+                background: rgba(76, 175, 80, 0.15) !important;
+                animation: pulse-green 2s infinite;
+            }
+            
+            @keyframes pulse-green {
+                0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+                70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+            }
+            
+            /* ==================== */
+            /* ESTILOS DE ESTRATEGAS (INGENIEROS) */
+            /* ==================== */
+            .pilotos-container {
+                flex: 1;
+                overflow-y: auto;
+                padding-right: 5px;
+            }
+            
+            /* ==================== */
+            /* ESTILOS DE PIEZAS MONTADAS */
+            /* ==================== */
+            .grid-11-columns {
+                display: grid !important;
+                grid-template-columns: repeat(11, 1fr) !important;
+                gap: 4px !important;
+                margin-top: 8px !important;
+                height: 70px !important;
+                align-items: stretch !important;
+                width: 100% !important;
+            }
+            
+            .boton-area-montada, .boton-area-vacia {
+                background: rgba(255, 255, 255, 0.03) !important;
+                border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
+                border-radius: 6px !important;
+                padding: 4px 3px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                cursor: pointer !important;
+                transition: all 0.2s ease !important;
+                height: 60px !important;
+                min-height: 60px !important;
+            }
+            
+            .boton-area-montada {
+                border-color: rgba(0, 210, 190, 0.25) !important;
+                background: rgba(0, 210, 190, 0.04) !important;
+            }
+            
+            .boton-area-montada:hover {
+                border-color: rgba(0, 210, 190, 0.5) !important;
+                background: rgba(0, 210, 190, 0.08) !important;
+                transform: translateY(-1px) !important;
+            }
+            
+            .boton-area-vacia {
+                border-style: dashed !important;
+                border-color: rgba(255, 255, 255, 0.1) !important;
+                background: rgba(255, 255, 255, 0.015) !important;
+            }
+            
+            .boton-area-vacia:hover {
+                border-color: rgba(0, 210, 190, 0.4) !important;
+                background: rgba(0, 210, 190, 0.05) !important;
+            }
+            
+            /* ==================== */
+            /* ESTILOS RESPONSIVE */
+            /* ==================== */
+            @media (max-width: 768px) {
+                .dashboard-header-compacto {
+                    flex-direction: column;
+                    height: auto;
+                    padding: 10px;
+                    gap: 10px;
+                    padding-bottom: 40px;
+                }
+                
+                .produccion-slots {
+                    grid-template-columns: repeat(2, 1fr) !important;
+                    grid-template-rows: 80px 80px !important;
+                    height: 170px !important;
+                    min-height: 170px !important;
+                }
+                
+                .produccion-slot {
+                    height: 80px !important;
+                    min-height: 80px !important;
+                }
+                
+                .three-columns-layout {
+                    grid-template-columns: 1fr !important;
+                    height: auto !important;
+                    gap: 15px !important;
+                }
+                
+                .col-estrategas, .col-countdown, .col-fabrica {
+                    height: 220px !important;
+                }
+                
+                .grid-11-columns {
+                    grid-template-columns: repeat(5, 1fr) !important;
+                    height: auto !important;
+                    min-height: 140px !important;
+                }
+                
+                .boton-area-montada, .boton-area-vacia {
+                    height: 70px !important;
+                    min-height: 70px !important;
+                }
+            }
+            
+            /* ==================== */
+            /* ESTILOS DE SCROLLBAR */
+            /* ==================== */
+            ::-webkit-scrollbar {
+                width: 6px;
+            }
+            
+            ::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 3px;
+            }
+            
+            ::-webkit-scrollbar-thumb {
+                background: rgba(0, 210, 190, 0.3);
+                border-radius: 3px;
+            }
+        `;
+        document.head.appendChild(allStyles);
+    }
     // AÑADE ESTO JUSTO AQUÍ
     // Desactivar zoom y gestos en móviles
     if (!document.querySelector('meta[name="viewport"][content*="user-scalable=no"]')) {
@@ -1520,25 +1818,7 @@ const tallerStyles = `
     }
 `;
 
-// Añadir los estilos al DOM cuando se cargue la página
-document.addEventListener('DOMContentLoaded', function() {
-    if (!document.getElementById('estilos-taller')) {
-        const style = document.createElement('style');
-        style.id = 'estilos-taller';
-        style.innerHTML = tallerStyles;
-        document.head.appendChild(style);
-    }
-});
 
-// Añadir los estilos al DOM cuando se cargue la página
-document.addEventListener('DOMContentLoaded', function() {
-    if (!document.getElementById('estilos-produccion')) {
-        const style = document.createElement('style');
-        style.id = 'estilos-produccion';
-        style.innerHTML = produccionStyles;
-        document.head.appendChild(style);
-    }
-});
 
 // ========================
 // 4. CLASE F1Manager PRINCIPAL CON TUTORIAL
@@ -6542,299 +6822,7 @@ class F1Manager {
         // ====================
         // INYECTAR TODOS LOS ESTILOS DE UNA VEZ (EVITA PARPADEO)
         // ====================
-        if (!document.getElementById('all-dashboard-styles')) {
-            const style = document.createElement('style');
-            style.id = 'all-dashboard-styles';
-            style.innerHTML = `
-                /* ==================== */
-                /* ESTILOS COMPACTOS CON FUNCIONALIDAD ORIGINAL */
-                /* ==================== */
-                #app {
-                    display: flex;
-                    flex-direction: column;
-                    height: 100vh;
-                    overflow: hidden;
-                }
-                
-                html, body {
-                    height: 100%;
-                    overflow: auto;
-                    margin: 0;
-                    padding: 0;
-                }
-                
-                /* Header */
-                .dashboard-header-compacto {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    background: rgba(21, 21, 30, 0.95);
-                    border-bottom: 2px solid rgba(0, 210, 190, 0.3);
-                    padding: 8px 15px;
-                    height: 50px;
-                    flex-shrink: 0;
-                }
-                
-                /* Tabs */
-                .tabs-compactas {
-                    display: flex;
-                    gap: 5px;
-                    flex: 2;
-                    justify-content: center;
-                    min-width: 0;
-                }
-                
-                .tab-btn-compacto {
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 8px;
-                    padding: 6px 12px;
-                    color: #aaa;
-                    font-family: 'Roboto', sans-serif;
-                    font-size: 0.8rem;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    white-space: nowrap;
-                    display: flex;
-                    align-items: center;
-                    gap: 5px;
-                    flex-shrink: 0;
-                }
-                
-                .tab-btn-compacto.active {
-                    background: rgba(0, 210, 190, 0.2);
-                    border-color: #00d2be;
-                    color: white;
-                    font-weight: bold;
-                }
-                
-                /* Contenido principal */
-                .dashboard-content {
-                    padding: 10px;
-                    flex: 1;
-                    overflow-y: auto;
-                    min-height: 0;
-                    position: relative;
-                }
-                
-                /* Grid de 3 columnas */
-                .three-columns-layout {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr 1fr;
-                    gap: 10px;
-                    margin: 10px 0;
-                    height: 280px;
-                }
-                
-                /* Columnas */
-                .col-estrategas, .col-countdown, .col-fabrica {
-                    background: rgba(30, 30, 40, 0.8);
-                    border: 1px solid rgba(0, 210, 190, 0.3);
-                    border-radius: 8px;
-                    padding: 8px;
-                    height: 270px !important;
-                    display: flex;
-                    flex-direction: column;
-                    min-height: 270px !important;
-                    overflow: hidden !important;
-                }
-                
-                /* ==================== */
-                /* ESTILOS DE PRODUCCIÓN (SISTEMA ORIGINAL) */
-                /* ==================== */
-                .produccion-slots {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr) !important;
-                    grid-template-rows: 80px 80px !important;
-                    row-gap: 10px !important;
-                    align-content: start !important;
-                    padding: 5px;
-                    gap: 5px !important;
-                    height: 170px !important;
-                    min-width: 300px !important;
-                }
-                
-                .produccion-slot {
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1.5px solid rgba(255, 255, 255, 0.08);
-                    border-radius: 6px;
-                    padding: 8px 8px !important;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    height: 80px !important;
-                    min-height: 80px !important;
-                    margin-bottom: 2px !important;
-                }
-                
-                .produccion-slot:hover {
-                    border-color: rgba(0, 210, 190, 0.4);
-                    background: rgba(0, 210, 190, 0.05);
-                    transform: translateY(-1px);
-                }
-                
-                .slot-content {
-                    text-align: center;
-                    width: 100%;
-                }
-                
-                .slot-content i {
-                    font-size: 1.1rem;
-                    color: #00d2be;
-                    margin-bottom: 5px;
-                }
-                
-                .slot-content span {
-                    display: block;
-                    font-size: 0.75rem;
-                    color: #888;
-                    line-height: 1.1;
-                }
-                
-                .produccion-activa {
-                    border-color: rgba(0, 210, 190, 0.25);
-                    background: rgba(0, 210, 190, 0.04);
-                }
-                
-                .produccion-lista {
-                    border-color: #4CAF50 !important;
-                    background: rgba(76, 175, 80, 0.15) !important;
-                    animation: pulse-green 2s infinite;
-                }
-                
-                @keyframes pulse-green {
-                    0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
-                    70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
-                    100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
-                }
-                
-                /* ==================== */
-                /* ESTILOS DE ESTRATEGAS (INGENIEROS) */
-                /* ==================== */
-                .pilotos-container {
-                    flex: 1;
-                    overflow-y: auto;
-                    padding-right: 5px;
-                }
-                
-                /* ==================== */
-                /* ESTILOS DE PIEZAS MONTADAS */
-                /* ==================== */
-                .grid-11-columns {
-                    display: grid !important;
-                    grid-template-columns: repeat(11, 1fr) !important;
-                    gap: 4px !important;
-                    margin-top: 8px !important;
-                    height: 70px !important;
-                    align-items: stretch !important;
-                    width: 100% !important;
-                }
-                
-                .boton-area-montada, .boton-area-vacia {
-                    background: rgba(255, 255, 255, 0.03) !important;
-                    border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
-                    border-radius: 6px !important;
-                    padding: 4px 3px !important;
-                    display: flex !important;
-                    flex-direction: column !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    cursor: pointer !important;
-                    transition: all 0.2s ease !important;
-                    height: 60px !important;
-                    min-height: 60px !important;
-                }
-                
-                .boton-area-montada {
-                    border-color: rgba(0, 210, 190, 0.25) !important;
-                    background: rgba(0, 210, 190, 0.04) !important;
-                }
-                
-                .boton-area-montada:hover {
-                    border-color: rgba(0, 210, 190, 0.5) !important;
-                    background: rgba(0, 210, 190, 0.08) !important;
-                    transform: translateY(-1px) !important;
-                }
-                
-                .boton-area-vacia {
-                    border-style: dashed !important;
-                    border-color: rgba(255, 255, 255, 0.1) !important;
-                    background: rgba(255, 255, 255, 0.015) !important;
-                }
-                
-                .boton-area-vacia:hover {
-                    border-color: rgba(0, 210, 190, 0.4) !important;
-                    background: rgba(0, 210, 190, 0.05) !important;
-                }
-                
-                /* ==================== */
-                /* ESTILOS RESPONSIVE */
-                /* ==================== */
-                @media (max-width: 768px) {
-                    .dashboard-header-compacto {
-                        flex-direction: column;
-                        height: auto;
-                        padding: 10px;
-                        gap: 10px;
-                        padding-bottom: 40px;
-                    }
-                    
-                    .produccion-slots {
-                        grid-template-columns: repeat(2, 1fr) !important;
-                        grid-template-rows: 80px 80px !important;
-                        height: 170px !important;
-                        min-height: 170px !important;
-                    }
-                    
-                    .produccion-slot {
-                        height: 80px !important;
-                        min-height: 80px !important;
-                    }
-                    
-                    .three-columns-layout {
-                        grid-template-columns: 1fr !important;
-                        height: auto !important;
-                        gap: 15px !important;
-                    }
-                    
-                    .col-estrategas, .col-countdown, .col-fabrica {
-                        height: 220px !important;
-                    }
-                    
-                    .grid-11-columns {
-                        grid-template-columns: repeat(5, 1fr) !important;
-                        height: auto !important;
-                        min-height: 140px !important;
-                    }
-                    
-                    .boton-area-montada, .boton-area-vacia {
-                        height: 70px !important;
-                        min-height: 70px !important;
-                    }
-                }
-                
-                /* ==================== */
-                /* ESTILOS DE SCROLLBAR */
-                /* ==================== */
-                ::-webkit-scrollbar {
-                    width: 6px;
-                }
-                
-                ::-webkit-scrollbar-track {
-                    background: rgba(255, 255, 255, 0.05);
-                    border-radius: 3px;
-                }
-                
-                ::-webkit-scrollbar-thumb {
-                    background: rgba(0, 210, 190, 0.3);
-                    border-radius: 3px;
-                }
-            `;
-            document.head.appendChild(style);
-        }
+
         
         // 1. Crear el HTML con diseño compacto
         document.body.innerHTML = `
