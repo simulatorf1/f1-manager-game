@@ -7782,16 +7782,20 @@ class F1Manager {
         // Añadir estilos CSS
         const styles = document.createElement('style');
         styles.innerHTML = `
-            /* SOLO ESTRUCTURA - SIN dimensiones fijas que interfieran */
             .estrategas-grid-minimal {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
                 grid-template-rows: repeat(2, 1fr);
-                gap: 8px; /* ← Valor normal, sin !important */
+                gap: 6px;
                 height: 100%;
+                padding: 2px;
             }
             
             .estratega-btn {
+                background: rgba(255, 255, 255, 0.03) !important;
+                border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
+                border-radius: 6px !important;
+                padding: 8px 6px !important; /* Más compacto */
                 display: flex;
                 flex-direction: column;
                 align-items: center;
@@ -7799,41 +7803,45 @@ class F1Manager {
                 cursor: pointer;
                 transition: all 0.2s ease;
                 position: relative;
-                border-radius: 8px;
-                /* NO poner height, min-height, padding aquí - los dejará el CSS inicial */
+                height: 65px;
+                min-height: 85px;
             }
             
             .estratega-btn.contratado {
-                border: 1.5px solid rgba(0, 210, 190, 0.25);
-                background: rgba(0, 210, 190, 0.04);
+                border-color: rgba(0, 210, 190, 0.25) !important;
+                background: rgba(0, 210, 190, 0.04) !important;
             }
             
             .estratega-btn.contratado:hover {
-                border-color: rgba(0, 210, 190, 0.5);
-                background: rgba(0, 210, 190, 0.08);
+                border-color: rgba(0, 210, 190, 0.5) !important;
+                background: rgba(0, 210, 190, 0.08) !important;
                 transform: translateY(-1px);
             }
             
             .estratega-btn.vacio {
-                border: 1.5px dashed rgba(255, 255, 255, 0.1);
-                background: rgba(255, 255, 255, 0.015);
+                border-style: dashed !important;
+                border-color: rgba(255, 255, 255, 0.1) !important;
+                background: rgba(255, 255, 255, 0.015) !important;
             }
             
             .estratega-btn.vacio:hover {
-                border-color: rgba(0, 210, 190, 0.4);
-                background: rgba(0, 210, 190, 0.05);
+                border-color: rgba(0, 210, 190, 0.4) !important;
+                background: rgba(0, 210, 190, 0.05) !important;
             }
             
             .estratega-icon {
+                font-size: 1.1rem !important; /* Más pequeño */
+                margin-bottom: 5px !important;
                 color: #00d2be;
+                height: 22px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                /* NO poner font-size fijo aquí */
             }
             
             .estratega-btn.vacio .estratega-icon {
                 color: #666;
+                font-size: 1rem !important;
             }
             
             .estratega-info {
@@ -7845,26 +7853,31 @@ class F1Manager {
             .estratega-nombre {
                 display: block;
                 font-weight: bold;
+                font-size: 0.75rem !important; /* Más pequeño */
                 color: white;
+                margin-bottom: 2px;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                /* NO poner font-size fijo aquí */
+                line-height: 1.1;
             }
             
             .estratega-salario {
                 display: block;
+                font-size: 0.65rem !important; /* Más pequeño */
                 color: #4CAF50;
-                /* NO poner font-size fijo aquí */
+                margin-bottom: 1px;
+                line-height: 1;
             }
             
             .estratega-funcion {
                 display: block;
+                font-size: 0.6rem !important; /* Más pequeño */
                 color: #888;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                /* NO poner font-size fijo aquí */
+                line-height: 1;
             }
             
             .estratega-bono {
@@ -7873,13 +7886,58 @@ class F1Manager {
                 right: 4px;
                 background: rgba(0, 210, 190, 0.15);
                 color: #00d2be;
+                font-size: 0.6rem !important; /* Más pequeño */
                 padding: 1px 4px;
                 border-radius: 8px;
                 font-weight: bold;
-                font-size: 0.6rem; /* Este SÍ puede ser fijo porque es único */
+                line-height: 1;
             }
             
-            /* ELIMINADO TODO lo demás - eso afecta otras secciones */
+            /* Ajustar section header */
+            .section-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px !important;
+                padding-bottom: 8px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            
+            .section-header h2 {
+                margin: 0 !important;
+                font-size: 1.1rem !important;
+                font-weight: 600;
+            }
+            
+            .section-header .badge {
+                background: rgba(0, 210, 190, 0.15);
+                color: #00d2be;
+                padding: 3px 8px;
+                border-radius: 10px;
+                font-size: 0.8rem;
+                font-weight: bold;
+            }
+            
+            /* Ajustar las otras columnas para más equilibrio */
+            .col-countdown, .col-fabrica {
+                padding: 10px !important; /* Reducir padding general */
+            }
+            
+            /* Mejorar scroll en producción */
+            .produccion-actual {
+                max-height: 220px;
+                overflow-y: auto;
+                padding-right: 3px;
+            }
+            
+            .produccion-actual::-webkit-scrollbar {
+                width: 4px;
+            }
+            
+            .produccion-actual::-webkit-scrollbar-thumb {
+                background: rgba(0, 210, 190, 0.3);
+                border-radius: 2px;
+            }
         `;
         
         // Añadir estilos solo si no existen
