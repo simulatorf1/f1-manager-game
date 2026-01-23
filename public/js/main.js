@@ -9077,28 +9077,29 @@ class F1Manager {
             }
             
             // 6. Actualizar UI
+
             if (window.f1Manager) {
                 // Parar timer de actualización
                 if (window.f1Manager.productionUpdateTimer) {
                     clearInterval(window.f1Manager.productionUpdateTimer);
                 }
                 
-                // ✅ SOLO actualizar el slot específico
+                // ✅ ACTUALIZAR SOLO EL SLOT ESPECÍFICO usando slotIndex
                 setTimeout(() => {
-                    // Buscar el slot por su data-fabricacion-id
-                    const slot = document.querySelector(`.produccion-slot[data-fabricacion-id="${fabricacionId}"]`);
-                    if (slot) {
-                        // Vaciar el slot
-                        slot.classList.remove('produccion-activa', 'produccion-lista');
-                        slot.innerHTML = `
+                    // Obtener todos los slots
+                    const slots = document.querySelectorAll('.produccion-slot');
+                    if (slots[slotIndex]) {
+                        // Vaciar el slot específico
+                        slots[slotIndex].classList.remove('produccion-activa', 'produccion-lista');
+                        slots[slotIndex].innerHTML = `
                             <div class="slot-content">
                                 <i class="fas fa-plus"></i>
-                                <span>VACÍO</span>
+                                <span>Departamento ${slotIndex + 1}</span>
+                                <span class="slot-disponible">Disponible</span>
                             </div>
                         `;
-                        // Limpiar atributos
-                        slot.removeAttribute('data-fabricacion-id');
-                        slot.removeAttribute('onclick');
+                        // Restaurar onclick para ir al taller
+                        slots[slotIndex].setAttribute('onclick', 'irAlTallerDesdeProduccion()');
                     }
                 }, 100);
                 
