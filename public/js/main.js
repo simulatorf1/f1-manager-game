@@ -1766,7 +1766,7 @@ class F1Manager {
                     if (piezaFabricada) {
                         // Botón LLENO (ya fabricado)
                         html += `
-                            <button class="btn-pieza-mini lleno" disabled title="${area.nombre} - Pieza ${piezaNum} fabricada">
+                            <button class="btn-pieza-mini lleno" disabled title="${area.nombre} - Evolución ${piezaNum} fabricada">
                                 <i class="fas fa-check"></i>
                                 <span class="pieza-num">${piezaNum}</span>
                             </button>
@@ -1777,7 +1777,7 @@ class F1Manager {
                         const minutos = Math.ceil(tiempoRestante / (1000 * 60));
                         
                         html += `
-                            <button class="btn-pieza-mini fabricando" disabled title="${area.nombre} - Pieza ${piezaNum} en fabricación (${minutos} min)">
+                            <button class="btn-pieza-mini fabricando" disabled title="${area.nombre} - Evolución ${piezaNum} en fabricación (${minutos} min)">
                                 <i class="fas fa-spinner fa-spin"></i>
                                 <span class="pieza-num">${piezaNum}</span>
                             </button>
@@ -1792,7 +1792,7 @@ class F1Manager {
                             <button class="btn-pieza-mini vacio" 
                                     onclick="iniciarFabricacionTallerDesdeBoton('${area.id}', ${nivelAFabricar})"
                                     ${!puedeFabricar ? 'disabled' : ''}
-                                    title="${area.nombre} - Pieza ${piezaNum} (Click para fabricar)">
+                                    title="${area.nombre} - Evolución ${piezaNum} (Click para fabricar)">
                                 <i class="fas fa-plus"></i>
                                 <span class="pieza-num">${piezaNum}</span>
                             </button>
@@ -2144,7 +2144,7 @@ class F1Manager {
             // 7. Mostrar notificación con tiempo REAL
             const nombreArea = this.getNombreArea(areaId);
             this.showNotification(
-                `✅ ${nombreArea} (Pieza ${numeroPieza}) en fabricación - ${tiempoMinutos} minutos`, 
+                `✅ ${nombreArea} (Evolución ${numeroPieza}) en fabricación - ${tiempoMinutos} minutos`, 
                 'success'
             );
             
@@ -2269,7 +2269,7 @@ class F1Manager {
             if (errorPiezas) throw errorPiezas;
             
             if (!piezasArea || piezasArea.length < 5) {
-                this.showNotification(`❌ Necesitas 5 piezas de nivel ${nivelSiguiente} para subir de nivel`, 'error');
+                this.showNotification(`❌ Necesitas 5 evoluciones del mismo nivel ${nivelSiguiente} para subir de nivel`, 'error');
                 return;
             }
             
