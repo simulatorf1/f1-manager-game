@@ -1681,7 +1681,7 @@ class F1Manager {
             // 3. Cargar fabricaciones activas desde fabricacion_actual
             const { data: fabricacionesActivas, error: errorFabricaciones } = await this.supabase
                 .from('fabricacion_actual')
-                .select('area, nivel, tiempo_fin, completada')
+                .select('area, nivel, tiempo_fin, completada, numero_evolucion')  // ← AÑADE numero_evolucion
                 .eq('escuderia_id', this.escuderia.id)
                 .eq('completada', false);
             
@@ -1743,7 +1743,8 @@ class F1Manager {
                 const fabricacionActiva = fabricacionesActivas?.find(f => {
                     const areaCoincide = f.area === area.id || f.area === area.nombre;
                     const nivelCoincide = f.nivel === nivelAFabricar;
-                    return areaCoincide && nivelCoincide && !f.completada;
+                    const evolucionCoincide = f.numero_evolucion === piezaNum;  // ← NUEVA CONDICIÓN
+                    return areaCoincide && nivelCoincide && evolucionCoincide && !f.completada;
                 });
                 
                 // Añadir nombre del área como título
@@ -1771,7 +1772,7 @@ class F1Manager {
                                 <span class="pieza-num">${piezaNum}</span>
                             </button>
                         `;
-                    } else if (fabricacionActiva && piezaNum === piezasAreaNivel.length + 1) {
+                    } else if (fabricacionActiva?.numero_evolucion === piezaNum) {
                         // Botón en FABRICACIÓN (la siguiente pieza a fabricar está en proceso)
                         const tiempoRestante = new Date(fabricacionActiva.tiempo_fin) - new Date();
                         const minutos = Math.ceil(tiempoRestante / (1000 * 60));
@@ -2126,8 +2127,9 @@ class F1Manager {
                     escuderia_id: this.escuderia.id,
                     area: areaId,
                     nivel: nivel,
+                    numero_evolucion: numeroPieza,  // ← AÑADE ESTA LÍNEA
                     tiempo_inicio: ahora.toISOString(),
-                    tiempo_fin: tiempoFin.toISOString(), // ← DEJA LA 'Z' INTACTA
+                    tiempo_fin: tiempoFin.toISOString(),
                     completada: false,
                     costo: costo,
                     creada_en: ahora.toISOString()
@@ -3170,12 +3172,13 @@ class F1Manager {
                                 const ahora = new Date();
                                 const tiempoFin = new Date(ahora.getTime() + tiempoMilisegundos);
                                 
-                                const { data: fabricacion, error: errorCrear } = await supabase
+                                const { data: fabricacion, error: errorCrear } = await this.supabase
                                     .from('fabricacion_actual')
                                     .insert([{
-                                        escuderia_id: window.tutorialManager.escuderia.id,
-                                        area: areaSeleccionada,
-                                        nivel: nivelAFabricar,
+                                        escuderia_id: this.escuderia.id,
+                                        area: areaId,
+                                        nivel: nivel,
+                                        numero_evolucion: numeroPieza,  // ← AÑADE ESTA LÍNEA
                                         tiempo_inicio: ahora.toISOString(),
                                         tiempo_fin: tiempoFin.toISOString(),
                                         completada: false,
