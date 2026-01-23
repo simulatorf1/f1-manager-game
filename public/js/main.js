@@ -8729,7 +8729,7 @@ class F1Manager {
                         <div class="produccion-slot" data-slot="${i}" onclick="irAlTallerDesdeProduccion()">
                             <div class="slot-content">
                                 <i class="fas fa-plus"></i>
-                                <span>Slot ${i + 1}</span>
+                                <span>Departamento ${i + 1}</span>
                                 <span class="slot-disponible">Disponible</span>
                             </div>
                         </div>
