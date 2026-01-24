@@ -57,14 +57,137 @@ function inicializarDocumento() {
 function cargarEstilosExternos() {
     console.log('🎨 Cargando estilos externos...');
     
-    // 1. Font Awesome (siempre primero)
+    // 1. Asegurar que head existe
+    if (!document.head) {
+        document.documentElement.appendChild(document.createElement('head'));
+    }
+    
+    // 2. Cargar Font Awesome
     if (!document.querySelector('link[href*="font-awesome"]')) {
         const faLink = document.createElement('link');
         faLink.rel = 'stylesheet';
         faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
         document.head.appendChild(faLink);
-        console.log('✅ Font Awesome cargado');
     }
+    
+    // 3. Cargar Google Fonts
+    if (!document.querySelector('link[href*="fonts.googleapis.com"]')) {
+        const fontLink = document.createElement('link');
+        fontLink.rel = 'stylesheet';
+        fontLink.href = 'https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Roboto:wght@300;400;500;700&display=swap';
+        document.head.appendChild(fontLink);
+    }
+    
+    // 4. ELIMINAR CUALQUIER CSS EXISTENTE PARA EVITAR DUPLICADOS
+    const existingCSS = document.querySelectorAll('link[rel="stylesheet"]');
+    existingCSS.forEach(css => {
+        if (css.href && (css.href.includes('styles.css') || css.href.includes('style.css'))) {
+            css.remove();
+            console.log('🗑️ CSS antiguo eliminado');
+        }
+    });
+    
+    // 5. DETECTAR SI ESTÁS EN GITHUB PAGES O LOCAL
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    
+    console.log('🌍 Detección entorno:', { 
+        hostname: window.location.hostname,
+        isGitHubPages, 
+        isLocal,
+        pathname: window.location.pathname 
+    });
+    
+    // 6. PROBAR DIFERENTES RUTAS EN ORDEN
+    const cssPaths = [];
+    
+    if (isGitHubPages) {
+        // Para GitHub Pages - IMPORTANTE: usa la ruta del repositorio
+        const repoName = window.location.pathname.split('/')[1] || '';
+        if (repoName) {
+            // Caso: https://usuario.github.io/nombre-repo/
+            cssPaths.push(`/${repoName}/styles.css`);
+            cssPaths.push(`/${repoName}/style.css`);
+        }
+        // También probar rutas relativas
+        cssPaths.push('./styles.css');
+        cssPaths.push('styles.css');
+        cssPaths.push('/styles.css');
+    } else if (isLocal) {
+        // Para desarrollo local
+        cssPaths.push('styles.css');
+        cssPaths.push('./styles.css');
+        cssPaths.push('/styles.css');
+    } else {
+        // Para cualquier otro hosting
+        cssPaths.push('styles.css');
+        cssPaths.push('./styles.css');
+        cssPaths.push('/styles.css');
+        cssPaths.push(window.location.origin + '/styles.css');
+    }
+    
+    // 7. FUNCIÓN PARA INTENTAR CARGAR CSS
+    const tryLoadCSS = (pathIndex = 0) => {
+        if (pathIndex >= cssPaths.length) {
+            console.error('❌ Todas las rutas de CSS fallaron');
+            return;
+        }
+        
+        const cssPath = cssPaths[pathIndex];
+        console.log(`🔄 Intentando CSS: ${cssPath} (${pathIndex + 1}/${cssPaths.length})`);
+        
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.id = 'main-css-' + Date.now(); // ID único
+        link.href = cssPath + '?v=' + Date.now(); // Cache busting
+        
+        link.onload = () => {
+            console.log(`✅ CSS cargado EXITOSAMENTE desde: ${cssPath}`);
+            // Verificar que realmente se aplicaron estilos
+            setTimeout(() => {
+                const testDiv = document.createElement('div');
+                testDiv.style.cssText = 'position: absolute; left: -9999px;';
+                document.body.appendChild(testDiv);
+                const stylesLoaded = getComputedStyle(testDiv).display !== '';
+                testDiv.remove();
+                console.log('🧪 Verificación estilos:', stylesLoaded ? '✅ Aplicados' : '❌ No aplicados');
+            }, 100);
+        };
+        
+        link.onerror = () => {
+            console.log(`❌ Falló: ${cssPath}`);
+            // Intentar siguiente ruta
+            setTimeout(() => tryLoadCSS(pathIndex + 1), 100);
+        };
+        
+        document.head.appendChild(link);
+    };
+    
+    // 8. EMPEZAR A CARGAR
+    tryLoadCSS();
+    
+    // 9. FALLBACK: Si después de 5 segundos no hay CSS, usar estilos básicos
+    setTimeout(() => {
+        const anyCSSLoaded = Array.from(document.styleSheets).some(sheet => 
+            sheet.href && (sheet.href.includes('styles.css') || sheet.href.includes('style.css'))
+        );
+        
+        if (!anyCSSLoaded) {
+            console.warn('⚠️ CSS no cargado después de 5s, aplicando estilos básicos');
+            const fallbackStyles = `
+                /* Estilos básicos de emergencia */
+                body { font-family: Arial, sans-serif; background: #0a0a0f; color: white; margin: 0; padding: 0; }
+                .dashboard-header-compacto { background: #1a1a2e; padding: 10px; display: flex; }
+                .tab-btn-compacto { background: #333; color: white; border: none; padding: 8px 12px; margin: 0 5px; }
+                .tab-btn-compacto.active { background: #e10600; }
+            `;
+            const styleTag = document.createElement('style');
+            styleTag.textContent = fallbackStyles;
+            document.head.appendChild(styleTag);
+        }
+    }, 5000);
+}
     
     // 2. Google Fonts
     if (!document.querySelector('link[href*="fonts.googleapis.com"]')) {
@@ -176,46 +299,7 @@ function initSupabase() {
 async function iniciarAplicacion() {
     console.log('🚀 Iniciando aplicación F1 Manager...');
 
-    // ============================================
-    // ESPERAR A QUE EL CSS SE CARGUE COMPLETAMENTE
-    // ============================================
-    console.log('⏳ Esperando carga de CSS...');
-    
-    // Función para verificar si los estilos están cargados
-    const waitForCSS = () => {
-        return new Promise((resolve) => {
-            const checkCSS = () => {
-                // Verificar si algún estilo está aplicado
-                const tempDiv = document.createElement('div');
-                tempDiv.style.display = 'none';
-                document.body.appendChild(tempDiv);
-                
-                // Si los estilos están cargados, continuar
-                if (document.styleSheets.length > 2) { // FontAwesome + Google Fonts + tu CSS
-                    console.log('✅ CSS detectado, continuando...');
-                    tempDiv.remove();
-                    resolve(true);
-                } else {
-                    console.log('⏳ CSS aún no cargado, esperando...');
-                    setTimeout(checkCSS, 200);
-                }
-            };
-            
-            // Dar tiempo inicial para carga
-            setTimeout(checkCSS, 500);
-            
-            // Timeout después de 3 segundos
-            setTimeout(() => {
-                console.warn('⚠️ Timeout esperando CSS, continuando igual...');
-                resolve(false);
-            }, 3000);
-        });
-    };
-    
-    await waitForCSS();
 
-
-    
     // AÑADE ESTO JUSTO AQUÍ
     // Desactivar zoom y gestos en móviles
     if (!document.querySelector('meta[name="viewport"][content*="user-scalable=no"]')) {
