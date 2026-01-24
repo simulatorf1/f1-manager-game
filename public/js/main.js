@@ -57,68 +57,38 @@ function inicializarDocumento() {
 function cargarEstilosExternos() {
     console.log('🎨 Cargando estilos externos...');
     
-    // 1. Font Awesome
-    if (!document.querySelector('link[href*="font-awesome"]')) {
-        const faLink = document.createElement('link');
-        faLink.rel = 'stylesheet';
-        faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
-        document.head.appendChild(faLink);
-    }
+    // Solo lo esencial
+    const fa = document.createElement('link');
+    fa.rel = 'stylesheet';
+    fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+    document.head.appendChild(fa);
     
-    // 2. Google Fonts
-    if (!document.querySelector('link[href*="fonts.googleapis.com"]')) {
-        const fontLink = document.createElement('link');
-        fontLink.rel = 'stylesheet';
-        fontLink.href = 'https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Roboto:wght@300;400;500;700&display=swap';
-        document.head.appendChild(fontLink);
-    }
+    const fonts = document.createElement('link');
+    fonts.rel = 'stylesheet';
+    fonts.href = 'https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Roboto:wght@300;400;500;700&display=swap';
+    document.head.appendChild(fonts);
     
-    // 3. TU CSS desde GitHub - MÉTODO QUE SÍ FUNCIONA
-    const cssURL = 'https://raw.githubusercontent.com/simulatorf1/f1-manager-game/main/public/js/styles.css';
-    
-    console.log('📥 Descargando CSS desde GitHub RAW...');
-    
-    fetch(cssURL + '?v=' + Date.now())
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.text();
-        })
-        .then(cssContent => {
-            // Crear elemento <style> con el CSS
-            const styleElement = document.createElement('style');
-            styleElement.id = 'app-styles';
-            styleElement.textContent = cssContent;
-            
-            // Insertar en el head
-            document.head.appendChild(styleElement);
-            
-            console.log('✅ CSS inyectado correctamente');
-            console.log('📏 Longitud del CSS:', cssContent.length, 'caracteres');
-            
-            // Verificar que se aplicó
-            setTimeout(() => {
-                console.log('📊 Stylesheets totales:', document.styleSheets.length);
-                let encontrado = false;
-                for (let i = 0; i < document.styleSheets.length; i++) {
-                    const sheet = document.styleSheets[i];
-                    if (sheet.ownerNode && sheet.ownerNode.id === 'app-styles') {
-                        encontrado = true;
-                        console.log('✅ Nuestro CSS está en el índice:', i);
-                        console.log('📝 Reglas CSS:', sheet.cssRules ? sheet.cssRules.length : 'no accesible');
-                        break;
-                    }
-                }
-                if (!encontrado) {
-                    console.log('⚠️ No se encontró nuestro stylesheet');
-                }
-            }, 100);
-        })
-        .catch(error => {
-            console.error('❌ Error cargando CSS:', error);
-            console.log('🔍 Detalles del error:', error.message);
-        });
+    // Tu CSS - CON RETRASO para asegurar
+    setTimeout(() => {
+        console.log('⏱️ Cargando tu CSS...');
+        fetch('https://raw.githubusercontent.com/simulatorf1/f1-manager-game/main/public/js/styles.css?v=' + Date.now())
+            .then(r => r.text())
+            .then(css => {
+                const style = document.createElement('style');
+                style.textContent = css;
+                document.head.appendChild(style);
+                console.log('✅ CSS INYECTADO');
+                
+                // DEPURACIÓN EXTRA
+                console.log('🧪 ¿Se aplicó? Creando test...');
+                const testDiv = document.createElement('div');
+                testDiv.style.cssText = 'position:absolute;left:-9999px;';
+                document.body.appendChild(testDiv);
+                console.log('Display:', window.getComputedStyle(testDiv).display);
+                testDiv.remove();
+            })
+            .catch(e => console.error('Fetch error:', e));
+    }, 1000); // 1 segundo de retraso
 }
 
 // ========================
