@@ -141,29 +141,7 @@ async function iniciarAplicacion() {
         </style>
     `;
 
-    // ============ AÑADE ESTO JUSTO AQUÍ ============
-    // Función para actualizar progreso (copiada del tutorial)
-    const updateProgress = (percentage, message) => {
-        const progressBar = document.getElementById('f1-progress-bar');
-        const progressText = document.getElementById('f1-progress-text');
-        const loadingMessage = document.getElementById('f1-loading-message');
-        
-        if (progressBar) progressBar.style.width = `${percentage}%`;
-        if (progressText) progressText.textContent = `${percentage}%`;
-        if (loadingMessage && message) loadingMessage.textContent = message;
-    };
-    
-    // Fuerza un progreso rápido
-    updateProgress(20, 'Iniciando sistema...');
-    setTimeout(() => updateProgress(40, 'Cargando recursos...'), 1500);   // 1.5 segundos
-    setTimeout(() => updateProgress(60, 'Conectando con el servidor...'), 3000); // 3 segundos
-    setTimeout(() => updateProgress(80, 'Preparando interfaz...'), 4500); // 4.5 segundos
-    setTimeout(() => updateProgress(100, 'Completando...'), 6000); // 6 segundos
-    setTimeout(() => {
-        const loadingScreen = document.getElementById('f1-loading-screen');
-        if (loadingScreen) loadingScreen.remove();
-    }, 7000);  // 7 segundos total
-    // ============ FIN DEL CÓDIGO A AÑADIR ============
+
     
     // Inicializar Supabase
     window.supabase = initSupabase();
