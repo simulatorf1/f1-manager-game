@@ -57,12 +57,7 @@ function inicializarDocumento() {
 function cargarEstilosExternos() {
     console.log('🎨 Cargando estilos externos...');
     
-    // 1. Asegurar que head existe
-    if (!document.head) {
-        document.documentElement.appendChild(document.createElement('head'));
-    }
-    
-    // 2. Cargar Font Awesome
+    // 1. Font Awesome
     if (!document.querySelector('link[href*="font-awesome"]')) {
         const faLink = document.createElement('link');
         faLink.rel = 'stylesheet';
@@ -70,7 +65,7 @@ function cargarEstilosExternos() {
         document.head.appendChild(faLink);
     }
     
-    // 3. Cargar Google Fonts
+    // 2. Google Fonts
     if (!document.querySelector('link[href*="fonts.googleapis.com"]')) {
         const fontLink = document.createElement('link');
         fontLink.rel = 'stylesheet';
@@ -78,111 +73,52 @@ function cargarEstilosExternos() {
         document.head.appendChild(fontLink);
     }
     
-    // 4. ELIMINAR CUALQUIER CSS EXISTENTE PARA EVITAR DUPLICADOS
-    const existingCSS = document.querySelectorAll('link[rel="stylesheet"]');
-    existingCSS.forEach(css => {
-        if (css.href && (css.href.includes('styles.css') || css.href.includes('style.css'))) {
-            css.remove();
-            console.log('🗑️ CSS antiguo eliminado');
-        }
-    });
+    // 3. TU CSS desde GitHub - MÉTODO QUE SÍ FUNCIONA
+    const cssURL = 'https://raw.githubusercontent.com/simulatorf1/f1-manager-game/main/public/js/styles.css';
     
-    // 5. RUTAS CORREGIDAS PARA TU ESTRUCTURA DE GITHUB
-    // Tu CSS está en /public/js/styles.css según tu URL de GitHub
-    const cssPaths = [
-        '/public/js/styles.css',           // Ruta absoluta desde raíz
-        './public/js/styles.css',          // Ruta relativa
-        'public/js/styles.css',            // Ruta desde directorio actual
-        '/js/styles.css',                  // Ruta alternativa
-        './js/styles.css',                 // Otra alternativa
-        'js/styles.css',                   // Última alternativa
-        'styles.css',                      // Por si acaso está en raíz
-        './styles.css'                     // Por si acaso
-    ];
+    console.log('📥 Descargando CSS desde GitHub RAW...');
     
-    console.log('🔄 Intentando rutas CSS:', cssPaths);
-    
-    // 6. FUNCIÓN PARA INTENTAR CARGAR CSS
-    const tryLoadCSS = (pathIndex = 0) => {
-        if (pathIndex >= cssPaths.length) {
-            console.error('❌ Todas las rutas de CSS fallaron');
-            crearEstilosDeEmergencia();
-            return;
-        }
-        
-        const cssPath = cssPaths[pathIndex];
-        console.log(`🔄 Intentando CSS [${pathIndex + 1}/${cssPaths.length}]: ${cssPath}`);
-        
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.type = 'text/css';
-        link.id = 'main-css-' + Date.now();
-        link.href = cssPath + '?v=' + Date.now(); // Cache busting
-        
-        link.onload = () => {
-            console.log(`✅ CSS cargado EXITOSAMENTE desde: ${cssPath}`);
-            verificarEstilosAplicados();
-        };
-        
-        link.onerror = () => {
-            console.log(`❌ Falló: ${cssPath}`);
-            // Intentar siguiente ruta
-            setTimeout(() => tryLoadCSS(pathIndex + 1), 100);
-        };
-        
-        document.head.appendChild(link);
-    };
-    
-    // 7. FUNCIÓN PARA VERIFICAR ESTILOS
-    function verificarEstilosAplicados() {
-        setTimeout(() => {
-            const testDiv = document.createElement('div');
-            testDiv.style.cssText = 'position: absolute; left: -9999px; width: 100px; height: 100px;';
-            document.body.appendChild(testDiv);
-            
-            const estilos = window.getComputedStyle(testDiv);
-            const tieneEstilos = estilos.width === '100px';
-            
-            console.log('🧪 Verificación estilos:', tieneEstilos ? '✅ Aplicados correctamente' : '❌ No se aplicaron');
-            
-            // Ver también qué estilosheets hay
-            console.log('📊 Stylesheets cargados:', document.styleSheets.length);
-            for (let i = 0; i < document.styleSheets.length; i++) {
-                const sheet = document.styleSheets[i];
-                if (sheet.href) {
-                    console.log(`  [${i}] ${sheet.href}`);
-                }
+    fetch(cssURL + '?v=' + Date.now())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
+            return response.text();
+        })
+        .then(cssContent => {
+            // Crear elemento <style> con el CSS
+            const styleElement = document.createElement('style');
+            styleElement.id = 'app-styles';
+            styleElement.textContent = cssContent;
             
-            testDiv.remove();
-        }, 200);
-    }
-    
-    // 8. FUNCIÓN DE EMERGENCIA
-    function crearEstilosDeEmergencia() {
-        console.warn('⚠️ CSS no cargado, aplicando estilos básicos de emergencia');
-        const fallbackStyles = `
-            /* Estilos básicos de emergencia */
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: Arial, sans-serif; background: #0a0a0f; color: white; margin: 0; padding: 0; }
-            .dashboard-header-compacto { background: #1a1a2e; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e10600; }
-            .tab-btn-compacto { background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-family: 'Orbitron', sans-serif; margin: 0 5px; }
-            .tab-btn-compacto.active { background: #e10600; }
-            .dashboard-content { padding: 20px; }
-            .three-columns-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-            @media (max-width: 1024px) { .three-columns-layout { grid-template-columns: 1fr; } }
-            .piezas-montadas { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 10px; margin-top: 20px; }
-            .grid-11-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; margin-top: 15px; }
-            .dashboard-footer { padding: 15px 20px; background: #1a1a2e; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
-        `;
-        const styleTag = document.createElement('style');
-        styleTag.id = 'emergency-styles';
-        styleTag.textContent = fallbackStyles;
-        document.head.appendChild(styleTag);
-    }
-    
-    // 9. EMPEZAR A CARGAR
-    tryLoadCSS();
+            // Insertar en el head
+            document.head.appendChild(styleElement);
+            
+            console.log('✅ CSS inyectado correctamente');
+            console.log('📏 Longitud del CSS:', cssContent.length, 'caracteres');
+            
+            // Verificar que se aplicó
+            setTimeout(() => {
+                console.log('📊 Stylesheets totales:', document.styleSheets.length);
+                let encontrado = false;
+                for (let i = 0; i < document.styleSheets.length; i++) {
+                    const sheet = document.styleSheets[i];
+                    if (sheet.ownerNode && sheet.ownerNode.id === 'app-styles') {
+                        encontrado = true;
+                        console.log('✅ Nuestro CSS está en el índice:', i);
+                        console.log('📝 Reglas CSS:', sheet.cssRules ? sheet.cssRules.length : 'no accesible');
+                        break;
+                    }
+                }
+                if (!encontrado) {
+                    console.log('⚠️ No se encontró nuestro stylesheet');
+                }
+            }, 100);
+        })
+        .catch(error => {
+            console.error('❌ Error cargando CSS:', error);
+            console.log('🔍 Detalles del error:', error.message);
+        });
 }
 
 // ========================
