@@ -91,6 +91,59 @@ function cargarEstilosExternos() {
     }, 1000); // 1 segundo de retraso
 }
 
+function esperarCSS() {
+    return new Promise((resolve) => {
+        const maxEspera = 5000; // 5 segundos máximo
+        const inicio = Date.now();
+        
+        const verificar = () => {
+            // Buscar nuestro CSS inyectado
+            const nuestroCSS = document.getElementById('mi-css') || 
+                              document.querySelector('style[id*="css"]') ||
+                              document.querySelector('style[textContent*="dashboard"]');
+            
+            if (nuestroCSS) {
+                console.log('✅ CSS encontrado en DOM');
+                resolve(true);
+                return;
+            }
+            
+            // Verificar en stylesheets
+            for (let i = 0; i < document.styleSheets.length; i++) {
+                const sheet = document.styleSheets[i];
+                try {
+                    if (sheet.cssRules && sheet.cssRules.length > 0) {
+                        // Verificar si tiene reglas de nuestra app
+                        for (let j = 0; j < Math.min(5, sheet.cssRules.length); j++) {
+                            const regla = sheet.cssRules[j].cssText;
+                            if (regla.includes('dashboard') || regla.includes('tab-btn')) {
+                                console.log('✅ Reglas CSS de la app encontradas');
+                                resolve(true);
+                                return;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // Ignorar errores CORS
+                }
+            }
+            
+            // Timeout
+            if (Date.now() - inicio > maxEspera) {
+                console.warn('⚠️ Timeout esperando CSS, continuando...');
+                resolve(false);
+                return;
+            }
+            
+            // Reintentar
+            setTimeout(verificar, 200);
+        };
+        
+        // Empezar a verificar
+        setTimeout(verificar, 500);
+    });
+}
+
 // ========================
 // 1. SISTEMA DE CARGA SEGURA DE SUPABASE
 // ========================
