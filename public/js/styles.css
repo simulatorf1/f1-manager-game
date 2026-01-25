@@ -2683,7 +2683,18 @@ html, body {
     font-size: 0.8rem !important;
     gap: 3px !important;
   }
+  .col-estrategas {
+      height: auto !important;
+      min-height: 190px !important;
+      padding: 5px !important;
+  }
 
+  .produccion-slots {
+      height: auto !important;
+      min-height: 170px !important;
+      gap: 8px !important;
+      padding: 8px !important;
+  }
   .logout-btn-compacto {
     top: 8px !important;
     right: 8px !important;
