@@ -1934,7 +1934,7 @@ class F1Manager {
                     const numeroPieza = fabricacion.numero_pieza || 1;
                     
                     html += `
-                        <div class="produccion-slot ${lista ? 'produccion-lista' : 'produccion-activa'}" 
+                        <div class="produccion-slot ${lista ? 'produccion-lista' : 'produccion-activa'}"
                              onclick="recogerPiezaSiLista('${fabricacion.id}', ${lista}, ${i})"
                              title="${nombreArea} - Evolución ${numeroPieza} de nivel ${fabricacion.nivel}">
                             <div class="produccion-icon">
