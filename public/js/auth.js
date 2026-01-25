@@ -72,6 +72,10 @@ class AuthManager {
         if (session) {
             console.log('✅ Usuario autenticado:', session.user.email);
             await this.cargarDatosUsuario(session.user);
+            // ✅ AÑADIR ESTA LÍNEA:
+            if (this.user && this.escuderia) {
+                this.notificarAutenticacionExitosa(this.user, this.escuderia);
+            }
             return { user: this.user, escuderia: this.escuderia };
         } else {
             console.log('👤 No hay sesión, mostrar login');
@@ -155,7 +159,27 @@ class AuthManager {
             return null;
         }
     }
-
+    // ========================
+    // NUEVO MÉTODO: Notificar a main.js cuando la autenticación es exitosa
+    // ========================
+    notificarAutenticacionExitosa(user, escuderia) {
+        console.log('🔔 Notificando autenticación exitosa a main.js');
+        
+        // Crear un evento personalizado
+        const evento = new CustomEvent('auth-completado', {
+            detail: { 
+                user: user, 
+                escuderia: escuderia,
+                supabase: this.supabase
+            }
+        });
+        
+        // Disparar el evento
+        window.dispatchEvent(evento);
+        
+        // También almacenar en variable global por si acaso
+        window.authData = { user, escuderia, supabase: this.supabase };
+    }
     // ========================
     // 5. CREAR DATOS INICIALES SI FALTAN
     // ========================
