@@ -15,11 +15,10 @@ class F1Manager {
         console.log('🚗 Creando F1Manager para:', user.email);
         this.user = user;
         this.escuderia = escuderia;
-        this.supabase = supabase;  // ← Añadir
+        this.supabase = supabase;
         this.pilotos = [];
         this.carStats = null;
         this.proximoGP = null;
-
     }
 
     // ========================
@@ -41,10 +40,8 @@ class F1Manager {
         }
         
         try {
-            // 1. Cargar stats del coche desde coches_stats
             await this.cargarCarStats();
             
-            // 2. Cargar piezas fabricadas desde almacen_piezas
             const { data: piezasFabricadas, error: errorPiezas } = await this.supabase
                 .from('almacen_piezas')
                 .select('area, nivel, calidad')
@@ -56,7 +53,6 @@ class F1Manager {
                 throw errorPiezas;
             }
             
-            // 3. Cargar fabricaciones activas desde fabricacion_actual
             const { data: fabricacionesActivas, error: errorFabricaciones } = await this.supabase
                 .from('fabricacion_actual')
                 .select('area, nivel, tiempo_fin, completada')
@@ -68,7 +64,6 @@ class F1Manager {
                 throw errorFabricaciones;
             }
             
-            // 4. Definir las 11 áreas del coche (basado en tu tabla coches_stats)
             const areas = [
                 { id: 'suelo', nombre: 'Suelo', icono: '🏎️' },
                 { id: 'motor', nombre: 'Motor', icono: '⚙️' },
@@ -83,139 +78,96 @@ class F1Manager {
                 { id: 'electronica', nombre: 'Electrónica', icono: '💡' }
             ];
             
-            // 5. Contar fabricaciones activas
             const fabricacionesCount = fabricacionesActivas?.length || 0;
             
-            // 6. Generar HTML simple: solo botones
-            let html = `
-                <div class="taller-minimalista">
-                    <div class="taller-header-mini">
-                        <h2><i class="fas fa-tools"></i> TALLER DE FABRICACIÓN</h2>
-                        <div class="fabricaciones-activas-mini">
-                            <span class="badge-fabricacion">${fabricacionesCount}/4 fabricando</span>
-                        </div>
-                    </div>
-                    
-                    <div class="taller-botones-grid">
-            `;
+            let html = '<div class="taller-minimalista">';
+            html += '<div class="taller-header-mini">';
+            html += '<h2><i class="fas fa-tools"></i> TALLER DE FABRICACIÓN</h2>';
+            html += '<div class="fabricaciones-activas-mini">';
+            html += '<span class="badge-fabricacion">' + fabricacionesCount + '/4 fabricando</span>';
+            html += '</div>';
+            html += '</div>';
             
-            // 7. Para cada área, crear fila con 5 botones horizontales
+            html += '<div class="taller-botones-grid">';
+            
             areas.forEach(area => {
-                // Obtener nivel actual del coche desde coches_stats
                 const nivelActual = this.carStats ? 
-                    this.carStats[`${area.id}_nivel`] || 0 : 0;
-                
-                // Contar cuántas piezas tenemos ya fabricadas de este nivel actual + 1
+                    this.carStats[area.id + '_nivel'] || 0 : 0;
                 const nivelAFabricar = nivelActual + 1;
                 
-                // Filtrar piezas de esta área del nivel que estamos fabricando
                 const piezasAreaNivel = piezasFabricadas?.filter(p => {
-                    // Verificar si el área coincide
                     const areaCoincide = p.area === area.id || p.area === area.nombre;
-                    // Verificar si es del nivel que estamos fabricando
                     const nivelCoincide = (p.nivel || 1) === nivelAFabricar;
                     return areaCoincide && nivelCoincide;
                 }) || [];
                 
-                // Verificar si tenemos fabricación activa para esta área y nivel
                 const fabricacionActiva = fabricacionesActivas?.find(f => {
                     const areaCoincide = f.area === area.id || f.area === area.nombre;
                     const nivelCoincide = f.nivel === nivelAFabricar;
                     return areaCoincide && nivelCoincide && !f.completada;
                 });
                 
-                // Añadir nombre del área como título
-                html += `
-                    <div class="area-fila-mini">
-                        <div class="area-titulo-mini">
-                            <span class="area-icono-mini">${area.icono}</span>
-                            <span class="area-nombre-mini">${area.nombre}</span>
-                            <span class="area-nivel-mini">Nivel ${nivelAFabricar}</span>
-                        </div>
-                        <div class="botones-calidad-mini">
-                `;
+                html += '<div class="area-fila-mini">';
+                html += '<div class="area-titulo-mini">';
+                html += '<span class="area-icono-mini">' + area.icono + '</span>';
+                html += '<span class="area-nombre-mini">' + area.nombre + '</span>';
+                html += '<span class="area-nivel-mini">Nivel ' + nivelAFabricar + '</span>';
+                html += '</div>';
+                html += '<div class="botones-calidad-mini">';
                 
-                // Crear 5 botones para esta área (siempre 5 por nivel)
                 for (let piezaNum = 1; piezaNum <= 5; piezaNum++) {
-                    // Verificar si esta pieza específica ya está fabricada
-                    // (en tu sistema, no distinguimos pieza 1, 2, 3... solo contamos total)
                     const piezaFabricada = piezasAreaNivel.length >= piezaNum;
                     
                     if (piezaFabricada) {
-                        // Botón LLENO (ya fabricado)
-                        html += `
-                            <button class="btn-pieza-mini lleno" disabled title="${area.nombre} - Evolución ${piezaNum} fabricada">
-                                <i class="fas fa-check"></i>
-                                <span class="pieza-num">${piezaNum}</span>
-                            </button>
-                        `;
+                        html += '<button class="btn-pieza-mini lleno" disabled title="' + area.nombre + ' - Evolución ' + piezaNum + ' fabricada">';
+                        html += '<i class="fas fa-check"></i>';
+                        html += '<span class="pieza-num">' + piezaNum + '</span>';
+                        html += '</button>';
                     } else if (fabricacionActiva && piezaNum === piezasAreaNivel.length + 1) {
-                        // Botón en FABRICACIÓN (la siguiente pieza a fabricar está en proceso)
                         const tiempoRestante = new Date(fabricacionActiva.tiempo_fin) - new Date();
                         const minutos = Math.ceil(tiempoRestante / (1000 * 60));
                         
-                        html += `
-                            <button class="btn-pieza-mini fabricando" disabled title="${area.nombre} - Evolución ${piezaNum} en fabricación (${minutos} min)">
-                                <i class="fas fa-spinner fa-spin"></i>
-                                <span class="pieza-num">${piezaNum}</span>
-                            </button>
-                        `;
+                        html += '<button class="btn-pieza-mini fabricando" disabled title="' + area.nombre + ' - Evolución ' + piezaNum + ' en fabricación (' + minutos + ' min)">';
+                        html += '<i class="fas fa-spinner fa-spin"></i>';
+                        html += '<span class="pieza-num">' + piezaNum + '</span>';
+                        html += '</button>';
                     } else {
-                        // Botón VACÍO (se puede fabricar)
                         const puedeFabricar = fabricacionesCount < 4 && 
                                             this.escuderia.dinero >= 10000 &&
                                             piezaNum === piezasAreaNivel.length + 1;
                         
-                        html += `
-                            <button class="btn-pieza-mini vacio" 
-                                    onclick="iniciarFabricacionTallerDesdeBoton('${area.id}', ${nivelAFabricar})"
-                                    ${!puedeFabricar ? 'disabled' : ''}
-                                    title="${area.nombre} - Evolución ${piezaNum} (Click para fabricar)">
-                                <i class="fas fa-plus"></i>
-                                <span class="pieza-num">${piezaNum}</span>
-                            </button>
-                        `;
+                        html += '<button class="btn-pieza-mini vacio" ';
+                        html += 'onclick="iniciarFabricacionTallerDesdeBoton(\'' + area.id + '\', ' + nivelAFabricar + ')"';
+                        html += (!puedeFabricar ? ' disabled' : '') + '>';
+                        html += '<i class="fas fa-plus"></i>';
+                        html += '<span class="pieza-num">' + piezaNum + '</span>';
+                        html += '</button>';
                     }
                 }
                 
-                // Botón "SUBIR DE NIVEL" solo cuando tengamos las 5 piezas
                 if (piezasAreaNivel.length >= 5) {
-                    html += `
-                        <button class="btn-subir-nivel" onclick="f1Manager.subirNivelArea('${area.id}')" title="Subir ${area.nombre} al nivel ${nivelAFabricar + 1}">
-                            <i class="fas fa-level-up-alt"></i>
-                            SUBIR NIVEL
-                        </button>
-                    `;
+                    html += '<button class="btn-subir-nivel" onclick="f1Manager.subirNivelArea(\'' + area.id + '\')" title="Subir ' + area.nombre + ' al nivel ' + (nivelAFabricar + 1) + '">';
+                    html += '<i class="fas fa-level-up-alt"></i>';
+                    html += 'SUBIR NIVEL';
+                    html += '</button>';
                 }
                 
-                html += `
-                        </div>
-                    </div>
-                `;
+                html += '</div>';
+                html += '</div>';
             });
             
-            html += `
-                    </div>
-                    
-                    <div class="taller-info-mini">
-                        <p><i class="fas fa-info-circle"></i> Fabricaciones activas: <strong>${fabricacionesCount}/4</strong></p>
-                        <p><i class="fas fa-info-circle"></i> Necesitas 5 evoluciones del mismo nivel para subir de nivel</p>
-                        
-                    </div>
-                </div>
-            `;
+            html += '</div>';
+            html += '<div class="taller-info-mini">';
+            html += '<p><i class="fas fa-info-circle"></i> Fabricaciones activas: <strong>' + fabricacionesCount + '/4</strong></p>';
+            html += '<p><i class="fas fa-info-circle"></i> Necesitas 5 evoluciones del mismo nivel para subir de nivel</p>';
+            html += '</div>';
+            html += '</div>';
             
             container.innerHTML = html;
             
         } catch (error) {
             console.error('❌ Error cargando taller minimalista:', error);
-            container.innerHTML = `
-                <div class="error">
-                    <h3>❌ Error cargando el taller</h3>
-                    <p>${error.message}</p>
-                    <button onclick="location.reload()">Reintentar</button>
-                </div>
-            `;
+            container.innerHTML = '<div class="error"><h3>❌ Error cargando el taller</h3><p>' + error.message + '</p><button onclick="location.reload()">Reintentar</button></div>';
         }
     }
     
@@ -231,7 +183,6 @@ class F1Manager {
         }
         
         try {
-            // 1. Verificar límite de 4 fabricaciones simultáneas
             const { data: fabricacionesActivas, error: errorLimite } = await this.supabase
                 .from('fabricacion_actual')
                 .select('id')
@@ -245,7 +196,6 @@ class F1Manager {
                 return false;
             }
             
-            // 2. Contar cuántas piezas ya has fabricado de esta área y nivel
             const { data: piezasExistentes, error: errorPiezas } = await this.supabase
                 .from('almacen_piezas')
                 .select('id')
@@ -256,23 +206,20 @@ class F1Manager {
             if (errorPiezas) throw errorPiezas;
             
             const numeroPieza = (piezasExistentes?.length || 0) + 1;
-            console.log(`📊 Fabricando pieza ${numeroPieza} para ${areaId} nivel ${nivel}`);
+            console.log('📊 Fabricando pieza ' + numeroPieza + ' para ' + areaId + ' nivel ' + nivel);
             
-            // 3. Calcular tiempo progresivo EN MINUTOS y convertirlo a milisegundos
             const tiempoMinutos = this.calcularTiempoProgresivo(numeroPieza);
-            const tiempoMilisegundos = tiempoMinutos * 60 * 1000; // Convertir minutos a milisegundos
-            console.log(`⏱️ Tiempo: ${tiempoMinutos} minutos (${tiempoMilisegundos}ms)`);
+            const tiempoMilisegundos = tiempoMinutos * 60 * 1000;
+            console.log('⏱️ Tiempo: ' + tiempoMinutos + ' minutos (' + tiempoMilisegundos + 'ms)');
             
-            // 4. Verificar dinero (costo fijo)
             const costo = 10000;
             if (this.escuderia.dinero < costo) {
-                this.showNotification(`❌ Fondos insuficientes. Necesitas €${costo.toLocaleString()}`, 'error');
+                this.showNotification('❌ Fondos insuficientes. Necesitas €' + costo.toLocaleString(), 'error');
                 return false;
             }
             
-            // 5. Crear fabricación con tiempo futuro REAL
             const ahora = new Date();
-            const tiempoFin = new Date(ahora.getTime() + tiempoMilisegundos); // Añadir tiempo real en milisegundos
+            const tiempoFin = new Date(ahora.getTime() + tiempoMilisegundos);
             
             console.log('📅 Tiempos:', {
                 inicio: ahora.toISOString(),
@@ -287,7 +234,7 @@ class F1Manager {
                     area: areaId,
                     nivel: nivel,
                     tiempo_inicio: ahora.toISOString(),
-                    tiempo_fin: tiempoFin.toISOString(), // ← DEJA LA 'Z' INTACTA
+                    tiempo_fin: tiempoFin.toISOString(),
                     completada: false,
                     costo: costo,
                     creada_en: ahora.toISOString()
@@ -297,18 +244,12 @@ class F1Manager {
             
             if (errorCrear) throw errorCrear;
             
-            // 6. Descontar dinero
             this.escuderia.dinero -= costo;
             await this.updateEscuderiaMoney();
             
-            // 7. Mostrar notificación con tiempo REAL
             const nombreArea = this.getNombreArea(areaId);
-            this.showNotification(
-                `✅ ${nombreArea} (Evolución ${numeroPieza}) en fabricación - ${tiempoMinutos} minutos`, 
-                'success'
-            );
+            this.showNotification('✅ ' + nombreArea + ' (Evolución ' + numeroPieza + ') en fabricación - ' + tiempoMinutos + ' minutos', 'success');
             
-            // 8. Actualizar UI inmediatamente
             setTimeout(() => {
                 this.updateProductionMonitor();
             }, 500);
@@ -317,42 +258,27 @@ class F1Manager {
             
         } catch (error) {
             console.error('❌ Error creando fabricación:', error);
-            this.showNotification(`❌ Error: ${error.message}`, 'error');
+            this.showNotification('❌ Error: ' + error.message, 'error');
             return false;
         }
     }
     
-    // ========================
-    // MÉTODO AUXILIAR: Calcular tiempo progresivo
-    // ========================
     calcularTiempoProgresivo(numeroPieza) {
-        // Sistema progresivo según especificaste:
-        // Pieza 1: 2 minutos
-        // Pieza 2: 4 minutos  
-        // Pieza 3: 15 minutos
-        // Pieza 4: 30 minutos
-        // Pieza 5: 60 minutos
-        // Pieza 6+: +50 minutos cada una
-        
         const tiemposEspeciales = {
-            1: 2,   // Primera pieza
-            2: 4,   // Segunda pieza
-            3: 15,  // Tercera pieza
-            4: 30,  // Cuarta pieza
-            5: 60   // Quinta pieza
+            1: 2,
+            2: 4,
+            3: 15,
+            4: 30,
+            5: 60
         };
         
         if (tiemposEspeciales[numeroPieza]) {
             return tiemposEspeciales[numeroPieza];
         }
         
-        // Para pieza 6 en adelante: 60 + (numeroPieza - 5) * 50
         return 60 + ((numeroPieza - 5) * 50);
     }
     
-    // ========================
-    // MÉTODO AUXILIAR: Obtener nombre de área
-    // ========================
     getNombreArea(areaId) {
         const areas = {
             'suelo': 'Suelo',
@@ -370,41 +296,22 @@ class F1Manager {
         return areas[areaId] || areaId;
     }
     
-    // ========================
-    // MÉTODO PARA CALCULAR TIEMPOS PROGRESIVOS
-    // ========================
     calcularTiempoFabricacion(piezaNumero) {
-        // Sistema progresivo según tu especificación:
-        // Pieza 1: 2 minutos
-        // Pieza 2: 4 minutos
-        // Pieza 3: 15 minutos
-        // Pieza 4: 30 minutos
-        // Pieza 5: 60 minutos
-        // Pieza 6-...: +50 minutos cada una
-        
         const tiemposEspeciales = {
-            1: 2,    // Primera pieza: 2 minutos
-            2: 4,    // Segunda pieza: 4 minutos
-            3: 15,   // Tercera pieza: 15 minutos
-            4: 30,   // Cuarta pieza: 30 minutos
-            5: 60    // Quinta pieza: 60 minutos
+            1: 2,
+            2: 4,
+            3: 15,
+            4: 30,
+            5: 60
         };
         
         if (tiemposEspeciales[piezaNumero]) {
             return tiemposEspeciales[piezaNumero];
         }
         
-        // Para piezas 6 en adelante: 60 + (piezaNumero - 5) * 50
-        // Ejemplo: 
-        // Pieza 6: 60 + (6-5)*50 = 110 minutos
-        // Pieza 7: 60 + (7-5)*50 = 160 minutos
-        // etc.
         return 60 + ((piezaNumero - 5) * 50);
     }
     
-    // ========================
-    // MÉTODO PARA SUBIR DE NIVEL UN ÁREA
-    // ========================
     async subirNivelArea(areaId) {
         console.log('⬆️ Subiendo nivel del área:', areaId);
         
@@ -414,8 +321,7 @@ class F1Manager {
         }
         
         try {
-            // 1. Verificar que tenemos 5 piezas del nivel actual
-            const nivelActual = this.carStats[`${areaId}_nivel`] || 0;
+            const nivelActual = this.carStats[areaId + '_nivel'] || 0;
             const nivelSiguiente = nivelActual + 1;
             
             const { data: piezasArea, error: errorPiezas } = await this.supabase
@@ -429,17 +335,16 @@ class F1Manager {
             if (errorPiezas) throw errorPiezas;
             
             if (!piezasArea || piezasArea.length < 5) {
-                this.showNotification(`❌ Necesitas 5 evoluciones del mismo nivel ${nivelSiguiente} para subir de nivel`, 'error');
+                this.showNotification('❌ Necesitas 5 evoluciones del mismo nivel ' + nivelSiguiente + ' para subir de nivel', 'error');
                 return;
             }
             
-            // 2. Actualizar nivel en coches_stats
-            const campoNivel = `${areaId}_nivel`;
-            const campoProgreso = `${areaId}_progreso`;
+            const campoNivel = areaId + '_nivel';
+            const campoProgreso = areaId + '_progreso';
             
             const nuevosStats = {
                 [campoNivel]: nivelSiguiente,
-                [campoProgreso]: 0, // Resetear progreso para el nuevo nivel
+                [campoProgreso]: 0,
                 actualizado_en: new Date().toISOString()
             };
             
@@ -450,7 +355,6 @@ class F1Manager {
             
             if (errorStats) throw errorStats;
             
-            // 3. Marcar las 5 piezas como equipadas
             const idsPiezas = piezasArea.slice(0, 5).map(p => p.id);
             
             const { error: errorEquipar } = await this.supabase
@@ -460,11 +364,9 @@ class F1Manager {
             
             if (errorEquipar) throw errorEquipar;
             
-            // 4. Actualizar datos locales
             this.carStats[campoNivel] = nivelSiguiente;
             this.carStats[campoProgreso] = 0;
             
-            // 5. Mostrar notificación y recargar
             const areasNombres = {
                 'suelo': 'Suelo',
                 'motor': 'Motor',
@@ -480,22 +382,18 @@ class F1Manager {
             };
             
             const nombreArea = areasNombres[areaId] || areaId;
-            this.showNotification(`✅ ${nombreArea} subido a nivel ${nivelSiguiente}!`, 'success');
+            this.showNotification('✅ ' + nombreArea + ' subido a nivel ' + nivelSiguiente + '!', 'success');
             
-            // 6. Recargar la pestaña taller después de 1 segundo
             setTimeout(() => {
                 this.cargarTabTaller();
             }, 1000);
             
         } catch (error) {
             console.error('❌ Error subiendo nivel:', error);
-            this.showNotification(`❌ Error subiendo nivel: ${error.message}`, 'error');
+            this.showNotification('❌ Error subiendo nivel: ' + error.message, 'error');
         }
     }
 
-    // Añade este método después del init():
-
-    
     async inicializarSistemasIntegrados() {
         console.log('🔗 Inicializando sistemas integrados...');
         
@@ -504,7 +402,6 @@ class F1Manager {
             return;
         }
         
-        // 1. Crear instancia de fabricacionManager si no existe
         if (window.FabricacionManager && !window.fabricacionManager) {
             console.log('🔧 Creando fabricacionManager...');
             window.fabricacionManager = new window.FabricacionManager();
@@ -513,20 +410,10 @@ class F1Manager {
         if (window.fabricacionManager && typeof window.fabricacionManager.inicializar === 'function') {
             await window.fabricacionManager.inicializar(this.escuderia.id);
             console.log('✅ Sistema de fabricación inicializado');
-        } else {
-            console.error('❌ fabricacionManager no disponible - creando nueva instancia');
-            // Intentar crear de nuevo
-            if (window.FabricacionManager) {
-                window.fabricacionManager = new window.FabricacionManager();
-                await window.fabricacionManager.inicializar(this.escuderia.id);
-                console.log('✅ Sistema de fabricación inicializado (segundo intento)');
-            }
         }
         
-        // 2. Crear almacenManager - VERSIÓN A PRUEBA DE FALLOS
         console.log('🔧 FORZANDO creación de almacenManager...');
         
-        // SI la clase NO existe, créala AHORA MISMO
         if (!window.AlmacenManager) {
             console.log('⚠️ Clase AlmacenManager no existe, creando básica...');
             window.AlmacenManager = class AlmacenManagerBasico {
@@ -537,7 +424,7 @@ class F1Manager {
                 
                 async inicializar(escuderiaId) {
                     this.escuderiaId = escuderiaId;
-                    console.log(`✅ almacenManager inicializado para escudería: ${escuderiaId}`);
+                    console.log('✅ almacenManager inicializado para escudería: ' + escuderiaId);
                     return true;
                 }
                 
@@ -561,27 +448,20 @@ class F1Manager {
             };
         }
         
-        // CREAR la instancia SI O SÍ
         if (!window.almacenManager) {
             window.almacenManager = new window.AlmacenManager();
             console.log('✅ Instancia de almacenManager creada');
         }
         
-        // INICIALIZAR SI O SÍ
         if (window.almacenManager && this.escuderia && this.escuderia.id) {
             await window.almacenManager.inicializar(this.escuderia.id);
             console.log('✅ Sistema de almacén inicializado (GARANTIZADO)');
-        } else {
-            console.error('❌ IMPOSIBLE inicializar almacén - falta escudería');
         }
         
-        // 3. Integración (opcional)
         if (window.IntegracionManager) {
             window.integracionManager = new window.IntegracionManager();
             await window.integracionManager.inicializar(this.escuderia.id);
             console.log('✅ Sistema de integración inicializado');
-        } else {
-            console.warn('⚠️ IntegracionManager no cargado - continuando sin integración');
         }
         
         this.iniciarTimersAutomaticos();
@@ -593,14 +473,13 @@ class F1Manager {
                 clearInterval(timer);
             });
         }
-        // CORRECCIÓN: Añadir llave y nombre de propiedad
+        
         this.timersAutomaticos = {
             produccion: setInterval(() => {
                 if (window.fabricacionManager && window.fabricacionManager.actualizarUIProduccion) {
-                    window.fabricacionManager.actualizarUIProduccion(true); // true = solo contador
+                    window.fabricacionManager.actualizarUIProduccion(true);
                 }
-            }, 1000), // Cada segundo para contador fluido 
-
+            }, 1000),
             
             dashboard: setInterval(() => {
                 this.updateProductionMonitor();
@@ -608,7 +487,7 @@ class F1Manager {
         };
         
         console.log('⏱️ Timers automáticos iniciados');
-    };
+    }
 
     async cargarPiezasMontadas() {
         console.log('🎯 Cargando piezas montadas...');
@@ -617,14 +496,12 @@ class F1Manager {
         if (!contenedor) return;
         
         try {
-            // 1. Obtener piezas montadas
             const { data: piezasMontadas } = await supabase
                 .from('almacen_piezas')
                 .select('*')
                 .eq('escuderia_id', this.escuderia.id)
                 .eq('equipada', true);
             
-            // 2. MAPEO de nombres de la BD a IDs del código
             const mapeoAreas = {
                 'Suelo y Difusor': 'suelo',
                 'Motor': 'motor',
@@ -641,15 +518,12 @@ class F1Manager {
                 'Caja de Cambios': 'caja_cambios'
             };
             
-            // 3. Crear mapeo área -> pieza montada
             const piezasPorArea = {};
             piezasMontadas?.forEach(p => {
-                // Convertir nombre de BD a ID del código
                 const areaId = mapeoAreas[p.area] || p.area.toLowerCase().replace(/ /g, '_');
                 piezasPorArea[areaId] = p;
             });
             
-            // 4. Generar 11 botones (usando los IDs que espera tu código)
             const areas = [
                 { id: 'suelo', nombre: 'Suelo', icono: '🏎️' },
                 { id: 'motor', nombre: 'Motor', icono: '⚙️' },
@@ -671,70 +545,51 @@ class F1Manager {
                 const pieza = piezasPorArea[area.id];
                 
                 if (pieza) {
-                    // Botón con pieza montada
                     puntosTotales += pieza.puntos_base || 0;
-                    html += `
-                        <div class="boton-area-montada" onclick="irAlAlmacenDesdePiezas()" 
-                             title="${pieza.area} - Nivel ${pieza.nivel} - ${pieza.calidad}">
-                            <div class="icono-area">${area.icono}</div>
-                            <div class="nombre-area">${area.nombre}</div>
-                            <div class="nivel-pieza">Nivel ${pieza.nivel}</div>
-                            <div class="puntos-pieza">+${pieza.puntos_base}</div>
-                            <div class="calidad-pieza" style="font-size:0.6rem;color:#aaa">${pieza.calidad}</div>
-                        </div>
-                    `;
+                    html += '<div class="boton-area-montada" onclick="irAlAlmacenDesdePiezas()" title="' + pieza.area + ' - Nivel ' + pieza.nivel + ' - ' + pieza.calidad + '">';
+                    html += '<div class="icono-area">' + area.icono + '</div>';
+                    html += '<div class="nombre-area">' + area.nombre + '</div>';
+                    html += '<div class="nivel-pieza">Nivel ' + pieza.nivel + '</div>';
+                    html += '<div class="puntos-pieza">+' + pieza.puntos_base + '</div>';
+                    html += '<div class="calidad-pieza" style="font-size:0.6rem;color:#aaa">' + pieza.calidad + '</div>';
+                    html += '</div>';
                 } else {
-                    // Botón vacío
-                    html += `
-                        <div class="boton-area-vacia" onclick="irAlAlmacenDesdePiezas()" 
-                             title="Sin pieza - Click para equipar">
-                            <div class="icono-area">+</div>
-                            <div class="nombre-area">${area.nombre}</div>
-                            <div style="font-size:0.7rem; color:#888; margin-top:5px;">Vacío</div>
-                        </div>
-                    `;
+                    html += '<div class="boton-area-vacia" onclick="irAlAlmacenDesdePiezas()" title="Sin pieza - Click para equipar">';
+                    html += '<div class="icono-area">+</div>';
+                    html += '<div class="nombre-area">' + area.nombre + '</div>';
+                    html += '<div style="font-size:0.7rem; color:#888; margin-top:5px;">Vacío</div>';
+                    html += '</div>';
                 }
             });
             
             contenedor.innerHTML = html;
             
-            // Actualizar total de puntos
             const puntosElement = document.getElementById('puntos-totales-montadas');
             if (puntosElement) {
                 puntosElement.textContent = puntosTotales;
             }
             
-            console.log(`✅ Piezas montadas cargadas: ${Object.keys(piezasPorArea).length} áreas equipadas`);
-            console.log(`📊 Puntos totales: ${puntosTotales}`);
-            
         } catch (error) {
             console.error('❌ Error cargando piezas montadas:', error);
-            // Mostrar botones vacíos como fallback
             this.mostrarBotonesVacios(contenedor);
         }
     }
     
-    // Función auxiliar para mostrar botones vacíos
     mostrarBotonesVacios(contenedor) {
         const areas = ['Suelo', 'Motor', 'Alerón Del.', 'Caja Cambios', 'Pontones', 
                        'Suspensión', 'Alerón Tras.', 'Chasis', 'Frenos', 'Volante', 'Electrónica'];
         
         let html = '';
         areas.forEach(area => {
-            html += `
-                <div class="boton-area-vacia" onclick="irAlAlmacenDesdePiezas()">
-                    <div class="icono-area">+</div>
-                    <div class="nombre-area">${area}</div>
-                    <div style="font-size:0.7rem; color:#888; margin-top:5px;">Vacío</div>
-                </div>
-            `;
+            html += '<div class="boton-area-vacia" onclick="irAlAlmacenDesdePiezas()">';
+            html += '<div class="icono-area">+</div>';
+            html += '<div class="nombre-area">' + area + '</div>';
+            html += '<div style="font-size:0.7rem; color:#888; margin-top:5px;">Vacío</div>';
+            html += '</div>';
         });
         
         contenedor.innerHTML = html;
     }
-    
-
-
 
     async loadPilotosContratados() {
         if (!this.escuderia || !this.escuderia.id || !this.supabase) {
@@ -745,7 +600,7 @@ class F1Manager {
         try {
             console.log('👥 Cargando ingenieros contratados...');
             const { data: ingenieros, error } = await this.supabase
-                .from('ingenieros_contratados')  // ← TABLA CORRECTA
+                .from('ingenieros_contratados')
                 .select('*')
                 .eq('escuderia_id', this.escuderia.id)
                 .eq('activo', true)
@@ -754,9 +609,9 @@ class F1Manager {
             if (error) throw error;
     
             this.pilotos = ingenieros || [];
-            console.log(`✅ ${this.pilotos.length} ingeniero(s) cargado(s)`);
+            console.log('✅ ' + this.pilotos.length + ' ingeniero(s) cargado(s)');
             
-            this.updatePilotosUI(); // Esta función debe usar this.pilotos
+            this.updatePilotosUI();
             
         } catch (error) {
             this.pilotos = [];
@@ -764,7 +619,6 @@ class F1Manager {
             this.updatePilotosUI();
         }
     }
-    
 
     async cargarCarStats() {
         if (!this.escuderia) return;
@@ -783,14 +637,7 @@ class F1Manager {
             console.error('Error cargando car stats:', error);
         }
     }
-    
 
-    // ========================
-    // DASHBOARD COMPLETO (VERSIÓN OPTIMIZADA - UNA SOLA FILA)
-    // ========================
-    // ========================
-    // DASHBOARD COMPLETO (VERSIÓN OPTIMIZADA - UNA SOLA FILA)
-    // ========================
     async cargarDashboardCompleto() {
         console.log('📊 Cargando dashboard COMPACTO con funcionalidad completa...');
         
@@ -798,11 +645,9 @@ class F1Manager {
             console.error('❌ No hay escudería para cargar dashboard');
             return;
         }
-    
-        // 1. Cargar el próximo GP
+
         await this.cargarProximoGP();
         
-        // 2. Función auxiliar para formatear fecha
         function formatearFecha(fechaStr) {
             if (!fechaStr) return 'Fecha no definida';
             const fecha = new Date(fechaStr);
@@ -812,8 +657,7 @@ class F1Manager {
             };
             return fecha.toLocaleDateString('es-ES', opciones);
         }
-        
-        // 3. HTML del countdown
+                
         const countdownHTML = `
             <div class="countdown-f1-container">
                 <div class="countdown-header-f1">
@@ -874,11 +718,9 @@ class F1Manager {
                 </button>
             </div>
         `;
-    
-        // 4. HTML principal del dashboard
-        const htmlPrincipal = `
+
+        document.body.innerHTML = `
             <div id="app">
-                <!-- Header compacto -->
                 <header class="dashboard-header-compacto">
                     <div class="header-left-compacto">
                         <div class="logo-compacto">
@@ -913,13 +755,9 @@ class F1Manager {
                     </nav>
                 </header>
                 
-                <!-- Main Content -->
                 <main class="dashboard-content">
-                    <!-- Tab Principal -->
                     <div id="tab-principal" class="tab-content active">
                         <div class="three-columns-layout">
-                            
-                            <!-- Columna 1: Estrategas -->
                             <div class="col-estrategas">
                                 <div class="section-header">
                                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -944,16 +782,13 @@ class F1Manager {
                                 </div>
                                 
                                 <div id="pilotos-container" class="pilotos-container">
-                                    <!-- Contenido dinámico -->
                                 </div>
                             </div>
                             
-                            <!-- Columna 2: Countdown -->
                             <div class="col-countdown">
                                 ${countdownHTML}
                             </div>
                             
-                            <!-- Columna 3: Producción -->
                             <div class="col-fabrica">
                                 <div class="monitor-fabrica">
                                     <div class="section-header">
@@ -978,7 +813,6 @@ class F1Manager {
                             </div>
                         </div>
                         
-                        <!-- Piezas Montadas -->
                         <section class="piezas-montadas">
                             <div class="section-header">
                                 <h2><i class="fas fa-car"></i> PIEZAS MONTADAS EN EL COCHE</h2>
@@ -989,12 +823,10 @@ class F1Manager {
                             </div>
                             
                             <div id="grid-piezas-montadas" class="grid-11-columns">
-                                <!-- 11 botones dinámicos -->
                             </div>
                         </section>
                     </div>
                     
-                    <!-- Otras pestañas -->
                     <div id="tab-taller" class="tab-content"></div>
                     <div id="tab-almacen" class="tab-content"></div>
                     <div id="tab-mercado" class="tab-content"></div>
@@ -1002,7 +834,6 @@ class F1Manager {
                     <div id="tab-clasificacion" class="tab-content"></div>
                 </main>
                 
-                <!-- Footer -->
                 <footer class="dashboard-footer">
                     <div class="user-info-compacto">
                         <i class="fas fa-user-circle"></i>
@@ -1027,17 +858,162 @@ class F1Manager {
                     </div>
                 </footer>
             </div>
+            
+            <script>
+                setTimeout(() => {
+                    const loadingScreen = document.getElementById('loading-screen');
+                    if (loadingScreen) {
+                        loadingScreen.style.display = 'none';
+                    }
+                }, 1000);
+                
+                document.querySelectorAll('.tab-btn-compacto').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const tabId = e.currentTarget.dataset.tab;
+                        
+                        document.querySelectorAll('.tab-btn-compacto').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        
+                        e.currentTarget.classList.add('active');
+                        document.getElementById('tab-' + tabId).classList.add('active');
+                        
+                        if (window.tabManager && window.tabManager.switchTab) {
+                            window.tabManager.switchTab(tabId);
+                        }
+                        
+                        if (tabId === 'principal') {
+                            setTimeout(() => {
+                                if (window.cargarContenidoPrincipal) {
+                                    window.cargarContenidoPrincipal();
+                                }
+                            }, 100);
+                        }
+                    });
+                });
+                
+                const logoutBtn = document.getElementById('logout-btn-visible');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        try {
+                            const supabaseClient = window.supabase;
+                            if (supabaseClient) {
+                                await supabaseClient.auth.signOut();
+                                console.log('✅ Sesión cerrada');
+                                window.location.href = window.location.origin;
+                            }
+                        } catch (error) {
+                            console.error('❌ Error cerrando sesión:', error);
+                            window.location.href = window.location.origin;
+                        }
+                    });
+                }
+                
+                window.irAlTallerDesdeProduccion = function() {
+                    document.querySelector('[data-tab="taller"]').click();
+                };
+                
+                window.gestionarEstrategas = function() {
+                    if (window.f1Manager && window.f1Manager.mostrarModalContratacion) {
+                        window.f1Manager.mostrarModalContratacion();
+                    }
+                };
+                
+                window.cargarContenidoPrincipal = async function() {
+                    if (window.f1Manager) {
+                        if (window.f1Manager.cargarPiezasMontadas) {
+                            await window.f1Manager.cargarPiezasMontadas();
+                        }
+                        if (window.f1Manager.loadPilotosContratados) {
+                            await window.f1Manager.loadPilotosContratados();
+                        }
+                        if (window.f1Manager.updateProductionMonitor) {
+                            window.f1Manager.updateProductionMonitor();
+                        }
+                    }
+                };
+                
+                setTimeout(() => {
+                    if (window.cargarContenidoPrincipal) {
+                        window.cargarContenidoPrincipal();
+                    }
+                }, 1500);
+            </script>
         `;
-    
-        // Establecer el HTML del body
-        document.body.innerHTML = htmlPrincipal;
-    
-        // Continuar con la inicialización...
-        // [El resto del código de inicialización...]
-    }
-    
 
-    
+        document.getElementById('logout-btn-visible').addEventListener('click', async () => {
+            try {
+                console.log('🔒 Cerrando sesión...');
+                const { error } = await this.supabase.auth.signOut();
+                if (error) {
+                    console.error('❌ Error al cerrar sesión:', error);
+                    this.showNotification('Error al cerrar sesión', 'error');
+                } else {
+                    console.log('✅ Sesión cerrada, recargando...');
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('❌ Error inesperado:', error);
+                this.showNotification('Error inesperado', 'error');
+            }
+        });
+        
+        setTimeout(async () => {
+            console.log('🔧 Inicializando sistemas críticos del dashboard...');
+            
+            if (!window.fabricacionManager && window.FabricacionManager) {
+                window.fabricacionManager = new window.FabricacionManager();
+                if (this.escuderia) {
+                    await window.fabricacionManager.inicializar(this.escuderia.id);
+                }
+            }
+            
+            setTimeout(() => {
+                if (window.tabManager && window.tabManager.setup) {
+                    const originalSwitchTab = window.tabManager.switchTab;
+                    
+                    window.tabManager.switchTab = function(tabId) {
+                        originalSwitchTab.call(this, tabId);
+                        
+                        if (tabId === 'principal') {
+                            setTimeout(() => {
+                                if (window.cargarContenidoPrincipal) {
+                                    window.cargarContenidoPrincipal();
+                                }
+                            }, 100);
+                        }
+                    };
+                    
+                    window.tabManager.setup();
+                }
+            }, 400);
+            
+            const supabase = window.supabase;
+            if (supabase) {
+                await this.loadCarStatus();
+                await this.loadPilotosContratados();
+                await this.cargarProximoGP();
+                
+                setTimeout(() => {
+                    this.iniciarCountdownCompacto();
+                }, 500);
+                
+                setTimeout(async () => {
+                    await this.cargarPiezasMontadas();
+                }, 500);
+            }
+            
+            console.log('✅ Dashboard compacto cargado correctamente con toda la funcionalidad');
+            
+            setTimeout(() => {
+                const loadingScreen = document.getElementById('f1-loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.remove();
+                }
+            }, 500);
+        }, 1000);
+    }
+
     getIconoEspecialidad(especialidad) {
         const iconos = {
             'Tiempos': '⏱️',
@@ -1049,141 +1025,65 @@ class F1Manager {
         };
         return iconos[especialidad] || iconos.default;
     }
-    
-    // ========================
-    // MÉTODO PARA ACTUALIZAR MONITOR DE PRODUCCIÓN (COMPACTO)
-    // ========================
-    async updateProductionMonitor() {
-        if (!this.escuderia || !this.escuderia.id || !this.supabase) {
-            console.log('❌ No hay escudería para monitor de producción');
-            return;
-        }
+
+    async updateProductionMonitorCompacto() {
+        const container = document.getElementById('produccion-grid-compacto');
+        const contador = document.getElementById('contador-produccion');
         
-        const container = document.getElementById('produccion-actual');
-        if (!container) {
-            console.log('❌ No se encontró #produccion-actual');
-            return;
-        }
+        if (!container || !this.escuderia) return;
         
         try {
-            // Cargar fabricaciones activas
             const { data: fabricaciones, error } = await this.supabase
                 .from('fabricacion_actual')
                 .select('*')
                 .eq('escuderia_id', this.escuderia.id)
                 .eq('completada', false)
-                .order('tiempo_inicio', { ascending: true });
+                .order('tiempo_fin', { ascending: true });
             
             if (error) throw error;
             
-            console.log('📊 Fabricaciones activas encontradas:', fabricaciones?.length || 0);
-            
-            // Verificar tiempos REALES de cada fabricación
-            const ahoraUTC = Date.now();
-            const fabricacionesConEstado = (fabricaciones || []).map(f => {
-                const tiempoFinStr = f.tiempo_fin.endsWith('Z') ? f.tiempo_fin : f.tiempo_fin + 'Z';
-                const tiempoFinUTC = new Date(tiempoFinStr).getTime();
-                const tiempoRestante = tiempoFinUTC - ahoraUTC;
-                const lista = tiempoRestante <= 0;
-                
-                return {
-                    ...f,
-                    tiempoRestante,
-                    lista
-                };
-            });
-            
-            console.log('⏱️ Estado fabricaciones:', fabricacionesConEstado.map(f => ({
-                area: f.area,
-                tiempoFin: f.tiempo_fin,
-                tiempoRestante: f.tiempoRestante,
-                lista: f.lista
-            })));
-            
-            // Para cada fabricación, calcular su número de pieza
-            const fabricacionesConNumero = [];
-            for (const fabricacion of fabricacionesConEstado) {
-                const { data: piezasExistentes } = await this.supabase
-                    .from('almacen_piezas')
-                    .select('id')
-                    .eq('escuderia_id', this.escuderia.id)
-                    .eq('area', fabricacion.area)
-                    .eq('nivel', fabricacion.nivel);
-                
-                const numeroPieza = (piezasExistentes?.length || 0) + 1;
-                fabricacionesConNumero.push({
-                    ...fabricacion,
-                    numero_pieza: numeroPieza
-                });
-            }
-            
-            // Asegurar estilos
-            this.cargarEstilosProduccion();
-            
-            let html = '<div class="produccion-slots">';
-            
-            // Crear 4 slots
-            for (let i = 0; i < 4; i++) {
-                const fabricacion = fabricacionesConNumero[i];
+            const slots = container.querySelectorAll('.slot-produccion-compacto');
+            slots.forEach((slot, index) => {
+                const fabricacion = fabricaciones && fabricaciones[index];
                 
                 if (fabricacion) {
-                    const tiempoRestante = fabricacion.tiempoRestante;
-                    const lista = fabricacion.lista;
-                    const nombreArea = this.getNombreArea(fabricacion.area);
-                    const tiempoFormateado = this.formatTime(tiempoRestante);
-                    const numeroPieza = fabricacion.numero_pieza || 1;
+                    const tiempoFin = new Date(fabricacion.tiempo_fin);
+                    const ahora = new Date();
+                    const diferencia = tiempoFin - ahora;
                     
-                    html += `
-                        <div class="produccion-slot ${lista ? 'produccion-lista' : 'produccion-activa'}" 
-                             onclick="recogerPiezaSiLista('${fabricacion.id}', ${lista}, ${i})"
-                             title="${nombreArea} - Evolución ${numeroPieza} de nivel ${fabricacion.nivel}">
-                            <div class="produccion-icon">
-                                ${lista ? '✅' : ''}
-                            </div>
-                            <div class="produccion-info">
-                                <span class="produccion-nombre">${nombreArea}</span>
-                                <span class="produccion-pieza-num">Evolución ${numeroPieza}</span>
-                                ${lista ? 
-                                    '<span class="produccion-lista-text">¡LISTA!</span>' :
-                                    '<span class="produccion-tiempo">' + tiempoFormateado + '</span>'
-                                }
-                            </div>
-                        </div>
-                    `;
+                    let tiempoTexto = '';
+                    if (diferencia > 0) {
+                        const horas = Math.floor(diferencia / (1000 * 60 * 60));
+                        const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
+                        tiempoTexto = horas + 'h ' + minutos + 'm';
+                    } else {
+                        tiempoTexto = '¡Listo!';
+                    }
+                    
+                    slot.classList.add('slot-activo-compacto');
+                    slot.innerHTML = '<div class="slot-icono-compacto"><i class="fas fa-cog fa-spin"></i></div><div class="slot-texto-compacto"><div style="color: #4CAF50; font-weight: bold; font-size: 0.7rem;">' + (fabricacion.area || 'Evolución') + '</div><div style="color: #FF9800; font-size: 0.65rem;">' + tiempoTexto + '</div></div>';
+                    
+                    slot.onclick = () => {
+                        document.querySelector('[data-tab="taller"]').click();
+                    };
                 } else {
-                    // Slot vacío
-                    html += `
-                        <div class="produccion-slot" data-slot="${i}" onclick="irAlTallerDesdeProduccion()">
-                            <div class="slot-content">
-                                <i class="fas fa-plus"></i>
-                                <span>Departamento ${i + 1}</span>
-                                <span class="slot-disponible">Disponible</span>
-                            </div>
-                        </div>
-                    `;
+                    slot.classList.remove('slot-activo-compacto');
+                    slot.innerHTML = '<div class="slot-icono-compacto"><i class="fas fa-plus"></i></div><div class="slot-texto-compacto">Slot ' + (index + 1) + '</div>';
+                    slot.onclick = () => {
+                        document.querySelector('[data-tab="taller"]').click();
+                    };
                 }
+            });
+            
+            if (contador) {
+                contador.textContent = (fabricaciones?.length || 0) + '/4';
             }
             
-            html += '</div>';
-            container.innerHTML = html;
-            
-            // Iniciar timer para actualización en tiempo real
-            this.iniciarTimerProduccion();
-            
         } catch (error) {
-            console.error("Error en updateProductionMonitor:", error);
-            container.innerHTML = `
-                <div class="produccion-error">
-                    <p>❌ Error cargando producción</p>
-                    <button onclick="window.f1Manager.updateProductionMonitor()">Reintentar</button>
-                </div>
-            `;
+            console.error('Error actualizando producción:', error);
         }
     }
-    
-    // ========================
-    // MÉTODO PARA CARGAR PIEZAS MONTADAS (COMPACTO)
-    // ========================
+
     async cargarPiezasMontadasCompacto() {
         console.log('🎯 Cargando piezas montadas compactas...');
         
@@ -1193,14 +1093,12 @@ class F1Manager {
         if (!container) return;
         
         try {
-            // Obtener piezas montadas (MISMA LÓGICA QUE ANTES)
             const { data: piezasMontadas } = await this.supabase
                 .from('almacen_piezas')
                 .select('*')
                 .eq('escuderia_id', this.escuderia.id)
                 .eq('equipada', true);
             
-            // Mapeo de áreas
             const mapeoAreas = {
                 'Suelo y Difusor': 'suelo',
                 'Motor': 'motor',
@@ -1223,7 +1121,6 @@ class F1Manager {
                 piezasPorArea[areaId] = p;
             });
             
-            // Áreas del coche
             const areas = [
                 { id: 'suelo', nombre: 'Suelo', icono: '🏎️' },
                 { id: 'motor', nombre: 'Motor', icono: '⚙️' },
@@ -1246,74 +1143,49 @@ class F1Manager {
                 
                 if (pieza) {
                     puntosTotales += pieza.puntos_base || 0;
-                    html += `
-                        <div class="pieza-boton-compacto pieza-montada-compacto" onclick="irAlAlmacenDesdePiezas()" 
-                             title="${pieza.area} - Nivel ${pieza.nivel} - ${pieza.calidad}">
-                            <div class="pieza-icono-compacto">${area.icono}</div>
-                            <div class="pieza-nombre-compacto">${area.nombre}</div>
-                            <div class="pieza-nivel-compacto">N${pieza.nivel}</div>
-                        </div>
-                    `;
+                    html += '<div class="pieza-boton-compacto pieza-montada-compacto" onclick="irAlAlmacenDesdePiezas()" title="' + pieza.area + ' - Nivel ' + pieza.nivel + ' - ' + pieza.calidad + '">';
+                    html += '<div class="pieza-icono-compacto">' + area.icono + '</div>';
+                    html += '<div class="pieza-nombre-compacto">' + area.nombre + '</div>';
+                    html += '<div class="pieza-nivel-compacto">N' + pieza.nivel + '</div>';
+                    html += '</div>';
                 } else {
-                    html += `
-                        <div class="pieza-boton-compacto" onclick="irAlAlmacenDesdePiezas()" 
-                             title="Sin pieza - Click para equipar">
-                            <div class="pieza-icono-compacto" style="color: #666;">+</div>
-                            <div class="pieza-nombre-compacto">${area.nombre}</div>
-                            <div style="font-size: 0.55rem; color: #888;">Vacío</div>
-                        </div>
-                    `;
+                    html += '<div class="pieza-boton-compacto" onclick="irAlAlmacenDesdePiezas()" title="Sin pieza - Click para equipar">';
+                    html += '<div class="pieza-icono-compacto" style="color: #666;">+</div>';
+                    html += '<div class="pieza-nombre-compacto">' + area.nombre + '</div>';
+                    html += '<div style="font-size: 0.55rem; color: #888;">Vacío</div>';
+                    html += '</div>';
                 }
             });
             
             container.innerHTML = html;
             
-            // Actualizar puntos totales
             if (puntosElement) {
-                puntosElement.textContent = `${puntosTotales} pts`;
+                puntosElement.textContent = puntosTotales + ' pts';
             }
             
         } catch (error) {
             console.error('❌ Error cargando piezas montadas:', error);
-            // Fallback
-            container.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; color: #888; padding: 10px;">
-                    Error cargando piezas
-                </div>
-            `;
+            container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #888; padding: 10px;">Error cargando piezas</div>';
         }
     }
-    
-    // ========================
-    // MÉTODO PARA COUNTDOWN COMPLETO CON DISEÑO F1
-    // ========================
+
     async iniciarCountdownCompacto() {
         console.log('🏎️ Iniciando countdown estilo F1...');
         
-        // Cargar próximo GP si no está cargado
         if (!this.proximoGP) {
             await this.cargarProximoGP();
         }
         
-        // Si no hay próximo GP, mostrar mensaje
         if (!this.proximoGP) {
             console.log('❌ No hay próximas carreras');
             return;
         }
         
-        // Crear fecha de carrera (48 horas antes)
         const fechaCarrera = new Date(this.proximoGP.fecha_inicio);
-        fechaCarrera.setHours(14, 0, 0, 0); // Hora de carrera: 14:00
+        fechaCarrera.setHours(14, 0, 0, 0);
         const fechaLimiteApuestas = new Date(fechaCarrera);
-        fechaLimiteApuestas.setHours(fechaCarrera.getHours() - 48); // 48 horas antes
+        fechaLimiteApuestas.setHours(fechaCarrera.getHours() - 48);
         
-        console.log('📅 Fechas:', {
-            carrera: fechaCarrera,
-            limiteApuestas: fechaLimiteApuestas,
-            ahora: new Date()
-        });
-        
-        // Función para formatear fecha
         const formatearFecha = (fecha) => {
             const opciones = { 
                 weekday: 'long', 
@@ -1324,42 +1196,33 @@ class F1Manager {
             return fecha.toLocaleDateString('es-ES', opciones);
         };
         
-        // Función para actualizar el countdown
         const actualizarCountdown = () => {
             const ahora = new Date();
             const diferencia = fechaLimiteApuestas - ahora;
             
-            // Elementos del DOM
             const diasElem = document.getElementById('countdown-dias');
             const horasElem = document.getElementById('countdown-horas');
             const minutosElem = document.getElementById('countdown-minutos');
             const segundosElem = document.getElementById('countdown-segundos');
-            const btnPronostico = document.getElementById('btn-enviar-pronostico');
-            const estadoApuestasElem = document.getElementById('estado-apuestas');
             
             if (diferencia > 0) {
-                // Calcular tiempo restante
                 const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24));
                 const horas = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
                 const segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
                 
-                // Actualizar elementos
                 if (diasElem) diasElem.textContent = dias.toString().padStart(2, '0');
                 if (horasElem) horasElem.textContent = horas.toString().padStart(2, '0');
                 if (minutosElem) minutosElem.textContent = minutos.toString().padStart(2, '0');
                 if (segundosElem) segundosElem.textContent = segundos.toString().padStart(2, '0');
                 
-                // UN SOLO BOTÓN
                 const btnApuestas = document.getElementById('btn-estado-apuestas');
                 if (btnApuestas) {
                     if (diferencia > 0) {
-                        // Apuestas abiertas
                         btnApuestas.disabled = false;
                         btnApuestas.innerHTML = '<i class="fas fa-paper-plane"></i> ENVIAR PRONÓSTICO';
                         btnApuestas.className = 'btn-pronostico-f1 abierto';
                     } else {
-                        // Apuestas cerradas
                         btnApuestas.disabled = true;
                         btnApuestas.innerHTML = '<i class="fas fa-lock"></i> APUESTAS CERRADAS';
                         btnApuestas.className = 'btn-pronostico-f1 cerrado';
@@ -1367,38 +1230,18 @@ class F1Manager {
                 }
                 
             } else {
-                // Tiempo agotado
                 if (diasElem) diasElem.textContent = '00';
                 if (horasElem) horasElem.textContent = '00';
                 if (minutosElem) minutosElem.textContent = '00';
                 if (segundosElem) segundosElem.textContent = '00';
-                
-                // Botón desactivado
-                if (btnPronostico) {
-                    btnPronostico.disabled = true;
-                    btnPronostico.innerHTML = '<i class="fas fa-lock"></i> APUESTAS CERRADAS';
-                }
-                
-                // Estado apuestas
-                if (estadoApuestasElem) {
-                    estadoApuestasElem.innerHTML = `
-                        <i class="fas fa-lock"></i>
-                        <span>APUESTAS CERRADAS</span>
-                    `;
-                    estadoApuestasElem.className = 'estado-apuestas cerrado';
-                }
             }
         };
         
-        // Iniciar el countdown
         actualizarCountdown();
         const intervalId = setInterval(actualizarCountdown, 1000);
         this.countdownInterval = intervalId;
     }
-    
-    // ========================
-    // MÉTODO PARA CERRAR SESIÓN
-    // ========================
+
     async cerrarSesion() {
         try {
             if (window.supabase) {
@@ -1413,10 +1256,8 @@ class F1Manager {
     }
         
     async loadProximoGP() {
-        // VERIFICAR primero que window.supabase existe
         if (!window.supabase || !window.supabase.from) {
             console.error('❌ window.supabase no está disponible en loadProximoGP');
-            // Crear datos de ejemplo
             this.proximoGP = {
                 nombre: 'Gran Premio de España',
                 fecha_inicio: new Date(Date.now() + 86400000 * 3).toISOString(),
@@ -1438,7 +1279,6 @@ class F1Manager {
             
             if (error) {
                 console.error('❌ Error en consulta GP:', error.message);
-                // Crear datos de ejemplo
                 this.proximoGP = {
                     nombre: 'Gran Premio de España',
                     fecha_inicio: new Date(Date.now() + 86400000 * 3).toISOString(),
@@ -1448,7 +1288,6 @@ class F1Manager {
                 this.proximoGP = gp;
                 console.log('✅ GP cargado:', gp.nombre);
             } else {
-                // Caso NUEVO: gp es null (no se encontró nada)
                 console.log('ℹ️ No hay GP próximo configurado en la base de datos');
                 this.proximoGP = {
                     nombre: 'Próximo GP por confirmar',
@@ -1461,7 +1300,6 @@ class F1Manager {
             
         } catch (error) {
             console.error('❌ Error fatal en loadProximoGP:', error);
-            // Crear datos de ejemplo
             this.proximoGP = {
                 nombre: 'Próximo GP por confirmar',
                 fecha_inicio: new Date(Date.now() + 86400000 * 7).toISOString(),
@@ -1470,11 +1308,7 @@ class F1Manager {
             this.updateCountdown();
         }
     }
-    
-    // ========================
-    // MÉTODOS AUXILIARES (igual que antes)
-    // ========================
-    
+
     async loadCarStatus() {
         if (!this.escuderia) return;
         
@@ -1493,7 +1327,7 @@ class F1Manager {
             console.error('Error cargando stats:', error);
         }
     }
-    
+
     async loadPilotos() {
         if (!this.escuderia) return;
         
@@ -1512,9 +1346,7 @@ class F1Manager {
             console.error('Error cargando pilotos:', error);
         }
     }
-    // ========================
-    // MÉTODO PARA CARGAR PRÓXIMO GP DESDE BD
-    // ========================
+
     async cargarProximoGP() {
         console.log('📅 Cargando próximo GP desde BD...');
         
@@ -1524,11 +1356,10 @@ class F1Manager {
         }
         
         try {
-            // Buscar la próxima carrera (fecha_inicio >= hoy)
             const { data: proximosGPs, error } = await this.supabase
                 .from('calendario_gp')
                 .select('*')
-                .gte('fecha_inicio', new Date().toISOString().split('T')[0]) // Fecha >= hoy
+                .gte('fecha_inicio', new Date().toISOString().split('T')[0])
                 .order('fecha_inicio', { ascending: true })
                 .limit(1);
             
@@ -1550,37 +1381,34 @@ class F1Manager {
             return null;
         }
     }
-    
+
     updateCarAreasUI() {
         const container = document.getElementById('areas-coche');
         if (!container || !this.carStats) return;
         
         container.innerHTML = window.CAR_AREAS.map(area => {
-            const nivel = this.carStats[`${area.id}_nivel`] || 0;
-            const progreso = this.carStats[`${area.id}_progreso`] || 0;
+            const nivel = this.carStats[area.id + '_nivel'] || 0;
+            const progreso = this.carStats[area.id + '_progreso'] || 0;
             const porcentaje = (progreso / window.CONFIG.PIECES_PER_LEVEL) * 100;
             
-            return `
-                <div class="area-item" style="border-left-color: ${area.color}">
-                    <span class="area-nombre">${area.name}</span>
-                    <div class="area-nivel">
-                        <span>Nivel</span>
-                        <span class="nivel-valor">${nivel}</span>
-                    </div>
-                    <div class="area-progreso">
-                        Progreso: <span class="progreso-valor">${progreso}/20</span>
-                    </div>
-                    <div class="progress-bar-small">
-                        <div class="progress-fill-small" style="width: ${porcentaje}%"></div>
-                    </div>
-                    <button class="btn-fabricar" data-area="${area.id}">
-                        <i class="fas fa-hammer"></i> Fabricar (€${window.CONFIG.PIECE_COST.toLocaleString()})
-                    </button>
-                </div>
-            `;
+            return '<div class="area-item" style="border-left-color: ' + area.color + '">' +
+                   '<span class="area-nombre">' + area.name + '</span>' +
+                   '<div class="area-nivel">' +
+                   '<span>Nivel</span>' +
+                   '<span class="nivel-valor">' + nivel + '</span>' +
+                   '</div>' +
+                   '<div class="area-progreso">' +
+                   'Progreso: <span class="progreso-valor">' + progreso + '/20</span>' +
+                   '</div>' +
+                   '<div class="progress-bar-small">' +
+                   '<div class="progress-fill-small" style="width: ' + porcentaje + '%"></div>' +
+                   '</div>' +
+                   '<button class="btn-fabricar" data-area="' + area.id + '">' +
+                   '<i class="fas fa-hammer"></i> Fabricar (€' + window.CONFIG.PIECE_COST.toLocaleString() + ')' +
+                   '</button>' +
+                   '</div>';
         }).join('');
         
-        // Configurar eventos de botones de fabricación
         document.querySelectorAll('.btn-fabricar').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const areaId = e.target.closest('.btn-fabricar').dataset.area;
@@ -1588,7 +1416,7 @@ class F1Manager {
             });
         });
     }
-    
+
     updatePilotosUI() {
         const container = document.getElementById('pilotos-container');
         if (!container) {
@@ -1598,66 +1426,46 @@ class F1Manager {
         
         const estrategasContratados = this.pilotos || [];
         
-        // Actualizar contador
         const contadorElement = document.getElementById('contador-estrategas');
         if (contadorElement) {
-            contadorElement.textContent = `${estrategasContratados.length}/4`;
+            contadorElement.textContent = estrategasContratados.length + '/4';
         }
         
-        // HTML de la cuadrícula 2x2 minimalista
-        let html = `
-            <div class="estrategas-grid-minimal">
-        `;
+        let html = '<div class="estrategas-grid-minimal">';
         
-        // Mostrar 4 huecos (2 filas x 2 columnas)
         for (let i = 0; i < 4; i++) {
             const estratega = estrategasContratados[i];
             
             if (estratega) {
-                // Botón con estratega contratado
-                html += `
-                    <div class="estratega-btn contratado" onclick="mostrarInfoEstratega(${i})">
-                        <div class="estratega-icon">
-                            <i class="fas fa-user-tie"></i>
-                        </div>
-                        <div class="estratega-info">
-                            <span class="estratega-nombre">${estratega.nombre || 'Estratega'}</span>
-                            <span class="estratega-salario">€${(estratega.salario || 0).toLocaleString()}/mes</span>
-                            <span class="estratega-funcion">${estratega.especialidad || 'General'}</span>
-                        </div>
-                        <div class="estratega-bono">+${estratega.bonificacion_valor || 0}%</div>
-                    </div>
-                `;
+                html += '<div class="estratega-btn contratado" onclick="mostrarInfoEstratega(' + i + ')">';
+                html += '<div class="estratega-icon">';
+                html += '<i class="fas fa-user-tie"></i>';
+                html += '</div>';
+                html += '<div class="estratega-info">';
+                html += '<span class="estratega-nombre">' + (estratega.nombre || 'Estratega') + '</span>';
+                html += '<span class="estratega-salario">€' + (estratega.salario || 0).toLocaleString() + '/mes</span>';
+                html += '<span class="estratega-funcion">' + (estratega.especialidad || 'General') + '</span>';
+                html += '</div>';
+                html += '<div class="estratega-bono">+' + (estratega.bonificacion_valor || 0) + '%</div>';
+                html += '</div>';
             } else {
-                // Botón vacío para contratar
-                html += `
-                    <div class="estratega-btn vacio" onclick="contratarNuevoEstratega(${i})">
-                        <div class="estratega-icon">
-                            <i class="fas fa-plus"></i>
-                        </div>
-                        <div class="estratega-info">
-                            <span class="estratega-nombre">Vacío</span>
-                            <span class="estratega-funcion">Click para contratar</span>
-                        </div>
-                    </div>
-                `;
+                html += '<div class="estratega-btn vacio" onclick="contratarNuevoEstratega(' + i + ')">';
+                html += '<div class="estratega-icon">';
+                html += '<i class="fas fa-plus"></i>';
+                html += '</div>';
+                html += '<div class="estratega-info">';
+                html += '<span class="estratega-nombre">Vacío</span>';
+                html += '<span class="estratega-funcion">Click para contratar</span>';
+                html += '</div>';
+                html += '</div>';
             }
         }
         
-        html += `</div>`;
+        html += '</div>';
         
         container.innerHTML = html;
-
-        `;
-        
-        // Añadir estilos solo si no existen
-        if (!document.getElementById('estilos-estrategas')) {
-            styles.id = 'estilos-estrategas';
-            document.head.appendChild(styles);
-        }
     }
-    
-    // Añade este método auxiliar para obtener iniciales
+
     getIniciales(nombre) {
         if (!nombre) return "??";
         return nombre.split(' ')
@@ -1666,23 +1474,17 @@ class F1Manager {
             .toUpperCase()
             .substring(0, 3);
     }
-    
+
     iniciarFabricacion(areaId) {
         console.log('🔧 [DEBUG] === INICIAR FABRICACION ===');
-        console.log('1. window.fabricacionManager:', window.fabricacionManager);
-        console.log('2. window.FabricacionManager:', window.FabricacionManager);
-        console.log('3. this.escuderia:', this.escuderia);
-
-    // AÑADE ESTA VERIFICACIÓN AQUÍ:
-    if (!this.escuderia || this.escuderia.dinero < window.CONFIG.PIECE_COST) {
-        const falta = window.CONFIG.PIECE_COST - (this.escuderia?.dinero || 0);
-        const mensaje = '❌ Fondos insuficientes. Necesitas €' + falta.toLocaleString() + ' más';
-        this.showNotification(mensaje, 'error');
-        return false;
-    }
-
         
-        // SI fabricacionManager no existe, CREARLO
+        if (!this.escuderia || this.escuderia.dinero < window.CONFIG.PIECE_COST) {
+            const falta = window.CONFIG.PIECE_COST - (this.escuderia?.dinero || 0);
+            const mensaje = '❌ Fondos insuficientes. Necesitas €' + falta.toLocaleString() + ' más';
+            this.showNotification(mensaje, 'error');
+            return false;
+        }
+
         if (!window.fabricacionManager) {
             console.log('⚠️ [DEBUG] fabricacionManager es undefined...');
             
@@ -1692,60 +1494,45 @@ class F1Manager {
                 console.log('✅ [DEBUG] Instancia creada:', window.fabricacionManager);
             } else {
                 console.error('❌ [DEBUG] Clase NO existe - Error fatal');
-                // Ver qué scripts se cargaron
-                console.log('Scripts cargados:');
-                console.log('- config.js:', typeof CONFIG !== 'undefined');
-                console.log('- auth.js:', typeof authManager !== 'undefined');
-                console.log('- main.js:', typeof f1Manager !== 'undefined');
-                console.log('- fabricacion.js:', typeof FabricacionManager !== 'undefined');
                 this.showNotification('Error: Sistema de fabricación no cargado', 'error');
                 return false;
             }
         }
         
-        // Verificar escudería
         if (!this.escuderia) {
             console.error('❌ No tienes escudería');
             this.showNotification('❌ No tienes escudería', 'error');
             return false;
         }
         
-        // Inicializar si es necesario
         if (window.fabricacionManager && !window.fabricacionManager.escuderiaId && this.escuderia) {
             console.log('🔧 [DEBUG] Inicializando fabricacionManager con escudería:', this.escuderia.id);
             window.fabricacionManager.inicializar(this.escuderia.id);
         }
         
-        console.log('🔧 [DEBUG] Llamando a iniciarFabricacion...'); // <-- CAMBIADO
+        console.log('🔧 [DEBUG] Llamando a iniciarFabricacion...');
         
-        // Verificar que el método existe (CORREGIDO EL NOMBRE)
-        if (!window.fabricacionManager.iniciarFabricacion) { // <-- CAMBIADO
+        if (!window.fabricacionManager.iniciarFabricacion) {
             console.error('❌ [DEBUG] iniciarFabricacion no existe en fabricacionManager');
-            console.log('Métodos disponibles:', Object.keys(window.fabricacionManager));
             this.showNotification('Error: Método de fabricación no disponible', 'error');
             return false;
         }
         
-        // Ejecutar la fabricación y CAPTURAR el resultado
-        const resultado = window.fabricacionManager.iniciarFabricacion(areaId); // <-- CAMBIADO
+        const resultado = window.fabricacionManager.iniciarFabricacion(areaId);
         
-        // SI fue exitoso, ACTUALIZAR LA UI
         if (resultado) {
             console.log('✅ Fabricación iniciada exitosamente');
             
-            // 1. Mostrar notificación
             const area = window.CAR_AREAS.find(a => a.id === areaId);
             if (area) {
                 const mensaje = '✅ Fabricación de ' + area.name + ' iniciada (30 segundos)';
                 this.showNotification(mensaje, 'success');
             }
             
-            // 2. Actualizar el monitor de producción INMEDIATAMENTE
             setTimeout(() => {
                 this.updateProductionMonitor();
             }, 1000);
             
-            // 3. Deshabilitar temporalmente el botón
             const selector = '[data-area="' + areaId + '"]';
             const boton = document.querySelector(selector);
             if (boton) {
@@ -1753,7 +1540,6 @@ class F1Manager {
                 boton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fabricando...';
             }
             
-            // 4. Actualizar dinero si hubo costo
             if (this.escuderia.dinero !== null) {
                 this.escuderia.dinero -= window.CONFIG.PIECE_COST || 10000;
                 this.updateEscuderiaMoney();
@@ -1764,18 +1550,16 @@ class F1Manager {
         
         return resultado;
     }
+
     showNotification(mensaje, tipo = 'success') {
         const notification = document.createElement('div');
         notification.className = 'notification ' + tipo;
         
-        // Determinar icono
         let icono = 'info-circle';
         if (tipo === 'success') icono = 'check-circle';
         if (tipo === 'error') icono = 'exclamation-circle';
         
-        notification.innerHTML = 
-            '<i class="fas fa-' + icono + '"></i>' +
-            '<span>' + mensaje + '</span>';
+        notification.innerHTML = '<i class="fas fa-' + icono + '"></i><span>' + mensaje + '</span>';
         
         document.body.appendChild(notification);
         
@@ -1783,7 +1567,7 @@ class F1Manager {
             notification.remove();
         }, 5000);
     }
-    
+
     async updateEscuderiaMoney() {
         if (!this.escuderia) return;
         
@@ -1803,39 +1587,32 @@ class F1Manager {
             console.error('Error actualizando dinero:', error);
         }
     }
-    
+
     async cargarDatosDashboard() {
         console.log('📊 Cargando datos del dashboard...');
         
-        // Actualizar producción en tiempo real INMEDIATAMENTE
         this.updateProductionMonitor();
         
-        // Configurar eventos de botones
         this.setupDashboardEvents();
         
-        // Iniciar temporizadores para actualización automática
         this.startTimers();
         
         console.log('✅ Dashboard configurado con timers');
     }
-    
+
     startTimers() {
-        // Timer de producción (actualizar cada 5 segundos)
         if (this.productionTimer) {
             clearInterval(this.productionTimer);
         }
         
-        // PRIMERA ejecución con retraso para que el DOM esté listo
         setTimeout(() => {
             this.updateProductionMonitor();
-        }, 300); // 300ms es suficiente para que el HTML se renderice
+        }, 300);
         
-        // Luego iniciar el intervalo normal cada 5 segundos
         this.productionTimer = setInterval(() => {
             this.updateProductionMonitor();
         }, 5000);
         
-        // Timer de countdown
         if (this.countdownTimer) {
             clearInterval(this.countdownTimer);
         }
@@ -1846,8 +1623,7 @@ class F1Manager {
         
         console.log('⏱️ Timers iniciados');
     }
-    
-    // En el método updateProductionMonitor() de la clase F1Manager
+
     async updateProductionMonitor() {
         if (!this.escuderia || !this.escuderia.id || !this.supabase) {
             console.log('❌ No hay escudería para monitor de producción');
@@ -1861,7 +1637,6 @@ class F1Manager {
         }
         
         try {
-            // Cargar fabricaciones activas
             const { data: fabricaciones, error } = await this.supabase
                 .from('fabricacion_actual')
                 .select('*')
@@ -1873,14 +1648,10 @@ class F1Manager {
             
             console.log('📊 Fabricaciones activas encontradas:', fabricaciones?.length || 0);
             
-            // Verificar tiempos REALES de cada fabricación
-            
-            const ahoraUTC = Date.now(); // UTC en milisegundos
+            const ahoraUTC = Date.now();
             const fabricacionesConEstado = (fabricaciones || []).map(f => {
-                // Asegurar que se interpreta como UTC
                 const tiempoFinStr = f.tiempo_fin.endsWith('Z') ? f.tiempo_fin : f.tiempo_fin + 'Z';
                 const tiempoFinUTC = new Date(tiempoFinStr).getTime();
-                
                 const tiempoRestante = tiempoFinUTC - ahoraUTC;
                 const lista = tiempoRestante <= 0;
                 
@@ -1891,17 +1662,8 @@ class F1Manager {
                 };
             });
             
-            console.log('⏱️ Estado fabricaciones:', fabricacionesConEstado.map(f => ({
-                area: f.area,
-                tiempoFin: f.tiempo_fin,
-                tiempoRestante: f.tiempoRestante,
-                lista: f.lista
-            })));
-            
-            // Para cada fabricación, calcular su número de pieza
             const fabricacionesConNumero = [];
             for (const fabricacion of fabricacionesConEstado) {
-                // Calcular número de pieza basado en cuántas ya hay fabricadas
                 const { data: piezasExistentes } = await this.supabase
                     .from('almacen_piezas')
                     .select('id')
@@ -1916,89 +1678,68 @@ class F1Manager {
                 });
             }
             
-            // Asegurar estilos
             this.cargarEstilosProduccion();
             
             let html = '<div class="produccion-slots">';
             
-            // Crear 4 slots
             for (let i = 0; i < 4; i++) {
                 const fabricacion = fabricacionesConNumero[i];
                 
                 if (fabricacion) {
                     const tiempoRestante = fabricacion.tiempoRestante;
                     const lista = fabricacion.lista;
-                    
                     const nombreArea = this.getNombreArea(fabricacion.area);
                     const tiempoFormateado = this.formatTime(tiempoRestante);
                     const numeroPieza = fabricacion.numero_pieza || 1;
                     
-                    html += `
-                        <div class="produccion-slot ${lista ? 'produccion-lista' : 'produccion-activa'}"
-                             onclick="recogerPiezaSiLista('${fabricacion.id}', ${lista}, ${i})"
-                             title="${nombreArea} - Evolución ${numeroPieza} de nivel ${fabricacion.nivel}">
-                            <div class="produccion-icon">
-                                ${lista ? '✅' : ''}
-                            </div>
-                            <div class="produccion-info">
-                                <span class="produccion-nombre">${nombreArea}</span>
-                                <span class="produccion-pieza-num">Evolución ${numeroPieza}</span>
-                                ${lista ? 
-                                    `<span class="produccion-lista-text">¡LISTA!</span>` :
-                                    `<span class="produccion-tiempo">${tiempoFormateado}</span>`
-                                }
-                            </div>
-                        </div>
-                    `;
+                    html += '<div class="produccion-slot ' + (lista ? 'produccion-lista' : 'produccion-activa') + '" ';
+                    html += 'onclick="recogerPiezaSiLista(\'' + fabricacion.id + '\', ' + lista + ', ' + i + ')" ';
+                    html += 'title="' + nombreArea + ' - Evolución ' + numeroPieza + ' de nivel ' + fabricacion.nivel + '">';
+                    html += '<div class="produccion-icon">';
+                    html += (lista ? '✅' : '');
+                    html += '</div>';
+                    html += '<div class="produccion-info">';
+                    html += '<span class="produccion-nombre">' + nombreArea + '</span>';
+                    html += '<span class="produccion-pieza-num">Evolución ' + numeroPieza + '</span>';
+                    if (lista) {
+                        html += '<span class="produccion-lista-text">¡LISTA!</span>';
+                    } else {
+                        html += '<span class="produccion-tiempo">' + tiempoFormateado + '</span>';
+                    }
+                    html += '</div>';
+                    html += '</div>';
                 } else {
-                    // Slot vacío
-                    html += `
-                        <div class="produccion-slot" data-slot="${i}" onclick="irAlTallerDesdeProduccion()">
-                            <div class="slot-content">
-                                <i class="fas fa-plus"></i>
-                                <span>Departamento ${i + 1}</span>
-                                <span class="slot-disponible">Disponible</span>
-                            </div>
-                        </div>
-                    `;
+                    html += '<div class="produccion-slot" data-slot="' + i + '" onclick="irAlTallerDesdeProduccion()">';
+                    html += '<div class="slot-content">';
+                    html += '<i class="fas fa-plus"></i>';
+                    html += '<span>Departamento ' + (i + 1) + '</span>';
+                    html += '<span class="slot-disponible">Disponible</span>';
+                    html += '</div>';
+                    html += '</div>';
                 }
             }
             
-            html += `</div>`;
+            html += '</div>';
             container.innerHTML = html;
             
-            // Iniciar timer para actualización en tiempo real
             this.iniciarTimerProduccion();
             
         } catch (error) {
             console.error("Error en updateProductionMonitor:", error);
-            container.innerHTML = `
-                <div class="produccion-error">
-                    <p>❌ Error cargando producción</p>
-                    <button onclick="window.f1Manager.updateProductionMonitor()">Reintentar</button>
-                </div>
-            `;
+            container.innerHTML = '<div class="produccion-error"><p>❌ Error cargando producción</p><button onclick="window.f1Manager.updateProductionMonitor()">Reintentar</button></div>';
         }
     }
-    
-    // ========================
-    // TIMER PARA ACTUALIZACIÓN EN TIEMPO REAL
-    // ========================
+
     iniciarTimerProduccion() {
-        // Limpiar timer anterior si existe
         if (this.productionUpdateTimer) {
             clearInterval(this.productionUpdateTimer);
         }
         
-        // Actualizar cada segundo para tiempos en vivo
         this.productionUpdateTimer = setInterval(() => {
             this.actualizarTiemposEnVivo();
         }, 1000);
     }
-    
-    // ========================
-    // ACTUALIZAR TIEMPOS EN VIVO SIN RECARGAR TODO
-    // ========================
+
     async actualizarTiemposEnVivo() {
         const slots = document.querySelectorAll('.produccion-slot.produccion-activa');
         if (slots.length === 0) return;
@@ -2012,7 +1753,6 @@ class F1Manager {
             
             if (error || !fabricaciones) return;
             
-            // Actualizar cada slot activo
             slots.forEach(slot => {
                 const fabricacionId = slot.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
                 if (!fabricacionId) return;
@@ -2026,19 +1766,10 @@ class F1Manager {
                 const tiempoRestante = tiempoFinUTC - ahoraUTC;
                 
                 if (tiempoRestante <= 0) {
-                    // ¡LISTA!
                     slot.classList.remove('produccion-activa');
                     slot.classList.add('produccion-lista');
-                    slot.innerHTML = `
-                        <div class="produccion-icon">✅</div>
-                        <div class="produccion-info">
-                            <span class="produccion-nombre">${this.getNombreArea(fabricacion.area)}</span>
-                            <span class="produccion-pieza-num">Evolución ${fabricacion.nivel || 1}</span>
-                            <span class="produccion-lista-text">¡LISTA!</span>
-                        </div>
-                    `;
+                    slot.innerHTML = '<div class="produccion-icon">✅</div><div class="produccion-info"><span class="produccion-nombre">' + this.getNombreArea(fabricacion.area) + '</span><span class="produccion-pieza-num">Evolución ' + (fabricacion.nivel || 1) + '</span><span class="produccion-lista-text">¡LISTA!</span></div>';
                 } else {
-                    // Actualizar tiempo
                     const tiempoElement = slot.querySelector('.produccion-tiempo');
                     if (tiempoElement) {
                         tiempoElement.textContent = this.formatTime(tiempoRestante);
@@ -2050,55 +1781,16 @@ class F1Manager {
             console.error('Error actualizando tiempos en vivo:', error);
         }
     }
-    
-    // Añadir este método auxiliar
+
     cargarEstilosProduccion() {
         if (!document.getElementById('estilos-produccion')) {
             const style = document.createElement('style');
             style.id = 'estilos-produccion';
-            style.innerHTML = produccionStyles; // Usa los estilos definidos arriba
+            style.innerHTML = produccionStyles;
             document.head.appendChild(style);
         }
     }
-    
-    getNombreArea(areaId) {
-        const areas = {
-            'motor': 'Motor',
-            'chasis': 'Chasis',
-            'aerodinamica': 'Aerodinámica',
-            'suspension': 'Suspensión',
-            'transmision': 'Transmisión',
-            'frenos': 'Frenos',
-            'electronica': 'Electrónica',
-            'control': 'Control',
-            'difusor': 'Difusor',
-            'alerones': 'Alerones',
-            'pontones': 'Pontones'
-        };
-        return areas[areaId] || areaId;
-    }
-    
-    setupDashboardEvents() {
-        // Botón de iniciar fabricación
-        document.getElementById('iniciar-fabricacion-btn')?.addEventListener('click', () => {
-            this.irAlTaller();
-        });
-        
-        // Botón de contratar pilotos
-        document.getElementById('contratar-pilotos-btn')?.addEventListener('click', () => {
-            this.mostrarContratarPilotos();
-        });
-        
-        document.getElementById('contratar-primer-piloto')?.addEventListener('click', () => {
-            this.mostrarContratarPilotos();
-        });
-        
-        // Botón de apuestas
-        document.getElementById('btn-apostar')?.addEventListener('click', () => {
-            this.mostrarApuestas();
-        });
-    }
-    
+
     formatTime(milliseconds) {
         if (milliseconds <= 0) return "00:00:00";
         
@@ -2108,36 +1800,40 @@ class F1Manager {
         const segundos = totalSegundos % 60;
         
         if (horas > 0) {
-            return `${horas}h ${minutos}m ${segundos}s`;
+            return horas + 'h ' + minutos + 'm ' + segundos + 's';
         } else if (minutos > 0) {
-            return `${minutos}m ${segundos}s`;
+            return minutos + 'm ' + segundos + 's';
         } else {
-            return `${segundos}s`;
+            return segundos + 's';
         }
     }
-    
-    startTimers() {
-        // Timer de producción
-        setInterval(() => {
-            this.updateProductionMonitor();
-        }, 1000);
+
+    setupDashboardEvents() {
+        document.getElementById('iniciar-fabricacion-btn')?.addEventListener('click', () => {
+            this.irAlTaller();
+        });
         
-        // Timer de countdown
-        setInterval(() => {
-            this.updateCountdown();
-        }, 1000);
+        document.getElementById('contratar-pilotos-btn')?.addEventListener('click', () => {
+            this.mostrarContratarPilotos();
+        });
+        
+        document.getElementById('contratar-primer-piloto')?.addEventListener('click', () => {
+            this.mostrarContratarPilotos();
+        });
+        
+        document.getElementById('btn-apostar')?.addEventListener('click', () => {
+            this.mostrarApuestas();
+        });
     }
-    
+
     mostrarContratarPilotos() {
         this.showNotification('🏎️ Sistema de pilotos en desarrollo', 'info');
-        // Aquí implementarías la lógica para contratar pilotos
     }
-    
+
     mostrarApuestas() {
         this.showNotification('💰 Sistema de apuestas en desarrollo', 'info');
-        // Aquí implementarías la lógica para apostar
     }
-    
+
     updateCountdown() {
         if (!this.proximoGP) return;
         
@@ -2165,7 +1861,7 @@ class F1Manager {
             if (gpCircuitoEl) gpCircuitoEl.textContent = this.proximoGP.circuito || 'Circuito por confirmar';
         }
     }
-    
+
     irAlTaller() {
         if (window.tabManager) {
             window.tabManager.switchTab('taller');
@@ -2173,494 +1869,421 @@ class F1Manager {
     }
 }
 
-    // FUNCIONES GLOBALES PARA EL TUTORIAL
-    window.tutorialManager = null;
-    window.tutorialData = {
-        estrategaSeleccionado: null,
-        areaSeleccionada: null,
-        pronosticosSeleccionados: {},
-        piezaFabricando: false
-    };
-    // Al final del archivo, con las otras funciones globales
-    window.irAlTallerDesdeProduccion = function() {
-        if (window.tabManager && window.tabManager.switchTab) {
-            window.tabManager.switchTab('taller');
-        } else {
-            alert('Redirigiendo al taller para fabricar...');
-            // Aquí deberías implementar la navegación al taller
-        }
-    };
+window.tutorialManager = null;
+window.tutorialData = {
+    estrategaSeleccionado: null,
+    areaSeleccionada: null,
+    pronosticosSeleccionados: {},
+    piezaFabricando: false
+};
+
+window.irAlTallerDesdeProduccion = function() {
+    if (window.tabManager && window.tabManager.switchTab) {
+        window.tabManager.switchTab('taller');
+    } else {
+        alert('Redirigiendo al taller para fabricar...');
+    }
+};
+
+window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
+    console.log("🔧 Recogiendo pieza:", { fabricacionId, lista });
     
-    window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
-        console.log("🔧 Recogiendo pieza:", { fabricacionId, lista });
-        
-        if (!lista) {
-            if (window.f1Manager && window.f1Manager.showNotification) {
+    if (!lista) {
+        if (window.f1Manager && window.f1Manager.showNotification) {
             window.f1Manager.showNotification("⏳ La pieza aún está en producción", "info");
-            }
-            // Mostrar información de la pieza en fabricación
-            try {
-                const { data: fabricacion } = await window.supabase
-                    .from('fabricacion_actual')
-                    .select('*')
-                    .eq('id', fabricacionId)
-                    .single();
-                    
-                if (fabricacion) {
-                    const ahora = new Date(); // Ya está en hora local
-                    const tiempoFin = new Date(fabricacion.tiempo_fin); // Esto ya es UTC si guardaste con 'Z'
-                    const tiempoRestante = tiempoFin - ahora;
-                    const tiempoFormateado = tiempoRestante > 0 ? 
-                        window.f1Manager?.formatTime(tiempoRestante) : "Finalizando...";
-                    
-                    // Calcular número de pieza
-                    const { data: piezasExistentes } = await window.supabase
-                        .from('almacen_piezas')
-                        .select('id')
-                        .eq('escuderia_id', fabricacion.escuderia_id)
-                        .eq('area', fabricacion.area)
-                        .eq('nivel', fabricacion.nivel);
-                    
-                    const numeroPieza = (piezasExistentes?.length || 0) + 1;
-                    const nombreArea = window.f1Manager?.getNombreArea(fabricacion.area) || fabricacion.area;
-                    
-                    alert(`🔄 ${nombreArea}\nPieza ${numeroPieza} de nivel ${fabricacion.nivel}\nTiempo restante: ${tiempoFormateado}`);
-                }
-            } catch (error) {
-                console.error("Error obteniendo info:", error);
-            }
-            return;
         }
         
-        // SI está lista, recoger
         try {
-            // 1. Obtener fabricación
-            const { data: fabricacion, error: fetchError } = await window.supabase
+            const { data: fabricacion } = await window.supabase
                 .from('fabricacion_actual')
                 .select('*')
                 .eq('id', fabricacionId)
                 .single();
-            
-            if (fetchError) throw fetchError;
-            
-            // 2. Calcular número de pieza y puntos
-            const { data: piezasExistentes } = await window.supabase
-                .from('almacen_piezas')
-                .select('id')
-                .eq('escuderia_id', fabricacion.escuderia_id)
-                .eq('area', fabricacion.area)
-                .eq('nivel', fabricacion.nivel);
-            
-            const numeroPieza = (piezasExistentes?.length || 0) + 1;
-            
-            // Calcular puntos basados en área, nivel y número de pieza
-            const puntosBase = calcularPuntosBase(fabricacion.area, fabricacion.nivel);
-            const puntosExtra = numeroPieza * 2; // Bonus por dificultad
-            const puntosTotales = puntosBase + puntosExtra;
-            
-            // 3. Crear pieza en almacen_piezas (COLUMNAS EXISTENTES SOLO)
-            const { error: insertError } = await window.supabase
-                .from('almacen_piezas')
-                .insert([{
-                    escuderia_id: fabricacion.escuderia_id,
-                    area: fabricacion.area,
-                    nivel: fabricacion.nivel || 1,
-                    puntos_base: puntosTotales,
-                    calidad: 'Normal',
-                    equipada: false,
-                    fabricada_en: new Date().toISOString(),
-                    creada_en: new Date().toISOString()
-                    // NO incluir 'pieza_numero' porque no existe en la tabla
-                }]);
-            
-            if (insertError) {
-                console.error("Error insertando pieza:", insertError);
-                throw insertError;
+                
+            if (fabricacion) {
+                const ahora = new Date();
+                const tiempoFin = new Date(fabricacion.tiempo_fin);
+                const tiempoRestante = tiempoFin - ahora;
+                const tiempoFormateado = tiempoRestante > 0 ? 
+                    window.f1Manager?.formatTime(tiempoRestante) : "Finalizando...";
+                
+                const { data: piezasExistentes } = await window.supabase
+                    .from('almacen_piezas')
+                    .select('id')
+                    .eq('escuderia_id', fabricacion.escuderia_id)
+                    .eq('area', fabricacion.area)
+                    .eq('nivel', fabricacion.nivel);
+                
+                const numeroPieza = (piezasExistentes?.length || 0) + 1;
+                const nombreArea = window.f1Manager?.getNombreArea(fabricacion.area) || fabricacion.area;
+                
+                alert('🔄 ' + nombreArea + '\nPieza ' + numeroPieza + ' de nivel ' + fabricacion.nivel + '\nTiempo restante: ' + tiempoFormateado);
+            }
+        } catch (error) {
+            console.error("Error obteniendo info:", error);
+        }
+        return;
+    }
+    
+    try {
+        const { data: fabricacion, error: fetchError } = await window.supabase
+            .from('fabricacion_actual')
+            .select('*')
+            .eq('id', fabricacionId)
+            .single();
+        
+        if (fetchError) throw fetchError;
+        
+        const { data: piezasExistentes } = await window.supabase
+            .from('almacen_piezas')
+            .select('id')
+            .eq('escuderia_id', fabricacion.escuderia_id)
+            .eq('area', fabricacion.area)
+            .eq('nivel', fabricacion.nivel);
+        
+        const numeroPieza = (piezasExistentes?.length || 0) + 1;
+        
+        const puntosBase = calcularPuntosBase(fabricacion.area, fabricacion.nivel);
+        const puntosExtra = numeroPieza * 2;
+        const puntosTotales = puntosBase + puntosExtra;
+        
+        const { error: insertError } = await window.supabase
+            .from('almacen_piezas')
+            .insert([{
+                escuderia_id: fabricacion.escuderia_id,
+                area: fabricacion.area,
+                nivel: fabricacion.nivel || 1,
+                puntos_base: puntosTotales,
+                calidad: 'Normal',
+                equipada: false,
+                fabricada_en: new Date().toISOString(),
+                creada_en: new Date().toISOString()
+            }]);
+        
+        if (insertError) {
+            console.error("Error insertando pieza:", insertError);
+            throw insertError;
+        }
+        
+        console.log("✅ Pieza añadida a almacen_piezas");
+        
+        const { error: updateError } = await window.supabase
+            .from('fabricacion_actual')
+            .update({ 
+                completada: true
+            })
+            .eq('id', fabricacionId);
+        
+        if (updateError) throw updateError;
+        
+        console.log("✅ Fabricación marcada como completada");
+        
+        const nombreArea = window.f1Manager?.getNombreArea(fabricacion.area) || fabricacion.area;
+        if (window.f1Manager && window.f1Manager.showNotification) {
+            window.f1Manager.showNotification('✅ ' + nombreArea + ' (Pieza ' + numeroPieza + ') recogida\n+' + puntosTotales + ' puntos técnicos', 'success');
+        }
+        
+        if (window.f1Manager) {
+            if (window.f1Manager.productionUpdateTimer) {
+                clearInterval(window.f1Manager.productionUpdateTimer);
             }
             
-            console.log("✅ Pieza añadida a almacen_piezas");
+            setTimeout(() => {
+                window.f1Manager.updateProductionMonitor();
+            }, 500);
             
-            // 4. Marcar fabricación como completada
-            const { error: updateError } = await window.supabase
-                .from('fabricacion_actual')
-                .update({ 
-                    completada: true,
-                    // Opcional: asignar pieza_id si quieres relacionarlas
-                    // pieza_id: resultado.id
-                })
-                .eq('id', fabricacionId);
-            
-            if (updateError) throw updateError;
-            
-            console.log("✅ Fabricación marcada como completada");
-            
-            // 5. Mostrar notificación
-            const nombreArea = window.f1Manager?.getNombreArea(fabricacion.area) || fabricacion.area;
-            if (window.f1Manager && window.f1Manager.showNotification) {
-                window.f1Manager.showNotification(
-                    `✅ ${nombreArea} (Pieza ${numeroPieza}) recogida\n+${puntosTotales} puntos técnicos`, 
-                    'success'
-                );
-            }
-            
-            // 6. Actualizar UI
-            if (window.f1Manager) {
-                // Parar timer de actualización
-                if (window.f1Manager.productionUpdateTimer) {
-                    clearInterval(window.f1Manager.productionUpdateTimer);
-                }
-                
-                // Actualizar producción
+            if (window.tabManager && window.tabManager.currentTab === 'almacen') {
                 setTimeout(() => {
-                    window.f1Manager.updateProductionMonitor();
-                }, 500);
-                
-                // Actualizar almacén si está abierto
-                if (window.tabManager && window.tabManager.currentTab === 'almacen') {
-                    setTimeout(() => {
-                        if (window.tabManager.loadAlmacenPiezas) {
-                            window.tabManager.loadAlmacenPiezas();
-                        }
-                    }, 1000);
-                }
-                
-                // Actualizar piezas montadas
-                setTimeout(() => {
-                    if (window.f1Manager.cargarPiezasMontadas) {
-                        window.f1Manager.cargarPiezasMontadas();
+                    if (window.tabManager.loadAlmacenPiezas) {
+                        window.tabManager.loadAlmacenPiezas();
                     }
-                }, 1500);
+                }, 1000);
             }
             
-        } catch (error) {
-            console.error('❌ Error recogiendo pieza:', error);
-            if (window.f1Manager && window.f1Manager.showNotification) {
-                window.f1Manager.showNotification(`❌ Error: ${error.message}`, 'error');
-            }
-        }
-    };
-    
-    // ========================
-    // FUNCIONES AUXILIARES
-    // ========================
-    function calcularPuntosBase(area, nivel) {
-        const puntosPorArea = {
-            'motor': 15,
-            'chasis': 12,
-            'suelo': 10,
-            'electronica': 14,
-            'aleron_delantero': 8,
-            'aleron_trasero': 8,
-            'caja_cambios': 9,
-            'suspension': 7,
-            'frenos': 6,
-            'volante': 5,
-            'pontones': 7
-        };
-        
-        const puntosArea = puntosPorArea[area] || 10;
-        return puntosArea * (nivel || 1);
-    }
-    
-    function formatTime(milliseconds) {
-        if (milliseconds <= 0) return "00:00:00";
-        
-        const totalSegundos = Math.floor(milliseconds / 1000);
-        const horas = Math.floor(totalSegundos / 3600);
-        const minutos = Math.floor((totalSegundos % 3600) / 60);
-        const segundos = totalSegundos % 60;
-        
-        if (horas > 0) {
-            return `${horas}h ${minutos}m`;
-        } else if (minutos > 0) {
-            return `${minutos}m ${segundos}s`;
-        } else {
-            return `${segundos}s`;
-        }
-    };
-    
-    // Función auxiliar para calcular puntos
-    function calcularPuntosPorArea(area, nivel) {
-        const puntosBase = {
-            'motor': 15,
-            'chasis': 12,
-            'suelo': 10,
-            'aleron_delantero': 8,
-            'aleron_trasero': 8,
-            'caja_cambios': 9,
-            'suspension': 7,
-            'frenos': 6,
-            'electronica': 14,
-            'volante': 5,
-            'pontones': 7
-        };
-        return (puntosBase[area] || 10) * (nivel || 1);
-    }
-    // Función de prueba para cerrar sesión
-    window.testLogout = async function() {
-        console.log('DEBUG: testLogout() ejecutado');
-        console.log('DEBUG: window.supabase existe?', !!window.supabase);
-        console.log('DEBUG: window.location.origin:', window.location.origin);
-        
-        try {
-            if (window.supabase) {
-                console.log('DEBUG: Intentando cerrar sesión...');
-                await window.supabase.auth.signOut();
-                console.log('DEBUG: Sesión cerrada, redirigiendo...');
-            }
-            window.location.href = window.location.origin;
-        } catch (error) {
-            console.error('DEBUG: Error:', error);
-            window.location.href = window.location.origin;
-        }
-    };
- 
-    window.cargarEstrategasTutorial = function() {
-        const container = document.getElementById('grid-estrategas-tutorial');
-        if (!container) return;
-        
-        const estrategas = [
-            { id: 1, nombre: "Analista de Tiempos", icono: "⏱️", especialidad: "Diferencias de tiempo", bono: "+15%", sueldo: "50,000€", ejemplo: "Diferencia 1º-2º" },
-            { id: 2, nombre: "Meteorólogo", icono: "🌧️", especialidad: "Condiciones climáticas", bono: "+20%", sueldo: "60,000€", ejemplo: "Lluvia/Sequía" },
-            { id: 3, nombre: "Experto en Fiabilidad", icono: "🔧", especialidad: "Abandonos y fallos", bono: "+18%", sueldo: "55,000€", ejemplo: "Número de abandonos" },
-            { id: 4, nombre: "Estratega de Carrera", icono: "🏁", especialidad: "Estrategias de parada", bono: "+22%", sueldo: "75,000€", ejemplo: "Número de paradas" },
-            { id: 5, nombre: "Analista de Neumáticos", icono: "🛞", especialidad: "Degradación de neumáticos", bono: "+16%", sueldo: "52,000€", ejemplo: "Compuesto predominante" },
-            { id: 6, nombre: "Especialista en Overtakes", icono: "💨", especialidad: "Adelantamientos", bono: "+19%", sueldo: "58,000€", ejemplo: "Adelantamientos entre compañeros" }
-        ];
-        
-        container.innerHTML = estrategas.map(e => `
-            <div class="estratega-tutorial-card seleccionable">
-                <div class="estratega-icon-tut">${e.icono}</div>
-                <div class="estratega-nombre-tut">${e.nombre}</div>
-                <div class="estratega-especialidad">${e.especialidad}</div>
-                <div class="estratega-bono">Bono: <span class="bono-valor">${e.bono}</span></div>
-                <div class="estratega-ejemplo">Ej: "${e.ejemplo}"</div>
-            </div>
-        `).join('');
-    };
-
-    // Función global para fabricar desde los botones del taller
-    // Función global CORREGIDA
-    window.iniciarFabricacionTallerDesdeBoton = async function(areaId, nivel) {
-        console.log('🔧 Botón presionado para:', areaId, nivel);
-        
-        if (!window.f1Manager || !window.f1Manager.iniciarFabricacionTaller) {
-            alert('Error: Sistema de fabricación no disponible');
-            return false;
-        }
-        
-        // Verificar dinero primero
-        if (!window.f1Manager.escuderia || window.f1Manager.escuderia.dinero < 10000) {
-            window.f1Manager.showNotification('❌ Fondos insuficientes (necesitas €10,000)', 'error');
-            return false;
-        }
-        
-        // Ejecutar fabricación
-        const resultado = await window.f1Manager.iniciarFabricacionTaller(areaId, nivel);
-        
-        // Si se inició, actualizar UI
-        if (resultado) {
-            // Actualizar taller
             setTimeout(() => {
-                if (window.f1Manager.cargarTabTaller) {
-                    window.f1Manager.cargarTabTaller();
-                }
-            }, 1000);
-            
-            // Ir a principal para ver la producción
-            setTimeout(() => {
-                if (window.tabManager && window.tabManager.switchTab) {
-                    window.tabManager.switchTab('principal');
+                if (window.f1Manager.cargarPiezasMontadas) {
+                    window.f1Manager.cargarPiezasMontadas();
                 }
             }, 1500);
         }
         
-        return resultado;
-    };
-
-
-    window.irAlAlmacenDesdePiezas = function() {
-        if (window.tabManager && window.tabManager.switchTab) {
-            window.tabManager.switchTab('almacen');
-        } else {
-            console.log('Redirigiendo al almacén...');
-            // Aquí puedes añadir más lógica
+    } catch (error) {
+        console.error('❌ Error recogiendo pieza:', error);
+        if (window.f1Manager && window.f1Manager.showNotification) {
+            window.f1Manager.showNotification('❌ Error: ' + error.message, 'error');
         }
-    };
+    }
+};
 
+function calcularPuntosBase(area, nivel) {
+    const puntosPorArea = {
+        'motor': 15,
+        'chasis': 12,
+        'suelo': 10,
+        'electronica': 14,
+        'aleron_delantero': 8,
+        'aleron_trasero': 8,
+        'caja_cambios': 9,
+        'suspension': 7,
+        'frenos': 6,
+        'volante': 5,
+        'pontones': 7
+    };
     
-    window.tutorialSimularCarrera = function() {
-        // 1. Obtener las selecciones del usuario
-        const tutorialData = window.tutorialData || {};
-        const pronosticosSeleccionados = tutorialData.pronosticosSeleccionados || {};
-        
-        // 2. Definir resultados REALES de la simulación (puedes cambiarlos)
-        const resultadosReales = {
-            bandera: 'si',        // Sí hubo bandera amarilla
-            abandonos: '3-5',     // Hubo 3-5 abandonos
-            diferencia: '1-5s'    // Diferencia fue de 2.3s (1-5s)
-        };
-        
-        // 3. Calcular aciertos
-        let aciertos = 0;
-        let detalles = [];
-        
-        // Bandera amarilla
-        const banderaCorrecto = pronosticosSeleccionados.bandera === resultadosReales.bandera;
-        detalles.push(`<div class="resultado-item ${banderaCorrecto ? 'correcto' : 'incorrecto'}">
-            ${banderaCorrecto ? '✅' : '❌'} Bandera amarilla: ${pronosticosSeleccionados.bandera === 'si' ? 'SÍ' : 'NO'} 
-            (${banderaCorrecto ? 'correcto' : 'incorrecto, fue ' + (resultadosReales.bandera === 'si' ? 'SÍ' : 'NO')})
-        </div>`);
-        if (banderaCorrecto) aciertos++;
-        
-        // Abandonos
-        const abandonosCorrecto = pronosticosSeleccionados.abandonos === resultadosReales.abandonos;
-        detalles.push(`<div class="resultado-item ${abandonosCorrecto ? 'correcto' : 'incorrecto'}">
-            ${abandonosCorrecto ? '✅' : '❌'} Abandonos: ${pronosticosSeleccionados.abandonos} 
-            (${abandonosCorrecto ? 'correcto' : 'incorrecto, fue ' + resultadosReales.abandonos})
-        </div>`);
-        if (abandonosCorrecto) aciertos++;
-        
-        // Diferencia
-        const diferenciaCorrecto = pronosticosSeleccionados.diferencia === resultadosReales.diferencia;
-        detalles.push(`<div class="resultado-item ${diferenciaCorrecto ? 'correcto' : 'incorrecto'}">
-            ${diferenciaCorrecto ? '✅' : '❌'} Diferencia 1º-2º: ${pronosticosSeleccionados.diferencia} 
-            (${diferenciaCorrecto ? 'correcto' : 'incorrecto, fue ' + resultadosReales.diferencia})
-        </div>`);
-        if (diferenciaCorrecto) aciertos++;
-        
-        // 4. Guardar resultados para el PASO 10
-        tutorialData.aciertosPronosticos = aciertos;
-        tutorialData.totalPronosticos = 3;
-        tutorialData.resultadosReales = resultadosReales;
-        tutorialData.puntosBaseCalculados = (banderaCorrecto ? 150 : 0) + 
-                                            (abandonosCorrecto ? 180 : 0) + 
-                                            (diferenciaCorrecto ? 200 : 0);
-        
-        // 5. Mostrar resultados
-        const resultados = document.getElementById('resultado-simulacion');
-        if (resultados) {
-            resultados.innerHTML = `
-                <div class="resultado-simulado">
-                    <h4>📊 RESULTADOS DE LA SIMULACIÓN:</h4>
-                    ${detalles.join('')}
-                    <div class="resumen-simulacion">
-                        <strong>${aciertos} de 3 pronósticos acertados (${Math.round(aciertos/3*100)}%)</strong>
-                    </div>
-                    <div class="puntos-simulacion">
-                        Puntos base obtenidos: <strong>${tutorialData.puntosBaseCalculados} pts</strong>
-                    </div>
-                </div>
-            `;
-            resultados.style.display = 'block';
+    const puntosArea = puntosPorArea[area] || 10;
+    return puntosArea * (nivel || 1);
+}
+
+function formatTime(milliseconds) {
+    if (milliseconds <= 0) return "00:00:00";
+    
+    const totalSegundos = Math.floor(milliseconds / 1000);
+    const horas = Math.floor(totalSegundos / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    const segundos = totalSegundos % 60;
+    
+    if (horas > 0) {
+        return horas + 'h ' + minutos + 'm';
+    } else if (minutos > 0) {
+        return minutos + 'm ' + segundos + 's';
+    } else {
+        return segundos + 's';
+    }
+}
+
+function calcularPuntosPorArea(area, nivel) {
+    const puntosBase = {
+        'motor': 15,
+        'chasis': 12,
+        'suelo': 10,
+        'aleron_delantero': 8,
+        'aleron_trasero': 8,
+        'caja_cambios': 9,
+        'suspension': 7,
+        'frenos': 6,
+        'electronica': 14,
+        'volante': 5,
+        'pontones': 7
+    };
+    return (puntosBase[area] || 10) * (nivel || 1);
+}
+
+window.testLogout = async function() {
+    console.log('DEBUG: testLogout() ejecutado');
+    console.log('DEBUG: window.supabase existe?', !!window.supabase);
+    console.log('DEBUG: window.location.origin:', window.location.origin);
+    
+    try {
+        if (window.supabase) {
+            console.log('DEBUG: Intentando cerrar sesión...');
+            await window.supabase.auth.signOut();
+            console.log('DEBUG: Sesión cerrada, redirigiendo...');
         }
-        
-        // 6. Notificación
-        const notifCarrera = document.createElement('div');
-        notifCarrera.className = 'notification info';
-        notifCarrera.innerHTML = `
-            <div class="notification-content">
-                <i class="fas fa-flag-checkered"></i>
-                <span>🏁 Carrera simulada - ${aciertos} de 3 aciertos (${Math.round(aciertos/3*100)}%)</span>
-            </div>
-        `;
-        document.body.appendChild(notifCarrera);
-        
-        setTimeout(() => notifCarrera.classList.add('show'), 10);
+        window.location.href = window.location.origin;
+    } catch (error) {
+        console.error('DEBUG: Error:', error);
+        window.location.href = window.location.origin;
+    }
+};
+
+window.cargarEstrategasTutorial = function() {
+    const container = document.getElementById('grid-estrategas-tutorial');
+    if (!container) return;
+    
+    const estrategas = [
+        { id: 1, nombre: "Analista de Tiempos", icono: "⏱️", especialidad: "Diferencias de tiempo", bono: "+15%", sueldo: "50,000€", ejemplo: "Diferencia 1º-2º" },
+        { id: 2, nombre: "Meteorólogo", icono: "🌧️", especialidad: "Condiciones climáticas", bono: "+20%", sueldo: "60,000€", ejemplo: "Lluvia/Sequía" },
+        { id: 3, nombre: "Experto en Fiabilidad", icono: "🔧", especialidad: "Abandonos y fallos", bono: "+18%", sueldo: "55,000€", ejemplo: "Número de abandonos" },
+        { id: 4, nombre: "Estratega de Carrera", icono: "🏁", especialidad: "Estrategias de parada", bono: "+22%", sueldo: "75,000€", ejemplo: "Número de paradas" },
+        { id: 5, nombre: "Analista de Neumáticos", icono: "🛞", especialidad: "Degradación de neumáticos", bono: "+16%", sueldo: "52,000€", ejemplo: "Compuesto predominante" },
+        { id: 6, nombre: "Especialista en Overtakes", icono: "💨", especialidad: "Adelantamientos", bono: "+19%", sueldo: "58,000€", ejemplo: "Adelantamientos entre compañeros" }
+    ];
+    
+    container.innerHTML = estrategas.map(e => 
+        '<div class="estratega-tutorial-card seleccionable">' +
+        '<div class="estratega-icon-tut">' + e.icono + '</div>' +
+        '<div class="estratega-nombre-tut">' + e.nombre + '</div>' +
+        '<div class="estratega-especialidad">' + e.especialidad + '</div>' +
+        '<div class="estratega-bono">Bono: <span class="bono-valor">' + e.bono + '</span></div>' +
+        '<div class="estratega-ejemplo">Ej: "' + e.ejemplo + '"</div>' +
+        '</div>'
+    ).join('');
+};
+
+window.tutorialSimularCarrera = function() {
+    const tutorialData = window.tutorialData || {};
+    const pronosticosSeleccionados = tutorialData.pronosticosSeleccionados || {};
+    
+    const resultadosReales = {
+        bandera: 'si',
+        abandonos: '3-5',
+        diferencia: '1-5s'
+    };
+    
+    let aciertos = 0;
+    let detalles = [];
+    
+    const banderaCorrecto = pronosticosSeleccionados.bandera === resultadosReales.bandera;
+    detalles.push('<div class="resultado-item ' + (banderaCorrecto ? 'correcto' : 'incorrecto') + '">' + (banderaCorrecto ? '✅' : '❌') + ' Bandera amarilla: ' + (pronosticosSeleccionados.bandera === 'si' ? 'SÍ' : 'NO') + ' (' + (banderaCorrecto ? 'correcto' : 'incorrecto, fue ' + (resultadosReales.bandera === 'si' ? 'SÍ' : 'NO')) + ')</div>');
+    if (banderaCorrecto) aciertos++;
+    
+    const abandonosCorrecto = pronosticosSeleccionados.abandonos === resultadosReales.abandonos;
+    detalles.push('<div class="resultado-item ' + (abandonosCorrecto ? 'correcto' : 'incorrecto') + '">' + (abandonosCorrecto ? '✅' : '❌') + ' Abandonos: ' + pronosticosSeleccionados.abandonos + ' (' + (abandonosCorrecto ? 'correcto' : 'incorrecto, fue ' + resultadosReales.abandonos) + ')</div>');
+    if (abandonosCorrecto) aciertos++;
+    
+    const diferenciaCorrecto = pronosticosSeleccionados.diferencia === resultadosReales.diferencia;
+    detalles.push('<div class="resultado-item ' + (diferenciaCorrecto ? 'correcto' : 'incorrecto') + '">' + (diferenciaCorrecto ? '✅' : '❌') + ' Diferencia 1º-2º: ' + pronosticosSeleccionados.diferencia + ' (' + (diferenciaCorrecto ? 'correcto' : 'incorrecto, fue ' + resultadosReales.diferencia) + ')</div>');
+    if (diferenciaCorrecto) aciertos++;
+    
+    tutorialData.aciertosPronosticos = aciertos;
+    tutorialData.totalPronosticos = 3;
+    tutorialData.resultadosReales = resultadosReales;
+    tutorialData.puntosBaseCalculados = (banderaCorrecto ? 150 : 0) + (abandonosCorrecto ? 180 : 0) + (diferenciaCorrecto ? 200 : 0);
+    
+    const resultados = document.getElementById('resultado-simulacion');
+    if (resultados) {
+        resultados.innerHTML = '<div class="resultado-simulado"><h4>📊 RESULTADOS DE LA SIMULACIÓN:</h4>' + detalles.join('') + '<div class="resumen-simulacion"><strong>' + aciertos + ' de 3 pronósticos acertados (' + Math.round(aciertos/3*100) + '%)</strong></div><div class="puntos-simulacion">Puntos base obtenidos: <strong>' + tutorialData.puntosBaseCalculados + ' pts</strong></div></div>';
+        resultados.style.display = 'block';
+    }
+    
+    const notifCarrera = document.createElement('div');
+    notifCarrera.className = 'notification info';
+    notifCarrera.innerHTML = '<div class="notification-content"><i class="fas fa-flag-checkered"></i><span>🏁 Carrera simulada - ' + aciertos + ' de 3 aciertos (' + Math.round(aciertos/3*100) + '%)</span></div>';
+    document.body.appendChild(notifCarrera);
+    
+    setTimeout(() => notifCarrera.classList.add('show'), 10);
+    setTimeout(() => {
+        notifCarrera.classList.remove('show');
         setTimeout(() => {
-            notifCarrera.classList.remove('show');
-            setTimeout(() => {
-                if (notifCarrera.parentNode) {
-                    notifCarrera.parentNode.removeChild(notifCarrera);
-                }
-            }, 300);
-        }, 2000);
-        // ========== AÑADE ESTA LÍNEA AL FINAL ==========
-        // 7. MOSTRAR EL BOTÓN SIGUIENTE
-        document.getElementById('btn-tutorial-next-large').classList.remove('hidden');
-        // ========== FIN DE LA LÍNEA A AÑADIR ==========
-    };
-    window.tutorialIrSeccion = function(seccion) {
-        alert(`Esta función te llevaría a la sección: ${seccion.toUpperCase()}\n\nEn el juego real, puedes navegar entre secciones usando el menú superior.`);
-    };
-
+            if (notifCarrera.parentNode) {
+                notifCarrera.parentNode.removeChild(notifCarrera);
+            }
+        }, 300);
+    }, 2000);
     
-    // Función para ejecutar pronóstico
-    window.tutorialEjecutarPronostico = function() {
-        // Verificar que los datos existen
-        if (!window.tutorialData || !window.tutorialData.pronosticosSeleccionados) {
-            alert("No has seleccionado ningún pronóstico");
-            return;
+    document.getElementById('btn-tutorial-next-large').classList.remove('hidden');
+};
+
+window.tutorialIrSeccion = function(seccion) {
+    alert('Esta función te llevaría a la sección: ' + seccion.toUpperCase() + '\n\nEn el juego real, puedes navegar entre secciones usando el menú superior.');
+};
+
+window.tutorialEjecutarPronostico = function() {
+    if (!window.tutorialData || !window.tutorialData.pronosticosSeleccionados) {
+        alert("No has seleccionado ningún pronóstico");
+        return;
+    }
+    
+    const selecciones = window.tutorialData.pronosticosSeleccionados;
+    const count = Object.keys(selecciones).length;
+    
+    if (count < 3) {
+        alert('Has seleccionado ' + count + ' de 3 pronósticos. Necesitas seleccionar uno de cada categoría.');
+        return;
+    }
+    
+    const resultadosReales = {
+        bandera: 'si',
+        abandonos: '3-5',
+        diferencia: '1-5s'
+    };
+    
+    let aciertos = 0;
+    const detalles = [];
+    
+    if (selecciones.bandera === resultadosReales.bandera) {
+        aciertos++;
+        detalles.push('✅ Bandera amarilla: SÍ (acertaste)');
+    } else {
+        detalles.push('❌ Bandera amarilla: ' + (selecciones.bandera === 'si' ? 'SÍ' : 'NO') + ' (era ' + (resultadosReales.bandera === 'si' ? 'SÍ' : 'NO') + ')');
+    }
+    
+    if (selecciones.abandonos === resultadosReales.abandonos) {
+        aciertos++;
+        detalles.push('✅ Abandonos: 3-5 (acertaste)');
+    } else {
+        detalles.push('❌ Abandonos: ' + selecciones.abandonos + ' (era ' + resultadosReales.abandonos + ')');
+    }
+    
+    if (selecciones.diferencia === resultadosReales.diferencia) {
+        aciertos++;
+        detalles.push('✅ Diferencia: 1-5s (acertaste)');
+    } else {
+        detalles.push('❌ Diferencia: ' + selecciones.diferencia + ' (era ' + resultadosReales.diferencia + ')');
+    }
+    
+    const resultados = document.getElementById('resultado-simulacion');
+    if (resultados) {
+        resultados.innerHTML = '<div class="resultado-simulado"><h4>📊 RESULTADOS DE LA SIMULACIÓN:</h4>' + detalles.map(d => '<div class="resultado-item">' + d + '</div>').join('') + '<div class="resumen-simulacion"><strong>' + aciertos + ' de 3 pronósticos acertados (' + Math.round((aciertos/3)*100) + '%)</strong></div></div>';
+        resultados.style.display = 'block';
+    }
+    
+    window.tutorialData.aciertosPronosticos = aciertos;
+    window.tutorialData.totalPronosticos = 3;
+    
+    const notificacion = document.createElement('div');
+    notificacion.className = aciertos >= 2 ? 'notification success' : 'notification warning';
+    notificacion.innerHTML = '<div class="notification-content"><i class="fas fa-' + (aciertos >= 2 ? 'trophy' : 'chart-line') + '"></i><span>' + aciertos + ' de 3 pronósticos acertados</span></div>';
+    document.body.appendChild(notificacion);
+    
+    setTimeout(() => notificacion.classList.add('show'), 10);
+    setTimeout(() => {
+        notificacion.classList.remove('show');
+        setTimeout(() => {
+            if (notificacion.parentNode) {
+                notificacion.parentNode.removeChild(notificacion);
+            }
+        }, 300);
+    }, 2000);
+    
+    setTimeout(() => {
+        if (window.tutorialManager) {
+            window.tutorialManager.tutorialStep++;
+            window.tutorialManager.mostrarTutorialStep();
         }
+    }, 2000);
+};
+
+window.mostrarInfoEstratega = function(index) {
+    const estratega = window.f1Manager.pilotos[index];
+    if (estratega) {
+        alert('📊 Estratega: ' + estratega.nombre + '\n💰 Salario: €' + estratega.salario + '/mes\n🎯 Función: ' + estratega.especialidad + '\n✨ Bono: +' + estratega.bonificacion_valor + '% puntos');
+    }
+};
+
+window.contratarNuevoEstratega = function(hueco) {
+    if (window.tabManager) {
+        window.tabManager.switchTab('equipo');
+    } else {
+        alert('Contratar nuevo estratega para hueco ' + (hueco + 1) + '\nRedirigiendo al mercado...');
+    }
+};
+
+window.recogerPiezaTutorial = async function(fabricacionId, area) {
+    try {
+        await window.supabase
+            .from('fabricacion_actual')
+            .update({ completada: true })
+            .eq('id', fabricacionId);
         
-        const selecciones = window.tutorialData.pronosticosSeleccionados;
-        const count = Object.keys(selecciones).length;
+        const { error: errorAlmacen } = await window.supabase
+            .from('almacen_piezas')
+            .insert([{
+                escuderia_id: window.f1Manager.escuderia.id,
+                area: area,
+                nivel: 1,
+                puntos_base: 15,
+                calidad: 'Básica',
+                equipada: false,
+                fabricada_en: new Date().toISOString(),
+                creada_en: new Date().toISOString()
+            }]);
         
-        if (count < 3) {
-            alert(`Has seleccionado ${count} de 3 pronósticos. Necesitas seleccionar uno de cada categoría.`);
-            return;
-        }
+        if (errorAlmacen) throw errorAlmacen;
         
-        // SIMULAR RESULTADOS REALES (esto sería aleatorio en el juego real)
-        const resultadosReales = {
-            bandera: 'si',      // En la simulación siempre hay bandera amarilla
-            abandonos: '3-5',   // En la simulación siempre hay 3-5 abandonos
-            diferencia: '1-5s'  // En la simulación siempre es 1-5s
-        };
-        
-        // Calcular aciertos REALES
-        let aciertos = 0;
-        const detalles = [];
-        
-        if (selecciones.bandera === resultadosReales.bandera) {
-            aciertos++;
-            detalles.push('✅ Bandera amarilla: SÍ (acertaste)');
-        } else {
-            detalles.push(`❌ Bandera amarilla: ${selecciones.bandera === 'si' ? 'SÍ' : 'NO'} (era ${resultadosReales.bandera === 'si' ? 'SÍ' : 'NO'})`);
-        }
-        
-        if (selecciones.abandonos === resultadosReales.abandonos) {
-            aciertos++;
-            detalles.push('✅ Abandonos: 3-5 (acertaste)');
-        } else {
-            detalles.push(`❌ Abandonos: ${selecciones.abandonos} (era ${resultadosReales.abandonos})`);
-        }
-        
-        if (selecciones.diferencia === resultadosReales.diferencia) {
-            aciertos++;
-            detalles.push('✅ Diferencia: 1-5s (acertaste)');
-        } else {
-            detalles.push(`❌ Diferencia: ${selecciones.diferencia} (era ${resultadosReales.diferencia})`);
-        }
-        
-        // Mostrar resultados
-        const resultados = document.getElementById('resultado-simulacion');
-        if (resultados) {
-            resultados.innerHTML = `
-                <div class="resultado-simulado">
-                    <h4>📊 RESULTADOS DE LA SIMULACIÓN:</h4>
-                    ${detalles.map(d => `<div class="resultado-item">${d}</div>`).join('')}
-                    <div class="resumen-simulacion">
-                        <strong>${aciertos} de 3 pronósticos acertados (${Math.round((aciertos/3)*100)}%)</strong>
-                    </div>
-                </div>
-            `;
-            resultados.style.display = 'block';
-        }
-        
-        // Guardar resultados para el paso final
-        window.tutorialData.aciertosPronosticos = aciertos;
-        window.tutorialData.totalPronosticos = 3;
-        
-        // Notificación basada en aciertos reales
         const notificacion = document.createElement('div');
-        notificacion.className = aciertos >= 2 ? 'notification success' : 'notification warning';
-        notificacion.innerHTML = `
-            <div class="notification-content">
-                <i class="fas fa-${aciertos >= 2 ? 'trophy' : 'chart-line'}"></i>
-                <span>${aciertos} de 3 pronósticos acertados</span>
-            </div>
-        `;
+        notificacion.className = 'notification success';
+        notificacion.innerHTML = '<div class="notification-content"><i class="fas fa-box-open"></i><span>✅ Pieza añadida al almacén</span></div>';
         document.body.appendChild(notificacion);
         
         setTimeout(() => notificacion.classList.add('show'), 10);
@@ -2673,93 +2296,16 @@ class F1Manager {
             }, 300);
         }, 2000);
         
-        // Avanzar automáticamente después de 2 segundos
-        setTimeout(() => {
-            if (window.tutorialManager) {
-                window.tutorialManager.tutorialStep++;
-                window.tutorialManager.mostrarTutorialStep();
-            }
-        }, 2000);
-    };
-    // Añade esto al final de tu archivo, con las otras funciones globales
-    window.mostrarInfoEstratega = function(index) {
-        const estratega = window.f1Manager.pilotos[index];
-        if (estratega) {
-            alert(`📊 Estratega: ${estratega.nombre}\n💰 Salario: €${estratega.salario}/mes\n🎯 Función: ${estratega.especialidad}\n✨ Bono: +${estratega.bonificacion_valor}% puntos`);
+        if (window.f1Manager) {
+            window.f1Manager.updateProductionMonitor();
         }
-    };
-    
-    window.contratarNuevoEstratega = function(hueco) {
-        // Esto abriría tu sistema de contratación
-        if (window.tabManager) {
-            window.tabManager.switchTab('equipo'); // Asume que tienes pestaña "equipo"
-        } else {
-            // Fallback simple
-            alert(`Contratar nuevo estratega para hueco ${hueco + 1}\nRedirigiendo al mercado...`);
-            // Aquí implementarías tu lógica de contratación
-        }
-    };
-    // Al final del archivo, con las otras funciones globales
-    window.recogerPiezaTutorial = async function(fabricacionId, area) {
-        try {
-            // 1. Marcar como completada
-            await window.supabase
-                .from('fabricacion_actual')
-                .update({ completada: true })
-                .eq('id', fabricacionId);
-            
-            // 2. Crear pieza en almacen
-            const { error: errorAlmacen } = await window.supabase
-                .from('almacen_piezas')
-                .insert([{
-                    escuderia_id: window.f1Manager.escuderia.id,
-                    area: area,
-                    nivel: 1,
-                    puntos_base: 15, // Ajusta según área
-                    calidad: 'Básica',
-                    equipada: false,
-                    fabricada_en: new Date().toISOString(),
-                    creada_en: new Date().toISOString()
-                }]);
-            
-            if (errorAlmacen) throw errorAlmacen;
-            
-            // Notificación en lugar de alert
-            const notificacion = document.createElement('div');
-            notificacion.className = 'notification success';
-            notificacion.innerHTML = `
-                <div class="notification-content">
-                    <i class="fas fa-box-open"></i>
-                    <span>✅ Pieza añadida al almacén</span>
-                </div>
-            `;
-            document.body.appendChild(notificacion);
-            
-            setTimeout(() => notificacion.classList.add('show'), 10);
-            setTimeout(() => {
-                notificacion.classList.remove('show');
-                setTimeout(() => {
-                    if (notificacion.parentNode) {
-                        notificacion.parentNode.removeChild(notificacion);
-                    }
-                }, 300);
-            }, 2000);
-            
-            // 3. Actualizar UI
-            if (window.f1Manager) {
-                window.f1Manager.updateProductionMonitor();
-            }
-            
-        } catch (error) {
-            console.error("Error recogiendo pieza:", error);
-            alert("Error recogiendo pieza: " + error.message);
-        }
-    };
-// ========================
-// ESCUCHAR AUTENTICACIÓN EXITOSA
-// ========================
+        
+    } catch (error) {
+        console.error("Error recogiendo pieza:", error);
+        alert("Error recogiendo pieza: " + error.message);
+    }
+};
 
-// Escuchar el evento de autenticación completada
 window.addEventListener('auth-completado', async (evento) => {
     console.log('✅ Evento auth-completado recibido en main.js');
     
@@ -2768,13 +2314,10 @@ window.addEventListener('auth-completado', async (evento) => {
     if (user && escuderia) {
         console.log('🎮 Creando F1Manager con datos de autenticación...');
         
-        // Crear instancia F1Manager
         window.f1Manager = new F1Manager(user, escuderia, supabase);
         
-        // Verificar si necesitas tutorial
         if (!escuderia.tutorial_completado) {
             console.log('📚 Mostrando tutorial...');
-            // Crear instancia del tutorial externo
             window.tutorialManager = new TutorialManager(window.f1Manager);
             window.tutorialManager.iniciar();
         } else {
@@ -2784,7 +2327,6 @@ window.addEventListener('auth-completado', async (evento) => {
     } 
 });
 
-// También verificar si ya hay datos almacenados
 setTimeout(() => {
     if (window.authData && window.authData.user && window.authData.escuderia) {
         console.log('📦 Usando datos de authData almacenados');
@@ -2793,10 +2335,7 @@ setTimeout(() => {
     }
 }, 1000);
 
-
-// AL FINAL DE TU ARCHIVO JS, FUERA DE CUALQUIER CLASE/FUNCIÓN
 (function() {
-    // Variable global para los datos del tutorial
     window.tutorialData = {
         estrategaSeleccionado: null,
         estrategaContratado: false,
@@ -2805,7 +2344,6 @@ setTimeout(() => {
         pronosticoSeleccionado: null
     };
     
-    // Funciones globales que llaman a los métodos del objeto
     window.tutorialSeleccionarEstratega = function(id) {
         if (window.tutorialManager && typeof window.tutorialManager.tutorialSeleccionarEstratega === 'function') {
             window.tutorialManager.tutorialSeleccionarEstratega(id);
@@ -2837,31 +2375,28 @@ setTimeout(() => {
             console.error("tutorialManager no está disponible");
         }
     };
-    // Funciones para gestionar estrategas
+    
     window.mostrarModalContratacion = function(huecoNumero) {
-        alert(`Mostrar modal para contratar estratega en hueco ${huecoNumero}`);
-        // Aquí implementarías la lógica para mostrar un modal de contratación
+        alert('Mostrar modal para contratar estratega en hueco ' + huecoNumero);
     };
     
     window.despedirEstratega = function(estrategaId) {
         if (confirm('¿Estás seguro de despedir a este estratega?')) {
-            // Aquí implementarías la lógica para despedir estratega
             console.log('Despedir estratega ID:', estrategaId);
             alert('Estratega despedido. Hueco disponible para nuevo contrato.');
             
-            // Recargar UI
             if (window.f1Manager) {
                 setTimeout(() => window.f1Manager.updatePilotosUI(), 500);
             }
         }
     };
-    // Reemplazar cualquier función de logout con:
+    
     window.cerrarSesion = function() {
         if (window.authManager) {
             window.authManager.cerrarSesion();
         }
     };
-    // Reemplazar loadUserData con:
+    
     window.recargarDatosUsuario = async function() {
         if (window.authManager && window.authManager.supabase) {
             const { data: { session } } = await window.authManager.supabase.auth.getSession();
@@ -2872,103 +2407,38 @@ setTimeout(() => {
         }
         return null;
     };
+    
     window.gestionarEstrategas = function() {
         alert('Mostrar pantalla completa de gestión de estrategas');
-        // Aquí puedes redirigir a una pestaña específica o mostrar un modal grande
         if (window.tabManager && window.tabManager.switchTab) {
             window.tabManager.switchTab('equipo');
         }
     };
-    // Función global para acceder desde los botones
+    
     window.iniciarFabricacionTaller = function(areaId, nivel) {
         if (window.f1Manager && window.f1Manager.iniciarFabricacionTaller) {
             window.f1Manager.iniciarFabricacionTaller(areaId, nivel);
         } else {
             alert('Error: Sistema de fabricación no disponible');
         }
-    };    
+    };
+    
     window.mostrarModalContratacion = function(huecoNumero) {
-        // Modal simple para contratar
-        const modalHTML = `
-            <div id="modal-contratacion" style="
-                position: fixed;
-                top: 0; left: 0; right: 0; bottom: 0;
-                background: rgba(0,0,0,0.8);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                z-index: 10000;
-            ">
-                <div style="
-                    background: #1a1a2e;
-                    padding: 20px;
-                    border-radius: 10px;
-                    border: 2px solid #00d2be;
-                    max-width: 400px;
-                    width: 90%;
-                ">
-                    <h3 style="color: #00d2be; margin-top: 0;">Contratar Estratega</h3>
-                    <p>Selecciona un estratega para el hueco ${huecoNumero}:</p>
-                    
-                    <div style="margin: 20px 0;">
-                        <button onclick="contratarEstrategaFicticio(1, ${huecoNumero})" style="
-                            width: 100%;
-                            padding: 10px;
-                            margin: 5px 0;
-                            background: rgba(0,210,190,0.1);
-                            border: 1px solid #00d2be;
-                            color: white;
-                            border-radius: 5px;
-                            cursor: pointer;
-                        ">
-                            🕐 Analista de Tiempos (+15%)
-                        </button>
-                        
-                        <button onclick="contratarEstrategaFicticio(2, ${huecoNumero})" style="
-                            width: 100%;
-                            padding: 10px;
-                            margin: 5px 0;
-                            background: rgba(0,210,190,0.1);
-                            border: 1px solid #00d2be;
-                            color: white;
-                            border-radius: 5px;
-                            cursor: pointer;
-                        ">
-                            🌧️ Meteorólogo (+20%)
-                        </button>
-                        
-                        <button onclick="contratarEstrategaFicticio(3, ${huecoNumero})" style="
-                            width: 100%;
-                            padding: 10px;
-                            margin: 5px 0;
-                            background: rgba(0,210,190,0.1);
-                            border: 1px solid #00d2be;
-                            color: white;
-                            border-radius: 5px;
-                            cursor: pointer;
-                        ">
-                            🔧 Experto en Fiabilidad (+18%)
-                        </button>
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px;">
-                        <button onclick="document.getElementById('modal-contratacion').remove()" style="
-                            flex: 1;
-                            padding: 10px;
-                            background: transparent;
-                            border: 1px solid #666;
-                            color: #aaa;
-                            border-radius: 5px;
-                            cursor: pointer;
-                        ">
-                            Cancelar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
+        const modalHTML = '<div id="modal-contratacion" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 10000;">' +
+            '<div style="background: #1a1a2e; padding: 20px; border-radius: 10px; border: 2px solid #00d2be; max-width: 400px; width: 90%;">' +
+            '<h3 style="color: #00d2be; margin-top: 0;">Contratar Estratega</h3>' +
+            '<p>Selecciona un estratega para el hueco ' + huecoNumero + ':</p>' +
+            '<div style="margin: 20px 0;">' +
+            '<button onclick="contratarEstrategaFicticio(1, ' + huecoNumero + ')" style="width: 100%; padding: 10px; margin: 5px 0; background: rgba(0,210,190,0.1); border: 1px solid #00d2be; color: white; border-radius: 5px; cursor: pointer;">🕐 Analista de Tiempos (+15%)</button>' +
+            '<button onclick="contratarEstrategaFicticio(2, ' + huecoNumero + ')" style="width: 100%; padding: 10px; margin: 5px 0; background: rgba(0,210,190,0.1); border: 1px solid #00d2be; color: white; border-radius: 5px; cursor: pointer;">🌧️ Meteorólogo (+20%)</button>' +
+            '<button onclick="contratarEstrategaFicticio(3, ' + huecoNumero + ')" style="width: 100%; padding: 10px; margin: 5px 0; background: rgba(0,210,190,0.1); border: 1px solid #00d2be; color: white; border-radius: 5px; cursor: pointer;">🔧 Experto en Fiabilidad (+18%)</button>' +
+            '</div>' +
+            '<div style="display: flex; gap: 10px;">' +
+            '<button onclick="document.getElementById(\'modal-contratacion\').remove()" style="flex: 1; padding: 10px; background: transparent; border: 1px solid #666; color: #aaa; border-radius: 5px; cursor: pointer;">Cancelar</button>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
         
-        // Insertar modal
         document.body.insertAdjacentHTML('beforeend', modalHTML);
     };
     
@@ -2979,28 +2449,22 @@ setTimeout(() => {
             3: { nombre: "Experto Fiabilidad", especialidad: "Técnica", bono: 18 }
         };
         
-        alert(`Contratado: ${estrategas[tipo].nombre} en hueco ${hueco}`);
+        alert('Contratado: ' + estrategas[tipo].nombre + ' en hueco ' + hueco);
         document.getElementById('modal-contratacion').remove();
         
-        // Actualizar UI
         if (window.f1Manager) {
             setTimeout(() => window.f1Manager.updatePilotosUI(), 500);
         }
     };
     
-    // Función para contratar estratega desde tutorial
     window.contratarEstrategaDesdeTutorial = function() {
-        // Redirigir al sistema de contratación
         if (window.tabManager) {
-            window.tabManager.switchTab('equipo'); // Asumiendo que tienes una pestaña "equipo"
+            window.tabManager.switchTab('equipo');
         } else {
             window.mostrarModalContratacion(1);
         }
     };
-
-    // ========================
-    // EVENTOS GLOBALES PARA EL COUNTDOWN
-    // ========================
+    
     document.addEventListener('DOMContentLoaded', () => {
         console.log('🎮 Configurando eventos del countdown...');
         
@@ -3012,13 +2476,11 @@ setTimeout(() => {
             btnPronostico.addEventListener('click', () => {
                 console.log('📤 Click en Enviar Pronóstico');
                 
-                // Redirigir a la pestaña de pronósticos
                 const tabPronosticos = document.querySelector('[data-tab="pronosticos"]');
                 if (tabPronosticos) {
                     tabPronosticos.click();
                     console.log('📍 Cambiando a pestaña pronósticos');
                 } else {
-                    // Si no existe la pestaña, buscar alternativas
                     const tabApuestas = document.querySelector('[data-tab="apuestas"]');
                     if (tabApuestas) {
                         tabApuestas.click();
@@ -3027,31 +2489,21 @@ setTimeout(() => {
                     }
                 }
             });
-        } else {
-            console.log('⚠️ Botón pronóstico NO encontrado');
         }
         
         if (btnCalendario) {
             console.log('✅ Botón calendario encontrado');
             btnCalendario.addEventListener('click', () => {
                 console.log('📅 Click en Calendario');
-                
-                // Por ahora solo un placeholder
                 alert('📅 CALENDARIO F1 2026\n\nFuncionalidad en desarrollo...\n\nPróximamente podrás:\n• Ver todas las carreras\n• Filtrar por temporada\n• Ver resultados pasados\n• Planificar estrategias');
-                
-                // Aquí pondrás la lógica real para mostrar el calendario
-                // Por ejemplo: window.f1Manager.mostrarCalendario();
             });
-        } else {
-            console.log('⚠️ Botón calendario NO encontrado');
         }
     });
-    // Función para recoger piezas y actualizar almacén
+    
     window.recogerPiezaYActualizarAlmacen = async function(fabricacionId) {
         try {
             console.log("Recogiendo pieza:", fabricacionId);
             
-            // 1. Obtener fabricación
             const { data: fabricacion, error: fetchError } = await supabase
                 .from('fabricacion_actual')
                 .select('*')
@@ -3060,10 +2512,8 @@ setTimeout(() => {
             
             if (fetchError) throw fetchError;
             
-            // 2. Convertir nombre a ID (ej: "Motor" → "motor")
             const areaId = fabricacion.area.toLowerCase().replace(/ /g, '_');
             
-            // 3. Crear pieza en piezas_almacen (tabla correcta)
             const { error: insertError } = await supabase
                 .from('piezas_almacen')
                 .insert([{
@@ -3077,7 +2527,6 @@ setTimeout(() => {
             
             if (insertError) throw insertError;
             
-            // 4. Marcar como completada
             const { error: updateError } = await supabase
                 .from('fabricacion_actual')
                 .update({ completada: true })
@@ -3085,23 +2534,19 @@ setTimeout(() => {
             
             if (updateError) throw updateError;
             
-            // 5. Notificación
             if (window.f1Manager && window.f1Manager.showNotification) {
-                window.f1Manager.showNotification(`✅ ${fabricacion.area} añadida al almacén`, 'success');
+                window.f1Manager.showNotification('✅ ' + fabricacion.area + ' añadida al almacén', 'success');
             }
             
-            // 6. Actualizar producción
             if (window.f1Manager && window.f1Manager.updateProductionMonitor) {
                 setTimeout(() => window.f1Manager.updateProductionMonitor(), 500);
             }
             
-            // 7. Si estamos en almacén, actualizar
             if (window.tabManager && window.tabManager.currentTab === 'almacen') {
                 if (window.tabManager.loadAlmacenPiezas) {
                     setTimeout(() => window.tabManager.loadAlmacenPiezas(), 1000);
                 }
             } else {
-                // Forzar recarga del almacén la próxima vez que se abra
                 window.almacenNecesitaActualizar = true;
             }
             
