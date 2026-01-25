@@ -1718,6 +1718,28 @@ html, body {
         left: 15px;
         right: 15px;
     }
+    .three-columns-layout {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+        height: auto !important;
+    }
+    
+    .col-estrategas, .col-countdown, .col-fabrica {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 250px !important;
+    }
+    
+    html, body {
+        position: relative !important;
+        overflow-y: auto !important;
+    }
+    
+    #app {
+        height: auto !important;
+        min-height: 100vh !important;
+    }
 }
 
 @media (max-width: 480px) {
@@ -2510,3 +2532,4 @@ html, body {
     min-height: 270px !important;
     overflow: hidden !important;
 }
+
