@@ -2649,17 +2649,23 @@ html, body {
     max-height: calc(100vh - 200px) !important;
   }
   .col-estrategas {
-      height: auto !important;
-      min-height: 190px !important;
-      padding: 5px !important;
+      height: fit-content !important;
+      min-height: unset !important;
+      padding: 0 !important;
   }
 
   .produccion-slots {
-      height: auto !important;
-      min-height: 170px !important;
-      gap: 8px !important;
-      padding: 8px !important;
-  }   
+      height: fit-content !important;
+      min-height: unset !important;
+      gap: 4px !important;
+      padding: 4px !important;
+  }
+
+  .produccion-slot {
+      height: 70px !important;
+      min-height: 70px !important;
+      padding: 6px !important;
+  }  
 }
 
 /* Para pantallas muy pequeñas (menos de 480px) */
