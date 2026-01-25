@@ -2656,8 +2656,8 @@ html, body {
       min-height: unset !important;
       padding: 2px !important;
       margin: 0 !important;
-      max-height: 160px !important;  /* ESTO FALTA */
-      overflow: hidden !important;    /* ESTO FALTA */
+      max-height: fit-content !important;
+      overflow: visible !important; /* Permite ver todo */
   }
   .col-estrategas .section-header {
       height: 30px !important;
@@ -2673,16 +2673,16 @@ html, body {
   .produccion-slots {
       height: auto !important;
       min-height: auto !important;
-      grid-template-rows: 60px 60px !important; /* Cambia auto auto por alturas fijas */
-      gap: 4px !important;
+      grid-template-rows: 50px 50px !important; /* Cambia auto auto por alturas fijas */
+      gap: 2px !important;
       padding: 4px !important;
       margin: 0 !important;
   }
 
   .produccion-slot {
-      height: 55px !important;
-      min-height: 55px !important;
-      padding: 4px !important;
+      height: 48px !important;
+      min-height: 48px !important;
+      padding: 3px !important;
       margin: 0 !important;
   }  
 }
