@@ -720,7 +720,7 @@ class F1Manager {
         `;
 
         document.body.innerHTML = `
-            <div id="app">
+            <div id="app" style="min-height: 100vh;">
                 <header class="dashboard-header-compacto">
                     <div class="header-left-compacto">
                         <div class="logo-compacto">
