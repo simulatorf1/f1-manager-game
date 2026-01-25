@@ -38,7 +38,7 @@ class F1Manager {
         this.tutorialStep = 0;
         this.tutorialData = null;
     }
-}
+
     // ========================
     // MÉTODO PARA CARGAR PESTAÑA TALLER
     // ========================
