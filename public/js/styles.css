@@ -2556,3 +2556,124 @@ html, body {
     overflow-y: auto !important;
     padding: 15px;
 }
+/* ========================
+   RESPONSIVE PARA MÓVIL - HEADER
+   ======================== */
+
+@media screen and (max-width: 768px) {
+  /* Header principal del dashboard - Reestructuración completa */
+  .dashboard-header-compacto {
+    flex-direction: column !important;
+    padding: 10px 15px !important;
+    height: auto !important;
+    gap: 10px !important;
+  }
+
+  /* Fila superior: nombre de escudería y dinero */
+  .header-left-compacto {
+    width: 100% !important;
+    justify-content: space-between !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid rgba(0, 210, 190, 0.2) !important;
+  }
+
+  .logo-compacto {
+    font-size: 1.1rem !important;
+  }
+
+  .money-display-compacto {
+    font-size: 0.9rem !important;
+    padding: 4px 10px !important;
+  }
+
+  /* Fila inferior: tabs con scroll horizontal */
+  .tabs-compactas {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 5px !important;
+    gap: 8px !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #00d2be rgba(255, 255, 255, 0.05) !important;
+  }
+
+  /* Estilo de scrollbar para móvil */
+  .tabs-compactas::-webkit-scrollbar {
+    height: 4px !important;
+  }
+
+  .tabs-compactas::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 10px !important;
+  }
+
+  .tabs-compactas::-webkit-scrollbar-thumb {
+    background: #00d2be !important;
+    border-radius: 10px !important;
+  }
+
+  .tab-btn-compacto {
+    padding: 8px 15px !important;
+    font-size: 0.85rem !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    min-width: fit-content !important;
+  }
+
+  /* Eliminar el contenedor derecho del header */
+  .header-right-compacto {
+    display: none !important;
+  }
+
+  /* Mover botón de logout al footer (o mantenerlo en header pero simplificado) */
+  .logout-btn-compacto {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    padding: 5px 10px !important;
+    font-size: 0.7rem !important;
+    z-index: 10 !important;
+  }
+
+  /* Ajustar el dashboard content para el nuevo header */
+  .dashboard-content {
+    padding-top: 10px !important;
+  }
+
+  /* Ajustar altura del contenido principal */
+  .tab-content {
+    max-height: calc(100vh - 200px) !important;
+  }
+}
+
+/* Para pantallas muy pequeñas (menos de 480px) */
+@media screen and (max-width: 480px) {
+  .dashboard-header-compacto {
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+
+  .logo-compacto {
+    font-size: 1rem !important;
+  }
+
+  .money-display-compacto {
+    font-size: 0.8rem !important;
+    padding: 3px 8px !important;
+  }
+
+  .tab-btn-compacto {
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+    gap: 3px !important;
+  }
+
+  .logout-btn-compacto {
+    top: 8px !important;
+    right: 8px !important;
+    padding: 4px 8px !important;
+    font-size: 0.65rem !important;
+  }
+}
