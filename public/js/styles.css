@@ -1856,7 +1856,7 @@ html, body {
 #app {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    min-height: 100vh;
     overflow: hidden;
 }
 
@@ -2533,4 +2533,8 @@ html, body {
     min-height: 270px !important;
     overflow: hidden !important;
 }
-
+.dashboard-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
