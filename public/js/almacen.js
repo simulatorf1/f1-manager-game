@@ -55,7 +55,7 @@ class AlmacenManager {
                     puntos_base: 10, // Cada pieza da 10 puntos
                     calidad: 'Estándar',
                     equipada: false,
-                    fabricada_en: new Date().toISOString()
+                    fabricada_en: new Date().toISOString(),
                     creada_en: new Date().toISOString()  // ← Añade esto también
                 }])
                 .select()
