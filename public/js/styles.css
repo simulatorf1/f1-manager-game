@@ -2656,14 +2656,14 @@ html, body {
       min-height: unset !important;
       padding: 2px !important;
       margin: 0 !important;
-      overflow: visible !important;
   }
 
   .produccion-slots {
       height: auto !important;
       min-height: auto !important;
-      gap: 3px !important;
-      padding: 2px !important;
+      grid-template-rows: auto auto !important; /* AÑADE ESTA LÍNEA */
+      gap: 4px !important;
+      padding: 4px !important;
       margin: 0 !important;
   }
 
@@ -2672,7 +2672,7 @@ html, body {
       min-height: 65px !important;
       padding: 4px !important;
       margin: 0 !important;
-  }
+  }  
 }
 
 /* Para pantallas muy pequeñas (menos de 480px) */
