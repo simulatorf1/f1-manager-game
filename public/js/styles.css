@@ -2524,15 +2524,16 @@ html, body {
 }
 
 /* Columnas del dashboard */
+
 .col-estrategas, .col-countdown, .col-fabrica {
     background: rgba(30, 30, 40, 0.8);
     border: 1px solid rgba(0, 210, 190, 0.3);
     border-radius: 8px;
     padding: 8px;
-    height: 270px !important;
+    height: auto !important;  /* CAMBIADO: auto en lugar de 270px */
     display: flex;
     flex-direction: column;
-    min-height: 270px !important;
+    min-height: unset !important;  /* CAMBIADO: unset en lugar de 270px */
     overflow: hidden !important;
 }
 .dashboard-content {
@@ -2651,23 +2652,27 @@ html, body {
     max-height: calc(100vh - 200px) !important;
   }
   .col-estrategas {
-      height: fit-content !important;
+      height: auto !important;
       min-height: unset !important;
-      padding: 0 !important;
+      padding: 2px !important;
+      margin: 0 !important;
+      overflow: visible !important;
   }
 
   .produccion-slots {
-      height: fit-content !important;
+      height: auto !important;
       min-height: unset !important;
-      gap: 4px !important;
-      padding: 4px !important;
+      gap: 3px !important;
+      padding: 2px !important;
+      margin: 0 !important;
   }
 
   .produccion-slot {
-      height: 70px !important;
-      min-height: 70px !important;
-      padding: 6px !important;
-  }  
+      height: 65px !important;
+      min-height: 65px !important;
+      padding: 4px !important;
+      margin: 0 !important;
+  }
 }
 
 /* Para pantallas muy pequeñas (menos de 480px) */
