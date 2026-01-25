@@ -2657,7 +2657,17 @@ html, body {
       padding: 2px !important;
       margin: 0 !important;
   }
-
+  .col-estrategas .section-header {
+      height: 30px !important;
+      min-height: 30px !important;
+      padding: 2px 8px !important;
+      margin-bottom: 4px !important;
+  }
+  
+  .col-estrategas .section-header h2 {
+      font-size: 0.8rem !important;
+      margin: 0 !important;
+  }
   .produccion-slots {
       height: auto !important;
       min-height: auto !important;
