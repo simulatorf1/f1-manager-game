@@ -2648,6 +2648,18 @@ html, body {
   .tab-content {
     max-height: calc(100vh - 200px) !important;
   }
+  .col-estrategas {
+      height: auto !important;
+      min-height: 190px !important;
+      padding: 5px !important;
+  }
+
+  .produccion-slots {
+      height: auto !important;
+      min-height: 170px !important;
+      gap: 8px !important;
+      padding: 8px !important;
+  }   
 }
 
 /* Para pantallas muy pequeñas (menos de 480px) */
