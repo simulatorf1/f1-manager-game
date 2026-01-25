@@ -2555,5 +2555,43 @@ setTimeout(() => {
             }
         }
     };
+    // Función global para fabricar desde los botones del taller
+    // Función global CORREGIDA
+    window.iniciarFabricacionTallerDesdeBoton = async function(areaId, nivel) {
+        console.log('🔧 Botón presionado para:', areaId, nivel);
+        
+        if (!window.f1Manager || !window.f1Manager.iniciarFabricacionTaller) {
+            alert('Error: Sistema de fabricación no disponible');
+            return false;
+        }
+        
+        // Verificar dinero primero
+        if (!window.f1Manager.escuderia || window.f1Manager.escuderia.dinero < 10000) {
+            window.f1Manager.showNotification('❌ Fondos insuficientes (necesitas €10,000)', 'error');
+            return false;
+        }
+        
+        // Ejecutar fabricación
+        const resultado = await window.f1Manager.iniciarFabricacionTaller(areaId, nivel);
+        
+        // Si se inició, actualizar UI
+        if (resultado) {
+            // Actualizar taller
+            setTimeout(() => {
+                if (window.f1Manager.cargarTabTaller) {
+                    window.f1Manager.cargarTabTaller();
+                }
+            }, 1000);
+            
+            // Ir a principal para ver la producción
+            setTimeout(() => {
+                if (window.tabManager && window.tabManager.switchTab) {
+                    window.tabManager.switchTab('principal');
+                }
+            }, 1500);
+        }
+        
+        return resultado;
+    };
     
 })();
