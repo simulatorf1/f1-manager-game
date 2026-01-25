@@ -2673,8 +2673,8 @@ html, body {
   .produccion-slots {
       height: auto !important;
       min-height: auto !important;
-      grid-template-rows: 50px 50px !important; /* Cambia auto auto por alturas fijas */
-      gap: 2px !important;
+      grid-template-rows: 55px 55px !important; /* Cambia auto auto por alturas fijas */
+      gap: 3px !important;
       padding: 4px !important;
       margin: 0 !important;
   }
