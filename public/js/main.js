@@ -1222,7 +1222,7 @@ class F1Manager {
             }, 400);
             
             // 3. Cargar datos iniciales (MISMA FUNCIONALIDAD ORIGINAL)
-            const supabase = await this.esperarSupabase();
+            const supabase = window.supabase; // Ya está disponible globalmente
             if (supabase) {
                 await this.loadCarStatus();
                 await this.loadPilotosContratados();
