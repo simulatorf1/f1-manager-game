@@ -3,594 +3,11 @@
 // ========================
 console.log('🏎️ F1 Manager - Sistema principal cargado');
 
-// ========================
-// 1. SISTEMA DE CARGA SEGURA DE SUPABASE
-// ========================
-console.log('🔧 Inicializando sistema seguro...');
-
-// Función para inicializar Supabase de forma SEGURA - VERSIÓN CORREGIDA
-function initSupabase() {
-    console.log('🔍 Verificando Supabase en window...');
-    
-    // Opción 1: Ya existe window.supabase del index.html
-    if (window.supabase && window.supabase.auth) {
-        console.log('✅ Supabase YA inicializado desde index.html');
-        return window.supabase;
-    }
-    
-    // Opción 2: Existe la variable global supabase del CDN
-    if (typeof supabase !== 'undefined' && supabase.createClient) {
-        console.log('⚠️ Creando cliente desde CDN (no debería pasar)');
-        try {
-            window.supabase = supabase.createClient(
-                'https://xbnbbmhcveyzrvvmdktg.supabase.co',
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg'
-            );
-            console.log('✅ Cliente creado como backup');
-            return window.supabase;
-        } catch (e) {
-            console.error('❌ Error creando cliente backup:', e);
-            return null;
-        }
-    }
-    
-    console.error('❌ CRÍTICO: No se puede encontrar Supabase de ninguna forma');
-    console.error('Estado de window.supabase:', window.supabase);
-    console.error('Estado de variable supabase:', typeof supabase);
-    
-    return null;
-}
-
-// ========================
-// 2. INICIALIZACIÓN PRINCIPAL
-// ========================
-async function iniciarAplicacion() {
-    console.log('🚀 Iniciando aplicación F1 Manager...');
-    // AÑADE ESTO JUSTO AQUÍ
-    // Desactivar zoom y gestos en móviles
-    if (!document.querySelector('meta[name="viewport"][content*="user-scalable=no"]')) {
-        const viewportMeta = document.createElement('meta');
-        viewportMeta.name = 'viewport';
-        viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
-        document.head.appendChild(viewportMeta);
-    }
-    
-    // Añadir estilos para prevenir gestos no deseados
-    const preventZoomStyles = document.createElement('style');
-    preventZoomStyles.id = 'prevent-zoom-styles';
-    preventZoomStyles.textContent = `
-        html, body {
-            touch-action: manipulation;
-            overscroll-behavior: none;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-        
-        * {
-            -webkit-tap-highlight-color: transparent;
-        }
-    `;
-    if (!document.getElementById('prevent-zoom-styles')) {
-        document.head.appendChild(preventZoomStyles);
-    }
-    // FIN DEL CÓDIGO A AÑADIR
-
-    
-    
-    // Mostrar pantalla de carga simple
-    document.body.innerHTML = '<div id="f1-loading-screen">Cargando...</div>';
-    
-    // Inicializar Supabase
-    window.supabase = initSupabase();
-    
-    if (!window.supabase) {
-        mostrarErrorCritico('No se pudo conectar con la base de datos');
-        return;
-    }
-    
-    console.log('✅ Supabase inicializado correctamente');
-    
-    // Verificar sesión
-    const { data: { session } } = await window.supabase.auth.getSession();
-    
-    if (session) {
-        console.log('✅ Usuario autenticado:', session.user.email);
-        // Crear instancia y llamar a init()
-        window.f1Manager = new F1Manager(session.user);
-        await window.f1Manager.init(); // ← ESTO ES CORRECTO, NO LO QUITES
-    } else {
-        console.log('👤 No hay sesión, mostrar login');
-        mostrarPantallaLogin();
-    }
-}
-
-// ========================
-// 3. PANTALLAS DE AUTENTICACIÓN
-// ========================
-function mostrarErrorCritico(mensaje) {
-    document.body.innerHTML = `
-        <div style="
-            min-height: 100vh;
-            background: #15151e;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            text-align: center;
-            padding: 20px;
-        ">
-            <div>
-                <h1 style="color: #e10600; margin-bottom: 20px;">❌ ERROR CRÍTICO</h1>
-                <p>${mensaje}</p>
-                <button onclick="location.reload()" style="
-                    margin-top: 20px;
-                    padding: 10px 20px;
-                    background: #e10600;
-                    color: white;
-                    border: none;
-                    border-radius: 5px;
-                    cursor: pointer;
-                ">
-                    Reintentar
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-function mostrarPantallaLogin() {
-    document.body.innerHTML = `
-        <div class="login-screen">
-            <div class="login-container">
-                <div class="login-header">
-                    <h1>MOTORSPORT Manager</h1>
-                    <p>Gestiona tu escudería de MotorSport</p>
-                </div>
-                
-                <div id="login-error" class="error-message"></div>
-                <div id="login-success" class="success-message"></div>
-                
-                <div class="login-form">
-                    <div class="form-group">
-                        <label for="login-email">Correo electrónico</label>
-                        <input type="email" id="login-email" placeholder="tu@email.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="login-password">Contraseña</label>
-                        <div class="password-input-container">
-                            <input type="password" id="login-password" placeholder="••••••••">
-                            <button type="button" class="toggle-password" id="toggle-login-password">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="login-buttons">
-                    <button class="btn-login" id="btn-login">
-                        <i class="fas fa-sign-in-alt"></i>
-                        INICIAR SESIÓN
-                    </button>
-                    <button class="btn-register" id="btn-register">
-                        <i class="fas fa-user-plus"></i>
-                        CREAR CUENTA
-                    </button>
-                </div>
-                
-                <div class="login-footer">
-                    <p>Un juego de gestión 100% online</p>
-                    <p>v1.0.0</p>
-                </div>
-            </div>
-        </div>
-        
-
-    `;
-    
-    // Configurar eventos
-    document.getElementById('btn-login').addEventListener('click', manejarLogin);
-    document.getElementById('btn-register').addEventListener('click', mostrarPantallaRegistro);
-    
-    // Permitir Enter para login
-    document.getElementById('login-password').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') manejarLogin();
-    });
-    
-    // Configurar botón para mostrar/ocultar contraseña
-    document.getElementById('toggle-login-password').addEventListener('click', function() {
-        const passwordInput = document.getElementById('login-password');
-        const icon = this.querySelector('i');
-        
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            icon.className = 'fas fa-eye-slash';
-        } else {
-            passwordInput.type = 'password';
-            icon.className = 'fas fa-eye';
-        }
-    });
-}
-
-function mostrarPantallaRegistro() {
-    document.body.innerHTML = `
-        <div class="register-screen">
-            <div class="register-container">
-                <button class="back-button" id="btn-back">
-                    <i class="fas fa-arrow-left"></i>
-                    Volver al login
-                </button>
-                
-                <div class="register-header">
-                    <h1>CREAR CUENTA</h1>
-                    <p>Comienza tu aventura en MotorSport</p>
-                </div>
-                
-                <div id="register-error" class="error-message"></div>
-                <div id="register-success" class="success-message"></div>
-                
-                <div class="register-form">
-                    <div class="form-group">
-                        <label for="register-username">Nombre de tu escudería</label>
-                        <input type="text" id="register-username" placeholder="Ej: RedBullManager" maxlength="20">
-                    </div>
-                    <div class="form-group">
-                        <label for="register-email">Correo electrónico</label>
-                        <input type="email" id="register-email" placeholder="tu@email.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="register-password">Contraseña</label>
-                        <div class="password-input-container">
-                            <input type="password" id="register-password" placeholder="•••••••• (mínimo 6 caracteres)">
-                            <button type="button" class="toggle-password" id="toggle-register-password">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="register-buttons">
-                    <button class="btn-validate" id="btn-validate">
-                        <i class="fas fa-check-circle"></i>
-                        VALIDAR DISPONIBILIDAD
-                    </button>
-                    <button class="register-button" id="btn-register-submit" disabled>
-                        <i class="fas fa-user-plus"></i>
-                        CREAR CUENTA
-                    </button>
-                </div>
-                
-                <div class="register-footer">
-                    <p>Recibirás 5,000,000€ para empezar</p>
-                </div>
-            </div>
-        </div>
-        
-
-    `;
-    
-    // Configurar eventos
-    document.getElementById('btn-back').addEventListener('click', mostrarPantallaLogin);
-    document.getElementById('btn-validate').addEventListener('click', validarDisponibilidad);
-    document.getElementById('btn-register-submit').addEventListener('click', manejarRegistro);
-    
-    // Configurar botón para mostrar/ocultar contraseña en registro
-    document.getElementById('toggle-register-password').addEventListener('click', function() {
-        const passwordInput = document.getElementById('register-password');
-        const icon = this.querySelector('i');
-        
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            icon.className = 'fas fa-eye-slash';
-        } else {
-            passwordInput.type = 'password';
-            icon.className = 'fas fa-eye';
-        }
-    });
-}
-
-async function validarDisponibilidad() {
-    const username = document.getElementById('register-username').value.trim();
-    const email = document.getElementById('register-email').value.trim();
-    const password = document.getElementById('register-password').value;
-    const errorDiv = document.getElementById('register-error');
-    const successDiv = document.getElementById('register-success');
-    const btnRegister = document.getElementById('btn-register-submit');
-    const btnValidate = document.getElementById('btn-validate');
-    
-    // Limpiar mensajes anteriores
-    mostrarMensaje('', errorDiv);
-    mostrarMensaje('', successDiv);
-    
-    // Validaciones básicas
-    if (!username || !email || !password) {
-        mostrarMensaje('Por favor, completa todos los campos', errorDiv);
-        btnRegister.disabled = true;
-        return;
-    }
-    
-    if (password.length < 6) {
-        mostrarMensaje('La contraseña debe tener al menos 6 caracteres', errorDiv);
-        btnRegister.disabled = true;
-        return;
-    }
-    
-    // Validar formato de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        mostrarMensaje('Por favor, introduce un correo electrónico válido', errorDiv);
-        btnRegister.disabled = true;
-        return;
-    }
-    
-    // Deshabilitar botón de validar mientras se verifica
-    btnValidate.disabled = true;
-    btnValidate.innerHTML = '<i class="fas fa-spinner fa-spin"></i> VERIFICANDO...';
-    
-    try {
-        console.log('🔍 Iniciando validación para:', { username, email });
-        
-        // 1. Verificar si el USERNAME ya existe en la tabla users
-        console.log('📊 Buscando username en users:', username);
-        const { data: usernameExistente, error: userError } = await supabase
-            .from('users')
-            .select('username, email')
-            .eq('username', username)
-            .maybeSingle();
-        
-        console.log('Resultado búsqueda username:', usernameExistente, 'Error:', userError);
-        
-        if (userError && userError.code !== 'PGRST116') {
-            console.error('Error en consulta username:', userError);
-            throw userError;
-        }
-        
-        if (usernameExistente) {
-            mostrarMensaje('❌ Ya existe un usuario con ese nombre de escudería', errorDiv);
-            btnRegister.disabled = true;
-            btnValidate.disabled = false;
-            btnValidate.innerHTML = '<i class="fas fa-check-circle"></i> VALIDAR DISPONIBILIDAD';
-            return;
-        }
-        
-        // 2. Verificar si el EMAIL ya existe en la tabla users
-        console.log('📧 Buscando email en users:', email);
-        const { data: emailExistente, error: emailError } = await supabase
-            .from('users')
-            .select('username, email')
-            .eq('email', email)
-            .maybeSingle();
-        
-        console.log('Resultado búsqueda email:', emailExistente, 'Error:', emailError);
-        
-        if (emailError && emailError.code !== 'PGRST116') {
-            console.error('Error en consulta email:', emailError);
-            throw emailError;
-        }
-        
-        if (emailExistente) {
-            mostrarMensaje('❌ Este correo electrónico ya está registrado', errorDiv);
-            btnRegister.disabled = true;
-            btnValidate.disabled = false;
-            btnValidate.innerHTML = '<i class="fas fa-check-circle"></i> VALIDAR DISPONIBILIDAD';
-            return;
-        }
-        
-        // 3. Si pasa ambas validaciones
-        console.log('✅ Validación exitosa - Datos disponibles');
-        mostrarMensaje('✅ ¡Nombre y correo disponibles! Ahora puedes crear tu cuenta', successDiv);
-        btnRegister.disabled = false;
-        
-        // Cambiar botón de validar
-        btnValidate.disabled = false;
-        btnValidate.innerHTML = '<i class="fas fa-check-double"></i> VALIDADO ✓';
-        btnValidate.style.background = 'linear-gradient(135deg, #4CAF50, #388E3C)';
-        
-    } catch (error) {
-        console.error('❌ Error completo en validación:', error);
-        
-        mostrarMensaje('❌ Error al verificar disponibilidad. Intenta de nuevo.', errorDiv);
-        btnRegister.disabled = true;
-        
-        // Restaurar botón de validar
-        btnValidate.disabled = false;
-        btnValidate.innerHTML = '<i class="fas fa-check-circle"></i> VALIDAR DISPONIBILIDAD';
-        btnValidate.style.background = 'linear-gradient(135deg, #ff9800, #ff5722)';
-    }
-}
-
-async function manejarRegistro() {
-    // ← DESHABILITAR BOTÓN INMEDIATAMENTE
-    const btnCrear = document.getElementById('btn-register-submit');
-    const textoOriginal = btnCrear.innerHTML;
-    btnCrear.disabled = true;
-    btnCrear.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESANDO...';
-    
-    const supabase = window.supabase;
-    if (!supabase) {
-        mostrarErrorCritico('No se pudo conectar con la base de datos');
-        btnCrear.disabled = false;
-        btnCrear.innerHTML = textoOriginal;
-        return;
-    }
-    
-    const username = document.getElementById('register-username').value.trim();
-    const email = document.getElementById('register-email').value.trim();
-    const password = document.getElementById('register-password').value;
-    const errorDiv = document.getElementById('register-error');
-    const successDiv = document.getElementById('register-success');
-    
-    if (!username || !email || !password) {
-        mostrarMensaje('Por favor, completa todos los campos', errorDiv);
-        btnCrear.disabled = false;
-        btnCrear.innerHTML = textoOriginal;
-        return;
-    }
-    
-    if (password.length < 6) {
-        mostrarMensaje('La contraseña debe tener al menos 6 caracteres', errorDiv);
-        btnCrear.disabled = false;
-        btnCrear.innerHTML = textoOriginal;
-        return;
-    }
-    
-    try {
-        console.log('📝 Verificando disponibilidad...');
-        
-        // ← PRIMERO verificar si YA existe usuario con ese email
-        try {
-            // Intento verificar si hay sesión (usuario ya logeado con ese email)
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                mostrarMensaje('⚠️ Ya hay una sesión activa con otro usuario', errorDiv);
-                return;
-            }
-        } catch (e) {
-            // Ignorar error de verificación
-        }
-        
-        // ← SOLO SI pasa la verificación, registrar
-        console.log('✅ Creando usuario:', email);
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: { 
-                    username: username,
-                    team_name: `${username}'s Team`
-                },
-                emailRedirectTo: window.location.origin
-            }
-        });
-        
-        if (authError) {
-            console.error('❌ Error Auth:', authError);
-            
-            // ← SI el error es "email ya registrado", mostramos mensaje y SALIMOS
-            if (authError.message.includes('already registered') || 
-                authError.message.includes('User already registered')) {
-                mostrarMensaje('Este correo ya está registrado', errorDiv);
-                return;
-            }
-            throw authError;
-        }
-        
-        console.log('✅ Usuario creado en Auth:', authData.user?.id);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // ← AHORA crear la escudería (la BD ya valida nombre único)
-        console.log('🏎️ Creando escudería:', username);
-        const { data: nuevaEscuderia, error: escError } = await supabase
-            .from('escuderias')
-            .insert([{
-                user_id: authData.user.id,
-                nombre: username,
-                dinero: 5000000,
-                puntos: 0,
-                ranking: 999,
-                nivel_ingenieria: 1,
-                color_principal: '#e10600',
-                color_secundario: '#ffffff',
-                creada_en: new Date().toISOString()
-            }])
-            .select()
-            .single();
-        
-        if (escError) {
-            console.error('❌ Error creando escudería:', escError);
-            
-            // ← SI la escudería ya existe, mostramos error PERO el usuario YA está creado
-            // Esto es lo que queremos evitar, pero si pasa, al menos informamos
-            if (escError.message.includes('escuderias_nombre_key') || 
-                escError.message.includes('duplicate')) {
-                mostrarMensaje('❌ Ya existe una escudería con ese nombre (el usuario se creó)', errorDiv);
-            }
-            throw escError;
-        }
-        
-        console.log('✅ Escudería creada:', nuevaEscuderia.id);
-        
-        await supabase
-            .from('coches_stats')
-            .insert([{ escuderia_id: nuevaEscuderia.id }]);
-        
-        mostrarMensaje('✅ ¡Cuenta creada! Revisa tu correo para confirmarla.', successDiv);
-        
-        setTimeout(() => mostrarPantallaLogin(), 3000);
-        
-    } catch (error) {
-        console.error('❌ Error en registro completo:', error);
-        
-        let mensajeError = error.message || 'Error creando la cuenta';
-        
-        if (error.message.includes('already registered')) {
-            mensajeError = 'Este correo ya está registrado';
-        } else if (error.message.includes('password')) {
-            mensajeError = 'La contraseña no cumple los requisitos';
-        } else if (error.message.includes('email')) {
-            mensajeError = 'El correo electrónico no es válido';
-        } else if (error.message.includes('escuderias_nombre_key') || error.message.includes('duplicate key')) {
-            mensajeError = '❌ Ya existe una escudería con ese nombre. Por favor, elige otro nombre.';
-        }
-        
-        mostrarMensaje(mensajeError, errorDiv);
-        
-    } finally {
-        // ← SIEMPRE restaurar botón
-        btnCrear.disabled = false;
-        btnCrear.innerHTML = textoOriginal;
-    }
-}
-
-async function manejarLogin() {
-    const supabase = window.supabase;
-    if (!supabase) {
-        mostrarErrorCritico('No se pudo conectar a la base de datos');
-        return;
-    }
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const errorDiv = document.getElementById('login-error');
-    const successDiv = document.getElementById('login-success');
-    
-    if (!email || !password) {
-        mostrarMensaje('Por favor, completa todos los campos', errorDiv);
-        return;
-    }
-    
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
-        
-        if (error) throw error;
-        
-        mostrarMensaje('✅ Sesión iniciada correctamente', successDiv);
-        
-        // Recargar la aplicación
-        setTimeout(() => location.reload(), 1000);
-        
-    } catch (error) {
-        console.error('Error en login:', error);
-        mostrarMensaje('Usuario o contraseña incorrectos', errorDiv);
-    }
-}
 
 
 
 
-function mostrarMensaje(mensaje, elemento) {
-    if (elemento) {
-        elemento.textContent = mensaje;
-        elemento.classList.add('show');
-        setTimeout(() => elemento.classList.remove('show'), 5000);
-    }
-}
+
 
 // ========================
 // ESTILOS CSS PARA PRODUCCIÓN (NUEVO DISEÑO)
@@ -610,104 +27,18 @@ const tallerStyles = '';
 // 4. CLASE F1Manager PRINCIPAL CON TUTORIAL
 // ========================
 class F1Manager {
-    constructor(user) {
+    constructor(user, escuderia, supabase) {
         console.log('🚗 Creando F1Manager para:', user.email);
         this.user = user;
-        this.escuderia = null;
+        this.escuderia = escuderia;
+        this.supabase = supabase;  // ← Añadir
         this.pilotos = [];
         this.carStats = null;
         this.proximoGP = null;
         this.tutorialStep = 0;
         this.tutorialData = null;
-        this.supabase = null; // Añadir referencia a supabase
     }
-    
-    async init() {
-        console.log('🔧 Inicializando juego...');
-        
-        // Inicializar Supabase
-        this.supabase = await this.esperarSupabase();
-        if (!this.supabase) {
-            console.error('❌ No se pudo cargar Supabase');
-            mostrarErrorCritico('Error de conexión con la base de datos');
-            return;
-        }
-        
-        // Cargar datos del usuario (IMPORTANTE: esto carga this.escuderia)
-        await this.loadUserData();
-        await this.loadPilotosContratados();
-        
-        // NUEVO: Verificar y crear datos iniciales si faltan
-        if (this.user && this.user.id) {
-            console.log('🔄 Verificando datos iniciales del usuario...');
-            const datosCreados = await this.crearDatosInicialesSiFaltan();
-            
-            if (!datosCreados) {
-                this.showNotification('⚠️ Hubo un problema configurando tu equipo.', 'warning');
-            }
-        }
-        
-        // VERIFICACIÓN MEJORADA DEL TUTORIAL
-        console.log('🔍 Verificando estado del tutorial...');
-        
-        // 1. Primero, asegúrate de que loadUserData cargó la escudería completa
-        // Si no, recárgala incluyendo tutorial_completado
-        if (this.escuderia && !('tutorial_completado' in this.escuderia)) {
-            console.log('🔄 Recargando escudería con campo tutorial...');
-            const { data: escuderiaCompleta, error } = await this.supabase
-                .from('escuderias')
-                .select('*')
-                .eq('id', this.escuderia.id)
-                .single();
-            
-            if (!error && escuderiaCompleta) {
-                this.escuderia = escuderiaCompleta;
-            }
-        }
-        
-        // 2. Verificar en ORDEN de prioridad:
-        const tutorialCompletadoBD = this.escuderia?.tutorial_completado;
-        const tutorialCompletadoLocal = localStorage.getItem('f1_tutorial_completado');
-        
-        console.log('📊 Estado tutorial:', {
-            BD: tutorialCompletadoBD,
-            localStorage: tutorialCompletadoLocal,
-            tieneEscudería: !!this.escuderia
-        });
-        
-        // 3. LÓGICA DECISIVA CORREGIDA: ¿Mostrar tutorial?
-        // MOSTRAR tutorial solo si:
-        // - Hay escudería
-        // - Y NO está completado en BD (false o null)
-        
-        // CORRECCIÓN: Siempre limpiar localStorage si BD dice false
-        if (tutorialCompletadoBD === false) {
-            localStorage.removeItem('f1_tutorial_completado');
-            if (this.escuderia?.id) {
-                localStorage.removeItem(`f1_tutorial_${this.escuderia.id}`);
-            }
-        }
-        
-        // DECISIÓN FINAL
-        if (this.escuderia && tutorialCompletadoBD === false) {
-            console.log('🎯 MOSTRANDO TUTORIAL (BD dice false)');
-            this.mostrarTutorialInicial();
-        } 
-        else if (!this.escuderia) {
-            console.log('🎯 MOSTRANDO TUTORIAL (no tiene escudería)');
-            this.mostrarTutorialInicial();
-        }
-        else {
-            console.log('📊 CARGANDO DASHBOARD (tutorial ya completado en BD o BD=true)');
-            await this.cargarDashboardCompleto();
-            await this.inicializarSistemasIntegrados();
-            
-            // Sincronizar localStorage si está en BD pero no en localStorage (para usuarios existentes)
-            if (tutorialCompletadoBD === true && !tutorialCompletadoLocal) {
-                localStorage.setItem('f1_tutorial_completado', 'true');
-            }
-        }
-    }
+}
     // ========================
     // MÉTODO PARA CARGAR PESTAÑA TALLER
     // ========================
@@ -1426,35 +757,7 @@ class F1Manager {
         contenedor.innerHTML = html;
     }
     
-    async esperarSupabase() {
-        console.log('⏳ Esperando Supabase y sesión de autenticación...');
-        let intentos = 0;
-        const maxIntentos = 50; // 5 segundos máximo
-    
-        while (intentos < maxIntentos) {
-            // 1. Esperar a que el cliente Supabase exista
-            if (window.supabase && window.supabase.auth) {
-                // 2. ¡CRUCIAL! Verificar que el cliente de auth tenga una sesión válida
-                try {
-                    const { data: { session } } = await window.supabase.auth.getSession();
-                    if (session) {
-                        console.log('✅ Supabase y sesión de auth listos después de ' + (intentos * 100) + 'ms');
-                        return window.supabase;
-                    } else {
-                        console.log('⚠️ Cliente Supabase listo, pero no hay sesión de usuario activa aún.');
-                    }
-                } catch (authError) {
-                    console.warn('⚠️ Error al verificar la sesión:', authError);
-                }
-            }
-            // Esperar 100ms antes de intentar de nuevo
-            await new Promise(resolve => setTimeout(resolve, 100));
-            intentos++;
-        }
-        console.error('❌ Supabase nunca se inicializó correctamente con una sesión de usuario.');
-        return null;
-    }
-    
+
 
     
     // ========================
@@ -3093,36 +2396,7 @@ class F1Manager {
         }
     }
     
-    async loadUserData() {
-        console.log('📥 Cargando datos del usuario...');
-        
-        try {
-            // Buscar escudería del usuario en Supabase
-            const { data: escuderias, error } = await supabase
-                .from('escuderias')
-                .select('*')
-                .eq('user_id', this.user.id)
-                .order('creada_en', { ascending: false })
-                .limit(1)
-                .maybeSingle(); // <- CORRECCIÓN
-            
-            if (error && error.code !== 'PGRST116') {
-                console.error('Error cargando escudería:', error);
-                return;
-            }
-            
-            if (escuderias) {
-                this.escuderia = escuderias;
-                console.log('✅ Escudería cargada:', escuderias.nombre);
-                
-                // Cargar stats del coche
-                await this.cargarCarStats();
-            }
-            
-        } catch (error) {
-            console.error('Error en loadUserData:', error);
-        }
-    }
+
 
     async loadPilotosContratados() {
         if (!this.escuderia || !this.escuderia.id || !this.supabase) {
@@ -3153,103 +2427,7 @@ class F1Manager {
         }
     }
     
-     // AÑADE ESTE MÉTODO DENTRO DE LA CLASE F1Manager en main.js
-    async crearDatosInicialesSiFaltan() {
-        console.log('🔍 Verificando si faltan datos iniciales...');
-        
-        // 1. Verificar si el usuario ya está en public.users
-        const { data: usuarioPublico, error: userError } = await this.supabase
-            .from('users')
-            .select('id')
-            .eq('id', this.user.id)
-            .maybeSingle();
-        
-        // Si NO existe en public.users, lo creamos
-        if (!usuarioPublico && !userError) {
-            console.log('👤 Creando usuario en tabla pública...');
-            const { error: insertError } = await this.supabase
-                .from('users')
-                .insert([{
-                    id: this.user.id,
-                    username: this.user.user_metadata?.username || this.user.email?.split('@')[0],
-                    email: this.user.email,
-                    created_at: new Date().toISOString(),
-                    last_login: new Date().toISOString()
-                }]);
-            
-            if (insertError) {
-                console.error('❌ Error creando usuario público:', insertError);
-            }
-        }
-        
-        // 2. Verificar si ya tiene escudería
-        const { data: escuderia, error: escError } = await this.supabase
-            .from('escuderias')
-            .select('id')
-            .eq('user_id', this.user.id)
-            .maybeSingle();
-        
-        // Si NO tiene escudería, la creamos
-        if (!escuderia && !escError) {
-            console.log('🏎️ Creando escudería inicial...');
-            const nombreEscuderia = this.user.user_metadata?.team_name || `${this.user.user_metadata?.username}'s Team`;
-            
-            const { error: escInsertError } = await this.supabase
-                .from('escuderias')
-                .insert([{
-                    user_id: this.user.id,
-                    nombre: nombreEscuderia,
-                    dinero: 5000000,
-                    puntos: 0,
-                    ranking: 999,
-                    nivel_ingenieria: 1,
-                    color_principal: '#e10600',
-                    color_secundario: '#ffffff',
-                    creada_en: new Date().toISOString()
-                }], { returning: 'minimal' }); // ← ¡IMPORTANTE!
-            
-            if (escInsertError) {
-                console.error('❌ Error creando escudería:', escInsertError);
-                return false;
-            }
-            
-            // 3. Crear stats del coche (SOLO si no existen ya)
-            const { data: nuevaEscuderia } = await this.supabase
-                .from('escuderias')
-                .select('id')
-                .eq('user_id', this.user.id)
-                .single();
-        
-            if (nuevaEscuderia) {
-                // PRIMERO verificar si ya existen stats para esta escudería
-                const { data: statsExistentes, error: statsError } = await this.supabase
-                    .from('coches_stats')
-                    .select('escuderia_id')
-                    .eq('escuderia_id', nuevaEscuderia.id)
-                    .maybeSingle();
-            
-                // SOLO insertar si NO existen stats
-                if (!statsExistentes && !statsError) {
-                    const { error: statsInsertError } = await this.supabase
-                        .from('coches_stats')
-                        .insert([{ escuderia_id: nuevaEscuderia.id }]);
-                
-                    if (statsInsertError) {
-                        console.error('❌ Error creando stats del coche:', statsInsertError);
-                    } else {
-                        console.log('📊 Stats del coche creados');
-                    }
-                } else {
-                    console.log('📊 Stats del coche ya existían, no se crean nuevos');
-                }
-            }
-            
-            console.log('✅ Datos iniciales creados correctamente');
-            return true;
-        }
-        
-        return true; // Ya tenía todos los datos
-    }   
+
     async cargarCarStats() {
         if (!this.escuderia) return;
         
@@ -5561,8 +4739,38 @@ class F1Manager {
 
 
 // Iniciar aplicación
-console.log('🚀 Iniciando aplicación desde el final del archivo...');
-iniciarAplicacion();
+// ========================
+// INICIAR JUEGO CUANDO AUTH ESTÉ LISTO
+// ========================
+console.log('🎮 Main.js listo - Esperando autenticación...');
+
+// Esperar a que authManager cargue el usuario
+function iniciarJuegoCuandoListo() {
+    // Verificar periódicamente si authManager tiene datos
+    const checkInterval = setInterval(() => {
+        if (window.authManager && window.authManager.user && window.authManager.escuderia) {
+            clearInterval(checkInterval);
+            console.log('✅ Usuario autenticado, iniciando juego...');
+            
+            // Crear instancia F1Manager
+            window.f1Manager = new F1Manager(
+                window.authManager.user, 
+                window.authManager.escuderia,
+                window.authManager.supabase
+            );
+            
+            // Iniciar juego
+            window.f1Manager.init();
+        }
+    }, 500);
+}
+
+// Iniciar verificación cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', iniciarJuegoCuandoListo);
+} else {
+    iniciarJuegoCuandoListo();
+}
 // AL FINAL DE TU ARCHIVO JS, FUERA DE CUALQUIER CLASE/FUNCIÓN
 (function() {
     // Variable global para los datos del tutorial
@@ -5623,6 +4831,23 @@ iniciarAplicacion();
                 setTimeout(() => window.f1Manager.updatePilotosUI(), 500);
             }
         }
+    };
+    // Reemplazar cualquier función de logout con:
+    window.cerrarSesion = function() {
+        if (window.authManager) {
+            window.authManager.cerrarSesion();
+        }
+    };
+    // Reemplazar loadUserData con:
+    window.recargarDatosUsuario = async function() {
+        if (window.authManager && window.authManager.supabase) {
+            const { data: { session } } = await window.authManager.supabase.auth.getSession();
+            if (session) {
+                await window.authManager.cargarDatosUsuario(session.user);
+                return { user: window.authManager.user, escuderia: window.authManager.escuderia };
+            }
+        }
+        return null;
     };
     window.gestionarEstrategas = function() {
         alert('Mostrar pantalla completa de gestión de estrategas');
