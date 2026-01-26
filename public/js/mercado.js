@@ -1294,8 +1294,14 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
             return;
         }
         
-        // Llamar al método que SÍ existe
-        await window.mercadoManager.mostrarModalVenta(pieza);
+        // VERIFICA SI EL MÉTODO NUEVO EXISTE
+        if (window.mercadoManager.mostrarModalVentaBasico) {
+            // Usar el método NUEVO que crea modal automáticamente
+            await window.mercadoManager.mostrarModalVentaBasico(pieza);
+        } else {
+            // Fallback al método viejo
+            await window.mercadoManager.mostrarModalVenta(pieza);
+        }
         
     } catch (error) {
         console.error('❌ Error vendiendo pieza:', error);
