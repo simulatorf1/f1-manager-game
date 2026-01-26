@@ -1132,7 +1132,7 @@ async function mostrarModalVentaBasico(pieza) {
                     </p>
                 </div>
                 
-                <button onclick="procesarVentaRapida('${pieza.id}')" style="
+                <button onclick="window.mercadoManager.procesarVentaRapida('${pieza.id}')" style="
                     width: 100%;
                     padding: 12px;
                     background: linear-gradient(135deg, #00d2be, #009688);
