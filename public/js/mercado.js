@@ -1107,12 +1107,37 @@ async function venderPiezaDesdeAlmacen(piezaId) {
 }
 
 // Hacer la función global para que pueda ser llamada desde main.js
-window.venderPiezaDesdeAlmacen = function(piezaId) {
-    if (window.mercadoManager) {
-        window.mercadoManager.venderPiezaDesdeAlmacen(piezaId);
-    } else {
+window.venderPiezaDesdeAlmacen = async function(piezaId) {
+    console.log('🛒 Botón VENDER clickeado para pieza:', piezaId);
+    
+    if (!window.mercadoManager) {
         console.error('❌ mercadoManager no disponible');
         alert('El sistema de mercado no está disponible. Recarga la página.');
+        return;
+    }
+    
+    try {
+        // Obtener datos de la pieza directamente
+        const { data: pieza, error } = await supabase
+            .from('almacen_piezas')
+            .select('*')
+            .eq('id', piezaId)
+            .single();
+        
+        if (error) throw error;
+        
+        // Verificar que no esté equipada
+        if (pieza.equipada) {
+            alert('❌ No puedes vender una pieza equipada');
+            return;
+        }
+        
+        // Llamar al método que SÍ existe
+        await window.mercadoManager.mostrarModalVenta(pieza);
+        
+    } catch (error) {
+        console.error('❌ Error vendiendo pieza:', error);
+        alert('Error al vender la pieza: ' + error.message);
     }
 };
 
