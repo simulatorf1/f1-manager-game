@@ -1155,11 +1155,16 @@ async function mostrarModalVentaBasico(pieza) {
 
 // ========================
 // 11. PROCESAR VENTA RÁPIDA
+
 // ========================
-// ========================
-// 11. PROCESAR VENTA RÁPIDA
-// ========================
-MercadoManager.prototype.procesarVentaRapida = async function(piezaId) {  // ← Cambiado
+MercadoManager.prototype.procesarVentaRapida = async function(piezaId) {
+    // VERIFICACIÓN CRÍTICA - HACER ESTO PRIMERO
+    if (!this.escuderia || !this.escuderia.id) {
+        console.error('❌ mercadoManager.escuderia es null o no tiene id:', this.escuderia);
+        alert('Error: Sistema de mercado no está listo. Por favor, recarga la página.');
+        return;
+    }
+    
     const precioInput = document.getElementById('precio-rapido');
     const precio = parseInt(precioInput.value);
     const modal = document.getElementById('modal-venta-rapido');
@@ -1175,7 +1180,7 @@ MercadoManager.prototype.procesarVentaRapida = async function(piezaId) {  // ←
             .from('almacen_piezas')
             .select('*')
             .eq('id', piezaId)
-            .eq('escuderia_id', this.escuderia.id)  // ← AÑADE ESTA LÍNEA
+            .eq('escuderia_id', this.escuderia.id)  // ← Usa this.escuderia.id que ya verificamos
             .single();
         
         if (error) {
@@ -1189,17 +1194,31 @@ MercadoManager.prototype.procesarVentaRapida = async function(piezaId) {  // ←
             return;
         }
         
+        // Verificar que no esté ya en venta
+        const { data: yaEnVenta } = await this.supabase
+            .from('mercado')
+            .select('id')
+            .eq('pieza_id', piezaId)
+            .eq('estado', 'disponible')
+            .single();
+            
+        if (yaEnVenta) {
+            alert('⚠️ Esta pieza ya está en venta en el mercado');
+            if (modal) modal.remove();
+            return;
+        }
+        
         // Crear orden en mercado
         const { error: mercadoError } = await this.supabase
             .from('mercado')
             .insert([{
-                vendedor_id: this.escuderia.id,  // ← Ahora this.escuderia existe
+                vendedor_id: this.escuderia.id,
                 vendedor_nombre: this.escuderia.nombre,
                 pieza_id: piezaId,
                 pieza_nombre: `${this.getAreaNombre(pieza.area)} Nivel ${pieza.nivel}`,
                 area: pieza.area,
                 nivel: pieza.nivel,
-                calidad: pieza.calidad,
+                calidad: pieza.calidad || 'Normal',
                 precio: precio,
                 estado: 'disponible',
                 creada_en: new Date().toISOString()
@@ -1222,6 +1241,11 @@ MercadoManager.prototype.procesarVentaRapida = async function(piezaId) {  // ←
         // Si está en pestaña mercado, recargar
         if (window.tabManager?.currentTab === 'mercado') {
             await this.cargarTabMercado();
+        }
+        
+        // Actualizar almacén si está visible
+        if (window.tabManager?.currentTab === 'almacen' && window.tabManager.loadAlmacenPiezas) {
+            setTimeout(() => window.tabManager.loadAlmacenPiezas(), 500);
         }
         
     } catch (error) {
