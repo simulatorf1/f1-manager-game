@@ -401,7 +401,14 @@ class F1Manager {
             console.error('❌ No hay escudería para inicializar sistemas');
             return;
         }
-        
+        if (window.MercadoManager && !window.window.mercadoManager) {
+            console.log('🔧 Creando mercadoManager...');
+            window.mercadoManager = new window.MercadoManager();
+        }
+        if (window.mercadoManager && typeof window.mercadoManager.inicializar === 'function') {
+            await window.mercadoManager.inicializar(this.escuderia);
+            console.log('✅ Sistema de mercado inicializado');
+        }
         if (window.FabricacionManager && !window.fabricacionManager) {
             console.log('🔧 Creando fabricacionManager...');
             window.fabricacionManager = new window.FabricacionManager();
