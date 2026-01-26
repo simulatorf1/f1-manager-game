@@ -1062,7 +1062,7 @@ class MercadoManager {
 // ========================
 // 10. MODAL BÁSICO PARA VENDER DESDE ALMACÉN
 // ========================
-async mostrarModalVentaBasico(pieza) {
+async function mostrarModalVentaBasico(pieza) {
     console.log('🔧 Mostrando modal básico para venta desde almacén');
     
     // Crear modal simple
