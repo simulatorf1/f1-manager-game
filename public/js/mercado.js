@@ -70,8 +70,6 @@ class MercadoManager {
     // ========================
     // 3. GENERAR HTML DEL MERCADO
     // ========================
-
-    
     generarHTMLMercado() {
         return `
             <div class="mercado-container">
@@ -87,21 +85,21 @@ class MercadoManager {
                         <div class="stat-icon-horizontal">💰</div>
                         <div class="stat-content-horizontal">
                             <div class="stat-value-horizontal">${this.ordenesDisponibles.length}</div>
-                            <div class="stat-label-horizontal">Órdenes disponibles</div>
+                            <div class="stat-label-horizontal">Disponibles</div>
                         </div>
                     </div>
                     <div class="stat-card-horizontal">
                         <div class="stat-icon-horizontal">🏎️</div>
                         <div class="stat-content-horizontal">
                             <div class="stat-value-horizontal">${this.misOrdenes.length}</div>
-                            <div class="stat-label-horizontal">Mis órdenes activas</div>
+                            <div class="stat-label-horizontal">Mis órdenes</div>
                         </div>
                     </div>
                     <div class="stat-card-horizontal">
                         <div class="stat-icon-horizontal">📈</div>
                         <div class="stat-content-horizontal">
                             <div class="stat-value-horizontal">${this.calcularPrecioPromedio()}€</div>
-                            <div class="stat-label-horizontal">Precio promedio</div>
+                            <div class="stat-label-horizontal">Precio avg</div>
                         </div>
                     </div>
                 </div>
@@ -145,7 +143,7 @@ class MercadoManager {
                     }
                 </div>
                 
-                <!-- Modales (se mantienen igual) -->
+                <!-- Modales -->
                 <div id="modal-compra" class="modal-overlay" style="display: none;">
                     <div class="modal-container">
                         <div class="modal-header">
@@ -158,10 +156,10 @@ class MercadoManager {
                 
                 <style>
                     /* ==================== */
-                    /* ESTILOS MERCADO MEJORADO */
+                    /* ESTILOS MERCADO COMPACTO */
                     /* ==================== */
                     .mercado-container {
-                        padding: 15px;
+                        padding: 12px;
                         color: white;
                         max-width: 1200px;
                         margin: 0 auto;
@@ -169,55 +167,55 @@ class MercadoManager {
                     
                     .mercado-header {
                         text-align: center;
-                        margin-bottom: 20px;
-                        padding-bottom: 15px;
+                        margin-bottom: 15px;
+                        padding-bottom: 12px;
                         border-bottom: 2px solid rgba(0, 210, 190, 0.3);
                     }
                     
                     .mercado-header h1 {
                         font-family: 'Orbitron', sans-serif;
-                        font-size: 1.5rem;
+                        font-size: 1.3rem;
                         color: white;
-                        margin-bottom: 8px;
+                        margin-bottom: 5px;
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        gap: 10px;
+                        gap: 8px;
                     }
                     
                     .subtitle {
                         color: #aaa;
-                        font-size: 0.85rem;
+                        font-size: 0.8rem;
                     }
                     
-                    /* Stats en horizontal */
+                    /* Stats compactos */
                     .mercado-stats-horizontal {
                         display: flex;
-                        gap: 10px;
-                        margin-bottom: 20px;
+                        gap: 8px;
+                        margin-bottom: 15px;
                         justify-content: center;
                         flex-wrap: wrap;
                     }
                     
                     .stat-card-horizontal {
                         background: rgba(255, 255, 255, 0.05);
-                        border-radius: 8px;
-                        padding: 12px;
+                        border-radius: 6px;
+                        padding: 10px;
                         display: flex;
                         align-items: center;
-                        gap: 12px;
+                        gap: 10px;
                         border: 1px solid rgba(255, 255, 255, 0.1);
                         flex: 1;
-                        min-width: 140px;
-                        max-width: 200px;
+                        min-width: 110px;
+                        max-width: 130px;
                     }
                     
                     .stat-icon-horizontal {
-                        font-size: 1.5rem;
-                        width: 40px;
-                        height: 40px;
+                        font-size: 1.2rem;
+                        width: 35px;
+                        height: 35px;
                         background: rgba(0, 210, 190, 0.1);
-                        border-radius: 8px;
+                        border-radius: 6px;
                         display: flex;
                         align-items: center;
                         justify-content: center;
@@ -225,7 +223,7 @@ class MercadoManager {
                     
                     .stat-value-horizontal {
                         font-family: 'Orbitron', sans-serif;
-                        font-size: 1.2rem;
+                        font-size: 1.1rem;
                         font-weight: bold;
                         color: white;
                         margin-bottom: 2px;
@@ -233,27 +231,27 @@ class MercadoManager {
                     
                     .stat-label-horizontal {
                         color: #aaa;
-                        font-size: 0.75rem;
+                        font-size: 0.7rem;
                         white-space: nowrap;
                     }
                     
                     /* Contenedor tabla */
                     .mercado-tabla-container {
-                        margin-top: 15px;
+                        margin-top: 12px;
                     }
                     
                     .tabla-titulo {
                         font-family: 'Orbitron', sans-serif;
-                        font-size: 1rem;
+                        font-size: 0.9rem;
                         color: white;
-                        margin-bottom: 12px;
-                        padding-left: 5px;
+                        margin-bottom: 10px;
+                        padding-left: 3px;
                     }
                     
-                    /* Tabla compacta */
+                    /* Tabla ultra compacta */
                     .table-responsive {
                         overflow-x: auto;
-                        border-radius: 10px;
+                        border-radius: 8px;
                         background: rgba(255, 255, 255, 0.03);
                         border: 1px solid rgba(255, 255, 255, 0.05);
                     }
@@ -261,66 +259,76 @@ class MercadoManager {
                     .ordenes-table-compact {
                         width: 100%;
                         border-collapse: collapse;
-                        min-width: 600px;
+                        min-width: 500px;
                     }
                     
                     .ordenes-table-compact th {
                         background: rgba(0, 210, 190, 0.15);
                         color: white;
-                        padding: 10px 8px;
+                        padding: 8px 4px;
                         text-align: left;
                         font-family: 'Orbitron', sans-serif;
-                        font-size: 0.75rem;
+                        font-size: 0.7rem;
                         text-transform: uppercase;
-                        letter-spacing: 0.5px;
+                        letter-spacing: 0.3px;
                         white-space: nowrap;
                     }
                     
                     .ordenes-table-compact td {
-                        padding: 10px 8px;
+                        padding: 8px 4px;
                         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
                         color: #ccc;
-                        font-size: 0.85rem;
+                        font-size: 0.8rem;
+                        white-space: nowrap;
                     }
                     
                     .ordenes-table-compact tr:hover {
                         background: rgba(255, 255, 255, 0.05);
                     }
                     
-                    /* Columnas específicas */
+                    /* Columnas ajustadas al texto */
                     .pieza-nombre-col {
                         font-weight: bold;
                         color: white;
-                        min-width: 150px;
+                        min-width: 120px;
+                        max-width: 140px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
                     }
                     
                     .nivel-col {
                         text-align: center;
-                        min-width: 60px;
+                        min-width: 40px;
+                        max-width: 50px;
                     }
                     
                     .vendedor-col {
-                        min-width: 120px;
+                        min-width: 80px;
+                        max-width: 100px;
                         color: #aaa;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
                     }
                     
                     .precio-col {
                         color: #FFD700;
                         font-weight: bold;
-                        min-width: 100px;
+                        min-width: 70px;
+                        max-width: 90px;
                     }
                     
                     .accion-col {
-                        min-width: 90px;
+                        min-width: 70px;
+                        max-width: 80px;
                     }
                     
                     .btn-comprar-compact {
                         background: linear-gradient(135deg, #4CAF50, #388E3C);
                         border: none;
                         color: white;
-                        padding: 6px 12px;
-                        border-radius: 5px;
-                        font-size: 0.75rem;
+                        padding: 6px 10px;
+                        border-radius: 4px;
+                        font-size: 0.7rem;
                         cursor: pointer;
                         font-weight: bold;
                         white-space: nowrap;
@@ -332,20 +340,21 @@ class MercadoManager {
                     
                     .sin-ordenes {
                         text-align: center;
-                        padding: 40px 20px;
+                        padding: 30px 15px;
                         color: #888;
                     }
                     
                     .sin-ordenes p {
                         margin: 5px 0;
+                        font-size: 0.9rem;
                     }
                     
                     .sin-ordenes .small {
-                        font-size: 0.85rem;
+                        font-size: 0.8rem;
                         color: #666;
                     }
                     
-                    /* Modales (mantener igual) */
+                    /* Modales */
                     .modal-overlay {
                         position: fixed;
                         top: 0;
@@ -361,123 +370,238 @@ class MercadoManager {
                     
                     .modal-container {
                         background: #1a1a2e;
-                        border-radius: 15px;
+                        border-radius: 12px;
                         width: 90%;
-                        max-width: 500px;
-                        border: 3px solid #00d2be;
-                        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+                        max-width: 450px;
+                        border: 2px solid #00d2be;
+                        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
                     }
                     
                     .modal-header {
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        padding: 15px 20px;
-                        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+                        padding: 12px 15px;
+                        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                     }
                     
                     .modal-header h3 {
                         margin: 0;
                         color: white;
                         font-family: 'Orbitron', sans-serif;
-                        font-size: 1rem;
+                        font-size: 0.9rem;
                     }
                     
                     .btn-cerrar-modal {
                         background: none;
                         border: none;
                         color: white;
-                        font-size: 1.5rem;
+                        font-size: 1.3rem;
                         cursor: pointer;
                         padding: 0;
-                        width: 30px;
-                        height: 30px;
+                        width: 25px;
+                        height: 25px;
                     }
                     
                     .modal-body {
-                        padding: 20px;
+                        padding: 15px;
                     }
                     
-                    /* Responsive para móvil */
+                    /* Responsive móvil ultra compacto */
                     @media (max-width: 768px) {
                         .mercado-container {
-                            padding: 10px;
+                            padding: 8px;
                         }
                         
                         .mercado-header h1 {
-                            font-size: 1.3rem;
+                            font-size: 1.1rem;
+                            gap: 6px;
                         }
                         
                         .subtitle {
-                            font-size: 0.8rem;
+                            font-size: 0.75rem;
                         }
                         
                         .mercado-stats-horizontal {
-                            gap: 8px;
+                            gap: 6px;
                         }
                         
                         .stat-card-horizontal {
-                            padding: 10px;
-                            gap: 10px;
-                            min-width: 120px;
+                            padding: 8px;
+                            gap: 8px;
+                            min-width: 95px;
+                            max-width: 110px;
                         }
                         
                         .stat-icon-horizontal {
-                            font-size: 1.3rem;
-                            width: 35px;
-                            height: 35px;
+                            font-size: 1rem;
+                            width: 30px;
+                            height: 30px;
                         }
                         
                         .stat-value-horizontal {
-                            font-size: 1rem;
-                        }
-                        
-                        .stat-label-horizontal {
-                            font-size: 0.7rem;
-                        }
-                        
-                        .ordenes-table-compact th,
-                        .ordenes-table-compact td {
-                            padding: 8px 6px;
-                            font-size: 0.8rem;
-                        }
-                        
-                        .btn-comprar-compact {
-                            padding: 5px 10px;
-                            font-size: 0.7rem;
-                        }
-                        
-                        .tabla-titulo {
                             font-size: 0.9rem;
-                            padding-left: 0;
-                        }
-                    }
-                    
-                    @media (max-width: 480px) {
-                        .mercado-header h1 {
-                            font-size: 1.1rem;
-                        }
-                        
-                        .stat-card-horizontal {
-                            min-width: 100px;
-                            padding: 8px;
                         }
                         
                         .stat-label-horizontal {
                             font-size: 0.65rem;
                         }
                         
+                        .tabla-titulo {
+                            font-size: 0.85rem;
+                            margin-bottom: 8px;
+                        }
+                        
+                        .ordenes-table-compact th,
+                        .ordenes-table-compact td {
+                            padding: 6px 3px;
+                            font-size: 0.75rem;
+                        }
+                        
+                        .pieza-nombre-col {
+                            min-width: 100px;
+                            max-width: 120px;
+                        }
+                        
+                        .nivel-col {
+                            min-width: 35px;
+                            max-width: 45px;
+                        }
+                        
+                        .vendedor-col {
+                            min-width: 70px;
+                            max-width: 90px;
+                        }
+                        
+                        .precio-col {
+                            min-width: 65px;
+                            max-width: 80px;
+                        }
+                        
+                        .accion-col {
+                            min-width: 65px;
+                            max-width: 75px;
+                        }
+                        
+                        .btn-comprar-compact {
+                            padding: 5px 8px;
+                            font-size: 0.65rem;
+                        }
+                    }
+                    
+                    @media (max-width: 480px) {
+                        .mercado-container {
+                            padding: 5px;
+                        }
+                        
+                        .mercado-header {
+                            margin-bottom: 10px;
+                            padding-bottom: 8px;
+                        }
+                        
+                        .mercado-header h1 {
+                            font-size: 1rem;
+                        }
+                        
+                        .subtitle {
+                            font-size: 0.7rem;
+                        }
+                        
+                        .stat-card-horizontal {
+                            min-width: 85px;
+                            max-width: 100px;
+                            padding: 6px;
+                        }
+                        
+                        .stat-icon-horizontal {
+                            width: 28px;
+                            height: 28px;
+                            font-size: 0.9rem;
+                        }
+                        
+                        .stat-value-horizontal {
+                            font-size: 0.85rem;
+                        }
+                        
+                        .stat-label-horizontal {
+                            font-size: 0.6rem;
+                        }
+                        
+                        .tabla-titulo {
+                            font-size: 0.8rem;
+                        }
+                        
+                        .ordenes-table-compact th,
+                        .ordenes-table-compact td {
+                            padding: 5px 2px;
+                            font-size: 0.7rem;
+                        }
+                        
+                        .pieza-nombre-col {
+                            min-width: 90px;
+                            max-width: 110px;
+                        }
+                        
+                        .nivel-col {
+                            min-width: 30px;
+                            max-width: 40px;
+                        }
+                        
+                        .vendedor-col {
+                            min-width: 60px;
+                            max-width: 80px;
+                        }
+                        
+                        .precio-col {
+                            min-width: 60px;
+                            max-width: 75px;
+                        }
+                        
+                        .accion-col {
+                            min-width: 60px;
+                            max-width: 70px;
+                        }
+                        
+                        .btn-comprar-compact {
+                            padding: 4px 6px;
+                            font-size: 0.6rem;
+                        }
+                        
                         .table-responsive {
-                            margin: 0 -10px;
+                            margin: 0 -5px;
                             border-radius: 0;
                             border-left: none;
                             border-right: none;
+                        }
+                    }
+                    
+                    @media (max-width: 360px) {
+                        .ordenes-table-compact th,
+                        .ordenes-table-compact td {
+                            padding: 4px 1px;
+                            font-size: 0.65rem;
+                        }
+                        
+                        .btn-comprar-compact {
+                            padding: 3px 5px;
+                            font-size: 0.55rem;
+                        }
+                        
+                        .stat-card-horizontal {
+                            min-width: 75px;
+                            padding: 5px;
+                        }
+                        
+                        .stat-icon-horizontal {
+                            width: 25px;
+                            height: 25px;
                         }
                     }
                 </style>
             </div>
         `;
     }
+    
 
     // ========================
     // 4. FUNCIONES AUXILIARES
