@@ -1348,7 +1348,187 @@ class TabManager {
             console.error('❌ Error restando puntos del coche:', error);
         }
     }
-    
+    async loadMercadoPiezas() {
+        console.log('🛒 Cargando mercado...');
+        const container = document.getElementById('mercado-grid');
+        if (!container) return;
+        
+        try {
+            const { data: piezasMercado, error } = await supabase
+                .from('mercado_piezas')
+                .select('*')
+                .eq('vendida', false)
+                .order('fecha_publicacion', { ascending: false });
+                
+            if (error) throw error;
+            
+            if (!piezasMercado || piezasMercado.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-mercado">
+                        <i class="fas fa-store-slash fa-3x"></i>
+                        <h3>No hay piezas en el mercado</h3>
+                        <p>Sé el primero en vender una pieza en tu almacén</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            
+            piezasMercado.forEach(pieza => {
+                const esMia = pieza.escuderia_id === window.f1Manager?.escuderia?.id;
+                
+                html += `
+                    <div class="mercado-item ${esMia ? 'mi-pieza' : ''}">
+                        <div class="mercado-item-header">
+                            <h4>${pieza.area}</h4>
+                            <span class="mercado-nivel">Nivel ${pieza.nivel}</span>
+                        </div>
+                        
+                        <div class="mercado-item-info">
+                            <div class="info-row">
+                                <span><i class="fas fa-star"></i> Puntos:</span>
+                                <strong>${pieza.puntos_base}</strong>
+                            </div>
+                            <div class="info-row">
+                                <span><i class="fas fa-medal"></i> Calidad:</span>
+                                <span>${pieza.calidad}</span>
+                            </div>
+                            <div class="info-row">
+                                <span><i class="fas fa-store"></i> Vendedor:</span>
+                                <span>${pieza.escuderia_nombre}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mercado-item-precio">
+                            <div class="precio-label">PRECIO</div>
+                            <div class="precio-valor">€${pieza.precio.toLocaleString()}</div>
+                        </div>
+                        
+                        <div class="mercado-item-acciones">
+                            ${esMia ? 
+                                `<button class="btn-cancelar-venta" onclick="window.tabManager.cancelarVenta('${pieza.id}')">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>` :
+                                `<button class="btn-comprar" onclick="window.tabManager.comprarPieza('${pieza.id}')"
+                                         ${!window.f1Manager?.escuderia || window.f1Manager.escuderia.dinero < pieza.precio ? 'disabled' : ''}>
+                                    <i class="fas fa-shopping-cart"></i> COMPRAR
+                                </button>`
+                            }
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+        } catch (error) {
+            console.error('❌ Error cargando mercado:', error);
+            container.innerHTML = `
+                <div class="error-mercado">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error cargando el mercado</h3>
+                    <button onclick="window.tabManager.loadMercadoPiezas()">Reintentar</button>
+                </div>
+            `;
+        }
+    }    
+    async venderPiezaDesdeAlmacen(piezaId) {
+        console.log('💰 Vender pieza:', piezaId);
+        
+        if (!window.f1Manager?.escuderia) {
+            alert('❌ No tienes escudería');
+            return;
+        }
+        
+        try {
+            // 1. Obtener pieza
+            const { data: pieza, error: fetchError } = await supabase
+                .from('almacen_piezas')
+                .select('*')
+                .eq('id', piezaId)
+                .single();
+                
+            if (fetchError) throw fetchError;
+            
+            if (pieza.equipada) {
+                alert('❌ No puedes vender una pieza equipada. Deséquipala primero.');
+                return;
+            }
+            
+            if (pieza.en_venta) {
+                alert('ℹ️ Esta pieza ya está en venta.');
+                return;
+            }
+            
+            // 2. Pedir precio
+            const costoBase = 10000;
+            const precioMinimo = Math.round(costoBase * 0.8);
+            const precioSugerido = Math.round(costoBase * 1.5);
+            
+            const precioInput = prompt(
+                `💸 VENDER: ${pieza.area} (Nivel ${pieza.nivel})\n\n` +
+                `Precio sugerido: €${precioSugerido.toLocaleString()}\n` +
+                `Mínimo aceptado: €${precioMinimo.toLocaleString()}\n\n` +
+                `Introduce el precio de venta (€):`,
+                precioSugerido
+            );
+            
+            if (!precioInput) return;
+            
+            const precio = parseInt(precioInput);
+            if (isNaN(precio) || precio < precioMinimo) {
+                alert(`❌ Precio inválido. Mínimo: €${precioMinimo.toLocaleString()}`);
+                return;
+            }
+            
+            // 3. Poner en mercado
+            const { error: mercadoError } = await supabase
+                .from('mercado_piezas')
+                .insert([{
+                    escuderia_id: window.f1Manager.escuderia.id,
+                    escuderia_nombre: window.f1Manager.escuderia.nombre,
+                    pieza_id: piezaId,
+                    area: pieza.area,
+                    nivel: pieza.nivel,
+                    calidad: pieza.calidad || 'Normal',
+                    puntos_base: pieza.puntos_base || 10,
+                    precio: precio,
+                    fecha_publicacion: new Date().toISOString(),
+                    vendida: false
+                }]);
+                
+            if (mercadoError) throw mercadoError;
+            
+            // 4. Marcar como en venta en almacén
+            const { error: updateError } = await supabase
+                .from('almacen_piezas')
+                .update({
+                    en_venta: true,
+                    precio_venta: precio
+                })
+                .eq('id', piezaId);
+                
+            if (updateError) throw updateError;
+            
+            // 5. Actualizar UI
+            this.loadAlmacenPiezas();
+            
+            // 6. Notificar
+            if (window.f1Manager?.showNotification) {
+                window.f1Manager.showNotification(`✅ Pieza puesta en venta por €${precio.toLocaleString()}`, 'success');
+            }
+            
+            // 7. Recargar mercado si está activo
+            if (this.currentTab === 'mercado') {
+                this.loadMercadoPiezas();
+            }
+            
+        } catch (error) {
+            console.error('❌ Error vendiendo pieza:', error);
+            alert('❌ Error al vender la pieza: ' + error.message);
+        }
+    }    
     async venderPieza(piezaId) {
         if (!confirm('¿Vender esta pieza? Se eliminará permanentemente.')) return;
         
