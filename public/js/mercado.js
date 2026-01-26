@@ -1156,7 +1156,7 @@ async function mostrarModalVentaBasico(pieza) {
 // ========================
 // 11. PROCESAR VENTA RÁPIDA
 // ========================
-async procesarVentaRapida(piezaId) {
+async function procesarVentaRapida(piezaId) {
     const precioInput = document.getElementById('precio-rapido');
     const precio = parseInt(precioInput.value);
     const modal = document.getElementById('modal-venta-rapido');
