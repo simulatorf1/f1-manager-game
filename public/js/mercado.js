@@ -1059,7 +1059,7 @@ class MercadoManager {
 // ========================
 // 9. FUNCIÓN PARA VENDER DESDE ALMACÉN
 // ========================
-async venderPiezaDesdeAlmacen(piezaId) {
+async function venderPiezaDesdeAlmacen(piezaId) {
     console.log('🛒 Iniciando venta desde almacén para pieza:', piezaId);
     
     if (!this.escuderia || !this.escuderia.id) {
