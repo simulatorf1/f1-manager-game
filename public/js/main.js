@@ -836,7 +836,12 @@ class F1Manager {
                     
                     <div id="tab-taller" class="tab-content"></div>
                     <div id="tab-almacen" class="tab-content"></div>
-                    <div id="tab-mercado" class="tab-content"></div>
+                    <div id="tab-mercado" class="tab-content">
+                        <div class="mercado-cargando">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando mercado...</p>
+                        </div>
+                    </div>
                     <div id="tab-presupuesto" class="tab-content"></div>
                     <div id="tab-clasificacion" class="tab-content"></div>
                 </main>
