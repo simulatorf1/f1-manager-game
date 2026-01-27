@@ -47,20 +47,34 @@ class PresupuestoManager {
 
     async registrarTransaccion(tipo, cantidad, descripcion, referencia = null) {
         try {
+            // VERIFICAR SI TENEMOS ESCUDERÍA
+            if (!this.escuderia || !this.escuderia.id) {
+                console.error('❌ No hay escudería para registrar transacción');
+                
+                // Intentar obtenerla de f1Manager
+                if (window.f1Manager && window.f1Manager.escuderia) {
+                    this.escuderia = window.f1Manager.escuderia;
+                    console.log('✅ Escudería obtenida de f1Manager');
+                } else {
+                    console.error('❌ No se puede obtener la escudería');
+                    return false;
+                }
+            }
+            
             const transaccion = {
                 escuderia_id: this.escuderia.id,
                 tipo: tipo, // 'ingreso' o 'gasto'
                 cantidad: cantidad,
                 descripcion: descripcion,
-                referencia: referencia, // ID de orden, fabricación, etc.
+                referencia: referencia,
                 fecha: new Date().toISOString(),
-                saldo_resultante: this.escuderia.dinero
+                saldo_resultante: this.escuderia.dinero || 0
             };
-
+    
             const { error } = await this.supabase
                 .from('transacciones')
                 .insert([transaccion]);
-
+    
             if (error) throw error;
             
             console.log(`✅ Transacción registrada: ${tipo} ${cantidad}€ - ${descripcion}`);
@@ -71,7 +85,6 @@ class PresupuestoManager {
             return false;
         }
     }
-
     generarHTMLPresupuesto() {
         const saldoActual = this.escuderia.dinero || 0;
         const ingresos24h = this.calcularTotalTipo('ingreso');
