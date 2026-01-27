@@ -997,13 +997,35 @@ class MercadoManager {
                     window.presupuestoManager.escuderia = this.escuderia;
                 }
                 
+                // A) Para el COMPRADOR (gasto)
                 await window.presupuestoManager.registrarTransaccion(
                     'gasto',
                     orden.precio,
                     `Compra: ${orden.pieza_nombre} de ${orden.vendedor_nombre}`,
                     orden.id
                 );
-            }          
+            }
+            
+            // B) Para el VENDEDOR (ingreso) - NUEVO
+            try {
+                const { error: transaccionVendedorError } = await this.supabase
+                    .from('transacciones')
+                    .insert([{
+                        escuderia_id: orden.vendedor_id,  // ID del que VENDE
+                        tipo: 'ingreso',
+                        cantidad: orden.precio,
+                        descripcion: `Venta: ${orden.pieza_nombre} a ${this.escuderia.nombre}`,
+                        referencia: orden.id,
+                        fecha: new Date().toISOString(),
+                        saldo_resultante: null
+                    }]);
+                
+                if (transaccionVendedorError) {
+                    console.log('⚠️ No se pudo registrar ingreso del vendedor:', transaccionVendedorError.message);
+                }
+            } catch (error) {
+                console.log('⚠️ Error registrando transacción del vendedor:', error.message);
+            }  
     
         } catch (error) {
             console.error('❌ Error procesando compra:', error);
