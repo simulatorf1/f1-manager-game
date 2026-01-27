@@ -21,13 +21,14 @@ class AlmacenManager {
                 .from('almacen_piezas')
                 .select('*')
                 .eq('escuderia_id', this.escuderiaId)
-
-                .order('fabricada_en', { ascending: false }); // ← USAR 'fabricada_en'
-
+                .eq('equipada', false)
+                .eq('en_venta', false)  // ← FILTRAR: solo NO en venta
+                .order('fabricada_en', { ascending: false });
+    
             if (error) throw error;
-
+    
             this.piezas = data || [];
-            console.log(`📦 ${this.piezas.length} piezas en almacén`);
+            console.log(`📦 ${this.piezas.length} piezas disponibles en almacén`);
             return this.piezas;
         } catch (error) {
             console.error('❌ Error cargando almacén:', error);
