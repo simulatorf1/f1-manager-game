@@ -941,38 +941,37 @@ class MercadoManager {
             }
     
             // 3. TRANSFERIR la pieza al comprador (NO crear nueva)
-            const { error: transferError } = await this.supabase
+            const { error: transferPiezaError } = await this.supabase  // ← CAMBIA NOMBRE
                 .from('almacen_piezas')
                 .update({
-                    escuderia_id: this.escuderia.id,  // ← Cambia dueño
-                    en_venta: false,                   // ← Ya no está en venta
+                    escuderia_id: this.escuderia.id,
+                    en_venta: false,
                     comprada_en: new Date().toISOString(),
                     precio_compra: orden.precio
                 })
-                .eq('id', orden.pieza_id);            // ← Misma pieza, solo cambia dueño
+                .eq('id', orden.pieza_id);
             
-            if (transferError) throw transferError;
+            if (transferPiezaError) throw transferPiezaError;  // ← USA NUEVO NOMBRE
     
-            // 4. Descontar dinero al comprador
+            // 4. Y 5. TRANSFERIR DINERO CON LA FUNCIÓN SEGURA
+            const { error: transferDineroError } = await this.supabase.rpc(  // ← NOMBRE DIFERENTE
+                'procesar_compra_mercado',
+                {
+                    p_orden_id: orden.id,
+                    p_comprador_id: this.escuderia.id,
+                    p_monto: orden.precio
+                }
+            );
+            
+            if (transferDineroError) {  // ← USA NUEVO NOMBRE
+                console.log('⚠️ Error en transferencia de dinero:', transferDineroError.message);
+            }
+            
+            // 6. Actualizar el dinero local del comprador
             this.escuderia.dinero -= orden.precio;
             await this.actualizarDineroEscuderia();
     
-            // 5. Añadir dinero al vendedor
-            const { data: vendedor, error: vendedorError } = await this.supabase
-                .from('escuderias')
-                .select('dinero')
-                .eq('id', orden.vendedor_id)
-                .single();
-            
-            if (!vendedorError && vendedor) {
-                const nuevoDinero = vendedor.dinero + orden.precio;
-                await this.supabase
-                    .from('escuderias')
-                    .update({ dinero: nuevoDinero })
-                    .eq('id', orden.vendedor_id);
-            }
-    
-            // 6. Marcar orden como vendida
+            // 7. Marcar orden como vendida  // ← AHORA ES 7, NO 6
             const { error: updateError } = await this.supabase
                 .from('mercado')
                 .update({
@@ -984,11 +983,11 @@ class MercadoManager {
     
             if (updateError) throw updateError;
     
-            // 7. Actualizar UI
+            // 8. Actualizar UI
             this.ocultarModales();
             await this.cargarTabMercado();
     
-            // 8. Mostrar notificación
+            // 9. Mostrar notificación
             this.mostrarNotificacion(`✅ Compra realizada: ${orden.pieza_nombre} por ${orden.precio.toLocaleString()}€`, 'success');
     
         } catch (error) {
@@ -996,7 +995,6 @@ class MercadoManager {
             this.mostrarNotificacion(`❌ Error: ${error.message}`, 'error');
         }
     }
-
     async cancelarVenta(ordenId) {
         // ELIMINAR EL CONFIRM DE AQUÍ TAMBIÉN
         try {
