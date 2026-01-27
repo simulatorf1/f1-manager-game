@@ -801,7 +801,9 @@ class MercadoManager {
         document.querySelectorAll('.btn-cancelar-compact').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const ordenId = e.target.dataset.ordenId;
-
+                if (confirm('¿Cancelar esta venta? La pieza volverá a tu almacén.')) {
+                    await this.cancelarVenta(ordenId);
+                }
             });
         });
     
@@ -978,7 +980,7 @@ class MercadoManager {
     }
 
     async cancelarVenta(ordenId) {
-        
+        if (!confirm('¿Cancelar esta venta? La pieza volverá a tu almacén.')) return;
 
         try {
             const { error } = await this.supabase
