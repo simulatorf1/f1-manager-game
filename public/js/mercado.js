@@ -801,9 +801,8 @@ class MercadoManager {
         document.querySelectorAll('.btn-cancelar-compact').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const ordenId = e.target.dataset.ordenId;
-                if (confirm('¿Cancelar esta venta? La pieza volverá a tu almacén.')) {
-                    await this.cancelarVenta(ordenId);
-                }
+                // ELIMINAR EL CONFIRM DE AQUÍ
+                await this.cancelarVenta(ordenId);
             });
         });
     
@@ -980,20 +979,19 @@ class MercadoManager {
     }
 
     async cancelarVenta(ordenId) {
-        if (!confirm('¿Cancelar esta venta? La pieza volverá a tu almacén.')) return;
-
+        // ELIMINAR EL CONFIRM DE AQUÍ TAMBIÉN
         try {
             const { error } = await this.supabase
                 .from('mercado')
                 .update({ estado: 'cancelado' })
                 .eq('id', ordenId)
                 .eq('vendedor_id', this.escuderia.id);
-
+    
             if (error) throw error;
-
+    
             await this.cargarTabMercado();
             this.mostrarNotificacion('✅ Venta cancelada', 'success');
-
+    
         } catch (error) {
             console.error('❌ Error cancelando venta:', error);
             this.mostrarNotificacion('❌ Error cancelando venta', 'error');
