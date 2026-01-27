@@ -923,13 +923,47 @@ class MercadoManager {
 
     async procesarCompra(orden) {
         try {
-            // 1. Verificar saldo nuevamente
+            // 1. Verificar saldo
             if (this.escuderia.dinero < orden.precio) {
                 alert('❌ Saldo insuficiente');
                 return;
             }
-
-            // 2. Actualizar orden como vendida
+    
+            // 2. ENCONTRAR LA PIEZA ORIGINAL DEL VENDEDOR
+            const { data: piezaOriginal, error: findError } = await this.supabase
+                .from('almacen_piezas')
+                .select('*')
+                .eq('id', orden.pieza_id)
+                .single();
+            
+            if (findError || !piezaOriginal) {
+                throw new Error('No se encontró la pieza original');
+            }
+    
+            // 3. TRANSFERIR la pieza al comprador (NO crear nueva)
+            const { error: transferError } = await this.supabase
+                .from('almacen_piezas')
+                .update({
+                    escuderia_id: this.escuderia.id,  // ← Cambia dueño
+                    en_venta: false,                   // ← Ya no está en venta
+                    comprada_en: new Date().toISOString(),
+                    precio_compra: orden.precio
+                })
+                .eq('id', orden.pieza_id);            // ← Misma pieza, solo cambia dueño
+            
+            if (transferError) throw transferError;
+    
+            // 4. Descontar dinero al comprador
+            this.escuderia.dinero -= orden.precio;
+            await this.actualizarDineroEscuderia();
+    
+            // 5. Añadir dinero al vendedor
+            await this.supabase.rpc('incrementar_dinero', {
+                escuderia_id: orden.vendedor_id,
+                cantidad: orden.precio
+            });
+    
+            // 6. Marcar orden como vendida
             const { error: updateError } = await this.supabase
                 .from('mercado')
                 .update({
@@ -938,40 +972,16 @@ class MercadoManager {
                     comprador_id: this.escuderia.id
                 })
                 .eq('id', orden.id);
-
+    
             if (updateError) throw updateError;
-
-            // 3. Transferir pieza al comprador (crear copia en su almacén)
-            const { error: piezaError } = await this.supabase
-                .from('almacen_piezas')
-                .insert([{
-                    escuderia_id: this.escuderia.id,
-                    area: orden.area,
-                    nivel: orden.nivel,
-                    calidad: orden.calidad,
-                    puntos_base: this.calcularPuntosBase(orden.nivel, orden.calidad),
-                    equipada: false,
-                    fabricada_en: new Date().toISOString(),
-                    comprada_en: new Date().toISOString(),
-                    precio_compra: orden.precio
-                }]);
-
-            if (piezaError) throw piezaError;
-
-            // 4. Descontar dinero al comprador
-            this.escuderia.dinero -= orden.precio;
-            await this.actualizarDineroEscuderia();
-
-            // 5. Añadir dinero al vendedor (en un sistema real, necesitarías webhook o trigger)
-            // Por ahora, solo mostramos mensaje
-
-            // 6. Actualizar UI
+    
+            // 7. Actualizar UI
             this.ocultarModales();
             await this.cargarTabMercado();
-
-            // 7. Mostrar notificación
+    
+            // 8. Mostrar notificación
             this.mostrarNotificacion(`✅ Compra realizada: ${orden.pieza_nombre} por ${orden.precio.toLocaleString()}€`, 'success');
-
+    
         } catch (error) {
             console.error('❌ Error procesando compra:', error);
             this.mostrarNotificacion(`❌ Error: ${error.message}`, 'error');
