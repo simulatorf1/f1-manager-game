@@ -168,6 +168,62 @@ class TabManager {
                 // SALIR del método - no hacer nada más para el mercado
                 return;
             }
+            // ======================================================
+            // ¡¡PESTAÑA PRESUPUESTO - NUEVO COMPORTAMIENTO!!
+            // ======================================================
+            if (tabId === 'presupuesto') {
+                // 1. SOLO marcar como activa
+                tabContent.classList.add('active');
+                this.currentTab = tabId;
+                
+                // 2. LIMPIAR contenido anterior
+                tabContent.innerHTML = '<div class="cargando-presupuesto"><i class="fas fa-spinner fa-spin"></i> Cargando presupuesto...</div>';
+                
+                // 3. Cargar el presupuesto directamente usando presupuestoManager
+                setTimeout(async () => {
+                    try {
+                        if (window.presupuestoManager && window.presupuestoManager.inicializar) {
+                            console.log('💰 Ejecutando inicializar presupuesto...');
+                            
+                            // Obtener la escudería del f1Manager
+                            const escuderia = window.f1Manager?.escuderia;
+                            if (!escuderia) {
+                                throw new Error('No se encontró la escudería');
+                            }
+                            
+                            // Inicializar el presupuesto manager
+                            await window.presupuestoManager.inicializar(escuderia);
+                            
+                            // Generar HTML del presupuesto
+                            const html = window.presupuestoManager.generarHTMLPresupuesto();
+                            tabContent.innerHTML = html;
+                            
+                            console.log('✅ Presupuesto cargado exitosamente');
+                        } else {
+                            console.error('❌ presupuestoManager no disponible');
+                            tabContent.innerHTML = `
+                                <div class="error-message">
+                                    <h3>❌ Error cargando el presupuesto</h3>
+                                    <p>El sistema de presupuesto no está disponible</p>
+                                    <button onclick="location.reload()">Reintentar</button>
+                                </div>
+                            `;
+                        }
+                    } catch (error) {
+                        console.error('❌ Error cargando presupuesto:', error);
+                        tabContent.innerHTML = `
+                            <div class="error-message">
+                                <h3>❌ Error cargando el presupuesto</h3>
+                                <p>${error.message || 'Error desconocido'}</p>
+                                <button onclick="location.reload()">Reintentar</button>
+                            </div>
+                        `;
+                    }
+                }, 300);
+                
+                // SALIR del método - no hacer nada más para el presupuesto
+                return;
+            }            
             
             // ======================================================
             // Para TODAS LAS OTRAS pestañas (principal, almacen, etc.)
