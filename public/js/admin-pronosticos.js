@@ -39,36 +39,65 @@ try {
 // 3. CLASE ADMIN
 class AdminPronosticos {
     constructor() {
-        console.log('🔨 Constructor AdminPronosticos');
-        this.supabase = supabaseCliente;
+        console.log("🔨 Constructor: window.supabaseCliente =", window.supabaseCliente);
+        console.log("🔨 ¿Tiene .from?", typeof window.supabaseCliente?.from);
+        
+        this.supabase = window.supabaseCliente;
         this.carreras = [];
         this.preguntasActuales = [];
         this.init();
     }
+    
+    // 🔴 🔴 🔴 AÑADE ESTOS TRES MÉTODOS BÁSICOS:
     setupTabs() {
-        console.log("🔧 Configurando tabs...");
-        const tabButtons = document.querySelectorAll('.tab-btn');
-        
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Remover activo de todos
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
+        console.log("📋 Configurando tabs...");
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const tabId = e.target.dataset.tab;
+                console.log("Click en tab:", tabId);
                 
-                // Activar actual
-                button.classList.add('active');
-                const tabId = button.getAttribute('data-tab');
-                const tabContent = document.getElementById(`tab-${tabId}`);
-                if (tabContent) {
-                    tabContent.classList.add('active');
-                }
+                // Remover activo
+                tabs.forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Activar
+                e.target.classList.add('active');
+                document.getElementById(`tab-${tabId}`).classList.add('active');
             });
         });
+    }
+    
+    setupEventos() {
+        console.log("🎯 Configurando eventos...");
+        const btnGuardar = document.getElementById('btn-guardar-preguntas');
+        const btnCorregir = document.getElementById('btn-guardar-correccion');
         
-        console.log(`✅ ${tabButtons.length} tabs configurados`);
-    }    
+        if (btnGuardar) {
+            btnGuardar.addEventListener('click', () => this.guardarPreguntas());
+        }
+        
+        if (btnCorregir) {
+            btnCorregir.addEventListener('click', () => this.guardarCorreccion());
+        }
+    }
+    
+    mostrarMensaje(texto, tipo = 'info') {
+        const container = document.getElementById('mensajes');
+        if (!container) {
+            console.log(`[${tipo}] ${texto}`);
+            return;
+        }
+        
+        const mensaje = document.createElement('div');
+        mensaje.className = `alert ${tipo}`;
+        mensaje.innerHTML = texto;
+        container.appendChild(mensaje);
+        
+        setTimeout(() => {
+            if (mensaje.parentNode) mensaje.remove();
+        }, 5000);
+    }
     async init() {
         console.log('🔧 Inicializando Admin...');
         
