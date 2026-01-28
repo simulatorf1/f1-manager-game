@@ -100,34 +100,89 @@ class PronosticosManager {
     
     async cargarDatosUsuario(usuarioId) {
         try {
-            const { data: coche } = await this.supabase
-                .from('coches_stats')
-                .select('puntos_totales')
+            console.log("🔍 Cargando datos para usuario:", usuarioId);
+            
+            // 1. Obtener la ESCUDERÍA del usuario
+            const { data: escuderia, error: errorEscuderia } = await this.supabase
+                .from('escuderias')
+                .select('id, puntos, dinero')
                 .eq('usuario_id', usuarioId)
                 .single();
             
-            this.usuarioPuntos = coche?.puntos_totales || 0;
+            if (errorEscuderia || !escuderia) {
+                console.error("❌ Error obteniendo escudería:", errorEscuderia);
+                this.usuarioPuntos = 0;
+                this.estrategasActivos = [];
+                return;
+            }
             
-            const { data: estrategas } = await this.supabase
+            console.log("✅ Escudería encontrada:", escuderia.id);
+            this.escuderiaId = escuderia.id;
+            
+            // 2. Calcular puntos TOTALES del coche
+            const { data: cocheStats, error: errorCoche } = await this.supabase
+                .from('coches_stats')
+                .select('*')
+                .eq('escuderia_id', escuderia.id)
+                .single();
+            
+            if (errorCoche || !cocheStats) {
+                console.log("⚠️ No hay stats de coche, usando puntos de escudería");
+                this.usuarioPuntos = escuderia.puntos || 0;
+            } else {
+                // Calcular puntos TOTALES sumando todos los niveles
+                let puntosTotales = 0;
+                const areas = [
+                    'suelo_nivel', 'motor_nivel', 'aleron_delantero_nivel',
+                    'caja_cambios_nivel', 'pontones_nivel', 'suspension_nivel',
+                    'aleron_trasero_nivel', 'chasis_nivel', 'frenos_nivel',
+                    'volante_nivel', 'electronica_nivel'
+                ];
+                
+                areas.forEach(area => {
+                    const nivel = cocheStats[area] || 0;
+                    puntosTotales += nivel * 100; // 100 puntos por nivel
+                });
+                
+                this.usuarioPuntos = puntosTotales;
+                console.log("✅ Puntos calculados:", puntosTotales);
+            }
+            
+            // 3. Obtener estrategas contratados (TU ESTRUCTURA)
+            const { data: estrategas, error: errorEstrategas } = await this.supabase
                 .from('ingenieros_contratados')
                 .select(`
+                    id,
                     ingeniero_id,
-                    ingenieros (
-                        nombre,
-                        especialidad,
-                        bonificacion_meteorologia,
-                        bonificacion_fiabilidad,
-                        bonificacion_estrategia,
-                        bonificacion_rendimiento
-                    )
+                    nombre,
+                    especialidad,
+                    bonificacion_tipo,
+                    bonificacion_valor,
+                    activo
                 `)
-                .eq('usuario_id', usuarioId)
+                .eq('escuderia_id', escuderia.id)
                 .eq('activo', true);
             
-            this.estrategasActivos = estrategas || [];
+            if (errorEstrategas) {
+                console.error("❌ Error obteniendo estrategas:", errorEstrategas);
+                this.estrategasActivos = [];
+            } else {
+                // Adaptar a la estructura que espera el código
+                this.estrategasActivos = estrategas.map(e => ({
+                    ingeniero_id: e.ingeniero_id,
+                    nombre: e.nombre,
+                    especialidad: e.especialidad,
+                    bonificacion_tipo: e.bonificacion_tipo,
+                    bonificacion_valor: e.bonificacion_valor,
+                    activo: e.activo
+                }));
+                console.log("✅ Estrategas encontrados:", this.estrategasActivos.length);
+            }
             
         } catch (error) {
-            console.error("Error cargando datos usuario:", error);
+            console.error("💥 Error completo en cargarDatosUsuario:", error);
+            this.usuarioPuntos = 0;
+            this.estrategasActivos = [];
         }
     }
     
