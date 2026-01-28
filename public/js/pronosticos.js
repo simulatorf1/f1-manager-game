@@ -377,7 +377,7 @@ class PronosticosManager {
             const { data, error } = await this.supabase
                 .from('pronosticos_usuario')
                 .insert([{
-                    usuario_id: user.id,
+                    escuderia_id: this.escuderiaId,  // ← AHORA (usar this.escuderiaId)
                     carrera_id: this.carreraActual.id,
                     respuestas: respuestas,
                     puntos_coche_snapshot: this.usuarioPuntos,
@@ -639,21 +639,26 @@ class PronosticosManager {
     calcularBonificacionArea(area, estrategas = this.estrategasActivos) {
         let bonificacion = 0;
         
+        // Mapeo de áreas a tipos de bonificación
+        const mapeoAreas = {
+            'meteorologia': 'meteorologia',
+            'fiabilidad': 'fiabilidad', 
+            'estrategia': 'estrategia',
+            'rendimiento': 'rendimiento',
+            'neumaticos': 'neumaticos',
+            'seguridad': 'seguridad',
+            'clasificacion': 'clasificacion',
+            'carrera': 'carrera',
+            'overtakes': 'overtakes',
+            'incidentes': 'incidentes'
+        };
+        
+        const tipoBusqueda = mapeoAreas[area] || area;
+        
         estrategas.forEach(e => {
-            const estratega = e.ingenieros || e;
-            switch(area) {
-                case 'meteorologia':
-                    bonificacion += estratega.bonificacion_meteorologia || 0;
-                    break;
-                case 'fiabilidad':
-                    bonificacion += estratega.bonificacion_fiabilidad || 0;
-                    break;
-                case 'estrategia':
-                    bonificacion += estratega.bonificacion_estrategia || 0;
-                    break;
-                case 'rendimiento':
-                    bonificacion += estratega.bonificacion_rendimiento || 0;
-                    break;
+            // Verificar si el estratega tiene bonificación para esta área
+            if (e.bonificacion_tipo && e.bonificacion_tipo.toLowerCase().includes(tipoBusqueda.toLowerCase())) {
+                bonificacion += e.bonificacion_valor || 0;
             }
         });
         
