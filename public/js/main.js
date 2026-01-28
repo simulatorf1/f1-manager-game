@@ -842,6 +842,7 @@ class F1Manager {
                             <p>Cargando mercado...</p>
                         </div>
                     </div>
+                    <div id="tab-pronosticos" class="tab-content"></div>
                     <div id="tab-presupuesto" class="tab-content"></div>
                     <div id="tab-clasificacion" class="tab-content"></div>
                 </main>
