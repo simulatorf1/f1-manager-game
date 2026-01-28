@@ -40,33 +40,29 @@ try {
 // 3. CLASE ADMIN
 class AdminPronosticos {
     constructor() {
-        console.log("🔨 Constructor: window.supabaseCliente =", window.supabaseCliente);
-        console.log("🔨 ¿Tiene .from?", typeof window.supabaseCliente?.from);
+        console.log("🔨 Constructor iniciado");
         
-        this.supabase = window.supabaseCliente;
+        // Intentar en este orden:
+        // 1. Variable local supabaseCliente
+        // 2. window.supabaseCliente 
+        // 3. Crear nuevo si nada funciona
+        let clienteFinal = supabaseCliente || window.supabaseCliente;
+        
+        if (!clienteFinal) {
+            console.warn("⚠️ No hay cliente, creando uno...");
+            clienteFinal = supabase.createClient(
+                'https://xbnbbmhcveyzrvvmdktg.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg'
+            );
+            supabaseCliente = clienteFinal;
+        }
+        
+        this.supabase = clienteFinal;
+        console.log("✅ this.supabase asignado:", this.supabase);
+        
         this.carreras = [];
         this.preguntasActuales = [];
         this.init();
-    }
-    
-    // 🔴 🔴 🔴 AÑADE ESTOS TRES MÉTODOS BÁSICOS:
-    setupTabs() {
-        console.log("📋 Configurando tabs...");
-        const tabs = document.querySelectorAll('.tab-btn');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                const tabId = e.target.dataset.tab;
-                console.log("Click en tab:", tabId);
-                
-                // Remover activo
-                tabs.forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                
-                // Activar
-                e.target.classList.add('active');
-                document.getElementById(`tab-${tabId}`).classList.add('active');
-            });
-        });
     }
     
     setupEventos() {
