@@ -733,6 +733,187 @@ class PronosticosManager {
             }
         });
     }
+
+    mostrarVistaPronosticoGuardado(pronostico, preguntas, respuestasCorrectas) {
+        const container = document.getElementById('main-content') || 
+                         document.querySelector('.tab-content.active') ||
+                         document.querySelector('.pronosticos-container');
+        
+        if (!container) {
+            console.error("No se encontró contenedor");
+            return;
+        }
+        
+        const respuestasUsuario = pronostico.respuestas;
+        const estado = pronostico.estado;
+        const tieneResultados = Object.keys(respuestasCorrectas).length > 0;
+        
+        let contenidoHTML = `
+            <div class="pronostico-container">
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h4><i class="fas fa-eye"></i> Mi Pronóstico - ${this.carreraActual?.nombre || 'Carrera'}</h4>
+                        <span class="badge ${estado === 'pendiente' ? 'bg-warning' : 'bg-success'}">
+                            ${estado === 'pendiente' ? '⏳ Pendiente' : '✅ Calificado'}
+                        </span>
+                    </div>
+                    <div class="card-body">
+        `;
+        
+        if (estado === 'pendiente') {
+            contenidoHTML += `
+                <div class="alert alert-info">
+                    <i class="fas fa-clock"></i>
+                    <strong>Estado:</strong> Tu pronóstico está pendiente de calificación.
+                    <p class="mb-0">Los resultados estarán disponibles después de la carrera.</p>
+                </div>
+            `;
+        } else if (estado === 'calificado') {
+            contenidoHTML += `
+                <div class="alert alert-success">
+                    <i class="fas fa-chart-bar"></i>
+                    <strong>¡Resultados disponibles!</strong>
+                    <p class="mb-0">
+                        <strong>Aciertos:</strong> ${pronostico.aciertos || 0}/10<br>
+                        <strong>Puntuación total:</strong> ${pronostico.puntuacion_total || 0} puntos<br>
+                        <strong>Dinero ganado:</strong> €${pronostico.dinero_ganado || 0}
+                    </p>
+                    <button class="btn btn-success btn-sm mt-2" 
+                            onclick="window.pronosticosManager.verResultadosCompletos(${this.carreraActual?.id})">
+                        <i class="fas fa-chart-line"></i> Ver desglose completo
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Lista de preguntas con respuestas
+        contenidoHTML += `
+            <h5 class="mt-4"><i class="fas fa-list-ol"></i> Tus respuestas:</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Pregunta</th>
+                            <th>Tu respuesta</th>
+                            ${tieneResultados ? '<th>Respuesta correcta</th><th>Resultado</th>' : ''}
+                            <th>Área</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        for (let i = 1; i <= 10; i++) {
+            const pregunta = preguntas.find(p => p.numero_pregunta === i);
+            const respuestaUsuario = respuestasUsuario[`p${i}`];
+            const respuestaCorrecta = respuestasCorrectas[`p${i}`];
+            const area = this.preguntaAreas[i] || 'general';
+            
+            let opcionTexto = '';
+            if (pregunta) {
+                if (respuestaUsuario === 'A') opcionTexto = pregunta.opcion_a;
+                else if (respuestaUsuario === 'B') opcionTexto = pregunta.opcion_b;
+                else if (respuestaUsuario === 'C') opcionTexto = pregunta.opcion_c;
+            }
+            
+            let filaHTML = `
+                <tr>
+                    <td>${i}</td>
+                    <td>${pregunta?.texto_pregunta || 'Pregunta ' + i}</td>
+                    <td>
+                        <span class="badge bg-primary">
+                            ${respuestaUsuario || 'No respondida'}: ${opcionTexto}
+                        </span>
+                    </td>
+            `;
+            
+            if (tieneResultados) {
+                const esCorrecta = respuestaUsuario === respuestaCorrecta;
+                let opcionCorrectaTexto = '';
+                if (pregunta && respuestaCorrecta) {
+                    if (respuestaCorrecta === 'A') opcionCorrectaTexto = pregunta.opcion_a;
+                    else if (respuestaCorrecta === 'B') opcionCorrectaTexto = pregunta.opcion_b;
+                    else if (respuestaCorrecta === 'C') opcionCorrectaTexto = pregunta.opcion_c;
+                }
+                
+                filaHTML += `
+                    <td>
+                        ${respuestaCorrecta ? 
+                            `<span class="badge ${respuestaCorrecta === 'A' ? 'bg-info' : 'bg-secondary'}">
+                                ${respuestaCorrecta}: ${opcionCorrectaTexto}
+                            </span>` : 
+                            '<span class="badge bg-secondary">No disponible</span>'
+                        }
+                    </td>
+                    <td>
+                        ${esCorrecta ? 
+                            '<span class="badge bg-success"><i class="fas fa-check"></i> Acierto</span>' : 
+                            '<span class="badge bg-danger"><i class="fas fa-times"></i> Fallo</span>'
+                        }
+                    </td>
+                `;
+            }
+            
+            filaHTML += `
+                    <td><span class="badge bg-secondary">${area}</span></td>
+                </tr>
+            `;
+            
+            contenidoHTML += filaHTML;
+        }
+        
+        contenidoHTML += `
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Información adicional -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6><i class="fas fa-car"></i> Snapshot del coche</h6>
+                            <p class="mb-1"><strong>Puntos registrados:</strong> ${pronostico.puntos_coche_snapshot}</p>
+                            <small class="text-muted">Estos puntos se sumarán a tu puntuación final</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6><i class="fas fa-users"></i> Estrategas registrados</h6>
+                            <p class="mb-1"><strong>Cantidad:</strong> ${Array.isArray(pronostico.estrategas_snapshot) ? pronostico.estrategas_snapshot.length : 0}</p>
+                            <small class="text-muted">Sus bonificaciones se aplicarán al cálculo final</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <button class="btn btn-outline-secondary" onclick="window.pronosticosManager.cargarPantallaPronostico()">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </button>
+                ${estado === 'calificado' ? `
+                    <button class="btn btn-success" onclick="window.pronosticosManager.verResultadosCompletos(${this.carreraActual?.id})">
+                        <i class="fas fa-chart-line"></i> Ver cálculo detallado
+                    </button>
+                ` : ''}
+            </div>
+        `;
+        
+        contenidoHTML += `
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.innerHTML = contenidoHTML;
+    }
+
+    async verResultadosCompletos(carreraId) {
+        // Reutiliza tu función existente cargarResultadosCarrera
+        await this.cargarResultadosCarrera(carreraId);
+    }    
     
     async actualizarDineroEscuderia(cantidad) {
         const { data: { user } } = await this.supabase.auth.getUser();
@@ -889,6 +1070,79 @@ class PronosticosManager {
             this.mostrarError("Error al crear preguntas");
         }
     }
+
+    async verPronosticoGuardado() {
+        try {
+            const { data: { user } } = await this.supabase.auth.getUser();
+            if (!user) {
+                this.mostrarError("Debes iniciar sesión");
+                return;
+            }
+            
+            if (!this.carreraActual || !this.carreraActual.id) {
+                await this.cargarPantallaPronostico(); // Recargar para obtener carrera
+                return;
+            }
+            
+            console.log("🔍 Buscando pronóstico guardado para carrera:", this.carreraActual.id);
+            
+            // Buscar el pronóstico del usuario para esta carrera
+            const { data: pronosticos, error } = await this.supabase
+                .from('pronosticos_usuario')
+                .select('*')
+                .eq('escuderia_id', this.escuderiaId)
+                .eq('carrera_id', this.carreraActual.id)
+                .maybeSingle(); // Usar maybeSingle en lugar de single
+            
+            if (error) {
+                console.error("❌ Error buscando pronóstico:", error);
+                this.mostrarError("Error al cargar tu pronóstico");
+                return;
+            }
+            
+            if (!pronosticos) {
+                this.mostrarError("No se encontró tu pronóstico");
+                return;
+            }
+            
+            console.log("✅ Pronóstico encontrado:", pronosticos);
+            
+            // Obtener las preguntas de esta carrera
+            const { data: preguntas, error: errorPreguntas } = await this.supabase
+                .from('preguntas_pronostico')
+                .select('*')
+                .eq('carrera_id', this.carreraActual.id)
+                .order('numero_pregunta');
+            
+            if (errorPreguntas) {
+                console.error("❌ Error cargando preguntas:", errorPreguntas);
+                this.mostrarError("Error al cargar las preguntas");
+                return;
+            }
+            
+            // Obtener respuestas correctas (si ya existen)
+            let respuestasCorrectas = {};
+            if (pronosticos.estado === 'calificado') {
+                const { data: resultados } = await this.supabase
+                    .from('resultados_carrera')
+                    .select('respuestas_correctas')
+                    .eq('carrera_id', this.carreraActual.id)
+                    .single();
+                
+                if (resultados) {
+                    respuestasCorrectas = resultados.respuestas_correctas;
+                }
+            }
+            
+            // Mostrar la vista de pronóstico
+            this.mostrarVistaPronosticoGuardado(pronosticos, preguntas, respuestasCorrectas);
+            
+        } catch (error) {
+            console.error("💥 Error en verPronosticoGuardado:", error);
+            this.mostrarError("Error inesperado al cargar el pronóstico");
+        }
+    }
+
     
     async guardarResultadosCarrera() {
         const carreraId = document.getElementById('carreraResultados').value;
