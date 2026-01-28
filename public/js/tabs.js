@@ -138,35 +138,52 @@ class TabManager {
                 // 3. Cargar los pronósticos usando la función del pronosticos.js
                 setTimeout(async () => {
                     try {
-                        if (window.cargarPantallaPronostico) {
-                            console.log('🔮 Ejecutando cargarPantallaPronostico()...');
-                            await window.cargarPantallaPronostico();
-                            console.log('✅ Pronósticos cargados exitosamente');
-                        } else {
-                            console.error('❌ cargarPantallaPronostico no disponible');
-                            tabContent.innerHTML = `
-                                <div class="error-message">
-                                    <h3>❌ Error cargando pronósticos</h3>
-                                    <p>El sistema de pronósticos no está disponible</p>
-                                    <button onclick="location.reload()">Reintentar</button>
-                                </div>
-                            `;
+                        console.log('🔮 Verificando pronosticosManager...');
+                        console.log('window.pronosticosManager:', window.pronosticosManager);
+                        console.log('window.cargarPantallaPronostico:', window.cargarPantallaPronostico);
+                        
+                        // PRIMERO intentar con el método del manager
+                        if (window.pronosticosManager && typeof window.pronosticosManager.cargarPantallaPronostico === 'function') {
+                            console.log('🎯 Usando pronosticosManager.cargarPantallaPronostico()');
+                            await window.pronosticosManager.cargarPantallaPronostico();
                         }
+                        // SEGUNDO intentar con la función global
+                        else if (window.cargarPantallaPronostico && typeof window.cargarPantallaPronostico === 'function') {
+                            console.log('🎯 Usando window.cargarPantallaPronostico()');
+                            await window.cargarPantallaPronostico();
+                        }
+                        // TERCERO: si nada funciona, intentar crear el manager
+                        else if (window.PronosticosManager) {
+                            console.log('🔧 Creando nueva instancia de PronosticosManager');
+                            window.pronosticosManager = new window.PronosticosManager();
+                            await window.pronosticosManager.cargarPantallaPronostico();
+                        }
+                        else {
+                            console.error('❌ Ningún método de pronósticos disponible');
+                            throw new Error('Sistema de pronósticos no disponible');
+                        }
+                        
+                        console.log('✅ Pronósticos cargados exitosamente');
+                        
                     } catch (error) {
                         console.error('❌ Error cargando pronósticos:', error);
                         tabContent.innerHTML = `
                             <div class="error-message">
                                 <h3>❌ Error cargando pronósticos</h3>
                                 <p>${error.message || 'Error desconocido'}</p>
+                                <p><small>Verifica la consola para más detalles</small></p>
                                 <button onclick="location.reload()">Reintentar</button>
+                                <button onclick="window.tabManager.switchTab('principal')" style="margin-left: 10px;">
+                                    Volver al inicio
+                                </button>
                             </div>
                         `;
                     }
-                }, 300);
+                }, 500); // Aumentar tiempo para asegurar carga
                 
                 // SALIR del método - no hacer nada más para pronósticos
                 return;
-            }            
+            }
             // ======================================================
             // ¡¡PESTAÑA MERCADO - NUEVO COMPORTAMIENTO!!
             // ======================================================
