@@ -71,7 +71,7 @@ class PronosticosManager {
         const { data: pronosticoExistente } = await this.supabase
             .from('pronosticos_usuario')
             .select('id')
-            .eq('usuario_id', user.id)
+            .eq('escuderia_id', this.escuderiaId)  // ← USA escuderia_id
             .eq('carrera_id', this.carreraActual.id)
             .single();
         
@@ -102,11 +102,11 @@ class PronosticosManager {
         try {
             console.log("🔍 Cargando datos para usuario:", usuarioId);
             
-            // 1. Obtener la ESCUDERÍA del usuario (usar user_id, no usuario_id)
+            // 1. Obtener la ESCUDERÍA del usuario
             const { data: escuderia, error: errorEscuderia } = await this.supabase
                 .from('escuderias')
                 .select('id, puntos, dinero')
-                .eq('user_id', usuarioId)  // ← CAMBIADO: user_id en lugar de usuario_id
+                .eq('user_id', usuarioId)
                 .single();
             
             if (errorEscuderia || !escuderia) {
@@ -120,34 +120,9 @@ class PronosticosManager {
             console.log("✅ Escudería encontrada:", escuderia);
             this.escuderiaId = escuderia.id;
             
-            // 2. Calcular puntos TOTALES del coche
-            const { data: cocheStats, error: errorCoche } = await this.supabase
-                .from('coches_stats')
-                .select('*')
-                .eq('escuderia_id', escuderia.id)
-                .single();
-            
-            if (errorCoche || !cocheStats) {
-                console.log("⚠️ No hay stats de coche, usando puntos de escudería");
-                this.usuarioPuntos = escuderia.puntos || 0;
-            } else {
-                // Calcular puntos TOTALES sumando todos los niveles
-                let puntosTotales = 0;
-                const areas = [
-                    'suelo_nivel', 'motor_nivel', 'aleron_delantero_nivel',
-                    'caja_cambios_nivel', 'pontones_nivel', 'suspension_nivel',
-                    'aleron_trasero_nivel', 'chasis_nivel', 'frenos_nivel',
-                    'volante_nivel', 'electronica_nivel'
-                ];
-                
-                areas.forEach(area => {
-                    const nivel = cocheStats[area] || 0;
-                    puntosTotales += nivel * 100; // 100 puntos por nivel
-                });
-                
-                this.usuarioPuntos = puntosTotales;
-                console.log("✅ Puntos calculados:", puntosTotales);
-            }
+            // 2. Usar los PUNTOS DIRECTAMENTE de la escudería (ya están bien calculados)
+            this.usuarioPuntos = escuderia.puntos || 0;
+            console.log("✅ Puntos de escudería:", this.usuarioPuntos);
             
             // 3. Obtener estrategas contratados
             const { data: estrategas, error: errorEstrategas } = await this.supabase
@@ -168,7 +143,6 @@ class PronosticosManager {
                 console.error("❌ Error obteniendo estrategas:", errorEstrategas);
                 this.estrategasActivos = [];
             } else {
-                // Adaptar a la estructura que espera el código
                 this.estrategasActivos = estrategas.map(e => ({
                     ingeniero_id: e.ingeniero_id,
                     nombre: e.nombre,
@@ -177,7 +151,7 @@ class PronosticosManager {
                     bonificacion_valor: e.bonificacion_valor,
                     activo: e.activo
                 }));
-                console.log("✅ Estrategas encontrados:", this.estrategasActivos);
+                console.log("✅ Estrategas encontrados:", this.estrategasActivos.length);
             }
             
             console.log("📊 Datos finales:", {
