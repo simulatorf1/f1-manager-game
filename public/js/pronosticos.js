@@ -25,62 +25,73 @@ class PronosticosManager {
     async cargarPantallaPronostico() {
         console.log("Cargando pantalla de pronósticos...");
         
-        const mainContent = document.getElementById('main-content') || 
-                           document.querySelector('.tab-content.active') ||
-                           document.querySelector('.pronosticos-container');
+        const container = document.getElementById('main-content') || 
+                         document.querySelector('.tab-content.active') ||
+                         document.querySelector('.pronosticos-container');
         
-        if (!mainContent) {
+        if (!container) {
             console.error("No se encontró contenedor para pronósticos");
             return;
         }
         
-        mainContent.innerHTML = '<div class="cargando"><i class="fas fa-spinner fa-spin"></i> Cargando pronósticos...</div>';
+        container.innerHTML = '<div class="cargando"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
         
         const { data: { user } } = await this.supabase.auth.getUser();
         if (!user) {
-            this.mostrarError("Debes iniciar sesión para hacer pronósticos", mainContent);
+            this.mostrarError("Debes iniciar sesión para hacer pronósticos", container);
             return;
         }
         
+        // 🔴 **PRIMERO:** Cargar datos del usuario (esto establece this.escuderiaId)
+        await this.cargarDatosUsuario(user.id);
+        
+        if (!this.escuderiaId) {
+            this.mostrarError("No se pudo obtener tu escudería", container);
+            return;
+        }
+        
+        // 🔴 **SEGUNDO:** Obtener carrera activa
         const hoy = new Date();
-        // Formato correcto para Supabase: YYYY-MM-DDTHH:mm:ssZ
-        const fechaHoy = hoy.toISOString();  // Esto genera "2026-01-28T10:30:00.000Z"
+        const fechaHoy = hoy.toISOString().split('T')[0];
         
         const { data: carreras, error } = await this.supabase
             .from('calendario_gp')
             .select('*')
-            .gte('fecha_inicio', fechaHoy)  // ← Usar el formato completo ISO
+            .gte('fecha_inicio', fechaHoy)
             .order('fecha_inicio', { ascending: true })
             .limit(1);
         
         if (error || !carreras || carreras.length === 0) {
-            this.mostrarError("No hay carreras próximas disponibles", mainContent);
+            this.mostrarError("No hay carreras próximas disponibles", container);
             return;
         }
         
         this.carreraActual = carreras[0];
         
+        // 🔴 **TERCERO:** Verificar fecha límite
         const fechaLimite = new Date(this.carreraActual.fecha_limite_pronosticos || this.carreraActual.fecha_inicio);
         fechaLimite.setHours(fechaLimite.getHours() - 48);
         
         if (hoy > fechaLimite) {
-            this.mostrarError("El plazo para pronósticos ha expirado (48 horas antes de la carrera)", mainContent);
+            this.mostrarError("El plazo para pronósticos ha expirado (48 horas antes de la carrera)", container);
             return;
         }
         
+        // 🔴 **CUARTO:** Ahora sí verificar pronóstico existente (this.escuderiaId ya está definido)
         const { data: pronosticoExistente } = await this.supabase
             .from('pronosticos_usuario')
             .select('id')
-            .eq('escuderia_id', this.escuderiaId)  // ← USA escuderia_id
+            .eq('escuderia_id', this.escuderiaId)  // ← Ahora this.escuderiaId tiene valor
             .eq('carrera_id', this.carreraActual.id)
             .single();
         
         this.pronosticoGuardado = !!pronosticoExistente;
         
+        // 🔴 **QUINTO:** Obtener preguntas de la carrera
         await this.cargarPreguntasCarrera(this.carreraActual.id);
-        await this.cargarDatosUsuario(user.id);
         
-        this.mostrarInterfazPronostico(mainContent);
+        // 🔴 **SEXTO:** Mostrar interfaz
+        this.mostrarInterfazPronostico(container);
     }
     
     async cargarPreguntasCarrera(carreraId) {
