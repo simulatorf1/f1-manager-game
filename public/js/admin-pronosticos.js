@@ -202,18 +202,33 @@ class AdminPronosticos {
         const container = document.getElementById('preguntas-container');
         let html = '<div class="preguntas-grid">';
         
-        const areas = [
+        // LISTA DE ÁREAS DISPONIBLES
+        const areasDisponibles = [
             'meteorologia', 'fiabilidad', 'estrategia', 'rendimiento', 'neumaticos',
-            'seguridad', 'clasificacion', 'carrera', 'overtakes', 'incidentes'
+            'seguridad', 'clasificacion', 'carrera', 'overtakes', 'incidentes',
+            'equipos', 'tiempos', 'paradas'
         ];
         
         for (let i = 1; i <= 10; i++) {
             const preguntaExistente = this.preguntasActuales.find(p => p.numero_pregunta === i);
-            const area = areas[i-1] || 'general';
+            const areaActual = preguntaExistente?.area || 'general';
+            
+            // Generar options para el select
+            let optionsAreas = '';
+            areasDisponibles.forEach(area => {
+                const selected = area === areaActual ? 'selected' : '';
+                const nombreLindo = area.charAt(0).toUpperCase() + area.slice(1);
+                optionsAreas += `<option value="${area}" ${selected}>${nombreLindo}</option>`;
+            });
             
             html += `
                 <div class="pregunta-card" data-numero="${i}">
-                    <h3>Pregunta ${i} <small style="color: #00D2BE;">(${area})</small></h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3>Pregunta ${i}</h3>
+                        <select id="p${i}_area" style="padding: 5px 10px; background: #2a2a3e; color: white; border: 1px solid #444; border-radius: 5px;">
+                            ${optionsAreas}
+                        </select>
+                    </div>
                     
                     <label>Texto de la pregunta:</label>
                     <textarea id="p${i}_texto" rows="3" placeholder="Ej: ¿Quién conseguirá la pole position?">${preguntaExistente?.texto_pregunta || ''}</textarea>
@@ -232,8 +247,6 @@ class AdminPronosticos {
                             <input type="text" id="p${i}_c" value="${preguntaExistente?.opcion_c || ''}" placeholder="Respuesta C">
                         </div>
                     </div>
-                    
-                    <input type="hidden" id="p${i}_area" value="${area}">
                 </div>
             `;
         }
