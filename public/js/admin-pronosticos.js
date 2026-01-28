@@ -1,24 +1,14 @@
 console.log('🔧 Admin Pronósticos cargando...');
 
-// Verificar si supabase ya existe globalmente
-if (!window.supabase) {
-    console.error('❌ ERROR: window.supabase no está disponible');
-    
-    // Si no existe, crearlo (con tus credenciales reales)
-    const SUPABASE_URL = 'https://xbnbbmhcveyzrvvmdktg.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg';
-    
-    try {
-        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log('✅ Cliente Supabase creado');
-    } catch (error) {
-        console.error('❌ Error creando Supabase:', error);
-        alert('Error conectando a la base de datos');
-        throw error;
-    }
-}
+// Configuración directa
+const SUPABASE_URL = 'https://xbnbbmhcveyzrvvmdktg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg';
 
-// 3. Ahora usa window.supabase directamente en la clase
+// Crear cliente directamente
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+console.log('✅ Cliente creado:', supabase);
+
+// Clase Admin
 class AdminPronosticos {
     constructor() {
         this.supabase = supabase;
