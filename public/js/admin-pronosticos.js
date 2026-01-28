@@ -1,4 +1,4 @@
-// admin-pronosticos.js - VERSIÓN CON CDN
+// admin-pronosticos.js - VERSIÓN CORREGIDA
 
 console.log('🔧 Admin Pronósticos cargando...');
 
@@ -12,21 +12,26 @@ if (typeof supabase === 'undefined') {
 const SUPABASE_URL = 'https://xbnbbmhcveyzrvvmdktg.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmJibWhjdmV5enJ2dm1ka3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzY1NDgsImV4cCI6MjA4MTU1MjU0OH0.RaNk5B62P97WB93kKJMR1OLac68lDb9JTVthu8_m3Hg';
 
-// Crear cliente
-let supabaseCliente;
+// 🔴 CAMBIO CRÍTICO: Hacer la variable GLOBAL
+window.supabaseCliente = null;
+
 try {
-    supabaseCliente = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('✅ Cliente Supabase creado:', supabaseCliente);
+    // Crear cliente y asignarlo a variable GLOBAL
+    window.supabaseCliente = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('✅ Cliente Supabase creado:', window.supabaseCliente);
 } catch (error) {
     console.error('❌ Error creando cliente:', error);
     alert('Error creando conexión a Supabase: ' + error.message);
     throw error;
 }
 
-// Clase Admin
+// Clase Admin - ahora usa window.supabaseCliente
 class AdminPronosticos {
     constructor() {
-        this.supabase = supabaseCliente;
+        console.log("🔨 Constructor: window.supabaseCliente =", window.supabaseCliente);
+        console.log("🔨 ¿Tiene .from?", typeof window.supabaseCliente?.from);
+        
+        this.supabase = window.supabaseCliente;  // ← Usar window.supabaseCliente
         this.carreras = [];
         this.preguntasActuales = [];
         this.init();
@@ -435,5 +440,14 @@ class AdminPronosticos {
 
 // Inicializar cuando se cargue la página
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("📄 DOM cargado, window.supabaseCliente =", window.supabaseCliente);
+    
+    if (!window.supabaseCliente || typeof window.supabaseCliente.from !== 'function') {
+        console.error('❌ ERROR: Cliente Supabase no está listo');
+        alert('Error: Conexión a base de datos no establecida. Recarga la página.');
+        return;
+    }
+    
+    console.log('✅ Creando instancia de AdminPronosticos...');
     window.adminPronosticos = new AdminPronosticos();
 });
