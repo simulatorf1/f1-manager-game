@@ -91,7 +91,7 @@ class PronosticosManager {
             this.pronosticoGuardado = pronosticos && pronosticos.length > 0;
         }
         
-        this.pronosticoGuardado = !!pronosticoExistente;
+
         
         // 🔴 **QUINTO:** Obtener preguntas de la carrera
         await this.cargarPreguntasCarrera(this.carreraActual.id);
