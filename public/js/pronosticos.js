@@ -385,7 +385,8 @@ class PronosticosManager {
             const { data, error } = await this.supabase
                 .from('pronosticos_usuario')
                 .insert([{
-                    escuderia_id: this.escuderiaId,  // ← AHORA (usar this.escuderiaId)
+                    escuderia_id: this.escuderiaId,  // ← Usar this.escuderiaId
+                    usuario_id: user.id,  // ← También guardar user_id por si acaso
                     carrera_id: this.carreraActual.id,
                     respuestas: respuestas,
                     puntos_coche_snapshot: this.usuarioPuntos,
