@@ -43,10 +43,13 @@ class PronosticosManager {
         }
         
         const hoy = new Date();
+        // Formato correcto para Supabase: YYYY-MM-DDTHH:mm:ssZ
+        const fechaHoy = hoy.toISOString();  // Esto genera "2026-01-28T10:30:00.000Z"
+        
         const { data: carreras, error } = await this.supabase
             .from('calendario_gp')
             .select('*')
-            .gte('fecha_carrera', hoy.toISOString().split('T')[0])
+            .gte('fecha_carrera', fechaHoy)  // ← Usar el formato completo ISO
             .order('fecha_carrera', { ascending: true })
             .limit(1);
         
