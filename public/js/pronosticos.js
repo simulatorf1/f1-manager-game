@@ -49,8 +49,8 @@ class PronosticosManager {
         const { data: carreras, error } = await this.supabase
             .from('calendario_gp')
             .select('*')
-            .gte('fecha_carrera', fechaHoy)  // ← Usar el formato completo ISO
-            .order('fecha_carrera', { ascending: true })
+            .gte('fecha_inicio', fechaHoy)  // ← Usar el formato completo ISO
+            .order('fecha_inicio', { ascending: true })
             .limit(1);
         
         if (error || !carreras || carreras.length === 0) {
@@ -60,7 +60,7 @@ class PronosticosManager {
         
         this.carreraActual = carreras[0];
         
-        const fechaLimite = new Date(this.carreraActual.fecha_limite_pronosticos || this.carreraActual.fecha_carrera);
+        const fechaLimite = new Date(this.carreraActual.fecha_limite_pronosticos || this.carreraActual.fecha_inicio);
         fechaLimite.setHours(fechaLimite.getHours() - 48);
         
         if (hoy > fechaLimite) {
@@ -135,7 +135,7 @@ class PronosticosManager {
         if (this.pronosticoGuardado) {
             container.innerHTML = `
                 <div class="pronostico-container">
-                    <h2><i class="fas fa-flag-checkered"></i> Pronóstico para ${this.carreraActual.nombre_gp}</h2>
+                    <h2><i class="fas fa-flag-checkered"></i> Pronóstico para ${this.carreraActual.nombre}</h2>
                     <div class="alert alert-success">
                         <i class="fas fa-check-circle"></i> 
                         <strong>¡Ya has enviado tu pronóstico!</strong>
@@ -149,7 +149,7 @@ class PronosticosManager {
             return;
         }
         
-        const fechaCarrera = new Date(this.carreraActual.fecha_carrera);
+        const fechaCarrera = new Date(this.carreraActual.fecha_inicio);
         fechaCarrera.setHours(fechaCarrera.getHours() + 24);
         const fechaResultados = fechaCarrera.toLocaleDateString('es-ES', {
             day: 'numeric',
@@ -265,7 +265,7 @@ class PronosticosManager {
                 <form id="formPronostico" onsubmit="event.preventDefault(); window.pronosticosManager.guardarPronostico();">
                     <div class="card">
                         <div class="card-header bg-dark text-white">
-                            <h4><i class="fas fa-bullseye"></i> Pronóstico - ${this.carreraActual.nombre_gp}</h4>
+                            <h4><i class="fas fa-bullseye"></i> Pronóstico - ${this.carreraActual.nombre}</h4>
                         </div>
                         <div class="card-body">
                             ${preguntasHTML}
@@ -335,7 +335,7 @@ class PronosticosManager {
             
             this.mostrarConfirmacion(`
                 <h4><i class="fas fa-check-circle text-success"></i> ¡Pronóstico enviado!</h4>
-                <p>Tu pronóstico para <strong>${this.carreraActual.nombre_gp}</strong> ha sido registrado correctamente.</p>
+                <p>Tu pronóstico para <strong>${this.carreraActual.nombre}</strong> ha sido registrado correctamente.</p>
                 <p>Recibirás una notificación cuando los resultados estén disponibles.</p>
                 <div class="mt-3">
                     <button class="btn btn-primary" onclick="window.pronosticosManager.cargarPantallaPronostico()">
@@ -362,9 +362,9 @@ class PronosticosManager {
         if (!carreraId) {
             const { data: carrera } = await this.supabase
                 .from('calendario_gp')
-                .select('id, nombre_gp')
-                .lt('fecha_carrera', new Date().toISOString())
-                .order('fecha_carrera', { ascending: false })
+                .select('id, nombre')
+                .lt('fecha_inicio', new Date().toISOString())
+                .order('fecha_inicio', { ascending: false })
                 .limit(1)
                 .single();
             
@@ -380,7 +380,7 @@ class PronosticosManager {
             .from('pronosticos_usuario')
             .select(`
                 *,
-                carreras:calendario_gp(nombre_gp),
+                carreras:calendario_gp(nombre),
                 resultados_carrera(respuestas_correctas)
             `)
             .eq('usuario_id', user.id)
@@ -475,7 +475,7 @@ class PronosticosManager {
             <div class="resultados-container">
                 <div class="card">
                     <div class="card-header bg-info text-white">
-                        <h4><i class="fas fa-chart-bar"></i> Resultados - ${resultado.carreras?.nombre_gp || 'Carrera'}</h4>
+                        <h4><i class="fas fa-chart-bar"></i> Resultados - ${resultado.carreras?.nombre || 'Carrera'}</h4>
                     </div>
                     <div class="card-body">
                         <div class="row mb-4">
@@ -719,11 +719,11 @@ class PronosticosManager {
         const { data: carreras } = await this.supabase
             .from('calendario_gp')
             .select('*')
-            .order('fecha_carrera', { ascending: true });
+            .order('fecha_inicio', { ascending: true });
         
         let carrerasHTML = '<option value="">Seleccionar carrera</option>';
         carreras.forEach(c => {
-            carrerasHTML += `<option value="${c.id}">${c.nombre_gp} - ${c.fecha_carrera}</option>`;
+            carrerasHTML += `<option value="${c.id}">${c.nombre} - ${c.fecha_inicio}</option>`;
         });
         
         const container = document.getElementById('main-content') || 
@@ -885,7 +885,7 @@ class PronosticosManager {
         
         const { data: carrera } = await this.supabase
             .from('calendario_gp')
-            .select('nombre_gp')
+            .select('nombre')
             .eq('id', carreraId)
             .single();
         
@@ -893,7 +893,7 @@ class PronosticosManager {
             usuario_id: p.usuario_id,
             tipo: 'resultados',
             titulo: 'Resultados disponibles',
-            mensaje: `Los resultados del GP ${carrera.nombre_gp} están disponibles`,
+            mensaje: `Los resultados del GP ${carrera.nombre} están disponibles`,
             fecha_creacion: new Date().toISOString(),
             vista: false
         }));
