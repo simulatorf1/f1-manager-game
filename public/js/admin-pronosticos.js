@@ -19,11 +19,12 @@ if (typeof supabase === 'undefined') {
     throw new Error('Supabase library not loaded');
 }
 
-// 2. CREAR CLIENTE
+// 2. CREAR CLIENTE Y HACERLO GLOBAL
 let supabaseCliente;
 try {
     supabaseCliente = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('✅ Cliente Supabase creado');
+    window.supabaseCliente = supabaseCliente;  // ← MANDATORIO
+    console.log('✅ Cliente Supabase creado y global:', window.supabaseCliente);
 } catch (error) {
     console.error('❌ Error creando cliente:', error);
     document.body.innerHTML = `
