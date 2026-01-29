@@ -2141,14 +2141,7 @@ window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
         
         if (fetchError) throw fetchError;
         
-        const { data: piezasExistentes } = await window.supabase
-            .from('almacen_piezas')
-            .select('id')
-            .eq('escuderia_id', fabricacion.escuderia_id)
-            .eq('area', fabricacion.area)
-            .eq('nivel', fabricacion.nivel);
-        
-        const numeroPieza = (piezasExistentes?.length || 0) + 1;
+  
         
         // Obtener número global de pieza
         const { data: todasPiezasArea } = await window.supabase
