@@ -172,7 +172,7 @@ class F1Manager {
                 // 2. Crear array de numeros_global ya usados (solo NO equipadas)
                 const numerosGlobalesUsados = [];
                 todasPiezasAreaConGlobal?.forEach(p => {
-                    if (p.nivel === nivelAFabricar && p.numero_global && !p.equipada) {
+                    if (p.nivel === nivelAFabricar && p.numero_global) {
                         numerosGlobalesUsados.push(p.numero_global);
                     }
                 });
@@ -182,38 +182,17 @@ class F1Manager {
                     // Calcular qué número global sería esta pieza
                     const numeroGlobalEsperado = ((nivelAFabricar - 1) * 5) + piezaNum;
                     
-                    // CAMBIO 1: Verificar si existe una pieza NO EQUIPADA con este numero_global
-                    const yaLaTienesNoEquipada = numerosGlobalesUsados.includes(numeroGlobalEsperado);
-                    
-                    // CAMBIO 2: Verificar si existe una pieza EQUIPADA con este numero_global
-                    const existePeroEquipada = todasPiezasAreaConGlobal?.some(p => 
-                        p.nivel === nivelAFabricar && 
-                        p.numero_global === numeroGlobalEsperado && 
-                        p.equipada === true
-                    );
-                    
+                    // SOLO ESTA LÍNEA: ¿Ya existe una pieza con este numero_global?
+                    const yaExistePieza = numerosGlobalesUsados.includes(numeroGlobalEsperado);
                     const piezaFabricada = piezasAreaNivel.length >= piezaNum;
                     
                     // Calcular puntos para mostrar
                     const puntosPieza = this.calcularPuntosPieza(numeroGlobalEsperado);
                     
-                    // CAMBIO 3: Cambiar la condición del if
-                    if (yaLaTienesNoEquipada || piezaFabricada) {
-                        // YA LA TIENES NO EQUIPADA o ya fabricada
+                    if (yaExistePieza || piezaFabricada) {
+                        // YA EXISTE la pieza (equipada o no)
                         html += '<button class="btn-pieza-mini lleno" disabled title="' + area.nombre + ' - Ya posees esta pieza (+' + puntosPieza + ' pts)">';
                         html += '<i class="fas fa-check"></i>';
-                        html += '<span class="pieza-num">+' + puntosPieza + '</span>';
-                        html += '</button>';
-                    } else if (existePeroEquipada) {
-                        // La tienes pero EQUIPADA - PUEDES fabricarla de nuevo
-                        const puedeFabricar = fabricacionesCount < 4 && 
-                                            this.escuderia.dinero >= 10000 &&
-                                            piezaNum === piezasAreaNivel.length + 1;
-                        
-                        html += '<button class="btn-pieza-mini vacio" ';
-                        html += 'onclick="iniciarFabricacionTallerDesdeBoton(\'' + area.id + '\', ' + nivelAFabricar + ')"';
-                        html += (!puedeFabricar ? ' disabled' : '') + '>';
-                        html += '<i class="fas fa-plus"></i>';
                         html += '<span class="pieza-num">+' + puntosPieza + '</span>';
                         html += '</button>';
                     } else if (fabricacionActiva && piezaNum === piezasAreaNivel.length + 1) {
