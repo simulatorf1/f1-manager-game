@@ -3,7 +3,29 @@
 // ========================
 console.log('🏎️ F1 Manager - Sistema principal cargado');
 
-const produccionStyles = '';
+const produccionStyles = `
+.progress-bar-global {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    margin: 5px 0;
+    overflow: hidden;
+}
+
+.progress-fill-global {
+    height: 100%;
+    background: linear-gradient(90deg, #00d2be, #0066cc);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.area-progreso-global {
+    font-size: 0.7rem;
+    color: #aaa;
+    margin-top: 2px;
+}
+`;
 
 const tallerStyles = '';
 
@@ -113,6 +135,27 @@ class F1Manager {
                 html += '<span class="area-nombre-mini">' + area.nombre + '</span>';
                 html += '<span class="area-nivel-mini">Nivel ' + nivelAFabricar + '</span>';
                 html += '</div>';
+                // Calcular progreso global del área (piezas 1-50)
+                const { data: todasPiezasArea } = await this.supabase
+                    .from('almacen_piezas')
+                    .select('id')
+                    .eq('escuderia_id', this.escuderia.id)
+                    .eq('area', area.id)
+                    .eq('equipada', false);
+                
+                const totalPiezasFabricadas = todasPiezasArea?.length || 0;
+                const numeroPiezaGlobal = totalPiezasFabricadas;
+                const porcentajeGlobal = Math.min(100, (numeroPiezaGlobal / 50) * 100);
+                
+                // Barra de progreso global
+                html += '<div class="progreso-global-container" style="margin: 5px 0; padding: 0 10px;">';
+                html += '<div class="progreso-global-text" style="font-size: 0.7rem; color: #aaa; margin-bottom: 3px;">';
+                html += 'Progreso: ' + numeroPiezaGlobal + '/50 piezas';
+                html += '</div>';
+                html += '<div class="progress-bar-global" title="Progreso total del área: ' + numeroPiezaGlobal + '/50 piezas" style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">';
+                html += '<div class="progress-fill-global" style="width: ' + porcentajeGlobal + '%; height: 100%; background: linear-gradient(90deg, #00d2be, #0066cc); border-radius: 3px;"></div>';
+                html += '</div>';
+                html += '</div>';                
                 html += '<div class="botones-calidad-mini">';
                 
                 for (let piezaNum = 1; piezaNum <= 5; piezaNum++) {
@@ -208,16 +251,22 @@ class F1Manager {
             const numeroPieza = (piezasExistentes?.length || 0) + 1;
             console.log('📊 Fabricando pieza ' + numeroPieza + ' para ' + areaId + ' nivel ' + nivel);
             
-            const tiempoMinutos = this.calcularTiempoProgresivo(numeroPieza);
+            const tiempoMinutos = this.calcularTiempoProgresivo(numeroPiezaGlobal);
             const tiempoMilisegundos = tiempoMinutos * 60 * 1000;
             console.log('⏱️ Tiempo: ' + tiempoMinutos + ' minutos (' + tiempoMilisegundos + 'ms)');
             
-            const costo = 10000;
+            // Obtener número global de pieza para esta área
+            const numeroPiezaGlobal = await this.obtenerNumeroPiezaGlobal(areaId, nivel);
+            const numeroPiezaEnNivel = ((numeroPiezaGlobal - 1) % 5) + 1;
+            
+            // Calcular costo basado en nivel y número de pieza
+            const costo = this.calcularCostoPieza(nivel, numeroPiezaEnNivel);
+            
             if (this.escuderia.dinero < costo) {
                 this.showNotification('❌ Fondos insuficientes. Necesitas €' + costo.toLocaleString(), 'error');
                 return false;
             }
-            
+                        
             const ahora = new Date();
             const tiempoFin = new Date(ahora.getTime() + tiempoMilisegundos);
             
@@ -246,10 +295,20 @@ class F1Manager {
             
             this.escuderia.dinero -= costo;
             await this.updateEscuderiaMoney();
-            
             const nombreArea = this.getNombreArea(areaId);
-            this.showNotification('✅ ' + nombreArea + ' (Evolución ' + numeroPieza + ') en fabricación - ' + tiempoMinutos + ' minutos', 'success');
+            const horas = Math.floor(tiempoMinutos / 60);
+            const dias = Math.floor(horas / 24);
+            let tiempoTexto = '';
+            if (dias > 0) {
+                tiempoTexto = dias + ' días ' + (horas % 24) + ' horas';
+            } else if (horas > 0) {
+                tiempoTexto = horas + ' horas ' + (tiempoMinutos % 60) + ' minutos';
+            } else {
+                tiempoTexto = tiempoMinutos + ' minutos';
+            }
             
+            this.showNotification('✅ ' + nombreArea + ' (Pieza ' + numeroPiezaGlobal + '/50, Nivel ' + nivel + ') en fabricación - ' + tiempoTexto, 'success');            
+
             setTimeout(() => {
                 this.updateProductionMonitor();
             }, 500);
@@ -263,22 +322,90 @@ class F1Manager {
         }
     }
     
-    calcularTiempoProgresivo(numeroPieza) {
-        const tiemposEspeciales = {
-            1: 2,
-            2: 4,
-            3: 15,
-            4: 30,
-            5: 60
+    calcularTiempoProgresivo(numeroPiezaGlobal) {
+        // Tabla de tiempos para 50 piezas en minutos
+        const tiemposPorPiezaGlobal = {
+            1: 2,      // Nivel 1, Pieza 1: 2 min
+            2: 15,     // Nivel 1, Pieza 2: 15 min
+            3: 30,     // Nivel 1, Pieza 3: 30 min
+            4: 60,     // Nivel 1, Pieza 4: 1 hora
+            5: 120,    // Nivel 1, Pieza 5: 2 horas
+            6: 180,    // Nivel 2, Pieza 1: 3 horas
+            7: 240,    // Nivel 2, Pieza 2: 4 horas
+            8: 360,    // Nivel 2, Pieza 3: 6 horas
+            9: 480,    // Nivel 2, Pieza 4: 8 horas
+            10: 720,   // Nivel 2, Pieza 5: 12 horas
+            11: 900,   // Nivel 3, Pieza 1: 15 horas
+            12: 1080,  // Nivel 3, Pieza 2: 18 horas
+            13: 1260,  // Nivel 3, Pieza 3: 21 horas
+            14: 1440,  // Nivel 3, Pieza 4: 1 día
+            15: 1620,  // Nivel 3, Pieza 5: 1.125 días
+            // Niveles 4-10: progresión más lenta
+            16: 1800, 17: 2160, 18: 2520, 19: 2880, 20: 3240, // Nivel 4: 1.25-2.25 días
+            21: 3600, 22: 4320, 23: 5040, 24: 5760, 25: 6480, // Nivel 5: 2.5-4.5 días
+            26: 7200, 27: 8640, 28: 10080, 29: 11520, 30: 12960, // Nivel 6: 5-9 días
+            31: 14400, 32: 17280, 33: 20160, 34: 23040, 35: 25920, // Nivel 7: 10-18 días
+            36: 28800, 37: 34560, 38: 40320, 39: 46080, 40: 51840, // Nivel 8: 20-36 días
+            41: 57600, 42: 69120, 43: 80640, 44: 92160, 45: 103680, // Nivel 9: 40-72 días
+            46: 115200, 47: 126720, 48: 138240, 49: 149760, 50: 161280 // Nivel 10: 80-112 días
         };
         
-        if (tiemposEspeciales[numeroPieza]) {
-            return tiemposEspeciales[numeroPieza];
+        // Si es una pieza mayor a 50, usar progresión continua
+        if (numeroPiezaGlobal > 50) {
+            const diasExtra = Math.floor((numeroPiezaGlobal - 50) / 5) * 7;
+            return 161280 + (diasExtra * 24 * 60);
         }
         
-        return 60 + ((numeroPieza - 5) * 50);
+        return tiemposPorPiezaGlobal[numeroPiezaGlobal] || 161280;
+    }
+
+    calcularCostoPieza(nivel, numeroPiezaEnNivel) {
+        // Costes base por nivel (en euros)
+        const costesBase = [
+            0,           // nivel 0 (no existe)
+            100000,      // nivel 1: €100K
+            350000,      // nivel 2: €350K
+            700000,      // nivel 3: €700K
+            1200000,     // nivel 4: €1.2M
+            2000000,     // nivel 5: €2M
+            4000000,     // nivel 6: €4M
+            8000000,     // nivel 7: €8M
+            13000000,    // nivel 8: €13M
+            18000000,    // nivel 9: €18M
+            23000000     // nivel 10: €23M
+        ];
+        
+        const base = costesBase[nivel] || 23000000;
+        // Incremento del 10% por cada pieza dentro del mismo nivel
+        return Math.floor(base * Math.pow(1.1, numeroPiezaEnNivel - 1));
     }
     
+    calcularPuntosPieza(numeroPiezaGlobal) {
+        // Progresión exponencial: Pieza 1 = 10 pts, Pieza 50 = ~53,084 pts
+        const puntosBase = 10 * Math.pow(1.25, numeroPiezaGlobal - 1);
+        return Math.floor(puntosBase);
+    }
+    
+    async obtenerNumeroPiezaGlobal(areaId, nivel) {
+        if (!this.escuderia || !this.escuderia.id) return 1;
+        
+        try {
+            // Contar todas las piezas fabricadas para esta área
+            const { data: piezasExistentes, error } = await this.supabase
+                .from('almacen_piezas')
+                .select('id')
+                .eq('escuderia_id', this.escuderia.id)
+                .eq('area', areaId);
+            
+            if (error) throw error;
+            
+            return (piezasExistentes?.length || 0) + 1;
+            
+        } catch (error) {
+            console.error('Error obteniendo número de pieza global:', error);
+            return 1;
+        }
+    }    
     getNombreArea(areaId) {
         const areas = {
             'suelo': 'Suelo',
@@ -1715,7 +1842,17 @@ class F1Manager {
                     html += '</div>';
                     html += '<div class="produccion-info">';
                     html += '<span class="produccion-nombre">' + nombreArea + '</span>';
-                    html += '<span class="produccion-pieza-num">Evolución ' + numeroPieza + '</span>';
+                    // Calcular número global de pieza
+                    const { data: piezasAreaTotal } = await this.supabase
+                        .from('almacen_piezas')
+                        .select('id')
+                        .eq('escuderia_id', this.escuderia.id)
+                        .eq('area', fabricacion.area);
+                    
+                    const totalPiezasFabricadas = piezasAreaTotal?.length || 0;
+                    const numeroPiezaGlobal = totalPiezasFabricadas + 1;
+                    
+                    html += '<span class="produccion-pieza-num">Pieza ' + numeroPiezaGlobal + '/50 (Nivel ' + fabricacion.nivel + ')</span>';
                     if (lista) {
                         html += '<span class="produccion-lista-text">¡LISTA!</span>';
                     } else {
@@ -1958,9 +2095,22 @@ window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
         
         const numeroPieza = (piezasExistentes?.length || 0) + 1;
         
-        const puntosBase = calcularPuntosBase(fabricacion.area, fabricacion.nivel);
-        const puntosExtra = numeroPieza * 2;
-        const puntosTotales = puntosBase + puntosExtra;
+        // Obtener número global de pieza
+        const { data: todasPiezasArea } = await window.supabase
+            .from('almacen_piezas')
+            .select('id')
+            .eq('escuderia_id', fabricacion.escuderia_id)
+            .eq('area', fabricacion.area);
+        
+        const numeroPiezaGlobal = (todasPiezasArea?.length || 0) + 1;
+        
+        // Calcular puntos usando el nuevo sistema
+        let puntosTotales;
+        if (window.f1Manager && window.f1Manager.calcularPuntosPieza) {
+            puntosTotales = window.f1Manager.calcularPuntosPieza(numeroPiezaGlobal);
+        } else {
+            puntosTotales = calcularPuntosBase(fabricacion.area, fabricacion.nivel, numeroPiezaGlobal);
+        }
         
         const { error: insertError } = await window.supabase
             .from('almacen_piezas')
@@ -2029,8 +2179,13 @@ window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
         }
     }
 };
-
-function calcularPuntosBase(area, nivel) {
+function calcularPuntosBase(area, nivel, numeroPiezaGlobal) {
+    // Usar el nuevo sistema de puntos exponencial
+    if (window.f1Manager && window.f1Manager.calcularPuntosPieza) {
+        return window.f1Manager.calcularPuntosPieza(numeroPiezaGlobal || 1);
+    }
+    
+    // Fallback al sistema antiguo
     const puntosPorArea = {
         'motor': 15,
         'chasis': 12,
@@ -2048,6 +2203,7 @@ function calcularPuntosBase(area, nivel) {
     const puntosArea = puntosPorArea[area] || 10;
     return puntosArea * (nivel || 1);
 }
+
 
 function formatTime(milliseconds) {
     if (milliseconds <= 0) return "00:00:00";
