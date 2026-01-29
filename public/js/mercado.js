@@ -1457,30 +1457,30 @@ async function venderPiezaDesdeAlmacen(piezaId) {
     
     try {
         // 1. Obtener datos de la pieza desde la BD
-        const { data: pieza, error } = await this.supabase
+        const { data: piezas, error } = await this.supabase
             .from('almacen_piezas')
             .select('*')
             .eq('id', piezaId)
             .eq('escuderia_id', this.escuderia.id)
-            .eq('equipada', false)
-            .single();
+            .eq('equipada', false);
         
         if (error) throw error;
         
-        if (!pieza) {
+        if (!piezas || piezas.length === 0) {
             this.mostrarNotificacion('❌ Pieza no encontrada o ya equipada', 'error');
             return;
         }
+        
+        const pieza = piezas[0];
         
         // 2. Verificar si ya está en venta
         const { data: yaEnVenta } = await this.supabase
             .from('mercado')
             .select('*')
             .eq('pieza_id', piezaId)
-            .eq('estado', 'disponible')
-            .single();
+            .eq('estado', 'disponible');
         
-        if (yaEnVenta) {
+        if (yaEnVenta && yaEnVenta.length > 0) {
             this.mostrarNotificacion('⚠️ Esta pieza ya está en venta', 'warning');
             return;
         }
