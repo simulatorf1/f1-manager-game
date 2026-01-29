@@ -303,7 +303,8 @@ class F1Manager {
                 tiempoTexto = tiempoMinutos + ' minutos';
             }
             
-            this.showNotification('✅ ' + nombreArea + ' (Pieza ' + numeroPiezaGlobal + '/50, Nivel ' + nivel + ') en fabricación - ' + tiempoTexto, 'success');            
+            const nivelMostrar = "Q" + nivel;
+            this.showNotification('✅ Actualización ' + nombreArea + ' (Mejora ' + numeroPiezaGlobal + ' ' + nivelMostrar + ') en fabricación - ' + tiempoTexto, 'success');            
 
             setTimeout(() => {
                 this.updateProductionMonitor();
@@ -1830,6 +1831,16 @@ class F1Manager {
                     const tiempoFormateado = this.formatTime(tiempoRestante);
                     const numeroPieza = fabricacion.numero_pieza || 1;
                     
+                    // === NUEVO: Cambiar textos de visualización ===
+                    // "Actualización Suelo" en lugar del nombre del área
+                    const nombreMostrar = "Actualización " + nombreArea;
+                    
+                    // "Mejora 4 Q1" en lugar de "Pieza 4/50 (Nivel 1)"
+                    // Q1, Q2, Q3... en lugar de nivel 1, nivel 2
+                    const nivelMostrar = "Q" + fabricacion.nivel;
+                    const mejoraTexto = "Mejora " + numeroPieza + " " + nivelMostrar;
+                    // === FIN NUEVO ===
+                    
                     html += '<div class="produccion-slot ' + (lista ? 'produccion-lista' : 'produccion-activa') + '" ';
                     html += 'onclick="recogerPiezaSiLista(\'' + fabricacion.id + '\', ' + lista + ', ' + i + ')" ';
                     html += 'title="' + nombreArea + ' - Evolución ' + numeroPieza + ' de nivel ' + fabricacion.nivel + '">';
@@ -1837,7 +1848,8 @@ class F1Manager {
                     html += (lista ? '✅' : '');
                     html += '</div>';
                     html += '<div class="produccion-info">';
-                    html += '<span class="produccion-nombre">' + nombreArea + '</span>';
+                    html += '<span class="produccion-nombre">' + nombreMostrar + '</span>';
+                    
                     // Calcular número global de pieza
                     const { data: piezasAreaTotal } = await this.supabase
                         .from('almacen_piezas')
@@ -1848,7 +1860,9 @@ class F1Manager {
                     const totalPiezasFabricadas = piezasAreaTotal?.length || 0;
                     const numeroPiezaGlobal = totalPiezasFabricadas + 1;
                     
-                    html += '<span class="produccion-pieza-num">Pieza ' + numeroPiezaGlobal + '/50 (Nivel ' + fabricacion.nivel + ')</span>';
+                    // Mostrar "Mejora 4 Q1" en lugar del texto anterior
+                    html += '<span class="produccion-pieza-num">' + mejoraTexto + '</span>';
+                    
                     if (lista) {
                         html += '<span class="produccion-lista-text">¡LISTA!</span>';
                     } else {
@@ -1916,7 +1930,12 @@ class F1Manager {
                 if (tiempoRestante <= 0) {
                     slot.classList.remove('produccion-activa');
                     slot.classList.add('produccion-lista');
-                    slot.innerHTML = '<div class="produccion-icon">✅</div><div class="produccion-info"><span class="produccion-nombre">' + this.getNombreArea(fabricacion.area) + '</span><span class="produccion-pieza-num">Evolución ' + (fabricacion.nivel || 1) + '</span><span class="produccion-lista-text">¡LISTA!</span></div>';
+                    // === ACTUALIZAR TEXTO A NUEVO FORMATO ===
+                    const nombreArea = this.getNombreArea(fabricacion.area);
+                    const nombreMostrar = "Actualización " + nombreArea;
+                    const nivelMostrar = "Q" + fabricacion.nivel;
+                    // === FIN ACTUALIZACIÓN ===
+                    slot.innerHTML = '<div class="produccion-icon">✅</div><div class="produccion-info"><span class="produccion-nombre">' + nombreMostrar + '</span><span class="produccion-pieza-num">' + nivelMostrar + '</span><span class="produccion-lista-text">¡LISTA!</span></div>';
                 } else {
                     const tiempoElement = slot.querySelector('.produccion-tiempo');
                     if (tiempoElement) {
