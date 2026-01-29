@@ -238,6 +238,15 @@ class F1Manager {
             if (errorPiezas) throw errorPiezas;
             
             const numeroPieza = (piezasExistentes?.length || 0) + 1;
+            // Obtener número global de pieza para esta área
+            const { data: todasPiezasArea } = await this.supabase
+                .from('almacen_piezas')
+                .select('id')
+                .eq('escuderia_id', this.escuderia.id)
+                .eq('area', areaId);
+            
+            const numeroPiezaGlobal = (todasPiezasArea?.length || 0) + 1;
+            const numeroPiezaEnNivel = ((numeroPiezaGlobal - 1) % 5) + 1;            
             console.log('📊 Fabricando pieza ' + numeroPieza + ' para ' + areaId + ' nivel ' + nivel);
             
             const tiempoMinutos = this.calcularTiempoProgresivo(numeroPiezaGlobal);
