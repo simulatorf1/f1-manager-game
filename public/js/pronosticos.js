@@ -479,7 +479,65 @@ class PronosticosManager {
                 height: 16px !important;
                 margin-top: 0.2rem !important;
             }
+            /* ESTILOS COMPACTOS PARA VISTAS DE PRONÓSTICO */
+            .stat-card-sm {
+                background: rgba(30, 30, 50, 0.7) !important;
+                border-radius: 8px !important;
+                border: 1px solid rgba(0, 210, 190, 0.2) !important;
+            }
             
+            .alert-sm {
+                padding: 8px 12px !important;
+                font-size: 0.85rem !important;
+                border-radius: 8px !important;
+            }
+            
+            .badge-sm {
+                padding: 3px 8px !important;
+                font-size: 0.7rem !important;
+                border-radius: 12px !important;
+            }
+            
+            .compacto .table-sm th,
+            .compacto .table-sm td {
+                padding: 6px 8px !important;
+                font-size: 0.85rem !important;
+            }
+            
+            .compacto .table-sm thead th {
+                font-size: 0.8rem !important;
+                padding: 8px !important;
+            }
+            
+            .pregunta-texto small {
+                font-size: 0.8rem !important;
+                color: #bbb !important;
+            }
+            
+            .respuesta-usuario {
+                font-size: 0.8rem !important;
+                color: #00d2be !important;
+            }
+            
+            /* Grid compacto */
+            .row.g-2 {
+                margin: 0 -4px !important;
+            }
+            
+            .row.g-2 > [class*="col-"] {
+                padding: 0 4px !important;
+            }
+            
+            /* Botones compactos */
+            .d-grid.gap-2 {
+                gap: 6px !important;
+            }
+            
+            .btn-sm {
+                padding: 6px 12px !important;
+                font-size: 0.85rem !important;
+                border-radius: 6px !important;
+            }            
             .compacto .form-check-label {
                 font-size: 0.9rem !important;
             }
@@ -670,17 +728,49 @@ class PronosticosManager {
     }
     
     mostrarInterfazPronostico(container) {
+        // Reemplaza esta parte en mostrarInterfazPronostico:
         if (this.pronosticoGuardado) {
             container.innerHTML = `
-                <div class="pronostico-container">
-                    <h2><i class="fas fa-flag-checkered"></i> Pronóstico para ${this.carreraActual.nombre}</h2>
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle"></i> 
-                        <strong>¡Ya has enviado tu pronóstico!</strong>
-                        <p>Puedes revisar tus respuestas y esperar los resultados.</p>
-                        <button class="btn btn-info mt-2" onclick="window.pronosticosManager.verPronosticoGuardado()">
-                            Ver mi pronóstico
-                        </button>
+                <div class="pronostico-container compacto">
+                    <div class="card">
+                        <div class="card-header bg-success text-white py-2">
+                            <h5 class="mb-0"><i class="fas fa-check-circle"></i> Pronóstico enviado</h5>
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="alert alert-success alert-sm mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-check me-2"></i>
+                                    <div>
+                                        <strong class="d-block">${this.carreraActual.nombre}</strong>
+                                        <small>Ya has enviado tu pronóstico</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <div class="stat-card-sm text-center p-2">
+                                        <small class="d-block text-muted">Estado</small>
+                                        <span class="badge bg-warning">Pendiente</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="stat-card-sm text-center p-2">
+                                        <small class="d-block text-muted">Resultados</small>
+                                        <span class="text-info">Próximamente</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-primary btn-sm" onclick="window.pronosticosManager.verPronosticoGuardado()">
+                                    <i class="fas fa-eye"></i> Ver mi pronóstico
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="window.tabManager.switchTab('principal')">
+                                    <i class="fas fa-home"></i> Volver al inicio
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1035,48 +1125,48 @@ class PronosticosManager {
             const esCorrecta = respuestaUsuario === respuestaCorrecta;
             const area = this.preguntaAreas[i] || 'general';
             
-            if (esCorrecta) {
-                aciertos++;
-                let puntosPregunta = 100;
+            // Texto corto de las opciones
+            let opcionUsuarioTexto = '';
+            let opcionCorrectaTexto = '';
+            
+            if (pregunta) {
+                if (respuestaUsuario === 'A') opcionUsuarioTexto = pregunta.opcion_a.substring(0, 30);
+                else if (respuestaUsuario === 'B') opcionUsuarioTexto = pregunta.opcion_b.substring(0, 30);
+                else if (respuestaUsuario === 'C') opcionUsuarioTexto = pregunta.opcion_c.substring(0, 30);
                 
-                let bonificacionTotal = this.calcularBonificacionArea(area, estrategas);
-                if (bonificacionTotal > 0) {
-                    puntosPregunta += puntosPregunta * (bonificacionTotal / 100);
-                    bonificacionesAplicadas.push({
-                        pregunta: i,
-                        area: area,
-                        bonificacion: bonificacionTotal
-                    });
-                }
-                
-                puntosPorAciertos += puntosPregunta;
+                if (respuestaCorrecta === 'A') opcionCorrectaTexto = pregunta.opcion_a.substring(0, 30);
+                else if (respuestaCorrecta === 'B') opcionCorrectaTexto = pregunta.opcion_b.substring(0, 30);
+                else if (respuestaCorrecta === 'C') opcionCorrectaTexto = pregunta.opcion_c.substring(0, 30);
             }
+            
+            if (opcionUsuarioTexto.length > 30) opcionUsuarioTexto += '...';
+            if (opcionCorrectaTexto.length > 30) opcionCorrectaTexto += '...';
             
             desgloseHTML += `
                 <tr class="${esCorrecta ? 'table-success' : 'table-danger'}">
-                    <td>${i}</td>
-                    <td>${pregunta?.texto_pregunta || 'Pregunta ' + i}</td>
-                    <td>
-                        <span class="badge ${respuestaUsuario === 'A' ? 'bg-primary' : 'bg-secondary'}">
-                            ${respuestaUsuario}: ${pregunta?.[`opcion_${respuestaUsuario?.toLowerCase()}`] || ''}
-                        </span>
+                    <td width="5%"><strong>${i}</strong></td>
+                    <td width="45%"><small>${pregunta?.texto_pregunta?.substring(0, 60) || 'Pregunta ' + i}${pregunta?.texto_pregunta?.length > 60 ? '...' : ''}</small></td>
+                    <td width="20%">
+                        <div>
+                            <span class="badge ${respuestaUsuario === 'A' ? 'bg-primary' : 'bg-secondary'} badge-sm">
+                                ${respuestaUsuario}
+                            </span>
+                            <small class="d-block">${opcionUsuarioTexto}</small>
+                        </div>
                     </td>
-                    <td>
-                        <span class="badge ${respuestaCorrecta === 'A' ? 'bg-primary' : 'bg-secondary'}">
-                            ${respuestaCorrecta}: ${pregunta?.[`opcion_${respuestaCorrecta?.toLowerCase()}`] || ''}
-                        </span>
+                    <td width="20%">
+                        <div>
+                            <span class="badge ${respuestaCorrecta === 'A' ? 'bg-primary' : 'bg-secondary'} badge-sm">
+                                ${respuestaCorrecta}
+                            </span>
+                            <small class="d-block">${opcionCorrectaTexto}</small>
+                        </div>
                     </td>
-                    <td>
+                    <td width="10%" class="text-center">
                         ${esCorrecta ? 
-                            `<span class="badge bg-success">
-                                <i class="fas fa-check"></i> Correcto
-                            </span>` : 
-                            `<span class="badge bg-danger">
-                                <i class="fas fa-times"></i> Incorrecto
-                            </span>`
-                        }
+                            '<span class="badge bg-success badge-sm"><i class="fas fa-check"></i></span>' : 
+                            '<span class="badge bg-danger badge-sm"><i class="fas fa-times"></i></span>'}
                     </td>
-                    <td>${area}</td>
                 </tr>
             `;
         }
@@ -1300,175 +1390,149 @@ class PronosticosManager {
                          document.querySelector('.tab-content.active') ||
                          document.querySelector('.pronosticos-container');
         
-        if (!container) {
-            console.error("No se encontró contenedor");
-            return;
-        }
+        if (!container) return;
         
         const respuestasUsuario = pronostico.respuestas;
         const estado = pronostico.estado;
-        const tieneResultados = Object.keys(respuestasCorrectas).length > 0;
+        const tieneResultados = estado === 'calificado' && Object.keys(respuestasCorrectas).length > 0;
         
-        let contenidoHTML = `
-            <div class="pronostico-container">
-                <div class="card">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <h4><i class="fas fa-eye"></i> Mi Pronóstico - ${this.carreraActual?.nombre || 'Carrera'}</h4>
-                        <span class="badge ${estado === 'pendiente' ? 'bg-warning' : 'bg-success'}">
-                            ${estado === 'pendiente' ? '⏳ Pendiente' : '✅ Calificado'}
-                        </span>
-                    </div>
-                    <div class="card-body">
-        `;
-        
-        if (estado === 'pendiente') {
-            contenidoHTML += `
-                <div class="alert alert-info">
-                    <i class="fas fa-clock"></i>
-                    <strong>Estado:</strong> Tu pronóstico está pendiente de calificación.
-                    <p class="mb-0">Los resultados estarán disponibles después de la carrera.</p>
-                </div>
-            `;
-        } else if (estado === 'calificado') {
-            contenidoHTML += `
-                <div class="alert alert-success">
-                    <i class="fas fa-chart-bar"></i>
-                    <strong>¡Resultados disponibles!</strong>
-                    <p class="mb-0">
-                        <strong>Aciertos:</strong> ${pronostico.aciertos || 0}/10<br>
-                        <strong>Puntuación total:</strong> ${pronostico.puntuacion_total || 0} puntos<br>
-                        <strong>Dinero ganado:</strong> €${pronostico.dinero_ganado || 0}
-                    </p>
-                    <button class="btn btn-success btn-sm mt-2" 
-                            onclick="window.pronosticosManager.verResultadosCompletos(${this.carreraActual?.id})">
-                        <i class="fas fa-chart-line"></i> Ver desglose completo
-                    </button>
-                </div>
-            `;
-        }
-        
-        // Lista de preguntas con respuestas
-        contenidoHTML += `
-            <h5 class="mt-4"><i class="fas fa-list-ol"></i> Tus respuestas:</h5>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Pregunta</th>
-                            <th>Tu respuesta</th>
-                            ${tieneResultados ? '<th>Respuesta correcta</th><th>Resultado</th>' : ''}
-                            <th>Área</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-        
+        let tablaHTML = '';
         for (let i = 1; i <= 10; i++) {
             const pregunta = preguntas.find(p => p.numero_pregunta === i);
             const respuestaUsuario = respuestasUsuario[`p${i}`];
             const respuestaCorrecta = respuestasCorrectas[`p${i}`];
             const area = this.preguntaAreas[i] || 'general';
             
-            let opcionTexto = '';
-            if (pregunta) {
-                if (respuestaUsuario === 'A') opcionTexto = pregunta.opcion_a;
-                else if (respuestaUsuario === 'B') opcionTexto = pregunta.opcion_b;
-                else if (respuestaUsuario === 'C') opcionTexto = pregunta.opcion_c;
-            }
-            
-            let filaHTML = `
-                <tr>
-                    <td>${i}</td>
-                    <td>${pregunta?.texto_pregunta || 'Pregunta ' + i}</td>
-                    <td>
-                        <span class="badge bg-primary">
-                            ${respuestaUsuario || 'No respondida'}: ${opcionTexto}
-                        </span>
-                    </td>
-            `;
-            
+            let estadoBadge = '';
             if (tieneResultados) {
                 const esCorrecta = respuestaUsuario === respuestaCorrecta;
-                let opcionCorrectaTexto = '';
-                if (pregunta && respuestaCorrecta) {
-                    if (respuestaCorrecta === 'A') opcionCorrectaTexto = pregunta.opcion_a;
-                    else if (respuestaCorrecta === 'B') opcionCorrectaTexto = pregunta.opcion_b;
-                    else if (respuestaCorrecta === 'C') opcionCorrectaTexto = pregunta.opcion_c;
-                }
-                
-                filaHTML += `
-                    <td>
-                        ${respuestaCorrecta ? 
-                            `<span class="badge ${respuestaCorrecta === 'A' ? 'bg-info' : 'bg-secondary'}">
-                                ${respuestaCorrecta}: ${opcionCorrectaTexto}
-                            </span>` : 
-                            '<span class="badge bg-secondary">No disponible</span>'
-                        }
-                    </td>
-                    <td>
-                        ${esCorrecta ? 
-                            '<span class="badge bg-success"><i class="fas fa-check"></i> Acierto</span>' : 
-                            '<span class="badge bg-danger"><i class="fas fa-times"></i> Fallo</span>'
-                        }
-                    </td>
-                `;
+                estadoBadge = esCorrecta ? 
+                    '<span class="badge bg-success badge-sm"><i class="fas fa-check"></i></span>' : 
+                    '<span class="badge bg-danger badge-sm"><i class="fas fa-times"></i></span>';
             }
             
-            filaHTML += `
-                    <td><span class="badge bg-secondary">${area}</span></td>
+            // Opción seleccionada por el usuario
+            let opcionUsuario = '';
+            if (respuestaUsuario) {
+                if (respuestaUsuario === 'A') opcionUsuario = pregunta?.opcion_a?.substring(0, 40) || 'A';
+                else if (respuestaUsuario === 'B') opcionUsuario = pregunta?.opcion_b?.substring(0, 40) || 'B';
+                else if (respuestaUsuario === 'C') opcionUsuario = pregunta?.opcion_c?.substring(0, 40) || 'C';
+                if (opcionUsuario.length > 40) opcionUsuario += '...';
+            }
+            
+            tablaHTML += `
+                <tr>
+                    <td width="5%"><span class="badge bg-dark">${i}</span></td>
+                    <td width="60%">
+                        <div class="pregunta-texto">
+                            <small>${pregunta?.texto_pregunta?.substring(0, 80) || 'Pregunta ' + i}${pregunta?.texto_pregunta?.length > 80 ? '...' : ''}</small>
+                            <div class="mt-1">
+                                <span class="badge bg-secondary badge-sm">${area}</span>
+                                <span class="respuesta-usuario">
+                                    <strong class="text-primary">${respuestaUsuario || '?'}</strong>: ${opcionUsuario}
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                    <td width="10%">
+                        ${estadoBadge}
+                    </td>
+                    <td width="15%">
+                        ${tieneResultados ? 
+                            `<span class="badge ${respuestaCorrecta === 'A' ? 'bg-info' : 'bg-dark'} badge-sm">
+                                ${respuestaCorrecta}
+                            </span>` : 
+                            '<span class="badge bg-secondary badge-sm">-</span>'}
+                    </td>
+                    <td width="10%">
+                        <span class="badge bg-secondary badge-sm">${area.substring(0, 3)}</span>
+                    </td>
                 </tr>
             `;
-            
-            contenidoHTML += filaHTML;
         }
         
-        contenidoHTML += `
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Información adicional -->
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6><i class="fas fa-car"></i> Snapshot del coche</h6>
-                            <p class="mb-1"><strong>Puntos registrados:</strong> ${pronostico.puntos_coche_snapshot}</p>
-                            <small class="text-muted">Estos puntos se sumarán a tu puntuación final</small>
+        container.innerHTML = `
+            <div class="pronostico-container compacto">
+                <div class="card">
+                    <div class="card-header bg-dark text-white py-2 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-eye"></i> Mi Pronóstico</h5>
+                        <span class="badge ${estado === 'pendiente' ? 'bg-warning' : 'bg-success'}">
+                            ${estado === 'pendiente' ? '⏳ Pendiente' : '✅ Calificado'}
+                        </span>
+                    </div>
+                    <div class="card-body py-3">
+                        ${estado === 'pendiente' ? `
+                            <div class="alert alert-info alert-sm mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-clock me-2"></i>
+                                    <div>
+                                        <strong>Pendiente de calificación</strong>
+                                        <small class="d-block">Los resultados estarán disponibles después de la carrera</small>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="alert alert-success alert-sm mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-chart-bar me-2"></i>
+                                    <div>
+                                        <strong>Resultados disponibles</strong>
+                                        <small class="d-block">
+                                            Aciertos: ${pronostico.aciertos || 0}/10 | 
+                                            Puntos: ${pronostico.puntuacion_total || 0} |
+                                            Dinero: €${pronostico.dinero_ganado || 0}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        `}
+                        
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-3">
+                                <thead class="bg-secondary">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Pregunta y tu respuesta</th>
+                                        <th>Resultado</th>
+                                        <th>Correcta</th>
+                                        <th>Área</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tablaHTML}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="stat-card-sm text-center p-2">
+                                    <small class="d-block text-muted">Puntos coche</small>
+                                    <span class="stat-value-mini">${pronostico.puntos_coche_snapshot || 0}</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-card-sm text-center p-2">
+                                    <small class="d-block text-muted">Estrategas</small>
+                                    <span class="stat-value-mini">${Array.isArray(pronostico.estrategas_snapshot) ? pronostico.estrategas_snapshot.length : 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            ${estado === 'calificado' ? `
+                                <button class="btn btn-success btn-sm" onclick="window.pronosticosManager.verResultadosCompletos(${this.carreraActual?.id})">
+                                    <i class="fas fa-chart-line"></i> Ver cálculo detallado
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-outline-secondary btn-sm" onclick="window.pronosticosManager.cargarPantallaPronostico()">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </button>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6><i class="fas fa-users"></i> Estrategas registrados</h6>
-                            <p class="mb-1"><strong>Cantidad:</strong> ${Array.isArray(pronostico.estrategas_snapshot) ? pronostico.estrategas_snapshot.length : 0}</p>
-                            <small class="text-muted">Sus bonificaciones se aplicarán al cálculo final</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mt-4">
-                <button class="btn btn-outline-secondary" onclick="window.pronosticosManager.cargarPantallaPronostico()">
-                    <i class="fas fa-arrow-left"></i> Volver
-                </button>
-                ${estado === 'calificado' ? `
-                    <button class="btn btn-success" onclick="window.pronosticosManager.verResultadosCompletos(${this.carreraActual?.id})">
-                        <i class="fas fa-chart-line"></i> Ver cálculo detallado
-                    </button>
-                ` : ''}
             </div>
         `;
-        
-        contenidoHTML += `
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        container.innerHTML = contenidoHTML;
     }
 
     async verResultadosCompletos(carreraId) {
