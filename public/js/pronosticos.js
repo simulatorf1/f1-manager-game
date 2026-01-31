@@ -938,8 +938,8 @@ class PronosticosManager {
             const { data, error } = await this.supabase
                 .from('pronosticos_usuario')
                 .insert([{
-                    escuderia_id: this.escuderiaId,  // ← Usar this.escuderiaId
-                    usuario_id: user.id,  // ← También guardar user_id por si acaso
+                    escuderia_id: this.escuderiaId,
+                    usuario_id: user.id,
                     carrera_id: this.carreraActual.id,
                     respuestas: respuestas,
                     puntos_coche_snapshot: this.usuarioPuntos,
@@ -950,22 +950,36 @@ class PronosticosManager {
             
             if (error) throw error;
             
-            this.mostrarConfirmacion(`
-                <h4><i class="fas fa-check-circle text-success"></i> ¡Pronóstico enviado!</h4>
-                <p>Tu pronóstico para <strong>${this.carreraActual.nombre}</strong> ha sido registrado correctamente.</p>
-                <p>Recibirás una notificación cuando los resultados estén disponibles.</p>
-                <div class="mt-3">
-                    <button class="btn btn-primary" onclick="window.pronosticosManager.cargarPantallaPronostico()">
-                        Aceptar
-                    </button>
+            // Mostrar notificación temporal
+            this.mostrarNotificacionTemporal(`
+                <div class="notificacion-exito">
+                    <i class="fas fa-check-circle text-success" style="font-size: 24px;"></i>
+                    <div>
+                        <h5 style="margin: 0 0 5px 0; color: #00d2be;">¡Pronóstico enviado!</h5>
+                        <p style="margin: 0; font-size: 14px;">Tu pronóstico para <strong>${this.carreraActual.nombre}</strong> ha sido registrado correctamente.</p>
+                        <p style="margin: 5px 0 0 0; font-size: 13px;">Recibirás una notificación cuando los resultados estén disponibles.</p>
+                    </div>
                 </div>
             `);
             
             this.pronosticoGuardado = true;
             
+            // Esperar 2 segundos y recargar la pantalla para mostrar "ya enviado"
+            setTimeout(() => {
+                this.cargarPantallaPronostico();
+            }, 2000);
+            
         } catch (error) {
             console.error("Error guardando pronóstico:", error);
-            this.mostrarError("Error al guardar el pronóstico. Inténtalo de nuevo.");
+            this.mostrarNotificacionTemporal(`
+                <div class="notificacion-error">
+                    <i class="fas fa-exclamation-circle text-danger" style="font-size: 24px;"></i>
+                    <div>
+                        <h5 style="margin: 0 0 5px 0; color: #e10600;">Error</h5>
+                        <p style="margin: 0; font-size: 14px;">Error al guardar el pronóstico. Inténtalo de nuevo.</p>
+                    </div>
+                </div>
+            `);
         }
     }
     
@@ -1304,6 +1318,84 @@ class PronosticosManager {
             }
         });
     }
+
+    mostrarNotificacionTemporal(mensajeHTML, duracion = 4000) {
+        // Crear contenedor de notificación
+        const notificacion = document.createElement('div');
+        notificacion.className = 'notificacion-temporal';
+        notificacion.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(20, 20, 40, 0.95);
+            border: 2px solid #00d2be;
+            border-radius: 8px;
+            padding: 15px;
+            color: white;
+            z-index: 10000;
+            min-width: 300px;
+            box-shadow: 0 4px 15px rgba(0, 210, 190, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+        `;
+        
+        notificacion.innerHTML = mensajeHTML;
+        
+        // Añadir al body
+        document.body.appendChild(notificacion);
+        
+        // Eliminar después del tiempo especificado
+        setTimeout(() => {
+            notificacion.style.animation = 'slideOut 0.3s ease-in';
+            setTimeout(() => {
+                if (notificacion.parentNode) {
+                    document.body.removeChild(notificacion);
+                }
+            }, 300);
+        }, duracion);
+        
+        // Añadir estilos de animación si no existen
+        if (!document.getElementById('estilos-notificaciones')) {
+            const estilos = document.createElement('style');
+            estilos.id = 'estilos-notificaciones';
+            estilos.textContent = `
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes slideOut {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                }
+                .notificacion-exito {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                .notificacion-error {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+            `;
+            document.head.appendChild(estilos);
+        }
+    }    
+    
 
     mostrarVistaPronosticoGuardado(pronostico, preguntas, respuestasCorrectas) {
         const container = document.getElementById('main-content') || 
