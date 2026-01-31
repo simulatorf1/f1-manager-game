@@ -1408,6 +1408,8 @@ class PronosticosManager {
         const estado = pronostico.estado;
         const tieneResultados = estado === 'calificado' && Object.keys(respuestasCorrectas).length > 0;
         
+        // En mostrarVistaPronosticoGuardado, cambia esta parte de la tabla:
+        
         let tablaHTML = '';
         for (let i = 1; i <= 10; i++) {
             const pregunta = preguntas.find(p => p.numero_pregunta === i);
@@ -1423,41 +1425,38 @@ class PronosticosManager {
                     '<span class="badge bg-danger badge-sm"><i class="fas fa-times"></i></span>';
             }
             
-            // Opción seleccionada por el usuario
-            let opcionUsuario = '';
-            if (respuestaUsuario) {
-                if (respuestaUsuario === 'A') opcionUsuario = pregunta?.opcion_a?.substring(0, 40) || 'A';
-                else if (respuestaUsuario === 'B') opcionUsuario = pregunta?.opcion_b?.substring(0, 40) || 'B';
-                else if (respuestaUsuario === 'C') opcionUsuario = pregunta?.opcion_c?.substring(0, 40) || 'C';
-                if (opcionUsuario.length > 40) opcionUsuario += '...';
-            }
+            // Texto corto de la pregunta
+            let textoPregunta = pregunta?.texto_pregunta || 'Pregunta ' + i;
+            if (textoPregunta.length > 60) textoPregunta = textoPregunta.substring(0, 57) + '...';
+            
+            // Opción seleccionada
+            let opcionTexto = '';
+            if (respuestaUsuario === 'A') opcionTexto = 'A';
+            else if (respuestaUsuario === 'B') opcionTexto = 'B';
+            else if (respuestaUsuario === 'C') opcionTexto = 'C';
             
             tablaHTML += `
                 <tr>
-                    <td width="5%"><span class="badge bg-dark">${i}</span></td>
-                    <td width="60%">
-                        <div class="pregunta-texto">
-                            <small>${pregunta?.texto_pregunta?.substring(0, 80) || 'Pregunta ' + i}${pregunta?.texto_pregunta?.length > 80 ? '...' : ''}</small>
-                            <div class="mt-1">
-                                <span class="badge bg-secondary badge-sm">${area}</span>
-                                <span class="respuesta-usuario">
-                                    <strong class="text-primary">${respuestaUsuario || '?'}</strong>: ${opcionUsuario}
-                                </span>
-                            </div>
+                    <td width="5%"><strong>${i}</strong></td>
+                    <td width="65%">
+                        <div style="font-size: 14px; line-height: 1.3;">${textoPregunta}</div>
+                        <div style="font-size: 13px; color: #00d2be; margin-top: 3px;">
+                            <strong>Tu respuesta:</strong> ${opcionTexto}
+                            ${tieneResultados ? 
+                                ` | <span style="color: ${respuestaUsuario === respuestaCorrecta ? '#00d2be' : '#e10600'}">
+                                    ${respuestaUsuario === respuestaCorrecta ? '✓ Correcta' : '✗ Incorrecta'}
+                                </span>` : ''}
                         </div>
                     </td>
-                    <td width="10%">
+                    <td width="15%" class="text-center">
                         ${estadoBadge}
-                    </td>
-                    <td width="15%">
                         ${tieneResultados ? 
-                            `<span class="badge ${respuestaCorrecta === 'A' ? 'bg-info' : 'bg-dark'} badge-sm">
-                                ${respuestaCorrecta}
-                            </span>` : 
-                            '<span class="badge bg-secondary badge-sm">-</span>'}
+                            `<div style="font-size: 13px; margin-top: 3px;">
+                                <span class="badge bg-secondary">${respuestaCorrecta}</span>
+                            </div>` : ''}
                     </td>
-                    <td width="10%">
-                        <span class="badge bg-secondary badge-sm">${area.substring(0, 3)}</span>
+                    <td width="15%" class="text-center">
+                        <span class="badge bg-dark">${area.substring(0, 3).toUpperCase()}</span>
                     </td>
                 </tr>
             `;
@@ -1503,11 +1502,10 @@ class PronosticosManager {
                             <table class="table table-sm table-hover mb-3">
                                 <thead class="bg-secondary">
                                     <tr>
-                                        <th>#</th>
-                                        <th>Pregunta y tu respuesta</th>
-                                        <th>Resultado</th>
-                                        <th>Correcta</th>
-                                        <th>Área</th>
+                                        <th width="5%">#</th>
+                                        <th width="65%">Pregunta</th>
+                                        <th width="15%">Resultado</th>
+                                        <th width="15%">Área</th>
                                     </tr>
                                 </thead>
                                 <tbody>
