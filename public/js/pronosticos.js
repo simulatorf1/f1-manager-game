@@ -17,57 +17,58 @@ class PronosticosManager {
         this.usuarioAceptoCondiciones = false; // <- Añade esto
         this.injectarEstilos();
     }
+
     injectarEstilos() {
         if (document.getElementById('estilos-pronosticos-f1')) return;
         
         const estilos = `
             /* ========== ESTILOS F1 SIMPLIFICADOS ========== */
             
-            /* Contenedor principal - SIMPLE Y PEQUEÑO */
+            /* Contenedor principal - COMPACTO PERO LEGIBLE */
             .pronostico-container {
-                padding: 8px;
+                padding: 12px;
                 background: #0a0a0a;
                 color: white;
                 font-family: 'Courier New', monospace;
-                font-size: 12px;
-                line-height: 1.2;
+                font-size: 14px;
+                line-height: 1.3;
             }
             
-            /* Tarjetas - MÍNIMAS */
+            /* Tarjetas - COMPACTAS */
             .card {
                 background: #1a1a1a;
-                border-radius: 4px;
+                border-radius: 6px;
                 border: 1px solid #00d2be;
-                margin-bottom: 8px;
-                font-size: 11px;
+                margin-bottom: 10px;
+                font-size: 13px;
             }
             
             /* Cabeceras de tarjetas */
             .card-header {
                 background: #0066cc;
-                padding: 4px 8px;
+                padding: 8px 12px;
                 color: white;
                 border-bottom: 1px solid #00d2be;
-                font-size: 11px;
+                font-size: 13px;
             }
             
             .card-header h4 {
                 margin: 0;
-                font-size: 12px;
+                font-size: 15px;
                 font-weight: bold;
             }
             
             .card-body {
-                padding: 8px;
-                font-size: 11px;
+                padding: 12px;
+                font-size: 13px;
             }
             
-            /* Botones - PEQUEÑOS */
+            /* Botones */
             .btn {
-                border-radius: 3px;
-                padding: 3px 6px;
-                font-size: 10px;
-                margin: 2px;
+                border-radius: 4px;
+                padding: 6px 10px;
+                font-size: 12px;
+                margin: 3px;
                 border: 1px solid;
                 cursor: pointer;
             }
@@ -93,24 +94,24 @@ class PronosticosManager {
             /* Preguntas */
             .pregunta-card {
                 background: #222;
-                border-radius: 3px;
-                padding: 6px;
-                margin-bottom: 6px;
-                border-left: 2px solid #00d2be;
-                font-size: 11px;
+                border-radius: 5px;
+                padding: 10px;
+                margin-bottom: 8px;
+                border-left: 3px solid #00d2be;
+                font-size: 13px;
             }
             
             .pregunta-card h5 {
                 color: #00d2be;
-                margin-bottom: 4px;
-                font-size: 11px;
+                margin-bottom: 6px;
+                font-size: 14px;
             }
             
             /* Opciones de respuesta */
             .opciones {
                 display: grid;
-                gap: 3px;
-                margin-top: 4px;
+                gap: 5px;
+                margin-top: 8px;
             }
             
             .opcion {
@@ -123,13 +124,14 @@ class PronosticosManager {
             
             .opcion label {
                 display: block;
-                padding: 4px 6px;
+                padding: 8px 10px;
                 background: #2a2a2a;
                 border: 1px solid #444;
-                border-radius: 2px;
+                border-radius: 4px;
                 cursor: pointer;
                 color: #ddd;
-                font-size: 10px;
+                font-size: 12px;
+                line-height: 1.3;
             }
             
             .opcion input[type="radio"]:checked + label {
@@ -140,15 +142,15 @@ class PronosticosManager {
             
             .opcion label strong {
                 color: #00d2be;
-                font-size: 10px;
-                min-width: 15px;
+                font-size: 12px;
+                min-width: 20px;
             }
             
             /* Badges */
             .badge {
-                padding: 1px 4px;
-                border-radius: 3px;
-                font-size: 9px;
+                padding: 3px 8px;
+                border-radius: 4px;
+                font-size: 11px;
                 font-weight: bold;
             }
             
@@ -176,9 +178,9 @@ class PronosticosManager {
             /* Tablas */
             .table {
                 background: #1a1a1a;
-                border-radius: 3px;
-                margin: 4px 0;
-                font-size: 10px;
+                border-radius: 5px;
+                margin: 8px 0;
+                font-size: 12px;
                 width: 100%;
             }
             
@@ -187,16 +189,17 @@ class PronosticosManager {
             }
             
             .table th {
-                padding: 3px;
+                padding: 8px;
                 color: white;
                 font-weight: bold;
-                font-size: 10px;
+                font-size: 12px;
             }
             
             .table td {
-                padding: 3px;
+                padding: 8px;
                 color: #ddd;
-                font-size: 10px;
+                font-size: 12px;
+                line-height: 1.3;
             }
             
             .table-success {
@@ -209,11 +212,12 @@ class PronosticosManager {
             
             /* Alertas */
             .alert {
-                padding: 4px 6px;
-                margin: 4px 0;
-                border-radius: 3px;
-                font-size: 10px;
+                padding: 8px 10px;
+                margin: 6px 0;
+                border-radius: 4px;
+                font-size: 12px;
                 border: 1px solid;
+                line-height: 1.3;
             }
             
             .alert-success {
@@ -243,170 +247,228 @@ class PronosticosManager {
             /* Tarjetas de estadísticas */
             .stat-card {
                 background: #222;
-                border-radius: 3px;
-                padding: 6px;
+                border-radius: 5px;
+                padding: 10px;
                 text-align: center;
                 border: 1px solid #444;
-                font-size: 10px;
+                font-size: 12px;
             }
             
             .stat-value {
-                font-size: 14px;
+                font-size: 18px;
                 font-weight: bold;
                 color: #00d2be;
-                margin: 2px 0;
+                margin: 5px 0;
             }
             
             /* Estrategas */
             .estratega-card {
                 background: #222;
-                border-radius: 2px;
-                padding: 4px;
-                margin-bottom: 3px;
-                border-left: 2px solid #00d2be;
-                font-size: 10px;
+                border-radius: 4px;
+                padding: 8px;
+                margin-bottom: 5px;
+                border-left: 3px solid #00d2be;
+                font-size: 12px;
             }
             
             /* Grids */
             .row {
-                margin: 0 -2px;
+                margin: 0 -5px;
             }
             
             .col-md-3, .col-md-4, .col-md-6 {
-                padding: 0 2px;
+                padding: 0 5px;
             }
             
             /* Responsive */
             @media (max-width: 768px) {
                 .pronostico-container {
-                    padding: 4px;
+                    padding: 8px;
+                    font-size: 13px;
                 }
                 
                 .card-header {
-                    padding: 3px 6px;
+                    padding: 6px 10px;
+                    font-size: 12px;
+                }
+                
+                .card-header h4 {
+                    font-size: 14px;
                 }
                 
                 .card-body {
-                    padding: 6px;
+                    padding: 10px;
+                    font-size: 12px;
                 }
                 
                 .btn {
-                    padding: 2px 4px;
-                    font-size: 9px;
+                    padding: 5px 8px;
+                    font-size: 11px;
+                }
+                
+                .pregunta-card {
+                    padding: 8px;
+                    font-size: 12px;
+                }
+                
+                .pregunta-card h5 {
+                    font-size: 13px;
                 }
             }
             
             /* ESTILOS COMPACTOS ESPECIALES */
             .compacto .card {
-                margin-bottom: 4px;
+                margin-bottom: 8px;
             }
             
             .compacto .card-header {
-                padding: 3px 6px;
-                font-size: 10px;
+                padding: 6px 10px;
+                font-size: 12px;
             }
             
             .compacto .card-header h4 {
-                font-size: 11px;
+                font-size: 14px;
             }
             
             .compacto .card-body {
-                padding: 6px;
-                font-size: 10px;
+                padding: 10px;
+                font-size: 12px;
             }
             
             .compacto .pregunta-card {
-                padding: 4px;
-                margin-bottom: 4px;
-                font-size: 10px;
+                padding: 8px;
+                margin-bottom: 6px;
+                font-size: 12px;
             }
             
             .compacto .pregunta-card h5 {
-                font-size: 10px;
-                margin-bottom: 2px;
+                font-size: 13px;
+                margin-bottom: 4px;
             }
             
             .compacto .opcion label {
-                padding: 3px 4px;
-                font-size: 9px;
+                padding: 6px 8px;
+                font-size: 11px;
             }
             
             .compacto .alert {
-                padding: 3px 4px;
-                margin: 3px 0;
-                font-size: 9px;
+                padding: 6px 8px;
+                margin: 5px 0;
+                font-size: 11px;
             }
             
             .compacto .table {
-                font-size: 9px;
+                font-size: 11px;
             }
             
             .compacto .table th,
             .compacto .table td {
-                padding: 2px;
+                padding: 6px;
             }
             
             .compacto .badge {
-                padding: 1px 3px;
-                font-size: 8px;
+                padding: 3px 6px;
+                font-size: 10px;
             }
             
             .compacto .stat-value-mini {
-                font-size: 12px;
+                font-size: 16px;
                 color: #00d2be;
             }
             
             .compacto .btn-sm {
-                padding: 2px 4px;
-                font-size: 9px;
+                padding: 5px 8px;
+                font-size: 11px;
             }
             
             /* Tablas súper compactas */
             .table-sm th,
             .table-sm td {
-                padding: 2px;
-                font-size: 9px;
+                padding: 6px;
+                font-size: 11px;
             }
             
-            /* Espaciados mínimos */
-            .mb-1 { margin-bottom: 0.1rem !important; }
-            .mb-2 { margin-bottom: 0.2rem !important; }
-            .mb-3 { margin-bottom: 0.3rem !important; }
-            .mt-1 { margin-top: 0.1rem !important; }
-            .mt-2 { margin-top: 0.2rem !important; }
-            .mt-3 { margin-top: 0.3rem !important; }
-            .pt-1 { padding-top: 0.1rem !important; }
-            .pt-2 { padding-top: 0.2rem !important; }
-            .pt-3 { padding-top: 0.3rem !important; }
+            /* Espaciados */
+            .mb-1 { margin-bottom: 0.25rem !important; }
+            .mb-2 { margin-bottom: 0.5rem !important; }
+            .mb-3 { margin-bottom: 0.75rem !important; }
+            .mt-1 { margin-top: 0.25rem !important; }
+            .mt-2 { margin-top: 0.5rem !important; }
+            .mt-3 { margin-top: 0.75rem !important; }
+            .pt-1 { padding-top: 0.25rem !important; }
+            .pt-2 { padding-top: 0.5rem !important; }
+            .pt-3 { padding-top: 0.75rem !important; }
             
             /* Grid compacto */
             .row.g-2 {
-                margin: 0 -1px !important;
+                margin: 0 -3px !important;
             }
             
             .row.g-2 > [class*="col-"] {
-                padding: 0 1px !important;
+                padding: 0 3px !important;
             }
             
             /* Contenedor de estrategas mini */
             .estratega-mini {
                 background: #222;
-                border-radius: 2px;
-                padding: 3px;
-                margin-bottom: 2px;
-                border-left: 1px solid #00d2be;
-                font-size: 9px;
+                border-radius: 4px;
+                padding: 6px;
+                margin-bottom: 4px;
+                border-left: 2px solid #00d2be;
+                font-size: 11px;
             }
             
             /* Texto de preguntas */
             .pregunta-texto small {
-                font-size: 9px;
+                font-size: 11px;
                 color: #bbb;
+                line-height: 1.3;
             }
             
             .respuesta-usuario {
-                font-size: 9px;
+                font-size: 11px;
                 color: #00d2be;
+                line-height: 1.3;
+            }
+            
+            .stat-value-mini {
+                font-size: 16px;
+                font-weight: bold;
+                color: #00d2be;
+                margin: 3px 0;
+            }
+            
+            .fecha-actual {
+                font-size: 14px;
+                font-weight: 600;
+                color: #00d2be;
+            }
+            
+            /* Formularios */
+            .form-check-input {
+                width: 16px;
+                height: 16px;
+                margin-top: 0.2rem;
+            }
+            
+            .form-check-label {
+                font-size: 12px;
+                margin-left: 5px;
+            }
+            
+            /* Scrollbar */
+            .pronostico-container::-webkit-scrollbar {
+                width: 6px;
+            }
+            
+            .pronostico-container::-webkit-scrollbar-track {
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 3px;
+            }
+            
+            .pronostico-container::-webkit-scrollbar-thumb {
+                background: #00d2be;
+                border-radius: 3px;
             }
         `;
         
@@ -414,7 +476,7 @@ class PronosticosManager {
         style.id = 'estilos-pronosticos-f1';
         style.textContent = estilos;
         document.head.appendChild(style);
-    }
+    }    
 
 
     
