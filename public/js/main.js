@@ -2554,8 +2554,10 @@ window.addEventListener('auth-completado', async (evento) => {
     if (user && escuderia) {
         console.log('🎮 Creando F1Manager con datos de autenticación...');
         // MOSTRAR PANTALLA DE CARGA INMEDIATAMENTE
-        document.getElementById('f1-loading-screen')?.style?.display = 'flex';
-        
+        const loadingScreen = document.getElementById('f1-loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'flex';
+        }        
 
         
         
