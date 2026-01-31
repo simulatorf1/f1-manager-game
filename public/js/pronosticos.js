@@ -746,7 +746,7 @@ class PronosticosManager {
                         <h5 class="mb-0"><i class="fas fa-flag-checkered"></i> Pronóstico - ${this.carreraActual.nombre}</h5>
                     </div>
                     <div class="card-body py-3">
-                        <h6 class="text-warning mb-3"><i class="fas fa-info-circle"></i> Datos que se guardarán:</h6>
+                        <h5 class="text-warning mb-3"><i class="fas fa-info-circle"></i> Datos que se guardarán:</h5>
                         
                         <div class="table-responsive mb-3">
                             <table class="table table-sm table-dark">
@@ -796,20 +796,18 @@ class PronosticosManager {
                             </small>
                         </div>
                         
-                        <div class="condiciones-acepto mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="aceptoCondiciones">
-                                <label class="form-check-label small" for="aceptoCondiciones">
-                                    Entiendo que estos datos se guardarán y se tendrán en cuenta para el cálculo final
-                                </label>
+                        <div class="mt-3">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> 
+                                Estos datos se guardarán y se tendrán en cuenta para el cálculo final
                             </div>
                         </div>
                         
                         <div class="d-flex gap-2">
-                            <button class="btn btn-success btn-sm flex-grow-1" onclick="window.pronosticosManager.iniciarPronostico()">
+                            <button class="btn btn-success flex-grow-1" onclick="window.pronosticosManager.iniciarPronostico()">
                                 <i class="fas fa-play"></i> Empezar pronóstico
                             </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.tabManager.switchTab('principal')">
+                            <button type="button" class="btn btn-outline-secondary" onclick="window.tabManager.switchTab('principal')">
                                 <i class="fas fa-times"></i> Cancelar
                             </button>
                         </div>
@@ -896,12 +894,6 @@ class PronosticosManager {
     }
     
     iniciarPronostico() {
-        const aceptoCheckbox = document.getElementById('aceptoCondiciones');
-        if (!aceptoCheckbox || !aceptoCheckbox.checked) {
-            this.mostrarError("Debes aceptar las condiciones primero");
-            return;
-        }
-        
         this.usuarioAceptoCondiciones = true;
         
         const container = document.querySelector('.pronosticos-container-f1')?.parentElement || 
