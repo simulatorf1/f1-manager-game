@@ -837,7 +837,9 @@ class F1Manager {
                         <i class="fas fa-flag-checkered"></i>
                         <h2>PRÓXIMA CARRERA</h2>
                     </div>
-                    <button class="btn-calendario-mini" id="btn-calendario" title="Ver calendario completo">
+                    <button class="btn-calendario-mini" id="btn-calendario" 
+                            onclick="mostrarCalendarioSimple()"
+                            title="Ver calendario completo">
                         <i class="fas fa-calendar-alt"></i>
                         CALENDARIO
                     </button>
@@ -2839,6 +2841,167 @@ setTimeout(() => {
         
         return resultado;
     };
+    // ========================
+    // CALENDARIO SIMPLE
+    // ========================
+    window.mostrarCalendarioSimple = async function() {
+        try {
+            const { data: carreras, error } = await supabase
+                .from('calendario_gp')
+                .select('*')
+                .order('fecha_inicio', { ascending: true });
+            
+            if (error) throw error;
+            
+            // Crear modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.9);
+                z-index: 9999;
+                padding: 20px;
+                overflow: auto;
+            `;
+            
+            // Contenedor
+            const container = document.createElement('div');
+            container.style.cssText = `
+                max-width: 800px;
+                margin: 40px auto;
+                background: #1a1a2e;
+                border-radius: 8px;
+                padding: 20px;
+                border: 2px solid #00d2be;
+            `;
+            
+            // Header
+            const header = document.createElement('div');
+            header.style.cssText = `
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #00d2be;
+            `;
+            
+            const titulo = document.createElement('h3');
+            titulo.textContent = 'CALENDARIO F1 2024';
+            titulo.style.cssText = 'color: #00d2be; margin: 0;';
+            
+            const btnCerrar = document.createElement('button');
+            btnCerrar.textContent = 'X';
+            btnCerrar.style.cssText = `
+                background: #e10600;
+                color: white;
+                border: none;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                cursor: pointer;
+                font-weight: bold;
+            `;
+            btnCerrar.onclick = () => modal.remove();
+            
+            header.appendChild(titulo);
+            header.appendChild(btnCerrar);
+            
+            // Tabla
+            const tabla = document.createElement('table');
+            tabla.style.cssText = `
+                width: 100%;
+                border-collapse: collapse;
+                color: white;
+            `;
+            
+            // Encabezados
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr style="background: #00d2be; color: black;">
+                    <th style="padding: 10px; text-align: left;">#</th>
+                    <th style="padding: 10px; text-align: left;">CARRERA</th>
+                    <th style="padding: 10px; text-align: left;">FECHA</th>
+                    <th style="padding: 10px; text-align: left;">PAÍS</th>
+                    <th style="padding: 10px; text-align: left;">APUESTAS</th>
+                </tr>
+            `;
+            
+            // Cuerpo
+            const tbody = document.createElement('tbody');
+            
+            if (carreras && carreras.length > 0) {
+                carreras.forEach((carrera, index) => {
+                    const fecha = new Date(carrera.fecha_inicio);
+                    const fechaFormateada = fecha.toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: 'short'
+                    });
+                    
+                    const fila = document.createElement('tr');
+                    fila.style.cssText = `
+                        border-bottom: 1px solid #333;
+                        background: ${index % 2 === 0 ? '#222' : '#1a1a2e'};
+                    `;
+                    
+                    fila.innerHTML = `
+                        <td style="padding: 10px;">${index + 1}</td>
+                        <td style="padding: 10px; font-weight: bold;">${carrera.nombre}</td>
+                        <td style="padding: 10px;">${fechaFormateada}</td>
+                        <td style="padding: 10px;">${carrera.pais || 'N/A'}</td>
+                        <td style="padding: 10px; color: ${carrera.cerrado_apuestas ? '#e10600' : '#00d2be'}">
+                            ${carrera.cerrado_apuestas ? 'CERRADO' : 'ABIERTO'}
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(fila);
+                });
+            } else {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="padding: 20px; text-align: center; color: #888;">
+                            No hay carreras programadas
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            tabla.appendChild(thead);
+            tabla.appendChild(tbody);
+            
+            // Footer
+            const footer = document.createElement('div');
+            footer.style.cssText = `
+                margin-top: 15px;
+                padding-top: 10px;
+                border-top: 1px solid #333;
+                color: #aaa;
+                font-size: 0.8rem;
+                text-align: center;
+            `;
+            footer.textContent = `Total: ${carreras?.length || 0} Grandes Premios`;
+            
+            // Ensamblar
+            container.appendChild(header);
+            container.appendChild(tabla);
+            container.appendChild(footer);
+            modal.appendChild(container);
+            document.body.appendChild(modal);
+            
+            // Cerrar con ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') modal.remove();
+            });
+            
+        } catch (error) {
+            console.error('Error cargando calendario:', error);
+            alert('Error al cargar el calendario: ' + error.message);
+        }
+    };
+    
     // Función para redirigir al almacén desde las piezas montadas
     window.irAlAlmacenDesdePiezas = function() {
         console.log('📦 Redirigiendo al almacén desde piezas montadas...');
