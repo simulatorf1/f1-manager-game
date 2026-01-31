@@ -774,8 +774,8 @@ class PronosticosManager {
                                             <small class="text-muted">Hoy</small>
                                         </td>
                                         <td class="text-center">
-                                            <div class="text-info">${fechaResultados.split(' ')[0]}</div>
-                                            <small class="text-muted">aprox.</small>
+                                            <div class="text-info">${fechaResultados.split(',')[0]}</div>
+                                            <small class="text-muted">${fechaResultados.split(',')[1] || 'aprox.'}</small>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -1289,7 +1289,7 @@ class PronosticosManager {
         container.innerHTML = `
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-triangle"></i> ${mensaje}
-                <button class="btn btn-sm btn-outline-secondary mt-2" onclick="window.tabManager.switchTab('principal')">
+                <button class="btn btn-sm btn-outline-secondary mt-2" onclick="window.location.hash = '#principal'">
                     Volver al inicio
                 </button>
             </div>
