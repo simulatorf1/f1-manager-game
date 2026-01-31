@@ -1426,14 +1426,29 @@ class PronosticosManager {
             }
             
             // Texto corto de la pregunta
+            // Texto corto de la pregunta
             let textoPregunta = pregunta?.texto_pregunta || 'Pregunta ' + i;
             if (textoPregunta.length > 60) textoPregunta = textoPregunta.substring(0, 57) + '...';
             
-            // Opción seleccionada
+            // Opción seleccionada - MOSTRAR TEXTO COMPLETO, NO SOLO LA LETRA
             let opcionTexto = '';
-            if (respuestaUsuario === 'A') opcionTexto = 'A';
-            else if (respuestaUsuario === 'B') opcionTexto = 'B';
-            else if (respuestaUsuario === 'C') opcionTexto = 'C';
+            let opcionUsuarioCompleta = '';
+            
+            if (respuestaUsuario === 'A') {
+                opcionTexto = 'A';
+                opcionUsuarioCompleta = pregunta?.opcion_a || 'Opción A';
+            } else if (respuestaUsuario === 'B') {
+                opcionTexto = 'B';
+                opcionUsuarioCompleta = pregunta?.opcion_b || 'Opción B';
+            } else if (respuestaUsuario === 'C') {
+                opcionTexto = 'C';
+                opcionUsuarioCompleta = pregunta?.opcion_c || 'Opción C';
+            }
+            
+            // Acortar el texto de la opción si es muy largo
+            if (opcionUsuarioCompleta.length > 40) {
+                opcionUsuarioCompleta = opcionUsuarioCompleta.substring(0, 37) + '...';
+            }
             
             tablaHTML += `
                 <tr>
@@ -1441,7 +1456,7 @@ class PronosticosManager {
                     <td width="65%">
                         <div style="font-size: 14px; line-height: 1.3;">${textoPregunta}</div>
                         <div style="font-size: 13px; color: #00d2be; margin-top: 3px;">
-                            <strong>Tu respuesta:</strong> ${opcionTexto}
+                            <strong>Tu respuesta (${opcionTexto}):</strong> ${opcionUsuarioCompleta}
                             ${tieneResultados ? 
                                 ` | <span style="color: ${respuestaUsuario === respuestaCorrecta ? '#00d2be' : '#e10600'}">
                                     ${respuestaUsuario === respuestaCorrecta ? '✓ Correcta' : '✗ Incorrecta'}
