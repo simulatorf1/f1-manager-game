@@ -1012,19 +1012,15 @@ class TabManager {
                         html += `<button class="pieza-boton-almacen ${esEquipada ? 'equipada' : ''}" 
                                 onclick="window.tabManager.equiparPieza('${pieza.id}')"
                                 data-color="${areaConfig.color}"
-                                style="flex-shrink:0;min-width:75px;max-width:75px;height:85px;padding:8px;border:2px solid ${areaConfig.color};border-radius:10px;background:linear-gradient(145deg, rgba(20,20,30,0.95), rgba(10,10,20,0.95));color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;${esEquipada ? 'box-shadow:0 0 15px ' + areaConfig.color + ', 0 0 30px ' + areaConfig.color + '80;' : 'box-shadow:0 4px 12px rgba(0,0,0,0.4);'}">
+                                style="flex-shrink:0;min-width:75px;max-width:75px;height:85px;padding:8px;border:2px solid ${areaConfig.color};border-radius:10px;background:linear-gradient(145deg, rgba(20,20,30,0.95), rgba(10,10,20,0.95));color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;${esEquipada ? 'box-shadow:0 0 15px ' + areaConfig.color + ', 0 0 30px ' + areaConfig.color + '80;' : 'box-shadow:0 4px 12px rgba(0,0,0,0.4);'}"
+                                title="${nombreComponente}">
                             
-                            <div style="font-size: 1.3rem; font-weight: bold; color: ${areaConfig.color}; margin-bottom: 5px;">
-                                ${puntos}
-                            </div>
-                            <div style="font-size: 0.6rem; color: #aaa; margin-bottom: 8px;">
-                                puntos
+                            <!-- SOLO EL NOMBRE DEL COMPONENTE -->
+                            <div style="font-size: 0.7rem; color: white; text-align: center; line-height: 1.1; max-height: 70px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                ${nombreComponente}
                             </div>
                             
-                            <div style="margin-top:5px;">
-                                <span style="background:${areaConfig.color};border-radius:10px;padding:2px 6px;font-weight:bold;color:white;font-size:0.7rem;">L${nivel}</span>
-                                ${esEquipada ? '<span style="color:#FFD700;font-size:0.8rem;margin-left:3px;">✓</span>' : ''}
-                            </div>
+                            <!-- QUITADO: puntos, nivel y todo lo demás -->
                         </button>`;
                         
                         // BOTÓN VENDER (NUEVO - solo si no está equipada)
