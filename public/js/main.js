@@ -2160,11 +2160,11 @@ class F1Manager {
                     }
                     
                     // Mostrar solo el nivel
-                    mejoraTexto = "Nivel " + fabricacion.nivel;
+                    mejoraTexto = nombreArea;
                     
                     html += '<div class="produccion-slot ' + (lista ? 'produccion-lista' : 'produccion-activa') + '" ';
                     html += 'onclick="recogerPiezaSiLista(\'' + fabricacion.id + '\', ' + lista + ', ' + i + ')" ';
-                    html += 'title="' + nombreMostrar + ' - Mejora ' + numeroPiezaGlobal + ' de 50 - Nivel ' + fabricacion.nivel + '">';
+                    html += 'title="' + nombreMostrar + ' - Mejora ' + numeroPiezaGlobal + ' de 50">';
                     html += '<div class="produccion-icon">';
                     html += (lista ? '✅' : '');
                     html += '</div>';
