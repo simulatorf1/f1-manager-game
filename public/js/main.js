@@ -182,6 +182,66 @@ class F1Manager {
                 'ECU omega', 'Tecnología final', 'Sistema perfecto', 'Control total'
             ]
         };
+        // Sistema de puntos "dientes de sierra" irregular con ceros y bajadas
+        this.puntosDientesSierra = {
+            // Suelo: Patrón irregular con ceros y saltos
+            'suelo': [2, 5, 0, 7, 3, 10, 5, 12, 0, 15, 8, 18, 10, 20, 0, 23, 15, 25, 0, 28,
+                      18, 30, 0, 33, 22, 35, 0, 38, 25, 40, 0, 43, 28, 45, 0, 48, 30, 50, 0, 53,
+                      32, 55, 0, 58, 35, 60, 0, 63, 38, 65],
+            
+            // Motor: Más variación con ceros estratégicos
+            'motor': [3, 8, 0, 12, 5, 15, 0, 20, 10, 23, 0, 28, 15, 30, 0, 35, 20, 38, 0, 43,
+                      25, 45, 0, 50, 28, 52, 0, 57, 30, 60, 0, 65, 32, 68, 0, 73, 35, 75, 0, 80,
+                      38, 82, 0, 87, 40, 90, 0, 95, 42, 100],
+            
+            // Alerón Delantero: Patrón más errático
+            'aleron_delantero': [1, 4, 0, 6, 2, 9, 0, 11, 3, 14, 0, 16, 5, 19, 0, 21, 6, 24, 0, 26,
+                                 8, 29, 0, 31, 10, 34, 0, 36, 12, 39, 0, 41, 14, 44, 0, 46, 16, 49, 0, 51,
+                                 18, 54, 0, 56, 20, 59, 0, 61, 22, 64],
+            
+            // Caja Cambios: Patrón con algunos ceros
+            'caja_cambios': [2, 6, 0, 9, 4, 12, 0, 15, 6, 18, 0, 21, 8, 24, 0, 27, 10, 30, 0, 33,
+                             12, 36, 0, 39, 14, 42, 0, 45, 16, 48, 0, 51, 18, 54, 0, 57, 20, 60, 0, 63,
+                             22, 66, 0, 69, 24, 72, 0, 75, 26, 78],
+            
+            // Pontones: Patrón más suave pero con ceros
+            'pontones': [1, 3, 0, 5, 2, 7, 0, 9, 3, 11, 0, 13, 4, 15, 0, 17, 5, 19, 0, 21,
+                         6, 23, 0, 25, 7, 27, 0, 29, 8, 31, 0, 33, 9, 35, 0, 37, 10, 39, 0, 41,
+                         11, 43, 0, 45, 12, 47, 0, 49, 13, 52],
+            
+            // Suspensión: Variación moderada con ceros
+            'suspension': [2, 4, 0, 6, 3, 8, 0, 10, 4, 12, 0, 14, 5, 16, 0, 18, 6, 20, 0, 22,
+                           7, 24, 0, 26, 8, 28, 0, 30, 9, 32, 0, 34, 10, 36, 0, 38, 11, 40, 0, 42,
+                           12, 44, 0, 46, 13, 48, 0, 50, 14, 55],
+            
+            // Alerón Trasero: Patrón similar al delantero
+            'aleron_trasero': [1, 5, 0, 7, 2, 10, 0, 12, 4, 15, 0, 17, 6, 20, 0, 22, 8, 25, 0, 27,
+                               10, 30, 0, 32, 12, 35, 0, 37, 14, 40, 0, 42, 16, 45, 0, 47, 18, 50, 0, 52,
+                               20, 55, 0, 57, 22, 60, 0, 62, 24, 65],
+            
+            // Chasis: Patrón con ceros
+            'chasis': [2, 6, 0, 8, 3, 11, 0, 13, 5, 16, 0, 18, 7, 21, 0, 23, 9, 26, 0, 28,
+                       11, 31, 0, 33, 13, 36, 0, 38, 15, 41, 0, 43, 17, 46, 0, 48, 19, 51, 0, 53,
+                       21, 56, 0, 58, 23, 61, 0, 63, 25, 68],
+            
+            // Frenos: Patrón más conservador
+            'frenos': [1, 3, 0, 5, 2, 7, 0, 9, 3, 11, 0, 13, 4, 15, 0, 17, 5, 19, 0, 21,
+                       6, 23, 0, 25, 7, 27, 0, 29, 8, 31, 0, 33, 9, 35, 0, 37, 10, 39, 0, 41,
+                       11, 43, 0, 45, 12, 47, 0, 49, 13, 50],
+            
+            // Volante: Patrón más errático
+            'volante': [0, 2, 1, 0, 3, 5, 0, 7, 2, 0, 4, 8, 0, 10, 3, 0, 5, 11, 0, 13,
+                        4, 0, 6, 14, 0, 16, 5, 0, 7, 17, 0, 19, 6, 0, 8, 20, 0, 22, 7, 0,
+                        9, 23, 0, 25, 8, 0, 10, 26, 0, 28],
+            
+            // Electrónica: Patrón con más ceros
+            'electronica': [2, 0, 3, 5, 0, 7, 4, 0, 5, 9, 0, 11, 6, 0, 7, 13, 0, 15, 8, 0,
+                            9, 17, 0, 19, 10, 0, 11, 21, 0, 23, 12, 0, 13, 25, 0, 27, 14, 0,
+                            15, 29, 0, 31, 16, 0, 17, 33, 0, 35, 18, 20]
+        };
+
+
+        
     }
 
 
@@ -339,7 +399,7 @@ class F1Manager {
                     const nombrePieza = this.nombresPiezas[area.id]?.[piezaNum - 1] || `${area.nombre} Mejora ${piezaNum}`;
                     
                     // Calcular puntos (aunque no se muestren en el botón)
-                    const puntosPieza = this.calcularPuntosPieza(piezaNum);
+                    const puntosPieza = this.calcularPuntosPieza(area.id, piezaNum);
                     
                     if (yaFabricada) {
                         // Ya fabricada
@@ -896,8 +956,17 @@ class F1Manager {
         return Math.floor(base * Math.pow(1.1, numeroPiezaEnNivel - 1));
     }
     
-    calcularPuntosPieza(numeroPiezaGlobal) {
-        // Progresión exponencial: Pieza 1 = 10 pts, Pieza 50 = ~53,084 pts
+    calcularPuntosPieza(areaId, numeroPiezaGlobal) {
+        // USAR SISTEMA PERSONALIZADO "DIENTES DE SIERRA"
+        if (this.puntosDientesSierra && 
+            this.puntosDientesSierra[areaId] && 
+            this.puntosDientesSierra[areaId][numeroPiezaGlobal - 1] !== undefined) {
+            
+            return this.puntosDientesSierra[areaId][numeroPiezaGlobal - 1];
+        }
+        
+        // Fallback a la fórmula antigua si no hay datos
+        console.warn('⚠️ No hay puntos personalizados para', areaId, 'pieza', numeroPiezaGlobal);
         const puntosBase = 10 * Math.pow(1.25, numeroPiezaGlobal - 1);
         return Math.floor(puntosBase);
     }
@@ -2701,7 +2770,8 @@ window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
         // ===== 3. Calcular puntos =====
         let puntosTotales;
         if (window.f1Manager && window.f1Manager.calcularPuntosPieza) {
-            puntosTotales = window.f1Manager.calcularPuntosPieza(nuevoNumeroGlobal);
+            // Pasar areaId y numeroPiezaGlobal
+            puntosTotales = window.f1Manager.calcularPuntosPieza(fabricacion.area, nuevoNumeroGlobal);
         } else {
             puntosTotales = calcularPuntosBase(fabricacion.area, fabricacion.nivel, nuevoNumeroGlobal);
         }
