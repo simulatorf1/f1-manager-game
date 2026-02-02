@@ -2441,6 +2441,16 @@ window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
             });
         }
         const nuevoNumeroGlobal = maxNumeroGlobal + 1;
+        // ===== AÑADIR ESTO =====
+        let componente = `${fabricacion.area} Mejora ${nuevoNumeroGlobal}`;
+        if (window.f1Manager && window.f1Manager.nombresPiezas && 
+            window.f1Manager.nombresPiezas[fabricacion.area]) {
+            const nombresArea = window.f1Manager.nombresPiezas[fabricacion.area];
+            if (nuevoNumeroGlobal <= nombresArea.length) {
+                componente = nombresArea[nuevoNumeroGlobal - 1];
+            }
+        }
+        // ===== FIN AÑADIR =====        
         
         // ===== 3. Calcular puntos =====
         let puntosTotales;
@@ -2458,6 +2468,7 @@ window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
                 area: fabricacion.area,
                 nivel: fabricacion.nivel || 1,
                 numero_global: nuevoNumeroGlobal,
+                componente: componente, 
                 puntos_base: puntosTotales,
                 calidad: 'Normal',
                 equipada: false,
