@@ -453,8 +453,8 @@ class TabManager {
                     <div class="stat-card-taller">
                         <i class="fas fa-puzzle-piece"></i>
                         <div>
-                            <span class="stat-label">PIEZAS POR NIVEL</span>  ← ¡¡QUITAR ESTO!!
-                            <span class="stat-value">20</span>               ← ¡¡QUITAR ESTO!!
+                            <span class="stat-label">PIEZAS POR NIVEL</span>
+                            <span class="stat-value">20</span>
                         </div>
                     </div>
                 </div>
@@ -893,12 +893,12 @@ class TabManager {
                 
                 <div class="area-info">
                     <div class="area-stat">
-                        <span class="stat-label">Próxima pieza</span>
-                        <span class="stat-value" id="nombre-${area.id}">Cargando...</span>
+                        <span class="stat-label">Nivel actual</span>
+                        <span class="stat-value" id="nivel-${area.id}">0</span>
                     </div>
                     <div class="area-stat">
-                        <span class="stat-label">Tiempo</span>
-                        <span class="stat-value">4 horas</span>
+                        <span class="stat-label">Progreso</span>
+                        <span class="stat-value" id="progreso-${area.id}">0/20</span>
                     </div>
                     <div class="area-stat">
                         <span class="stat-label">Costo</span>
@@ -910,33 +910,23 @@ class TabManager {
                     <i class="fas fa-hammer"></i> Fabricar Pieza
                 </button>
                 
-                <div class="area-proximo">
-                    <small>Pieza #<span id="orden-${area.id}">1</span> de 50</small>
+                <div class="area-progress">
+                    <div class="progress-bar" id="progress-${area.id}">
+                        <div class="progress-fill" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
         `).join('');
-        
-        // Cargar nombres dinámicamente
-        if (window.fabricacionManager) {
-            window.CAR_AREAS.forEach(async area => {
-                const orden = await window.fabricacionManager.obtenerSiguienteOrden(area.id);
-                const nombre = await window.fabricacionManager.obtenerNombrePieza(area.id, orden);
-                
-                document.getElementById(`nombre-${area.id}`).textContent = nombre;
-                document.getElementById(`orden-${area.id}`).textContent = orden;
-            });
-        }
         
         // Configurar eventos de los botones
         document.querySelectorAll('.btn-taller-fabricar').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const areaId = e.target.closest('.btn-taller-fabricar').dataset.area;
-                if (window.fabricacionManager) {
-                    window.fabricacionManager.iniciarFabricacion(areaId);
+                if (window.f1Manager) {
+                    window.f1Manager.iniciarFabricacion(areaId);
                 }
             });
         });
-        this.actualizarProgresoTotal();
     }
     
     async loadAlmacenPiezas() {
@@ -1196,32 +1186,10 @@ class TabManager {
     
 
     
-
+    // ===== FUNCIONES PARA MANEJAR PIEZAS =====
+    // ... el resto de tu código sigue aquí ... 
     
-    async actualizarProgresoTotal() {
-        try {
-            if (!window.f1Manager?.escuderia?.id) return;
-            
-            const { data: piezas, error } = await supabase
-                .from('almacen_piezas')
-                .select('id')
-                .eq('escuderia_id', window.f1Manager.escuderia.id);
-                
-            if (error) throw error;
-            
-            const total = piezas?.length || 0;
-            const porcentaje = Math.min(100, (total / 550) * 100);
-            
-            document.getElementById('piezas-fabricadas').textContent = total;
-            const fill = document.getElementById('progreso-total-fill');
-            if (fill) {
-                fill.style.width = `${porcentaje}%`;
-            }
-            
-        } catch (error) {
-            console.error('Error actualizando progreso:', error);
-        }
-    }    
+    
     
     // ===== FUNCIONES PARA MANEJAR PIEZAS =====
     
