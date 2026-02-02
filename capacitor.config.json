@@ -1,6 +1,6 @@
 {
   "appId": "com.miweb.app",
-  "appName": "Manager Motorsport",
+  "appName": "Critical LAP",
   "webDir": "out",
   "server": {
     "url": "https://f1-manager-game.vercel.app/",
