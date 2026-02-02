@@ -969,7 +969,7 @@ class F1Manager {
                 if (pieza) {
                     puntosTotales += pieza.puntos_base || 0;
                     // Obtener nombre personalizado
-                    let nombreMostrar = pieza.area;
+                    let nombreMostrar = pieza.componente || pieza.area;
                     if (pieza.numero_global && this.nombresPiezas && 
                         this.nombresPiezas[area.id] && 
                         pieza.numero_global <= this.nombresPiezas[area.id].length) {
@@ -2147,7 +2147,7 @@ class F1Manager {
                     const numeroPiezaGlobal = totalPiezasFabricadas + 1;
                     
                     // === USAR NOMBRES PERSONALIZADOS ===
-                    let nombreMostrar = "Actualización " + nombreArea;
+                    let nombreMostrar = nombreComponente;
                     let mejoraTexto = "";
                     
                     // Buscar en los nombres personalizados si existe
