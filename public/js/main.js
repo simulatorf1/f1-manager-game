@@ -43,16 +43,12 @@ class F1Manager {
         this.proximoGP = null;
     }
 
-    // ========================
-    // MÉTODO PARA CARGAR PESTAÑA TALLER
-    // ========================
 
     // ========================
-    // MÉTODO PARA CARGAR PESTAÑA TALLER (MODIFICADO)
+    // MÉTODO PARA CARGAR PESTAÑA TALLER (MODIFICADO CON 50 BOTONES)
     // ========================
-    
     async cargarTabTaller() {
-        console.log('🔧 Cargando pestaña taller minimalista...');
+        console.log('🔧 Cargando pestaña taller con 50 botones...');
         
         const container = document.getElementById('tab-taller');
         if (!container) {
@@ -70,10 +66,9 @@ class F1Manager {
             
             const { data: piezasFabricadas, error: errorPiezas } = await this.supabase
                 .from('almacen_piezas')
-                .select('area, nivel, calidad')
+                .select('area, nivel, calidad, numero_global')
                 .eq('escuderia_id', this.escuderia.id);
-
-            
+    
             if (errorPiezas) {
                 console.error('Error cargando piezas:', errorPiezas);
                 throw errorPiezas;
@@ -89,6 +84,146 @@ class F1Manager {
                 console.error('Error cargando fabricaciones:', errorFabricaciones);
                 throw errorFabricaciones;
             }
+            
+            // Nombres personalizados para cada pieza de cada área (50 por área)
+            const nombresPiezas = {
+                'suelo': [
+                    'Perfil aerodinámico básico', 'Difusor estándar', 'Planes de succión', 'Túnel de viento v1',
+                    'Doble difusor', 'Suelo escalonado', 'Alas de gaviota', 'Túnel de viento v2',
+                    'Suelo poroso', 'Generadores de vórtice', 'Difusor soplado', 'Túnel de viento v3',
+                    'Suelo flexible', 'Canales de flujo', 'Doble plano', 'Túnel de viento v4',
+                    'Sistema de succión activa', 'Difusor ajustable', 'Alas delta', 'Túnel de viento v5',
+                    'Suelo magnético', 'Canales helicoidales', 'Difusor turbo', 'Túnel de viento v6',
+                    'Sistema antigravitatorio', 'Perfiles adaptativos', 'Difusor cuántico', 'Túnel de viento v7',
+                    'Suelo inteligente', 'Microcanales', 'Difusor holográfico', 'Túnel de viento v8',
+                    'Sistema de levitación', 'Nanoperfiles', 'Difusor iónico', 'Túnel de viento v9',
+                    'Suelo cuántico', 'Canales plasmáticos', 'Difusor gravitatorio', 'Túnel de viento v10',
+                    'Sistema de distorsión', 'Perfiles temporales', 'Difusor dimensional', 'Túnel de viento omega',
+                    'Suelo de singularidad', 'Canales de taquiones', 'Difusor de agujero de gusano', 'Tecnología final'
+                ],
+                'motor': [
+                    'Motor V6 estándar', 'Turbo simple', 'Sistema MGU-H básico', 'MGU-K v1',
+                    'Motor V6 turbo', 'Turbocompresor dual', 'Sistema MGU-H mejorado', 'MGU-K v2',
+                    'Motor V8', 'Turbo de geometría variable', 'MGU-H avanzado', 'MGU-K v3',
+                    'Motor V10', 'Turbocompresor eléctrico', 'Sistema híbrido v1', 'MGU-K v4',
+                    'Motor V12', 'Turbo magnético', 'Sistema híbrido v2', 'MGU-K v5',
+                    'Motor W16', 'Turbo plasmático', 'Sistema híbrido v3', 'MGU-K v6',
+                    'Motor rotativo', 'Turbo iónico', 'Sistema híbrido v4', 'MGU-K v7',
+                    'Motor eléctrico puro', 'Turbo cuántico', 'Sistema híbrido v5', 'MGU-K v8',
+                    'Motor de fusión', 'Turbo gravitatorio', 'Sistema híbrido v6', 'MGU-K v9',
+                    'Motor de antimateria', 'Turbo temporal', 'Sistema híbrido v7', 'MGU-K omega',
+                    'Motor de singularidad', 'Turbo dimensional', 'Sistema híbrido final', 'MGU-K perfecto',
+                    'Motor cuántico', 'Turbo de taquiones', 'Sistema de agujero de gusano', 'Tecnología final'
+                ],
+                'aleron_delantero': [
+                    'Alerón básico', 'Perfiles estándar', 'Elementos endplate', 'Flaps v1',
+                    'Alerón con DRS', 'Perfiles optimizados', 'Endplate vortex', 'Flaps v2',
+                    'Alerón ajustable', 'Perfiles aerodinámicos', 'Endplate soplado', 'Flaps v3',
+                    'Alerón flexible', 'Perfiles adaptativos', 'Endplate magnético', 'Flaps v4',
+                    'Alerón inteligente', 'Perfiles activos', 'Endplate iónico', 'Flaps v5',
+                    'Alerón holográfico', 'Perfiles cuánticos', 'Endplate gravitatorio', 'Flaps v6',
+                    'Alerón cuántico', 'Perfiles temporales', 'Endplate dimensional', 'Flaps v7',
+                    'Alerón de plasma', 'Perfiles de taquiones', 'Endplate de singularidad', 'Flaps v8',
+                    'Alerón gravitatorio', 'Perfiles de agujero de gusano', 'Endplate final', 'Flaps omega',
+                    'Alerón temporal', 'Perfiles omnidireccionales', 'Endplate perfecto', 'Tecnología final'
+                ],
+                'caja_cambios': [
+                    'Caja 7 velocidades', 'Cambio secuencial', 'Embrague semiautomático', 'Diferencial v1',
+                    'Caja 8 velocidades', 'Cambio rápido', 'Embrague dual', 'Diferencial v2',
+                    'Caja 9 velocidades', 'Cambio instantáneo', 'Embrague magnético', 'Diferencial v3',
+                    'Caja 10 velocidades', 'Cambio predictivo', 'Embrague iónico', 'Diferencial v4',
+                    'Caja CVT', 'Cambio adaptativo', 'Embrague cuántico', 'Diferencial v5',
+                    'Caja magnética', 'Cambio temporal', 'Embrague gravitatorio', 'Diferencial v6',
+                    'Caja iónica', 'Cambio cuántico', 'Embrague dimensional', 'Diferencial v7',
+                    'Caja cuántica', 'Cambio de taquiones', 'Embrague de singularidad', 'Diferencial v8',
+                    'Caja gravitatoria', 'Cambio omnidireccional', 'Embrague perfecto', 'Diferencial omega',
+                    'Caja temporal', 'Cambio final', 'Embrague final', 'Tecnología final'
+                ],
+                'pontones': [
+                    'Pontones estándar', 'Conductos de freno', 'Entradas de aire', 'Salidas v1',
+                    'Pontones optimizados', 'Conductos mejorados', 'Entradas optimizadas', 'Salidas v2',
+                    'Pontones soplados', 'Conductos soplados', 'Entradas sopladas', 'Salidas v3',
+                    'Pontones flexibles', 'Conductos magnéticos', 'Entradas inteligentes', 'Salidas v4',
+                    'Pontones inteligentes', 'Conductos iónicos', 'Entradas cuánticas', 'Salidas v5',
+                    'Pontones holográficos', 'Conductos cuánticos', 'Entradas gravitatorias', 'Salidas v6',
+                    'Pontones cuánticos', 'Conductos gravitatorios', 'Entradas dimensionales', 'Salidas v7',
+                    'Pontones de plasma', 'Conductos temporales', 'Entradas de taquiones', 'Salidas v8',
+                    'Pontones gravitatorios', 'Conductos de singularidad', 'Entradas finales', 'Salidas omega',
+                    'Pontones temporales', 'Conductos finales', 'Entradas perfectas', 'Tecnología final'
+                ],
+                'suspension': [
+                    'Suspensión push-rod', 'Amortiguadores v1', 'Barra estabilizadora', 'Muelles v1',
+                    'Suspensión pull-rod', 'Amortiguadores v2', 'Barra activa', 'Muelles v2',
+                    'Suspensión activa', 'Amortiguadores magnéticos', 'Barra inteligente', 'Muelles v3',
+                    'Suspensión hidráulica', 'Amortiguadores iónicos', 'Barra cuántica', 'Muelles v4',
+                    'Suspensión neumática', 'Amortiguadores cuánticos', 'Barra gravitatoria', 'Muelles v5',
+                    'Suspensión magnética', 'Amortiguadores gravitatorios', 'Barra temporal', 'Muelles v6',
+                    'Suspensión iónica', 'Amortiguadores dimensionales', 'Barra de taquiones', 'Muelles v7',
+                    'Suspensión cuántica', 'Amortiguadores de singularidad', 'Barra final', 'Muelles v8',
+                    'Suspensión gravitatoria', 'Amortiguadores perfectos', 'Sistema omnidireccional', 'Muelles omega',
+                    'Suspensión temporal', 'Sistema final', 'Tecnología definitiva', 'Perfección alcanzada'
+                ],
+                'aleron_trasero': [
+                    'Alerón trasero básico', 'DRS estándar', 'Flap principal', 'Endplates v1',
+                    'Alerón optimizado', 'DRS mejorado', 'Flap activo', 'Endplates v2',
+                    'Alerón soplado', 'DRS magnético', 'Flap inteligente', 'Endplates v3',
+                    'Alerón flexible', 'DRS iónico', 'Flap cuántico', 'Endplates v4',
+                    'Alerón inteligente', 'DRS cuántico', 'Flap gravitatorio', 'Endplates v5',
+                    'Alerón holográfico', 'DRS gravitatorio', 'Flap dimensional', 'Endplates v6',
+                    'Alerón cuántico', 'DRS temporal', 'Flap de taquiones', 'Endplates v7',
+                    'Alerón de plasma', 'DRS de singularidad', 'Flap final', 'Endplates v8',
+                    'Alerón gravitatorio', 'DRS perfecto', 'Sistema omnidireccional', 'Endplates omega',
+                    'Alerón temporal', 'Tecnología final', 'Perfección aerodinámica', 'Última evolución'
+                ],
+                'chasis': [
+                    'Chasis monocasco', 'Estructura v1', 'Protección anti-intrusión', 'Jaula v1',
+                    'Chasis carbono', 'Estructura v2', 'Protección mejorada', 'Jaula v2',
+                    'Chasis compuesto', 'Estructura v3', 'Protección activa', 'Jaula v3',
+                    'Chasis inteligente', 'Estructura v4', 'Protección magnética', 'Jaula v4',
+                    'Chasis adaptativo', 'Estructura v5', 'Protección iónica', 'Jaula v5',
+                    'Chasis magnético', 'Estructura v6', 'Protección cuántica', 'Jaula v6',
+                    'Chasis iónico', 'Estructura v7', 'Protección gravitatoria', 'Jaula v7',
+                    'Chasis cuántico', 'Estructura v8', 'Protección dimensional', 'Jaula v8',
+                    'Chasis gravitatorio', 'Estructura v9', 'Protección de taquiones', 'Jaula v9',
+                    'Chasis temporal', 'Estructura omega', 'Protección final', 'Tecnología definitiva'
+                ],
+                'frenos': [
+                    'Frenos de disco', 'Pastillas carbono', 'Pinzas v1', 'Sistema hidráulico',
+                    'Frenos carbono', 'Pastillas mejoradas', 'Pinzas v2', 'Sistema neumático',
+                    'Frenos cerámicos', 'Pastillas magnéticas', 'Pinzas v3', 'Sistema magnético',
+                    'Frenos magnéticos', 'Pastillas iónicas', 'Pinzas v4', 'Sistema iónico',
+                    'Frenos iónicos', 'Pastillas cuánticas', 'Pinzas v5', 'Sistema cuántico',
+                    'Frenos cuánticos', 'Pastillas gravitatorias', 'Pinzas v6', 'Sistema gravitatorio',
+                    'Frenos gravitatorios', 'Pastillas dimensionales', 'Pinzas v7', 'Sistema dimensional',
+                    'Frenos de plasma', 'Pastillas de taquiones', 'Pinzas v8', 'Sistema temporal',
+                    'Frenos temporales', 'Pastillas de singularidad', 'Pinzas omega', 'Sistema final',
+                    'Frenos perfectos', 'Tecnología definitiva', 'Sistema omnidireccional', 'Última evolución'
+                ],
+                'volante': [
+                    'Volante básico', 'Botones v1', 'Pantalla LCD', 'Sistema telemetría',
+                    'Volante mejorado', 'Botones v2', 'Pantalla OLED', 'Telemetría avanzada',
+                    'Volante táctil', 'Botones haptic', 'Pantalla holográfica', 'Telemetría en tiempo real',
+                    'Volante inteligente', 'Botones adaptativos', 'Pantalla 3D', 'Telemetría predictiva',
+                    'Volante holográfico', 'Botones cuánticos', 'Pantalla cuántica', 'Telemetría cuántica',
+                    'Volante cuántico', 'Botones gravitatorios', 'Pantalla gravitatoria', 'Telemetría gravitatoria',
+                    'Volante gravitatorio', 'Botones dimensionales', 'Pantalla dimensional', 'Telemetría temporal',
+                    'Volante temporal', 'Botones de taquiones', 'Pantalla de singularidad', 'Telemetría omnidireccional',
+                    'Volante perfecto', 'Botones finales', 'Pantalla definitiva', 'Telemetría final',
+                    'Volante final', 'Tecnología omega', 'Interfaz perfecta', 'Control total'
+                ],
+                'electronica': [
+                    'ECU básica', 'Sensores v1', 'Sistema adquisición', 'Telemetría básica',
+                    'ECU mejorada', 'Sensores v2', 'Adquisición avanzada', 'Telemetría v2',
+                    'ECU predictiva', 'Sensores v3', 'Sistema inteligente', 'Telemetría v3',
+                    'ECU inteligente', 'Sensores v4', 'Sistema adaptativo', 'Telemetría v4',
+                    'ECU cuántica', 'Sensores cuánticos', 'Sistema cuántico', 'Telemetría cuántica',
+                    'ECU gravitatoria', 'Sensores gravitatorios', 'Sistema gravitatorio', 'Telemetría gravitatoria',
+                    'ECU temporal', 'Sensores dimensionales', 'Sistema dimensional', 'Telemetría temporal',
+                    'ECU de taquiones', 'Sensores de taquiones', 'Sistema taquiónico', 'Telemetría omnidireccional',
+                    'ECU de singularidad', 'Sensores perfectos', 'Sistema final', 'Telemetría definitiva',
+                    'ECU omega', 'Tecnología final', 'Sistema perfecto', 'Control total'
+                ]
+            };
             
             const areas = [
                 { id: 'suelo', nombre: 'Suelo', icono: '🏎️' },
@@ -114,132 +249,237 @@ class F1Manager {
             html += '</div>';
             html += '</div>';
             
-            html += '<div class="taller-botones-grid">';
-            
-            // Para cada área, procesar las 5 piezas posibles
+            // Para cada área
             for (const area of areas) {
-                const nivelActual = this.carStats ? 
-                    this.carStats[area.id + '_nivel'] || 0 : 0;
-                const nivelAFabricar = nivelActual + 1;
-                
-                const piezasAreaNivel = piezasFabricadas?.filter(p => {
-                    const areaCoincide = p.area === area.id || p.area === area.nombre;
-                    const nivelCoincide = (p.nivel || 1) === nivelAFabricar;
-                    return areaCoincide && nivelCoincide;
-                }) || [];
-                
-                const fabricacionActiva = fabricacionesActivas?.find(f => {
-                    const areaCoincide = f.area === area.id || f.area === area.nombre;
-                    const nivelCoincide = f.nivel === nivelAFabricar;
-                    return areaCoincide && nivelCoincide && !f.completada;
-                });
-                
-                html += '<div class="area-fila-mini">';
-                html += '<div class="area-titulo-mini">';
-                html += '<span class="area-icono-mini">' + area.icono + '</span>';
-                html += '<span class="area-nombre-mini">' + area.nombre + '</span>';
-                html += '<span class="area-nivel-mini">Nivel ' + nivelAFabricar + '</span>';
-                
-                // Barra simple
-                html += '<div style="width: 100%; margin: 5px 0 10px 0;">';
-                html += '<div style="font-size: 0.7rem; color: #aaa; margin-bottom: 3px;">Progreso del área</div>';
-                html += '<div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">';
-                html += '<div style="width: 2%; height: 100%; background: #00d2be; border-radius: 3px;"></div>';
-                html += '</div>';
+                html += '<div class="area-completa">';
+                html += '<div class="area-header-completa">';
+                html += '<span class="area-icono-completa">' + area.icono + '</span>';
+                html += '<span class="area-nombre-completa">' + area.nombre + '</span>';
                 html += '</div>';
                 
-                html += '</div>';  // ← Cierra 'area-titulo-mini'
-                html += '<div class="botones-calidad-mini">';
+                html += '<div class="botones-area-completa">';
                 
-                // Primero, obtener el total de piezas fabricadas para esta área
-                const { data: todasPiezasArea } = await this.supabase
-                    .from('almacen_piezas')
-                    .select('id')
-                    .eq('escuderia_id', this.escuderia.id)
-                    .eq('area', area.id);
+                // Obtener todas las piezas fabricadas para esta área
+                const piezasAreaFabricadas = piezasFabricadas?.filter(p => 
+                    p.area === area.id || p.area === area.nombre
+                ) || [];
                 
-                const totalPiezasFabricadas = todasPiezasArea?.length || 0;
+                // Obtener fabricaciones activas para esta área
+                const fabricacionesAreaActivas = fabricacionesActivas?.filter(f => 
+                    (f.area === area.id || f.area === area.nombre) && !f.completada
+                ) || [];
                 
-                // Para cada una de las 5 posibles piezas de este nivel
-                // Primero, obtener todas las piezas de esta área para saber los numeros_global usados
-                // 1. Obtener TODAS las piezas (equipadas o no) con numero_global
-                const { data: todasPiezasAreaConGlobal } = await this.supabase
-                    .from('almacen_piezas')
-                    .select('id, nivel, numero_global, equipada')
-                    .eq('escuderia_id', this.escuderia.id)
-                    .eq('area', area.id);
-                
-                // 2. Crear array de numeros_global ya usados (solo NO equipadas)
-                const numerosGlobalesUsados = [];
-                todasPiezasAreaConGlobal?.forEach(p => {
-                    if (p.nivel === nivelAFabricar && p.numero_global) {
-                        numerosGlobalesUsados.push(p.numero_global);
-                    }
-                });
-                
-                // Para cada una de las 5 posibles piezas
-                for (let piezaNum = 1; piezaNum <= 5; piezaNum++) {
-                    // Calcular qué número global sería esta pieza
-                    const numeroGlobalEsperado = ((nivelAFabricar - 1) * 5) + piezaNum;
+                // Para cada una de las 50 piezas
+                for (let piezaNum = 1; piezaNum <= 50; piezaNum++) {
+                    // Calcular nivel (cada 5 piezas es un nivel)
+                    const nivel = Math.ceil(piezaNum / 5);
                     
-                    // SOLO ESTA LÍNEA: ¿Ya existe una pieza con este numero_global?
-                    const yaExistePieza = numerosGlobalesUsados.includes(numeroGlobalEsperado);
-                    const piezaFabricada = piezasAreaNivel.length >= piezaNum;
+                    // Verificar si esta pieza ya está fabricada
+                    const yaFabricada = piezasAreaFabricadas.some(p => p.numero_global === piezaNum);
                     
-                    // Calcular puntos para mostrar
-                    const puntosPieza = this.calcularPuntosPieza(numeroGlobalEsperado);
+                    // Verificar si está en fabricación
+                    const enFabricacion = fabricacionesAreaActivas.some(f => {
+                        // Calcular qué pieza del nivel estaría fabricando
+                        const nivelFabricacion = f.nivel;
+                        const rangoInicio = (nivelFabricacion - 1) * 5 + 1;
+                        const rangoFin = nivelFabricacion * 5;
+                        
+                        // Encontrar la próxima pieza no fabricada en ese nivel
+                        const piezasNivelFabricadas = piezasAreaFabricadas.filter(p => {
+                            const nivelPieza = Math.ceil(p.numero_global / 5);
+                            return nivelPieza === nivelFabricacion;
+                        }).length;
+                        
+                        const proximaPieza = rangoInicio + piezasNivelFabricadas;
+                        return proximaPieza === piezaNum && !yaFabricada;
+                    });
                     
-                    if (yaExistePieza || piezaFabricada) {
-                        // YA EXISTE la pieza (equipada o no)
-                        html += '<button class="btn-pieza-mini lleno" disabled title="' + area.nombre + ' - Ya posees esta pieza (+' + puntosPieza + ' pts)">';
+                    // Nombre personalizado para esta pieza
+                    const nombrePieza = nombresPiezas[area.id]?.[piezaNum - 1] || `${area.nombre} Mejora ${piezaNum}`;
+                    
+                    // Calcular puntos (aunque no se muestren en el botón)
+                    const puntosPieza = this.calcularPuntosPieza(piezaNum);
+                    
+                    if (yaFabricada) {
+                        // Ya fabricada
+                        html += '<button class="btn-pieza-50 lleno" disabled title="' + nombrePieza + ' - Ya posees esta pieza">';
                         html += '<i class="fas fa-check"></i>';
-                        html += '<span class="pieza-num">+' + puntosPieza + '</span>';
+                        html += '<div class="pieza-nombre-50">' + nombrePieza + '</div>';
                         html += '</button>';
-                    } else if (fabricacionActiva && piezaNum === piezasAreaNivel.length + 1) {
-                        const tiempoRestante = new Date(fabricacionActiva.tiempo_fin) - new Date();
+                    } else if (enFabricacion) {
+                        // En fabricación
+                        const fabricacion = fabricacionesAreaActivas.find(f => {
+                            const nivelFabricacion = f.nivel;
+                            const rangoInicio = (nivelFabricacion - 1) * 5 + 1;
+                            const piezasNivelFabricadas = piezasAreaFabricadas.filter(p => {
+                                const nivelPieza = Math.ceil(p.numero_global / 5);
+                                return nivelPieza === nivelFabricacion;
+                            }).length;
+                            const proximaPieza = rangoInicio + piezasNivelFabricadas;
+                            return proximaPieza === piezaNum;
+                        });
+                        
+                        const tiempoRestante = fabricacion ? new Date(fabricacion.tiempo_fin) - new Date() : 0;
                         const minutos = Math.ceil(tiempoRestante / (1000 * 60));
                         
-                        html += '<button class="btn-pieza-mini fabricando" disabled title="' + area.nombre + ' - Evolución ' + piezaNum + ' en fabricación (' + minutos + ' min) - +' + puntosPieza + ' pts">';
+                        html += '<button class="btn-pieza-50 fabricando" disabled title="' + nombrePieza + ' - En fabricación (' + minutos + ' min)">';
                         html += '<i class="fas fa-spinner fa-spin"></i>';
-                        html += '<span class="pieza-num">+' + puntosPieza + '</span>';
+                        html += '<div class="pieza-nombre-50">' + nombrePieza + '</div>';
                         html += '</button>';
                     } else {
+                        // Verificar si es la próxima pieza a fabricar
+                        const proximaPiezaNoFabricada = !yaFabricada && 
+                            piezaNum === (piezasAreaFabricadas.length + 1);
+                        
                         const puedeFabricar = fabricacionesCount < 4 && 
                                             this.escuderia.dinero >= 10000 &&
-                                            piezaNum === piezasAreaNivel.length + 1;
+                                            proximaPiezaNoFabricada;
                         
-                        html += '<button class="btn-pieza-mini vacio" ';
-                        html += 'onclick="iniciarFabricacionTallerDesdeBoton(\'' + area.id + '\', ' + nivelAFabricar + ')"';
-                        html += (!puedeFabricar ? ' disabled' : '') + '>';
+                        html += '<button class="btn-pieza-50 vacio" ';
+                        if (puedeFabricar) {
+                            html += 'onclick="iniciarFabricacionTallerDesdeBoton(\'' + area.id + '\', ' + nivel + ')"';
+                        } else {
+                            html += ' disabled';
+                        }
+                        html += ' title="' + nombrePieza + ' - Nivel ' + nivel + '">';
                         html += '<i class="fas fa-plus"></i>';
-                        html += '<span class="pieza-num">+' + puntosPieza + '</span>';
+                        html += '<div class="pieza-nombre-50">' + nombrePieza + '</div>';
                         html += '</button>';
                     }
                 }
                 
-                if (piezasAreaNivel.length >= 5) {
-                    html += '<button class="btn-subir-nivel" onclick="f1Manager.subirNivelArea(\'' + area.id + '\')" title="Subir ' + area.nombre + ' al nivel ' + (nivelAFabricar + 1) + '">';
-                    html += '<i class="fas fa-level-up-alt"></i>';
-                    html += 'SUBIR NIVEL';
-                    html += '</button>';
-                }
-                
-                html += '</div>';
-                html += '</div>';
+                html += '</div>'; // Cierra botones-area-completa
+                html += '</div>'; // Cierra area-completa
             }
             
-            html += '</div>';
             html += '<div class="taller-info-mini">';
             html += '<p><i class="fas fa-info-circle"></i> Fabricaciones activas: <strong>' + fabricacionesCount + '/4</strong></p>';
-            html += '<p><i class="fas fa-info-circle"></i> Necesitas 5 evoluciones del mismo nivel para subir de nivel</p>';
-            html += '<p><i class="fas fa-info-circle"></i> Los números muestran los puntos técnicos que otorga cada pieza</p>';
+            html += '<p><i class="fas fa-info-circle"></i> Fabricación secuencial: Solo puedes fabricar la siguiente pieza disponible</p>';
+            html += '<p><i class="fas fa-info-circle"></i> Cada área tiene 50 mejoras progresivas</p>';
             html += '</div>';
             html += '</div>';
             
             container.innerHTML = html;
             
+            // Añadir estilos CSS para la nueva disposición
+            if (!document.querySelector('#estilos-taller-50')) {
+                const style = document.createElement('style');
+                style.id = 'estilos-taller-50';
+                style.innerHTML = `
+                    .area-completa {
+                        margin-bottom: 20px;
+                        padding: 15px;
+                        background: rgba(0, 0, 0, 0.3);
+                        border-radius: 8px;
+                        border: 1px solid rgba(0, 210, 190, 0.2);
+                    }
+                    
+                    .area-header-completa {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        margin-bottom: 15px;
+                        padding-bottom: 10px;
+                        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    }
+                    
+                    .area-icono-completa {
+                        font-size: 1.5rem;
+                    }
+                    
+                    .area-nombre-completa {
+                        font-weight: bold;
+                        color: #00d2be;
+                        font-size: 1.1rem;
+                    }
+                    
+                    .botones-area-completa {
+                        display: grid;
+                        grid-template-columns: repeat(5, 1fr);
+                        gap: 8px;
+                    }
+                    
+                    @media (max-width: 1200px) {
+                        .botones-area-completa {
+                            grid-template-columns: repeat(4, 1fr);
+                        }
+                    }
+                    
+                    @media (max-width: 900px) {
+                        .botones-area-completa {
+                            grid-template-columns: repeat(3, 1fr);
+                        }
+                    }
+                    
+                    @media (max-width: 600px) {
+                        .botones-area-completa {
+                            grid-template-columns: repeat(2, 1fr);
+                        }
+                    }
+                    
+                    .btn-pieza-50 {
+                        height: 80px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        border: 2px solid rgba(0, 210, 190, 0.3);
+                        border-radius: 6px;
+                        background: rgba(0, 0, 0, 0.5);
+                        color: white;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        padding: 8px;
+                        text-align: center;
+                    }
+                    
+                    .btn-pieza-50:hover:not(:disabled) {
+                        border-color: #00d2be;
+                        background: rgba(0, 210, 190, 0.1);
+                        transform: translateY(-2px);
+                    }
+                    
+                    .btn-pieza-50:disabled {
+                        opacity: 0.6;
+                        cursor: not-allowed;
+                    }
+                    
+                    .btn-pieza-50.lleno {
+                        border-color: #4CAF50;
+                        background: rgba(76, 175, 80, 0.1);
+                    }
+                    
+                    .btn-pieza-50.fabricando {
+                        border-color: #FF9800;
+                        background: rgba(255, 152, 0, 0.1);
+                    }
+                    
+                    .btn-pieza-50.vacio {
+                        border-color: #666;
+                        background: rgba(100, 100, 100, 0.1);
+                    }
+                    
+                    .btn-pieza-50 i {
+                        font-size: 1.2rem;
+                        margin-bottom: 5px;
+                    }
+                    
+                    .pieza-nombre-50 {
+                        font-size: 0.7rem;
+                        line-height: 1.1;
+                        max-height: 32px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        display: -webkit-box;
+                        -webkit-line-clamp: 2;
+                        -webkit-box-orient: vertical;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
         } catch (error) {
-            console.error('❌ Error cargando taller minimalista:', error);
+            console.error('❌ Error cargando taller con 50 botones:', error);
             container.innerHTML = '<div class="error"><h3>❌ Error cargando el taller</h3><p>' + error.message + '</p><button onclick="location.reload()">Reintentar</button></div>';
         }
     }
@@ -2814,15 +3054,34 @@ setTimeout(() => {
             }
         }
     };
-    // Función global para fabricar desde los botones del taller
-    // Función global CORREGIDA
-    window.iniciarFabricacionTallerDesdeBoton = async function(areaId, nivel) {
-        console.log('🔧 Botón presionado para:', areaId, nivel);
+
+    // ========================
+    // FUNCIÓN GLOBAL MODIFICADA PARA CALCULAR NIVEL
+    // ========================
+    window.iniciarFabricacionTallerDesdeBoton = async function(areaId, nivelDesdeBoton) {
+        console.log('🔧 Botón presionado para:', areaId, 'nivel desde botón:', nivelDesdeBoton);
         
         if (!window.f1Manager || !window.f1Manager.iniciarFabricacionTaller) {
             alert('Error: Sistema de fabricación no disponible');
             return false;
         }
+        
+        // Obtener la próxima pieza a fabricar para esta área
+        const { data: piezasFabricadas } = await supabase
+            .from('almacen_piezas')
+            .select('numero_global')
+            .eq('escuderia_id', window.f1Manager.escuderia.id)
+            .eq('area', areaId)
+            .order('numero_global', { ascending: true });
+        
+        const siguienteNumeroGlobal = (piezasFabricadas?.length || 0) + 1;
+        const nivelCalculado = Math.ceil(siguienteNumeroGlobal / 5);
+        
+        console.log('📊 Calculando fabricación:', {
+            siguienteNumeroGlobal,
+            nivelCalculado,
+            nivelDesdeBoton
+        });
         
         // Verificar dinero primero
         if (!window.f1Manager.escuderia || window.f1Manager.escuderia.dinero < 10000) {
@@ -2830,8 +3089,8 @@ setTimeout(() => {
             return false;
         }
         
-        // Ejecutar fabricación
-        const resultado = await window.f1Manager.iniciarFabricacionTaller(areaId, nivel);
+        // Ejecutar fabricación con el nivel calculado
+        const resultado = await window.f1Manager.iniciarFabricacionTaller(areaId, nivelCalculado);
         
         // Si se inició, actualizar UI
         if (resultado) {
