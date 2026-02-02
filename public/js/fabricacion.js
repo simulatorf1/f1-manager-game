@@ -353,6 +353,12 @@ class FabricacionManager {
     }
 
     async obtenerSiguienteOrden(areaId) {
+        // AÑADE ESTO AL PRINCIPIO:
+        if (!this.escuderiaId) {
+            console.error('❌ No hay escuderiaId en obtenerSiguienteOrden');
+            return 1;
+        }
+        
         try {
             const { data, error } = await supabase
                 .from('almacen_piezas')
