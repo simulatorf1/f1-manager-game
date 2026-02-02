@@ -2386,17 +2386,27 @@ window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
                 const tiempoFormateado = tiempoRestante > 0 ? 
                     window.f1Manager?.formatTime(tiempoRestante) : "Finalizando...";
                 
-                const { data: piezasExistentes } = await window.supabase
+                // Obtener número GLOBAL de la próxima pieza (no solo del nivel)
+                const { data: todasPiezasArea } = await window.supabase
                     .from('almacen_piezas')
-                    .select('id')
+                    .select('numero_global')
                     .eq('escuderia_id', fabricacion.escuderia_id)
                     .eq('area', fabricacion.area)
-                    .eq('nivel', fabricacion.nivel);
+                    .order('numero_global', { ascending: true });
                 
-                const numeroPieza = (piezasExistentes?.length || 0) + 1;
-                const nombreArea = window.f1Manager?.getNombreArea(fabricacion.area) || fabricacion.area;
+                const siguienteNumeroGlobal = (todasPiezasArea?.length || 0) + 1;
+                let nombrePiezaMostrar = window.f1Manager?.getNombreArea(fabricacion.area) || fabricacion.area;
                 
-                alert('🔄 ' + nombreArea + '\nPieza ' + numeroPieza + ' de nivel ' + fabricacion.nivel + '\nTiempo restante: ' + tiempoFormateado);
+                // Usar el nombre personalizado si existe
+                if (window.f1Manager && window.f1Manager.nombresPiezas && 
+                    window.f1Manager.nombresPiezas[fabricacion.area]) {
+                    const nombresArea = window.f1Manager.nombresPiezas[fabricacion.area];
+                    if (siguienteNumeroGlobal <= nombresArea.length) {
+                        nombrePiezaMostrar = nombresArea[siguienteNumeroGlobal - 1];
+                    }
+                }
+                
+                alert('🔄 ' + nombrePiezaMostrar + '\nMejora ' + siguienteNumeroGlobal + ' de 50\nNivel ' + fabricacion.nivel + '\nTiempo restante: ' + tiempoFormateado);
             }
         } catch (error) {
             console.error("Error obteniendo info:", error);
