@@ -28,11 +28,17 @@ jobs:
 
       - name: Generate Assets (Icon & Splash)
         run: |
+          # 1. Crear carpeta assets y descargar la imagen como 'icon-only.png'
+          # (La herramienta busca este nombre por defecto para el icono)
           mkdir -p assets
-          # Descargamos tu imagen desde la ruta que me diste
-          wget -q https://raw.githubusercontent.com/simulatorf1/f1-manager-game/main/public/IMG_20260202_194732.png -O assets/logo.png
-          # Genera automáticamente todos los tamaños de icono para Android
-          npx capacitor-assets generate --android --icon-source assets/logo.png
+          wget -q https://raw.githubusercontent.com/simulatorf1/f1-manager-game/main/public/IMG_20260202_194732.png -O assets/icon-only.png
+          
+          # 2. Copiarla también como logo.png por si acaso
+          cp assets/icon-only.png assets/logo.png
+          
+          # 3. Ejecutar la generación (sin parámetros extraños que den error)
+          # Esto generará todos los recursos necesarios para Android
+          npx capacitor-assets generate --android
 
       - name: Sync and Fix App Name
         run: |
