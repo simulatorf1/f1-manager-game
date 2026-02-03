@@ -120,19 +120,19 @@ jobs:
       - name: Rename and compress APK
         run: |
           cd android/app/build/outputs/apk/debug
-          # Renombrar APK con el nombre correcto de la app
-          mv app-debug.apk "Critical LAP.apk"
+          # Renombrar APK con nombre simple (sin espacios)
+          mv app-debug.apk CriticalLAP.apk
           # Comprimir
-          gzip -c "Critical LAP.apk" > "Critical LAP.apk.gz"
-          echo "APK renombrado: Critical LAP.apk"
-          echo "Tamaño original: $(du -h 'Critical LAP.apk' | cut -f1)"
-          echo "Tamaño comprimido: $(du -h 'Critical LAP.apk.gz' | cut -f1)"
+          gzip -c CriticalLAP.apk > CriticalLAP.apk.gz
+          echo "APK renombrado: CriticalLAP.apk"
+          echo "Tamaño original: $(du -h CriticalLAP.apk | cut -f1)"
+          echo "Tamaño comprimido: $(du -h CriticalLAP.apk.gz | cut -f1)"
 
       - name: Upload APK (Compressed)
         uses: actions/upload-artifact@v4
         with:
-          name: Critical-LAP-APK
-          path: android/app/build/outputs/apk/debug/Critical LAP.apk.gz
+          name: CriticalLAP-APK
+          path: android/app/build/outputs/apk/debug/CriticalLAP.apk.gz
           retention-days: 7
           if-no-files-found: error
           overwrite: true
@@ -142,17 +142,17 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: Critical-LAP-APK-Raw
-          path: android/app/build/outputs/apk/debug/Critical LAP.apk
+          name: CriticalLAP-APK-Raw
+          path: android/app/build/outputs/apk/debug/CriticalLAP.apk
           retention-days: 1
           if-no-files-found: error
 
       - name: Display APK info
         run: |
           cd android/app/build/outputs/apk/debug
-          echo "✅ APK generado: Critical LAP.apk"
+          echo "✅ APK generado: CriticalLAP.apk"
           echo "📱 Nombre de la app: Critical LAP"
           echo "🎯 Icono: IMG_20260202_194732.PNG"
-          echo "📦 Tamaño: $(du -h 'Critical LAP.apk' | cut -f1)"
-          echo "📥 Para descargar: Ve a 'Artifacts' → 'Critical-LAP-APK'"
+          echo "📦 Tamaño: $(du -h CriticalLAP.apk | cut -f1)"
+          echo "📥 Para descargar: Ve a 'Artifacts' → 'CriticalLAP-APK'"
           echo "ℹ️  Nota: El archivo está comprimido (.gz), descomprímelo antes de instalar"
