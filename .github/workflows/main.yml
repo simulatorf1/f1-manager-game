@@ -11,7 +11,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
 
       - name: Install Capacitor
         run: |
@@ -26,65 +26,98 @@ jobs:
           distribution: 'zulu'
           java-version: '21'
 
-      - name: Download icon properly
+      - name: Download and setup icon
         run: |
-          # URL directa y corregida del icono
-          wget --no-check-certificate "https://raw.githubusercontent.com/simulatorf1/f1-manager-game/main/public/IMG_20260202_194732.PNG" -O icon.png
+          # Descargar el icono desde GitHub
+          echo "Descargando icono desde GitHub..."
+          wget -q https://raw.githubusercontent.com/simulatorf1/f1-manager-game/main/public/IMG_20260202_194732.PNG -O icon.png || echo "Icono no descargado"
           
           if [ -f "icon.png" ]; then
-            echo "✅ Icono descargado"
-            # Configurar para Android
-            mkdir -p android/app/src/main/res/mipmap-xxxhdpi
-            cp icon.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+            echo "Icono descargado correctamente"
+            ls -la icon.png
           else
-            echo "⚠️  Usando icono por defecto"
+            echo "ERROR: No se pudo descargar el icono"
           fi
 
-      - name: Fix app name
+      - name: Configure icon for Android
         run: |
-          # Asegurar nombre "Critical LAP"
-          mkdir -p android/app/src/main/res/values
-          cat > android/app/src/main/res/values/strings.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Critical LAP</string>
-</resources>
-EOF
+          if [ -f "icon.png" ]; then
+            echo "Configurando icono para Android..."
+            sudo apt-get update
+            sudo apt-get install -y imagemagick
+            mkdir -p android/app/src/main/res/mipmap-mdpi
+            mkdir -p android/app/src/main/res/mipmap-hdpi
+            mkdir -p android/app/src/main/res/mipmap-xhdpi
+            mkdir -p android/app/src/main/res/mipmap-xxhdpi
+            mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+            
+            convert icon.png -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher.png 2>/dev/null || true
+            convert icon.png -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher.png 2>/dev/null || true
+            convert icon.png -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher.png 2>/dev/null || true
+            convert icon.png -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png 2>/dev/null || true
+            convert icon.png -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png 2>/dev/null || true
+            echo "Icono configurado"
+          else
+            echo "No hay icono para configurar"
+          fi
 
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Fix Kotlin
+      - name: Force Fix Kotlin Duplicates
         run: |
+          mkdir -p android/app/gradle/
           echo "configurations.all {
-              resolutionStrategy.eachDependency { details ->
+              resolutionStrategy.eachDependency { DependencyResolveDetails details ->
                   if (details.requested.group == 'org.jetbrains.kotlin') {
                       details.useVersion '1.8.22'
                   }
               }
           }" >> android/app/build.gradle
           
-          echo "android.useAndroidX=true" > android/gradle.properties
+          echo "android.useAndroidX=true" >> android/gradle.properties
           echo "android.enableJetifier=true" >> android/gradle.properties
 
       - name: Build APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Rename APK
+      - name: Rename and compress APK
         run: |
           cd android/app/build/outputs/apk/debug
+          # Renombrar APK
           mv app-debug.apk CriticalLAP.apk
-          gzip -k CriticalLAP.apk
-          echo "✅ APK: CriticalLAP.apk"
+          # Comprimir
+          gzip -c CriticalLAP.apk > CriticalLAP.apk.gz
+          echo "APK renombrado: CriticalLAP.apk"
+          echo "Tamaño original: $(du -h CriticalLAP.apk | cut -f1)"
+          echo "Tamaño comprimido: $(du -h CriticalLAP.apk.gz | cut -f1)"
 
-      - name: Upload APK
+      - name: Upload APK (Compressed)
         uses: actions/upload-artifact@v4
         with:
           name: CriticalLAP-APK
           path: android/app/build/outputs/apk/debug/CriticalLAP.apk.gz
+          retention-days: 7
+          if-no-files-found: error
+          overwrite: true
+          compression-level: 0
 
-      - name: Done
-        run: echo "🎉 ¡APK Critical LAP lista! Nombre e icono configurados."
+      - name: Upload APK (Original) como fallback
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CriticalLAP-APK-Raw
+          path: android/app/build/outputs/apk/debug/CriticalLAP.apk
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Display APK info
+        run: |
+          cd android/app/build/outputs/apk/debug
+          echo "✅ APK generado: CriticalLAP.apk"
+          echo "📱 Nombre de la app: Critical LAP"
+          echo "🎯 Icono: Configurado desde IMG_20260202_194732.PNG"
+          echo "📥 Para descargar: Ve a 'Artifacts' → 'CriticalLAP-APK'"
