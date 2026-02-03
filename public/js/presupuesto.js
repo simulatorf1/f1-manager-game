@@ -36,7 +36,28 @@ class PresupuestoManager {
         await this.cargarTransacciones();
         return true;
     }
-
+    
+    calcularPresupuestoInicialReal() {
+        const lunes = this.obtenerInicioSemana();
+        
+        // Buscar transacciones ANTES del lunes
+        const transaccionesAntesLunes = this.transacciones.filter(t => {
+            if (!t || !t.fecha) return false;
+            const fechaTrans = new Date(t.fecha);
+            return fechaTrans < lunes;
+        });
+        
+        if (transaccionesAntesLunes.length > 0) {
+            // Ordenar por fecha (más reciente primero)
+            transaccionesAntesLunes.sort((a, b) => 
+                new Date(b.fecha) - new Date(a.fecha)
+            );
+            return Number(transaccionesAntesLunes[0].saldo_resultante || 5000000);
+        }
+        
+        // Si no hay transacciones, usar valor por defecto
+        return 5000000;
+    }
     async cargarTransacciones(dias = 7) {
         try {
             const fechaLimite = new Date();
@@ -83,7 +104,7 @@ class PresupuestoManager {
         const resumen = this.calcularResumenSemanal(transaccionesSemana);
         
         // Calcular presupuesto inicial aproximado
-        const presupuestoInicial = saldoActual - resumen.balanceSemanal;
+        const presupuestoInicial = await this.obtenerPresupuestoInicialReal();
         
         return `
             <div class="presupuesto-container compacto">
