@@ -868,12 +868,13 @@ class F1Manager {
                     await window.presupuestoManager.registrarTransaccion(
                         'gasto',
                         costo,
-                        `Fabricación ${this.getNombreArea(areaId)} Nivel Q${nivel}`,
+                        `Fabricación ${nombrePiezaNotif}`, // ← ¡ESTE ES EL NOMBRE CORRECTO!
                         'produccion',
                         { 
                             area: areaId, 
-                            nivel: nivel, 
-                            numero_pieza: numeroPiezaGlobal 
+                            nivel: nivel,
+                            nombre_pieza: nombrePiezaNotif, // ← PASA EL NOMBRE TAMBIÉN
+                            numero_pieza: numeroPiezaGlobal
                         }
                     );
                     console.log('💰 Transacción registrada en presupuesto');
