@@ -3225,10 +3225,10 @@ function mostrarPantallaCargaInicial() {
         ">
             <div style="margin-bottom: 40px; text-align: center;">
                 <div style="color: #e10600; font-size: 4rem; font-weight: bold; margin-bottom: 10px; text-shadow: 0 0 20px rgba(225, 6, 0, 0.7); letter-spacing: 2px;">
-                    F1
+                    CRITICAL LAP
                 </div>
                 <div style="color: #ffffff; font-size: 1.2rem; letter-spacing: 3px; font-weight: 300;">
-                    STRATEGY MANAGER
+                    STRATEGY & DESIGN
                 </div>
             </div>
             
