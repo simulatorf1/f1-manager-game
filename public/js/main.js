@@ -861,6 +861,27 @@ class F1Manager {
             
             this.escuderia.dinero -= costo;
             await this.updateEscuderiaMoney();
+            // ✅ AGREGA ESTO:
+            // Registrar transacción de presupuesto
+            try {
+                if (window.presupuestoManager && window.presupuestoManager.registrarTransaccion) {
+                    await window.presupuestoManager.registrarTransaccion(
+                        'gasto',
+                        costo,
+                        `Fabricación ${this.getNombreArea(areaId)} Nivel Q${nivel}`,
+                        'produccion',
+                        { 
+                            area: areaId, 
+                            nivel: nivel, 
+                            numero_pieza: numeroPiezaGlobal 
+                        }
+                    );
+                    console.log('💰 Transacción registrada en presupuesto');
+                }
+            } catch (error) {
+                console.warn('⚠️ No se pudo registrar transacción:', error);
+                // No fallar la fabricación si el registro de transacción falla
+            }            
             const nombreArea = this.getNombreArea(areaId);
             const horas = Math.floor(tiempoMinutos / 60);
             const dias = Math.floor(horas / 24);
@@ -884,7 +905,10 @@ class F1Manager {
             }
             
             this.showNotification('✅ ' + nombrePiezaNotif + ' en fabricación - ' + tiempoTexto, 'success');                        
-
+            // ✅ AGREGAR TAMBIÉN AQUÍ para actualizar presupuesto en pantalla:
+            if (window.presupuestoManager && window.presupuestoManager.actualizarVistaPresupuesto) {
+                window.presupuestoManager.actualizarVistaPresupuesto();
+            }
             setTimeout(() => {
                 this.updateProductionMonitor();
             }, 500);
