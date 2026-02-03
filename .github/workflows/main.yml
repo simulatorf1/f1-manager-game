@@ -13,7 +13,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Capacitor and dependencies
+      - name: Install Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
           mkdir -p out
@@ -29,61 +29,34 @@ jobs:
       - name: Install ImageMagick
         run: sudo apt-get update && sudo apt-get install -y imagemagick
 
-      - name: Configure Android app
+      - name: Configure Android app name and icon
         run: |
-          # Crear el script de configuración
-          cat > setup-android.js << 'EOF'
-          const fs = require('fs');
-          const path = require('path');
-          const { execSync } = require('child_process');
-          
-          console.log('🔧 Configurando Android...');
-          
-          // Crear strings.xml
-          const stringsXml = `<?xml version="1.0" encoding="utf-8"?>
+          # 1. Crear strings.xml con nombre "Critical LAP"
+          mkdir -p android/app/src/main/res/values
+          echo '<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Critical LAP</string>
-</resources>`;
+</resources>' > android/app/src/main/res/values/strings.xml
           
-          fs.mkdirSync('android/app/src/main/res/values', { recursive: true });
-          fs.writeFileSync('android/app/src/main/res/values/strings.xml', stringsXml);
+          # 2. Descargar icono
+          echo "Descargando icono..."
+          curl -s -o /tmp/icon.png https://raw.githubusercontent.com/simulatorf1/f1-manager-game/main/public/IMG_20260202_194732.PNG || echo "No se pudo descargar icono"
           
-          // Actualizar AndroidManifest.xml
-          if (fs.existsSync('android/app/src/main/AndroidManifest.xml')) {
-              let manifest = fs.readFileSync('android/app/src/main/AndroidManifest.xml', 'utf8');
-              manifest = manifest.replace(/android:label="[^"]*"/g, 'android:label="@string/app_name"');
-              fs.writeFileSync('android/app/src/main/AndroidManifest.xml', manifest);
-          }
-          
-          // Descargar y configurar icono
-          try {
-              execSync('curl -s -o /tmp/icon.png https://raw.githubusercontent.com/simulatorf1/f1-manager-game/main/public/IMG_20260202_194732.PNG');
-              
-              if (fs.existsSync('/tmp/icon.png')) {
-                  const sizes = [
-                      ['mipmap-mdpi', 48],
-                      ['mipmap-hdpi', 72],
-                      ['mipmap-xhdpi', 96],
-                      ['mipmap-xxhdpi', 144],
-                      ['mipmap-xxxhdpi', 192]
-                  ];
-                  
-                  for (const [folder, size] of sizes) {
-                      const dir = `android/app/src/main/res/${folder}`;
-                      fs.mkdirSync(dir, { recursive: true });
-                      execSync(`convert /tmp/icon.png -resize ${size}x${size} ${dir}/ic_launcher.png 2>/dev/null || echo "Falló ${folder}"`);
-                  }
-                  console.log('✅ Icono configurado');
-              }
-          } catch (e) {
-              console.log('⚠️  Error con icono:', e.message);
-          }
-          
-          console.log('🎉 Configuración completada!');
-          EOF
-          
-          # Ejecutar el script
-          node setup-android.js
+          # 3. Crear iconos en diferentes resoluciones
+          if [ -f "/tmp/icon.png" ]; then
+            echo "Creando iconos para Android..."
+            mkdir -p android/app/src/main/res/mipmap-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}
+            
+            convert /tmp/icon.png -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher.png 2>/dev/null || cp /tmp/icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+            convert /tmp/icon.png -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher.png 2>/dev/null || cp /tmp/icon.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+            convert /tmp/icon.png -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher.png 2>/dev/null || cp /tmp/icon.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+            convert /tmp/icon.png -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png 2>/dev/null || cp /tmp/icon.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+            convert /tmp/icon.png -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png 2>/dev/null || cp /tmp/icon.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+            
+            echo "✅ Iconos creados"
+          else
+            echo "⚠️  Usando iconos por defecto"
+          fi
 
       - name: Sync Capacitor
         run: npx cap sync android
@@ -98,7 +71,7 @@ jobs:
               }
           }" >> android/app/build.gradle
           
-          echo "android.useAndroidX=true" >> android/gradle.properties
+          echo "android.useAndroidX=true" > android/gradle.properties
           echo "android.enableJetifier=true" >> android/gradle.properties
 
       - name: Build APK
@@ -107,7 +80,7 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Prepare APK
+      - name: Rename APK
         run: |
           cd android/app/build/outputs/apk/debug
           mv app-debug.apk CriticalLAP.apk
@@ -121,4 +94,4 @@ jobs:
           path: android/app/build/outputs/apk/debug/CriticalLAP.apk.gz
 
       - name: Done
-        run: echo "🎉 ¡APK Critical LAP con icono personalizado lista!"
+        run: echo "🎉 ¡Critical LAP con icono personalizado lista para descargar!"
