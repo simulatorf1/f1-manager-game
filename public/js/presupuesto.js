@@ -104,7 +104,7 @@ class PresupuestoManager {
         const resumen = this.calcularResumenSemanal(transaccionesSemana);
         
         // Calcular presupuesto inicial aproximado
-        const presupuestoInicial = await this.obtenerPresupuestoInicialReal();
+        const presupuestoInicial = this.calcularPresupuestoInicialSync();
         
         return `
             <div class="presupuesto-container compacto">
