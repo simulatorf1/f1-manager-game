@@ -2572,6 +2572,260 @@ html, body {
     overflow-y: auto !important;
     padding: 15px;
 }
+
+/* ======================= */
+/* ESTILOS CLASIFICACIÓN   */
+/* ======================= */
+
+.clasificacion-container {
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.clasificacion-subtitle {
+    color: #666;
+    margin-top: 5px;
+    font-size: 0.95rem;
+}
+
+.clasificacion-info-bar {
+    display: flex;
+    justify-content: space-between;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.info-item i {
+    font-size: 1.5rem;
+}
+
+.info-label {
+    display: block;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.info-value {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.tabla-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.ordenamiento-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-ordenar {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.btn-ordenar:hover {
+    background: #f0f0f0;
+}
+
+.btn-ordenar.active {
+    background: #2196F3;
+    color: white;
+    border-color: #2196F3;
+}
+
+.search-box {
+    position: relative;
+    width: 300px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 15px 10px 35px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.search-box .fa-search {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+}
+
+.tabla-contenedor-scroll {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.tabla-clasificacion-simple {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.tabla-clasificacion-simple thead {
+    position: sticky;
+    top: 0;
+    background: #2c3e50;
+    color: white;
+    z-index: 10;
+}
+
+.tabla-clasificacion-simple th {
+    padding: 15px 20px;
+    text-align: left;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+}
+
+.tabla-clasificacion-simple th:hover {
+    background: #34495e;
+}
+
+.sort-icon {
+    margin-left: 8px;
+    font-size: 0.8rem;
+}
+
+.col-posicion {
+    width: 80px;
+}
+
+.col-nombre {
+    width: 50%;
+}
+
+.col-dinero {
+    width: 30%;
+}
+
+.tabla-clasificacion-simple td {
+    padding: 12px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.tabla-clasificacion-simple tbody tr:hover {
+    background: #f9f9f9;
+}
+
+.mi-escuderia {
+    background: #E8F5E9 !important;
+    font-weight: 600;
+}
+
+.mi-escuderia:hover {
+    background: #DCEDC8 !important;
+}
+
+.celda-posicion {
+    text-align: center;
+}
+
+.numero-posicion {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 50%;
+    text-align: center;
+    font-weight: bold;
+}
+
+.top-1 .numero-posicion {
+    background: #FFD700;
+    color: #333;
+}
+
+.top-2 .numero-posicion {
+    background: #C0C0C0;
+    color: #333;
+}
+
+.top-3 .numero-posicion {
+    background: #CD7F32;
+    color: white;
+}
+
+.valor-dinero {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    color: #2E7D32;
+}
+
+.tabla-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.actualizar-buttons {
+    text-align: center;
+    margin-top: 25px;
+}
+
+.btn-actualizar {
+    padding: 12px 30px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-actualizar:hover {
+    background: #45a049;
+}
+
+.cargando-clasificacion {
+    text-align: center;
+    color: #666;
+}
+
+.cargando-clasificacion i {
+    margin-bottom: 10px;
+}
+
+.loading-row {
+    opacity: 0.7;
+}
+
 /* ========================
    RESPONSIVE PARA MÓVIL - HEADER
    ======================== */
