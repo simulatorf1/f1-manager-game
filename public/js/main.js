@@ -1211,6 +1211,14 @@ class F1Manager {
             await window.integracionManager.inicializar(this.escuderia.id);
             console.log('✅ Sistema de integración inicializado');
         }
+        if (window.IngenieriaManager && !window.ingenieriaManager) {
+            console.log('🔧 Creando ingenieriaManager...');
+            window.ingenieriaManager = new window.IngenieriaManager(this);
+            await window.ingenieriaManager.inicializar();
+            console.log('✅ Sistema de ingeniería inicializado');
+        } else if (window.ingenieriaManager) {
+            console.log('✅ ingenieriaManager ya existe');
+        }
         
         this.iniciarTimersAutomaticos();
     }
