@@ -391,7 +391,7 @@ class TabManager {
     
     loadTabContents() {
         // Precargar contenido de todas las pestañas
-        const tabs = ['principal', 'taller', 'almacen', 'mercado', 'presupuesto', 'clasificacion', 'pronosticos'];
+        const tabs = ['principal', 'taller', 'almacen', 'mercado', 'presupuesto', 'clasificacion', 'pronosticos', 'ingenieria'];
         
         tabs.forEach(tab => {
             this.tabContents[tab] = this.generateTabContent(tab);
@@ -413,7 +413,9 @@ class TabManager {
             case 'clasificacion':
                 return this.getClasificacionContent();
             case 'pronosticos': 
-                return this.getPronosticosContent();                
+                return this.getPronosticosContent();
+            case 'ingenieria': // AÑADIR ESTE CASO
+                return this.getIngenieriaContent();                
             default:
                 return `<h2>Pestaña ${tabId}</h2><p>Contenido en desarrollo...</p>`;
         }
@@ -604,6 +606,18 @@ class TabManager {
             </div>
         `;
     }
+
+    getIngenieriaContent() {
+        return `
+            <div class="tab-cargando">
+                <div class="spinner-ingenieria">
+                    <i class="fas fa-flask fa-spin"></i>
+                </div>
+                <p>Cargando pruebas en pista...</p>
+                <p class="subtexto">Preparando simulación de ingeniería</p>
+            </div>
+        `;
+    }    
     
     getPresupuestoContent() {
         return `
@@ -1011,6 +1025,10 @@ class TabManager {
             case 'mercado':
                 this.setupMercadoEvents();
                 break;
+            case 'ingenieria': // AÑADIR ESTE CASO
+                this.setupIngenieriaEvents();
+                break;
+                
             case 'clasificacion':  // ← AÑADIDO
                 this.setupClasificacionEvents();
                 // Cargar datos cuando se abra la pestaña
