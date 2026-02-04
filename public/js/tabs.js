@@ -1102,6 +1102,31 @@ class TabManager {
         // Cargar piezas del mercado
         this.loadMercadoPiezas();
     }
+
+    setupIngenieriaEvents() {
+        console.log('🔧 Configurando eventos de ingeniería...');
+        
+        // Esta función cargará el contenido real cuando la pestaña se active
+        setTimeout(() => {
+            if (window.ingenieriaManager && window.ingenieriaManager.cargarTabIngenieria) {
+                window.ingenieriaManager.cargarTabIngenieria();
+                console.log('✅ Contenido de ingeniería cargado');
+            } else {
+                console.error('❌ ingenieriaManager no disponible');
+                const tabContent = document.getElementById('tab-ingenieria');
+                if (tabContent) {
+                    tabContent.innerHTML = `
+                        <div class="error-tab">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Error</h3>
+                            <p>Sistema de ingeniería no disponible</p>
+                            <button onclick="location.reload()">Reintentar</button>
+                        </div>
+                    `;
+                }
+            }
+        }, 100);
+    }
+    
     
     // ===== FUNCIONES DE PESTAÑAS =====
     
