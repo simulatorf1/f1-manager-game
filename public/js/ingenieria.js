@@ -22,7 +22,7 @@ class IngenieriaManager {
             puntosMaximos: 660, // Puntos máximos alcanzables
             puntosBase: 0, // Puntos base (sin mejoras)
             vueltasPrueba: 10, // Número de vueltas en la simulación
-            duracionSimulacion: 3600 // Duración en segundos (1 hora)
+            duracionSimulacion: 60 // Duración en segundos (1 hora)
         };
     }
 
@@ -57,10 +57,7 @@ class IngenieriaManager {
                 <div class="ingenieria-container">
                     <div class="ingenieria-header">
                         <h2><i class="fas fa-flask"></i> PRUEBAS EN PISTA</h2>
-                        <div class="puntos-actuales">
-                            <span class="puntos-label">Puntos técnicos del coche:</span>
-                            <span class="puntos-valor">${puntosActuales.toLocaleString()}</span>
-                        </div>
+
                     </div>
                     
                     <div class="simulacion-panel">
