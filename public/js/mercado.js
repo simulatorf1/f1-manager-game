@@ -298,10 +298,8 @@ class MercadoManager {
                     .pieza-nombre-col {
                         font-weight: bold;
                         color: white;
-                        min-width: 120px;
-                        max-width: 140px;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
+                        width: auto;  /* NUEVO: ajuste automático */
+                        white-space: nowrap;
                     }
                     
                     .nivel-col {
@@ -311,18 +309,16 @@ class MercadoManager {
                     }
                     
                     .vendedor-col {
-                        min-width: 80px;
-                        max-width: 100px;
                         color: #aaa;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
+                        width: auto;  /* NUEVO: ajuste automático */
+                        white-space: nowrap;
                     }
                     
                     .precio-col {
                         color: #FFD700;
                         font-weight: bold;
-                        min-width: 70px;
-                        max-width: 90px;
+                        width: auto;  /* NUEVO: ajuste automático */
+                        white-space: nowrap;
                     }
                     
                     .accion-col {
@@ -480,25 +476,14 @@ class MercadoManager {
                             font-size: 0.75rem;
                         }
                         
-                        .pieza-nombre-col {
-                            min-width: 100px;
-                            max-width: 120px;
-                        }
+
                         
                         .nivel-col {
                             min-width: 35px;
                             max-width: 45px;
                         }
                         
-                        .vendedor-col {
-                            min-width: 70px;
-                            max-width: 90px;
-                        }
-                        
-                        .precio-col {
-                            min-width: 65px;
-                            max-width: 80px;
-                        }
+
                         
                         .accion-col {
                             min-width: 65px;
@@ -563,25 +548,14 @@ class MercadoManager {
                             font-size: 0.7rem;
                         }
                         
-                        .pieza-nombre-col {
-                            min-width: 90px;
-                            max-width: 110px;
-                        }
+
                         
                         .nivel-col {
                             min-width: 30px;
                             max-width: 40px;
                         }
                         
-                        .vendedor-col {
-                            min-width: 60px;
-                            max-width: 80px;
-                        }
-                        
-                        .precio-col {
-                            min-width: 60px;
-                            max-width: 75px;
-                        }
+
                         
                         .accion-col {
                             min-width: 60px;
