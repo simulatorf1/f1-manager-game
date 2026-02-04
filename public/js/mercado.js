@@ -117,7 +117,6 @@ class MercadoManager {
                                 <thead>
                                     <tr>
                                         <th>Pieza</th>
-                                        <th>Nivel</th>
                                         <th>Vendedor</th>
                                         <th>Precio</th>
                                         <th>Acción</th>
@@ -131,7 +130,6 @@ class MercadoManager {
                                         return `
                                             <tr>
                                                 <td class="pieza-nombre-col">${orden.pieza_nombre}</td>
-                                                <td class="nivel-col">${orden.nivel}</td>
                                                 <td class="vendedor-col">${orden.vendedor_nombre}</td>
                                                 <td class="precio-col">${orden.precio.toLocaleString()}€</td>
                                                 <td class="accion-col">
@@ -664,7 +662,6 @@ class MercadoManager {
                         <tr>
                             <th>Pieza</th>
                             <th>Área</th>
-                            <th>Nivel</th>
                             <th>Calidad</th>
                             <th>Vendedor</th>
                             <th>Precio</th>
@@ -676,7 +673,6 @@ class MercadoManager {
                             <tr>
                                 <td>${orden.pieza_nombre}</td>
                                 <td>${this.getAreaNombre(orden.area)}</td>
-                                <td>${orden.nivel}</td>
                                 <td><span class="badge-calidad">${orden.calidad}</span></td>
                                 <td>${orden.vendedor_nombre}</td>
                                 <td class="precio">${orden.precio.toLocaleString()}€</td>
