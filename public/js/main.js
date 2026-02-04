@@ -3215,6 +3215,22 @@ window.addEventListener('auth-completado', async (evento) => {
         
         window.f1Manager = new F1Manager(user, escuderia, supabase);
         
+        if (window.IngenieriaManager && !window.ingenieriaManager) {
+            console.log('🔧 Creando ingenieriaManager...');
+            try {
+                window.ingenieriaManager = new window.IngenieriaManager(window.f1Manager);
+                // Inicializar pero no esperar (se hará async)
+                window.ingenieriaManager.inicializar().then(() => {
+                    console.log('✅ ingenieriaManager inicializado');
+                }).catch(error => {
+                    console.error('❌ Error inicializando ingenieriaManager:', error);
+                });
+            } catch (error) {
+                console.error('❌ Error creando ingenieriaManager:', error);
+            }
+        }
+        
+        
         if (window.MercadoManager) {
             console.log('🔧 Inicializando mercadoManager con escudería:', escuderia.id);
             if (!window.mercadoManager) {
