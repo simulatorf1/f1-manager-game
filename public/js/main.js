@@ -1525,6 +1525,10 @@ class F1Manager {
                         <button class="tab-btn-compacto" data-tab="clasificacion">
                             <i class="fas fa-medal"></i> Clasificación
                         </button>
+                        <button class="tab-btn-compacto" data-tab="ingenieria">
+                            <i class="fas fa-flask"></i> Ingeniería
+                        </button>
+                        
                     </nav>
                 </header>
                 
