@@ -3864,12 +3864,7 @@ setTimeout(() => {
                 }
             }, 1000);
             
-            // Ir a principal para ver la producción
-            setTimeout(() => {
-                if (window.tabManager && window.tabManager.switchTab) {
-                    window.tabManager.switchTab('principal');
-                }
-            }, 1500);
+
         }
         
         return resultado;
