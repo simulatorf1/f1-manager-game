@@ -1641,7 +1641,8 @@ class F1Manager {
                     </nav>
                 </header>
                 
-                <main class="dashboard-content" style="flex: 1; overflow-y: auto;">
+                <!-- CONTENIDO PRINCIPAL (SOLO ESTO CAMBIARÁ CON LAS PESTAÑAS) -->
+                <div id="main-content-area" style="flex: 1; overflow-y: auto;">
                     <div id="tab-principal" class="tab-content active">
                         <div class="three-columns-layout">
                             <div class="col-estrategas">
@@ -1702,7 +1703,6 @@ class F1Manager {
                         <section class="piezas-montadas">
                             <div class="section-header">
                                 <h2><i class="fas fa-car"></i> PIEZAS MONTADAS EN EL COCHE</h2>
-                                <!-- SE ELIMINÓ EL CONTADOR DE PUNTOS -->
                             </div>
                             
                             <div id="grid-piezas-montadas" class="grid-11-columns">
@@ -1724,9 +1724,16 @@ class F1Manager {
                     <div id="tab-pronosticos" class="tab-content"></div>
                     <div id="tab-presupuesto" class="tab-content"></div>
                     <div id="tab-clasificacion" class="tab-content"></div>
-                </main>
+                </div>
                 
-                <footer class="dashboard-footer">
+                <!-- FOOTER FIJO - SIEMPRE VISIBLE -->
+                <footer class="dashboard-footer" style="
+                    position: sticky;
+                    bottom: 0;
+                    background: #1a1a2e;
+                    border-top: 1px solid rgba(0, 210, 190, 0.3);
+                    z-index: 1000;
+                ">
                     <div class="user-info-compacto">
                         <i class="fas fa-user-circle"></i>
                         <span>${this.user.email?.split('@')[0] || 'Usuario'}</span>
