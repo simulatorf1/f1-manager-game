@@ -814,7 +814,28 @@ html, body {
     pointer-events: none !important;
     gap: 12px;
 }
+.estrellas-display-compacto {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 8px;
+    padding: 4px 10px;
+    color: #FFD700;
+    font-weight: bold;
+    cursor: help;
+    font-size: 0.9rem;
+}
 
+.estrellas-display-compacto i {
+    font-size: 0.9rem;
+}
+
+.estrellas-display-compacto:hover {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: #FFD700;
+}
 /* Quitar hover y transiciones */
 .grid-btn-big:hover {
     transform: none !important;
