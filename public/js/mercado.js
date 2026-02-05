@@ -903,7 +903,27 @@ class MercadoManager {
                 return;
             }
     
-            // 2. ENCONTRAR LA PIEZA ORIGINAL DEL VENDEDOR
+            // 2. VERIFICAR SI YA TIENE UNA PIEZA IGUAL O SUPERIOR EN EL MISMO ÁREA Y NIVEL
+            const { data: misPiezas, error: piezasError } = await this.supabase
+                .from('almacen_piezas')
+                .select('*')
+                .eq('escuderia_id', this.escuderia.id)
+                .eq('area', orden.area)
+                .eq('equipada', true);
+            
+            if (piezasError) throw piezasError;
+            
+            if (misPiezas && misPiezas.length > 0) {
+                // Verificar si ya tiene una pieza del mismo nivel o superior equipada
+                const piezaEquipada = misPiezas.find(p => p.nivel >= orden.nivel);
+                if (piezaEquipada) {
+                    if (!confirm(`⚠️ Ya tienes ${this.getAreaNombre(orden.area)} Nivel ${piezaEquipada.nivel} equipado.\n¿Estás seguro de comprar esta pieza de nivel ${orden.nivel}?`)) {
+                        return;
+                    }
+                }
+            }
+            
+            // 3. ENCONTRAR LA PIEZA ORIGINAL DEL VENDEDOR
             const { data: piezasOriginales, error: findError } = await this.supabase
                 .from('almacen_piezas')
                 .select('*')
@@ -915,14 +935,16 @@ class MercadoManager {
             
             const piezaOriginal = piezasOriginales[0];
     
-            // 3. TRANSFERIR la pieza al comprador (NO crear nueva)
+            // 4. TRANSFERIR la pieza al comprador (NO crear nueva)
             const { error: transferPiezaError } = await this.supabase
                 .from('almacen_piezas')
                 .update({
                     escuderia_id: this.escuderia.id,
                     en_venta: false,
                     comprada_en: new Date().toISOString(),
-                    precio_compra: orden.precio
+                    precio_compra: orden.precio,
+                    comprada_mercado: true,  // ← NUEVO CAMPO PARA IDENTIFICAR PIEZAS COMPRADAS
+                    vendedor_original: orden.vendedor_nombre  // ← Guardar quién la vendió
                 })
                 .eq('id', orden.pieza_id);
             
@@ -964,7 +986,7 @@ class MercadoManager {
     
             // 9. Mostrar notificación
             this.mostrarNotificacion(`✅ Compra realizada: ${orden.pieza_nombre} por ${orden.precio.toLocaleString()}€`, 'success');
-
+    
             // 10. REGISTRAR TRANSACCIÓN PARA EL COMPRADOR
             try {
                 const { error: transaccionError } = await this.supabase
@@ -982,12 +1004,12 @@ class MercadoManager {
             } catch (error) {
                 console.log('⚠️ Error registrando transacción de compra:', error);
             }
-
+    
             // 11. REGISTRAR TRANSACCIÓN PARA EL VENDEDOR
             try {
                 const { error: transaccionVendedorError } = await this.supabase
                     .from('transacciones')
-                    .insert([{
+                        .insert([{
                         escuderia_id: orden.vendedor_id,
                         tipo: 'ingreso',
                         cantidad: orden.precio,
