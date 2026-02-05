@@ -803,6 +803,31 @@ class F1Manager {
                         -webkit-line-clamp: 2;
                         -webkit-box-orient: vertical;
                     }
+
+                    .btn-pieza-50.comprada-mercado {
+                        border-color: #FF9800; /* Naranja para piezas compradas */
+                        background: rgba(255, 152, 0, 0.1);
+                        color: #FF9800;
+                    }
+                    
+                    .btn-pieza-50.comprada-mercado:hover {
+                        border-color: #FFB74D;
+                        background: rgba(255, 152, 0, 0.2);
+                    }
+                    
+                    .btn-pieza-50.comprada-mercado i {
+                        color: #FF9800;
+                    }
+                    
+                    .mercado-badge {
+                        position: absolute;
+                        top: 2px;
+                        right: 2px;
+                        font-size: 0.6rem;
+                        color: #FF9800;
+                    }
+
+                    
                 `;
                 document.head.appendChild(style);
             }
