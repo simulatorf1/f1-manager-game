@@ -974,23 +974,24 @@ class MercadoManager {
             
             const piezaOriginal = piezasOriginales[0];
     
-            // 4. TRANSFERIR la pieza al comprador (NO crear nueva)
+            // 4. TRANSFERIR la pieza al comprador y LIMPIAR FLAG EN_VENTA
             const { error: transferPiezaError } = await this.supabase
                 .from('almacen_piezas')
                 .update({
                     escuderia_id: this.escuderia.id,
-                    en_venta: false,
+                    en_venta: false,  // ← IMPORTANTE: Limpiar flag de venta
+                    precio_venta: null,  // ← Limpiar precio de venta
                     comprada_en: new Date().toISOString(),
                     precio_compra: orden.precio,
-                    comprada_mercado: true,  // ← NUEVO CAMPO PARA IDENTIFICAR PIEZAS COMPRADAS
+                    comprada_mercado: true,  // ← Marcar como comprada en mercado
                     vendedor_original: orden.vendedor_nombre  // ← Guardar quién la vendió
                 })
                 .eq('id', orden.pieza_id);
             
             if (transferPiezaError) throw transferPiezaError;
     
-            // 4. Y 5. TRANSFERIR DINERO CON LA FUNCIÓN SEGURA
-            const { error: transferDineroError } = await this.supabase.rpc(  // ← NOMBRE DIFERENTE
+            // 5. TRANSFERIR DINERO CON LA FUNCIÓN SEGURA
+            const { error: transferDineroError } = await this.supabase.rpc(
                 'procesar_compra_mercado',
                 {
                     p_orden_id: orden.id,
@@ -999,7 +1000,7 @@ class MercadoManager {
                 }
             );
             
-            if (transferDineroError) {  // ← USA NUEVO NOMBRE
+            if (transferDineroError) {
                 console.log('⚠️ Error en transferencia de dinero:', transferDineroError.message);
             }
             
@@ -1007,7 +1008,7 @@ class MercadoManager {
             this.escuderia.dinero -= orden.precio;
             await this.actualizarDineroEscuderia();
     
-            // 7. Marcar orden como vendida  // ← AHORA ES 7, NO 6
+            // 7. Marcar orden como vendida
             const { error: updateError } = await this.supabase
                 .from('mercado')
                 .update({
@@ -1048,7 +1049,7 @@ class MercadoManager {
             try {
                 const { error: transaccionVendedorError } = await this.supabase
                     .from('transacciones')
-                        .insert([{
+                    .insert([{
                         escuderia_id: orden.vendedor_id,
                         tipo: 'ingreso',
                         cantidad: orden.precio,
@@ -1062,34 +1063,86 @@ class MercadoManager {
                 console.log('⚠️ Error registrando transacción del vendedor:', error);
             }
     
+            // 12. RECARGAR ALMACÉN SI ESTÁ VISIBLE
+            if (window.tabManager?.currentTab === 'almacen' && window.tabManager.loadAlmacenPiezas) {
+                setTimeout(() => {
+                    window.tabManager.loadAlmacenPiezas();
+                }, 500);
+            }
+    
+            // 13. RECARGAR TALLER SI ESTÁ VISIBLE
+            if (window.tabManager?.currentTab === 'taller' && window.f1Manager?.cargarTabTaller) {
+                setTimeout(() => {
+                    window.f1Manager.cargarTabTaller();
+                }, 500);
+            }
+    
         } catch (error) {
             console.error('❌ Error procesando compra:', error);
             this.mostrarNotificacion(`❌ Error: ${error.message}`, 'error');
         }
     }
     async cancelarVenta(ordenId) {
-        // ELIMINAR EL CONFIRM DE AQUÍ TAMBIÉN
         try {
-            const { error } = await this.supabase
+            // 1. Obtener la orden para saber qué pieza es
+            const { data: orden, error: ordenError } = await this.supabase
                 .from('mercado')
-                .update({ estado: 'cancelado' })
+                .select('*')
+                .eq('id', ordenId)
+                .eq('vendedor_id', this.escuderia.id)
+                .single();
+            
+            if (ordenError) throw ordenError;
+            if (!orden) throw new Error('Orden no encontrada o no te pertenece');
+    
+            // 2. Cancelar la venta en la tabla mercado
+            const { error: mercadoError } = await this.supabase
+                .from('mercado')
+                .update({ 
+                    estado: 'cancelado',
+                    cancelada_en: new Date().toISOString()
+                })
                 .eq('id', ordenId)
                 .eq('vendedor_id', this.escuderia.id);
+            
+            if (mercadoError) throw mercadoError;
+            
+            // 3. IMPORTANTE: Actualizar la pieza en almacen_piezas para quitar el flag en_venta
+            const { error: piezaError } = await this.supabase
+                .from('almacen_piezas')
+                .update({ 
+                    en_venta: false,
+                    precio_venta: null  // También limpiar el precio de venta si existe
+                })
+                .eq('id', orden.pieza_id)
+                .eq('escuderia_id', this.escuderia.id);
+            
+            if (piezaError) throw piezaError;
+            
+            console.log('✅ Venta cancelada y pieza actualizada en almacén:', orden.pieza_id);
     
-            if (error) throw error;
-    
+            // 4. Recargar el mercado
             await this.cargarTabMercado();
-            this.mostrarNotificacion('✅ Venta cancelada', 'success');
-
-            // Registrar cancelación
+            
+            // 5. Si estamos en la pestaña de almacén, recargarla también
+            if (window.tabManager?.currentTab === 'almacen' && window.tabManager.loadAlmacenPiezas) {
+                setTimeout(() => {
+                    window.tabManager.loadAlmacenPiezas();
+                }, 300);
+            }
+            
+            // 6. Mostrar notificación
+            this.mostrarNotificacion('✅ Venta cancelada. La pieza ya no está en venta.', 'success');
+    
+            // 7. Registrar cancelación
             try {
                 const { error: transaccionError } = await this.supabase
                     .from('transacciones')
-                    .insert([{
+                        .insert([{
                         escuderia_id: this.escuderia.id,
                         tipo: 'ajuste',
                         cantidad: 0,
-                        descripcion: `Venta cancelada: Orden ${ordenId}`,
+                        descripcion: `Venta cancelada: ${orden.pieza_nombre}`,
                         referencia: ordenId,
                         fecha: new Date().toISOString(),
                         saldo_resultante: this.escuderia.dinero,
@@ -1098,10 +1151,10 @@ class MercadoManager {
             } catch (error) {
                 console.log('⚠️ Error registrando cancelación:', error);
             }
-    
+            
         } catch (error) {
             console.error('❌ Error cancelando venta:', error);
-            this.mostrarNotificacion('❌ Error cancelando venta', 'error');
+            this.mostrarNotificacion('❌ Error cancelando venta: ' + error.message, 'error');
         }
     }
 
@@ -1446,7 +1499,7 @@ MercadoManager.prototype.procesarVentaRapida = async function(piezaId) {
             .from('almacen_piezas')
             .select('*')
             .eq('id', piezaId)
-            .eq('escuderia_id', this.escuderia.id)  // ← Usa this.escuderia.id que ya verificamos
+            .eq('escuderia_id', this.escuderia.id)
             .single();
         
         if (error) {
@@ -1492,11 +1545,16 @@ MercadoManager.prototype.procesarVentaRapida = async function(piezaId) {
         
         if (mercadoError) throw mercadoError;
         
-        // Marcar pieza como en venta
-        await this.supabase
+        // Marcar pieza como en venta - IMPORTANTE: ESTABLECER en_venta = true y precio_venta
+        const { error: updatePiezaError } = await this.supabase
             .from('almacen_piezas')
-            .update({ en_venta: true })
+            .update({ 
+                en_venta: true,
+                precio_venta: precio
+            })
             .eq('id', piezaId);
+        
+        if (updatePiezaError) throw updatePiezaError;
         
         // Cerrar modal
         if (modal) modal.remove();
@@ -1616,16 +1674,196 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
             return;
         }
         
-        // VERIFICA SI EL MÉTODO NUEVO EXISTE
-        if (typeof mostrarModalVentaBasico === 'function') {
-            // Usar la función global (no this)
-            await mostrarModalVentaBasico.call(window.mercadoManager, pieza);
-        } else if (window.mercadoManager.mostrarModalVenta) {
-            // Fallback al método viejo
-            await window.mercadoManager.mostrarModalVenta(pieza);
-        } else {
-            alert('Sistema de mercado no disponible');
+        // Verificar que no esté ya en venta
+        if (pieza.en_venta) {
+            alert('⚠️ Esta pieza ya está en venta en el mercado');
+            return;
         }
+        
+        // Crear modal de venta básico (versión mejorada)
+        const modalHTML = `
+            <div id="modal-venta-rapido" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.85);
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <div style="
+                    background: #1a1a2e;
+                    border-radius: 10px;
+                    padding: 20px;
+                    border: 3px solid #00d2be;
+                    max-width: 450px;
+                    width: 90%;
+                    color: white;
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0; color: #00d2be;">
+                            <i class="fas fa-tag"></i> VENDER PIEZA
+                        </h3>
+                        <button onclick="document.getElementById('modal-venta-rapido').remove()" style="
+                            background: none;
+                            border: none;
+                            color: white;
+                            font-size: 1.5rem;
+                            cursor: pointer;
+                        ">&times;</button>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <p><strong>Pieza:</strong> ${window.mercadoManager.getAreaNombre(pieza.area)}</p>
+                        <p><strong>Nivel:</strong> ${pieza.nivel}</p>
+                        <p><strong>Calidad:</strong> ${pieza.calidad || 'Normal'}</p>
+                        <p><strong>Puntos:</strong> ${pieza.puntos_base || 10}</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: #aaa;">
+                            <i class="fas fa-euro-sign"></i> Precio de venta:
+                        </label>
+                        <input type="number" 
+                               id="precio-rapido" 
+                               value="${window.mercadoManager.calcularPrecioSugerido(pieza.nivel, pieza.calidad || 'Normal')}" 
+                               min="1000" 
+                               max="1000000" 
+                               step="1000"
+                               style="
+                                    width: 100%;
+                                    padding: 10px;
+                                    background: rgba(255,255,255,0.1);
+                                    border: 1px solid #00d2be;
+                                    border-radius: 5px;
+                                    color: white;
+                                    font-size: 1rem;
+                               ">
+                        <p style="font-size: 0.8rem; color: #aaa; margin-top: 5px;">
+                            Precio sugerido: ${window.mercadoManager.calcularPrecioSugerido(pieza.nivel, pieza.calidad || 'Normal').toLocaleString()}€
+                        </p>
+                    </div>
+                    
+                    <button onclick="procesarVentaDesdeModal('${piezaId}')" style="
+                        width: 100%;
+                        padding: 12px;
+                        background: linear-gradient(135deg, #00d2be, #009688);
+                        border: none;
+                        border-radius: 8px;
+                        color: white;
+                        font-weight: bold;
+                        cursor: pointer;
+                        font-size: 1rem;
+                    ">
+                        <i class="fas fa-check"></i> PUBLICAR VENTA
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Añadir modal al body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Crear función para procesar la venta desde el modal
+        window.procesarVentaDesdeModal = async function(piezaIdParam) {
+            try {
+                const precioInput = document.getElementById('precio-rapido');
+                const precio = parseInt(precioInput.value);
+                const modal = document.getElementById('modal-venta-rapido');
+                
+                if (!precio || precio < 1000) {
+                    alert('❌ Precio mínimo: 1,000€');
+                    return;
+                }
+                
+                // Verificar nuevamente que no esté en venta
+                const { data: piezaCheck, error: checkError } = await supabase
+                    .from('almacen_piezas')
+                    .select('en_venta')
+                    .eq('id', piezaIdParam)
+                    .single();
+                
+                if (checkError) throw checkError;
+                
+                if (piezaCheck.en_venta) {
+                    alert('⚠️ Esta pieza ya está en venta en el mercado');
+                    if (modal) modal.remove();
+                    return;
+                }
+                
+                // Crear orden en mercado
+                const { error: mercadoError } = await supabase
+                    .from('mercado')
+                    .insert([{
+                        vendedor_id: window.f1Manager.escuderia.id,
+                        vendedor_nombre: window.f1Manager.escuderia.nombre,
+                        pieza_id: piezaIdParam,
+                        pieza_nombre: pieza.componente,
+                        area: pieza.area,
+                        nivel: pieza.nivel,
+                        calidad: pieza.calidad || 'Normal',
+                        precio: precio,
+                        estado: 'disponible',
+                        creada_en: new Date().toISOString()
+                    }]);
+                
+                if (mercadoError) throw mercadoError;
+                
+                // Actualizar la pieza para marcar como en venta
+                const { error: updatePiezaError } = await supabase
+                    .from('almacen_piezas')
+                    .update({ 
+                        en_venta: true,
+                        precio_venta: precio
+                    })
+                    .eq('id', piezaIdParam);
+                
+                if (updatePiezaError) throw updatePiezaError;
+                
+                // Cerrar modal
+                if (modal) modal.remove();
+                
+                // Mostrar notificación
+                if (window.f1Manager?.showNotification) {
+                    window.f1Manager.showNotification(`✅ Pieza puesta en venta por ${precio.toLocaleString()}€`, 'success');
+                }
+                
+                // Registrar transacción
+                try {
+                    const { error: transaccionError } = await supabase
+                        .from('transacciones')
+                        .insert([{
+                            escuderia_id: window.f1Manager.escuderia.id,
+                            tipo: 'ajuste',
+                            cantidad: 0,
+                            descripcion: `Pieza en venta: ${window.mercadoManager.getAreaNombre(pieza.area)} Nivel ${pieza.nivel} por ${precio.toLocaleString()}€`,
+                            referencia: piezaIdParam,
+                            fecha: new Date().toISOString(),
+                            saldo_resultante: window.f1Manager.escuderia.dinero,
+                            categoria: 'mercado_venta'
+                        }]);
+                } catch (error) {
+                    console.log('⚠️ Error registrando venta en mercado:', error);
+                }
+                
+                // Recargar almacén
+                if (window.tabManager?.loadAlmacenPiezas) {
+                    setTimeout(() => window.tabManager.loadAlmacenPiezas(), 500);
+                }
+                
+                // Recargar mercado si está visible
+                if (window.tabManager?.currentTab === 'mercado' && window.mercadoManager?.cargarTabMercado) {
+                    setTimeout(() => window.mercadoManager.cargarTabMercado(), 500);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error en venta desde modal:', error);
+                alert('❌ Error: ' + error.message);
+            }
+        };
         
     } catch (error) {
         console.error('❌ Error vendiendo pieza:', error);
