@@ -68,6 +68,35 @@ class MercadoManager {
     }
 
     // ========================
+    // 2. verificar duplicados
+    // ========================
+
+    async verificarPiezaDuplicada(area, nivel) {
+        if (!this.escuderia) return false;
+        
+        try {
+            // Verificar si ya tiene una pieza del mismo nivel en el mismo área
+            const { data: misPiezas, error } = await this.supabase
+                .from('almacen_piezas')
+                .select('*')
+                .eq('escuderia_id', this.escuderia.id)
+                .eq('area', area)
+                .eq('nivel', nivel);
+            
+            if (error) {
+                console.error('Error verificando pieza duplicada:', error);
+                return false;
+            }
+            
+            return misPiezas && misPiezas.length > 0;
+        } catch (error) {
+            console.error('Error en verificarPiezaDuplicada:', error);
+            return false;
+        }
+    }
+
+    
+    // ========================
     // 3. GENERAR HTML DEL MERCADO
     // ========================
     generarHTMLMercado() {
@@ -1095,24 +1124,25 @@ class MercadoManager {
             if (ordenError) throw ordenError;
             if (!orden) throw new Error('Orden no encontrada o no te pertenece');
     
-            // 2. Cancelar la venta en la tabla mercado
+            // 2. Cancelar la venta en la tabla mercado (SIN cancelada_en)
             const { error: mercadoError } = await this.supabase
                 .from('mercado')
                 .update({ 
-                    estado: 'cancelado',
-                    cancelada_en: new Date().toISOString()
+                    estado: 'cancelado'
+                    // Elimina cancelada_en si no existe
+                    // cancelada_en: new Date().toISOString()
                 })
                 .eq('id', ordenId)
                 .eq('vendedor_id', this.escuderia.id);
             
             if (mercadoError) throw mercadoError;
             
-            // 3. IMPORTANTE: Actualizar la pieza en almacen_piezas para quitar el flag en_venta
+            // 3. Actualizar la pieza en almacen_piezas para quitar el flag en_venta
             const { error: piezaError } = await this.supabase
                 .from('almacen_piezas')
                 .update({ 
                     en_venta: false,
-                    precio_venta: null  // También limpiar el precio de venta si existe
+                    precio_venta: null
                 })
                 .eq('id', orden.pieza_id)
                 .eq('escuderia_id', this.escuderia.id);
@@ -1138,7 +1168,7 @@ class MercadoManager {
             try {
                 const { error: transaccionError } = await this.supabase
                     .from('transacciones')
-                        .insert([{
+                    .insert([{
                         escuderia_id: this.escuderia.id,
                         tipo: 'ajuste',
                         cantidad: 0,
@@ -1355,6 +1385,9 @@ class MercadoManager {
         }, 3000);
     }
 }
+
+
+
 
 async function verificarPiezaDuplicada(area, nivel) {
     if (!this.escuderia) return false;
@@ -1870,7 +1903,32 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
         alert('Error al vender la pieza: ' + error.message);
     }
 };
-
+// ========================
+// FUNCIÓN PARA VERIFICAR PIEZAS DUPLICADAS
+// ========================
+MercadoManager.prototype.verificarPiezaDuplicada = async function(area, nivel) {
+    if (!this.escuderia) return false;
+    
+    try {
+        // Verificar si ya tiene una pieza del mismo nivel en el mismo área
+        const { data: misPiezas, error } = await this.supabase
+            .from('almacen_piezas')
+            .select('*')
+            .eq('escuderia_id', this.escuderia.id)
+            .eq('area', area)
+            .eq('nivel', nivel);
+        
+        if (error) {
+            console.error('Error verificando pieza duplicada:', error);
+            return false;
+        }
+        
+        return misPiezas && misPiezas.length > 0;
+    } catch (error) {
+        console.error('Error en verificarPiezaDuplicada:', error);
+        return false;
+    }
+};
 
 // ========================
 // 8. INICIALIZACIÓN GLOBAL
