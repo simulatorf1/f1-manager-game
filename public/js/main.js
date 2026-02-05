@@ -1624,6 +1624,7 @@ class F1Manager {
                         </div>
                     </div>
                     
+                    <!-- 4 PESTAÑAS ARRIBA -->
                     <nav class="tabs-compactas">
                         <button class="tab-btn-compacto active" data-tab="principal">
                             <i class="fas fa-home"></i> Principal
@@ -1634,22 +1635,9 @@ class F1Manager {
                         <button class="tab-btn-compacto" data-tab="almacen">
                             <i class="fas fa-warehouse"></i> Almacén
                         </button>
-                        <button class="tab-btn-compacto" data-tab="mercado">
-                            <i class="fas fa-shopping-cart"></i> Mercado
-                        </button>
-                        <button class="tab-btn-compacto" data-tab="pronosticos">
-                            <i class="fas fa-chart-line"></i> Pronósticos
-                        </button>
-                        <button class="tab-btn-compacto" data-tab="presupuesto">
-                            <i class="fas fa-chart-pie"></i> Presupuesto
-                        </button>
-                        <button class="tab-btn-compacto" data-tab="clasificacion">
-                            <i class="fas fa-medal"></i> Clasificación
-                        </button>
                         <button class="tab-btn-compacto" data-tab="ingenieria">
                             <i class="fas fa-flask"></i> Ingeniería
                         </button>
-                        
                     </nav>
                 </header>
                 
@@ -1724,6 +1712,9 @@ class F1Manager {
                     
                     <div id="tab-taller" class="tab-content"></div>
                     <div id="tab-almacen" class="tab-content"></div>
+                    <div id="tab-ingenieria" class="tab-content"></div>
+                    
+                    <!-- PESTAÑAS ABAJO (inicialmente ocultas) -->
                     <div id="tab-mercado" class="tab-content">
                         <div class="mercado-cargando">
                             <i class="fas fa-spinner fa-spin"></i>
@@ -1733,7 +1724,6 @@ class F1Manager {
                     <div id="tab-pronosticos" class="tab-content"></div>
                     <div id="tab-presupuesto" class="tab-content"></div>
                     <div id="tab-clasificacion" class="tab-content"></div>
-                    <div id="tab-ingenieria" class="tab-content"></div>
                 </main>
                 
                 <footer class="dashboard-footer">
@@ -1741,6 +1731,23 @@ class F1Manager {
                         <i class="fas fa-user-circle"></i>
                         <span>${this.user.email?.split('@')[0] || 'Usuario'}</span>
                     </div>
+                    
+                    <!-- 4 PESTAÑAS ABAJO - USANDO LA MISMA CLASE QUE ARRIBA -->
+                    <nav class="tabs-compactas" style="flex: 1; justify-content: center; margin: 0 10px;">
+                        <button class="tab-btn-compacto" data-tab="mercado">
+                            <i class="fas fa-shopping-cart"></i> Mercado
+                        </button>
+                        <button class="tab-btn-compacto" data-tab="pronosticos">
+                            <i class="fas fa-chart-line"></i> Pronósticos
+                        </button>
+                        <button class="tab-btn-compacto" data-tab="presupuesto">
+                            <i class="fas fa-chart-pie"></i> Presupuesto
+                        </button>
+                        <button class="tab-btn-compacto" data-tab="clasificacion">
+                            <i class="fas fa-medal"></i> Clasificación
+                        </button>
+                    </nav>
+                    
                     <button class="logout-btn-compacto" id="logout-btn-visible" title="Cerrar sesión" style="
                         background: rgba(225, 6, 0, 0.1);
                         border: 1px solid rgba(225, 6, 0, 0.3);
@@ -1760,6 +1767,7 @@ class F1Manager {
                     </div>
                 </footer>
             </div>
+
             
             <script>
                 setTimeout(() => {
