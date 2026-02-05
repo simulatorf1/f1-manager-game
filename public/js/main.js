@@ -2903,66 +2903,11 @@ window.irAlTallerDesdeProduccion = function() {
     }
 };
 
-window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
-    console.log("🔧 Recogiendo pieza:", { fabricacionId, lista });
+window.recogerPiezaSiLista = async function(fabricacionId, slotIndex) {
+    console.log("🔧 Recogiendo pieza:", fabricacionId);
     
-    if (!lista) {
-        // SOLO ESTO SE MODIFICA: Mostrar información útil pero SIN notificación molesta
-        try {
-            const { data: fabricacion } = await window.supabase
-                .from('fabricacion_actual')
-                .select('*')
-                .eq('id', fabricacionId)
-                .single();
-                
-            if (fabricacion) {
-                const ahora = new Date();
-                const tiempoFin = new Date(fabricacion.tiempo_fin);
-                const tiempoRestante = tiempoFin - ahora;
-                const tiempoFormateado = tiempoRestante > 0 ? 
-                    window.f1Manager?.formatTime(tiempoRestante) : "Finalizando...";
-                
-                // Obtener número GLOBAL de la próxima pieza
-                const { data: todasPiezasArea } = await window.supabase
-                    .from('almacen_piezas')
-                    .select('numero_global')
-                    .eq('escuderia_id', fabricacion.escuderia_id)
-                    .eq('area', fabricacion.area)
-                    .order('numero_global', { ascending: true });
-                
-                const siguienteNumeroGlobal = (todasPiezasArea?.length || 0) + 1;
-                let nombrePiezaMostrar = window.f1Manager?.getNombreArea(fabricacion.area) || fabricacion.area;
-                
-                // Usar el nombre personalizado si existe
-                if (window.f1Manager && window.f1Manager.nombresPiezas && 
-                    window.f1Manager.nombresPiezas[fabricacion.area]) {
-                    const nombresArea = window.f1Manager.nombresPiezas[fabricacion.area];
-                    if (siguienteNumeroGlobal <= nombresArea.length) {
-                        nombrePiezaMostrar = nombresArea[siguienteNumeroGlobal - 1];
-                    }
-                }
-                
-                // SOLO ESTA PARTE CAMBIA: Mostrar información SIN notificación
-                console.log('⏳ Pieza aún en producción:', nombrePiezaMostrar, 'Tiempo restante:', tiempoFormateado);
-                
-                // Puedes mostrar un tooltip o información discreta si quieres, pero NO notificación
-                // Ejemplo: actualizar el texto del slot con el tiempo restante
-                const slotElement = document.querySelector(`[onclick*="${fabricacionId}"]`);
-                if (slotElement) {
-                    const tiempoElement = slotElement.querySelector('.produccion-tiempo');
-                    if (tiempoElement) {
-                        tiempoElement.textContent = tiempoFormateado;
-                    }
-                }
-            }
-        } catch (error) {
-            console.error("Error obteniendo info:", error);
-        }
-        return; // IMPORTANTE: Seguir retornando aquí para NO recoger si no está lista
-    }
-    
-    // EL RESTO DEL CÓDIGO PERMANECE EXACTAMENTE IGUAL ↓↓↓
     try {
+        // 1. SIEMPRE verificar el estado actual desde la BD
         const { data: fabricacion, error: fetchError } = await window.supabase
             .from('fabricacion_actual')
             .select('*')
@@ -2971,7 +2916,59 @@ window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
         
         if (fetchError) throw fetchError;
         
-        // ===== Calcular número global =====
+        // 2. Verificar en tiempo real si está lista
+        const ahora = new Date();
+        const tiempoFin = new Date(fabricacion.tiempo_fin);
+        const tiempoRestante = tiempoFin - ahora;
+        const realmenteLista = tiempoRestante <= 0;
+        
+        if (!realmenteLista) {
+            // Solo mostrar tiempo restante actualizado
+            const tiempoFormateado = tiempoRestante > 0 ? 
+                window.f1Manager?.formatTime(tiempoRestante) : "Finalizando...";
+            
+            // Obtener información de la pieza
+            const { data: todasPiezasArea } = await window.supabase
+                .from('almacen_piezas')
+                .select('numero_global')
+                .eq('escuderia_id', fabricacion.escuderia_id)
+                .eq('area', fabricacion.area)
+                .order('numero_global', { ascending: true });
+            
+            const siguienteNumeroGlobal = (todasPiezasArea?.length || 0) + 1;
+            let nombrePiezaMostrar = window.f1Manager?.getNombreArea(fabricacion.area) || fabricacion.area;
+            
+            if (window.f1Manager && window.f1Manager.nombresPiezas && 
+                window.f1Manager.nombresPiezas[fabricacion.area]) {
+                const nombresArea = window.f1Manager.nombresPiezas[fabricacion.area];
+                if (siguienteNumeroGlobal <= nombresArea.length) {
+                    nombrePiezaMostrar = nombresArea[siguienteNumeroGlobal - 1];
+                }
+            }
+            
+            // Mostrar información discreta (opcional, sin notificación)
+            console.log('⏳ ' + nombrePiezaMostrar + ' - Tiempo restante: ' + tiempoFormateado);
+            
+            // Actualizar el tiempo en el slot visualmente
+            const slotElement = document.querySelector(`[onclick*="${fabricacionId}"]`);
+            if (slotElement) {
+                const tiempoElement = slotElement.querySelector('.produccion-tiempo');
+                if (tiempoElement) {
+                    tiempoElement.textContent = tiempoFormateado;
+                }
+                
+                // Si dice "Finalizando..." pero aún no está lista, actualizar
+                if (tiempoFormateado === "Finalizando..." && tiempoRestante > 0) {
+                    const tiempoFinalFormateado = window.f1Manager?.formatTime(tiempoRestante) || "Pronto...";
+                    tiempoElement.textContent = tiempoFinalFormateado;
+                }
+            }
+            
+            return; // NO recoger si no está realmente lista
+        }
+        
+        // 3. SI ESTÁ REALMENTE LISTA, PROCEDER CON LA RECOGIDA
+        // ... (TODO EL RESTO DEL CÓDIGO DE RECOGIDA, IGUAL QUE TENÍAS ANTES) ...
         const { data: todasPiezasArea } = await window.supabase
             .from('almacen_piezas')
             .select('id, numero_global')
@@ -3019,28 +3016,17 @@ window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
                 creada_en: new Date().toISOString()
             }]);
         
-        if (insertError) {
-            console.error("Error insertando pieza:", insertError);
-            throw insertError;
-        }
-        
-        console.log("✅ Pieza añadida a almacen_piezas");
+        if (insertError) throw insertError;
         
         const { error: updateError } = await window.supabase
             .from('fabricacion_actual')
-            .update({ 
-                completada: true
-            })
+            .update({ completada: true })
             .eq('id', fabricacionId);
         
         if (updateError) throw updateError;
         
-        console.log("✅ Fabricación marcada como completada");
-        
-        const numeroPiezaEnNivel = ((nuevoNumeroGlobal - 1) % 5) + 1;
-        const nombreArea = window.f1Manager?.getNombreArea(fabricacion.area) || fabricacion.area;
-        
-        let nombrePiezaNotif = nombreArea;
+        // Notificación de éxito
+        let nombrePiezaNotif = window.f1Manager?.getNombreArea(fabricacion.area) || fabricacion.area;
         if (window.f1Manager && window.f1Manager.nombresPiezas && 
             window.f1Manager.nombresPiezas[fabricacion.area]) {
             const nombresArea = window.f1Manager.nombresPiezas[fabricacion.area];
@@ -3053,22 +3039,11 @@ window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
             window.f1Manager.showNotification('✅ ' + nombrePiezaNotif + ' recogida\n+' + puntosTotales + ' puntos técnicos', 'success');
         }
         
+        // Actualizar UI
         if (window.f1Manager) {
-            if (window.f1Manager.productionUpdateTimer) {
-                clearInterval(window.f1Manager.productionUpdateTimer);
-            }
-            
             setTimeout(() => {
                 window.f1Manager.updateProductionMonitor();
             }, 500);
-            
-            if (window.tabManager && window.tabManager.currentTab === 'almacen') {
-                setTimeout(() => {
-                    if (window.tabManager.loadAlmacenPiezas) {
-                        window.tabManager.loadAlmacenPiezas();
-                    }
-                }, 1000);
-            }
             
             setTimeout(() => {
                 if (window.f1Manager.cargarPiezasMontadas) {
