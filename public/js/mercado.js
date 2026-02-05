@@ -1209,6 +1209,8 @@ class MercadoManager {
     }
     async cancelarVenta(ordenId) {
         try {
+            console.log('❌ Cancelando venta:', ordenId);
+            
             // 1. Obtener la orden para saber qué pieza es
             const { data: orden, error: ordenError } = await this.supabase
                 .from('mercado')
@@ -1220,7 +1222,75 @@ class MercadoManager {
             if (ordenError) throw ordenError;
             if (!orden) throw new Error('Orden no encontrada o no te pertenece');
     
-            // 2. Cancelar la venta en la tabla mercado
+            console.log('📋 Orden encontrada:', {
+                id: orden.id,
+                pieza_id: orden.pieza_id,
+                estado_actual: orden.estado
+            });
+    
+            // 2. Primero actualizar la pieza en almacen_piezas para quitar el flag en_venta
+            console.log('🔄 Actualizando almacen_piezas para pieza:', orden.pieza_id);
+            
+            // PRIMERO: Verificar la estructura actual de la tabla
+            const { data: piezaActual, error: estructuraError } = await this.supabase
+                .from('almacen_piezas')
+                .select('en_venta, equipada')
+                .eq('id', orden.pieza_id)
+                .single();
+            
+            if (estructuraError) {
+                console.error('❌ Error obteniendo datos de la pieza:', estructuraError);
+            } else {
+                console.log('📊 Estado actual de la pieza:', piezaActual);
+            }
+            
+            // Preparar datos de actualización
+            const datosActualizacion = {
+                actualizada_en: new Date().toISOString()
+            };
+            
+            // Verificar columnas existentes y actualizarlas
+            const { data: columnas, error: columnasError } = await this.supabase
+                .from('almacen_piezas')
+                .select('*')
+                .limit(1);
+            
+            if (!columnasError && columnas && columnas.length > 0) {
+                const columnasDisponibles = Object.keys(columnas[0]);
+                
+                // Si existe la columna en_venta, actualizarla
+                if (columnasDisponibles.includes('en_venta')) {
+                    datosActualizacion.en_venta = false;
+                    console.log('✅ Columna en_venta encontrada, se actualizará a false');
+                } else {
+                    console.warn('⚠️ Columna en_venta no encontrada en almacen_piezas');
+                }
+                
+                // Si existe la columna precio_venta, actualizarla
+                if (columnasDisponibles.includes('precio_venta')) {
+                    datosActualizacion.precio_venta = null;
+                }
+            }
+            
+            // Actualizar la pieza en almacen_piezas
+            console.log('📝 Datos a actualizar:', datosActualizacion);
+            
+            const { error: piezaError } = await this.supabase
+                .from('almacen_piezas')
+                .update(datosActualizacion)
+                .eq('id', orden.pieza_id)
+                .eq('escuderia_id', this.escuderia.id);
+            
+            if (piezaError) {
+                console.error('❌ Error actualizando almacen_piezas:', piezaError);
+                throw piezaError;
+            }
+            
+            console.log('✅ almacen_piezas actualizado correctamente');
+    
+            // 3. Después cancelar la venta en la tabla mercado
+            console.log('🔄 Actualizando mercado para orden:', ordenId);
+            
             const { error: mercadoError } = await this.supabase
                 .from('mercado')
                 .update({ 
@@ -1232,56 +1302,62 @@ class MercadoManager {
             
             if (mercadoError) throw mercadoError;
             
-            // 3. VERIFICAR EXISTENCIA DE COLUMNAS ANTES DE ACTUALIZAR
-            // Primero, obtener la estructura de la tabla almacen_piezas
-            const { data: piezaActual, error: piezaActualError } = await this.supabase
-                .from('almacen_piezas')
-                .select('*')
-                .eq('id', orden.pieza_id)
-                .eq('escuderia_id', this.escuderia.id)
-                .single();
-            
-            if (piezaActualError) {
-                console.error('Error obteniendo datos de la pieza:', piezaActualError);
-            }
-            
-            // 4. Actualizar la pieza en almacen_piezas para quitar el flag en_venta
-            const datosActualizacion = {
-                actualizada_en: new Date().toISOString()
-            };
-            
-            // Solo actualizar en_venta si sabemos que la columna existe
-            if (piezaActual && 'en_venta' in piezaActual) {
-                datosActualizacion.en_venta = false;
-            }
-            
-            // Solo actualizar precio_venta si sabemos que la columna existe
-            if (piezaActual && 'precio_venta' in piezaActual) {
-                datosActualizacion.precio_venta = null;
-            }
-            
-            // Solo actualizar si hay campos que actualizar
-            if (Object.keys(datosActualizacion).length > 1) { // Más de 1 porque siempre hay actualizada_en
-                const { error: piezaError } = await this.supabase
-                    .from('almacen_piezas')
-                    .update(datosActualizacion)
-                    .eq('id', orden.pieza_id)
-                    .eq('escuderia_id', this.escuderia.id);
+            console.log('✅ mercado actualizado correctamente');
+    
+            // 4. Verificación: Comprobar que se actualizó correctamente
+            setTimeout(async () => {
+                console.log('🔍 Realizando verificación post-cancelación...');
                 
-                if (piezaError) throw piezaError;
-            }
-            
-            console.log('✅ Venta cancelada:', {
-                ordenId,
-                piezaId: orden.pieza_id,
-                camposActualizados: datosActualizacion
-            });
+                // Verificar estado en mercado
+                const { data: ordenVerificada } = await this.supabase
+                    .from('mercado')
+                    .select('estado')
+                    .eq('id', ordenId)
+                    .single();
+                
+                if (ordenVerificada && ordenVerificada.estado === 'cancelado') {
+                    console.log('✅ Verificación mercado: Orden cancelada correctamente');
+                } else {
+                    console.error('❌ Verificación mercado: Orden NO cancelada');
+                }
+                
+                // Verificar estado en almacen_piezas
+                const { data: piezaVerificada } = await this.supabase
+                    .from('almacen_piezas')
+                    .select('en_venta')
+                    .eq('id', orden.pieza_id)
+                    .single();
+                
+                if (piezaVerificada) {
+                    console.log('✅ Verificación almacén:', {
+                        pieza_id: orden.pieza_id,
+                        en_venta: piezaVerificada.en_venta,
+                        deberiaSer: false
+                    });
+                    
+                    if (piezaVerificada.en_venta !== false) {
+                        console.error('❌ ERROR: La pieza sigue marcada como en_venta =', piezaVerificada.en_venta);
+                        
+                        // Intentar corregir manualmente
+                        await this.supabase
+                            .from('almacen_piezas')
+                            .update({ 
+                                en_venta: false,
+                                actualizada_en: new Date().toISOString()
+                            })
+                            .eq('id', orden.pieza_id);
+                        
+                        console.log('🔄 Corrección manual aplicada');
+                    }
+                }
+            }, 1000);
     
             // 5. Recargar el mercado
             await this.cargarTabMercado();
             
-            // 6. Si estamos en la pestaña de almacén, recargarla también
+            // 6. Recargar almacén si está visible
             if (window.tabManager?.currentTab === 'almacen' && window.tabManager.loadAlmacenPiezas) {
+                console.log('🔄 Recargando almacén...');
                 setTimeout(() => {
                     window.tabManager.loadAlmacenPiezas();
                 }, 300);
@@ -1304,37 +1380,44 @@ class MercadoManager {
                         saldo_resultante: this.escuderia.dinero,
                         categoria: 'mercado_cancelacion'
                     }]);
+                    
+                if (transaccionError) {
+                    console.log('⚠️ Error registrando transacción:', transaccionError);
+                }
             } catch (error) {
                 console.log('⚠️ Error registrando cancelación:', error);
             }
             
-            // 9. VERIFICACIÓN EXTRA: Verificar que la pieza ya no está disponible en el mercado
-            setTimeout(async () => {
-                const { data: ordenVerificada } = await this.supabase
-                    .from('mercado')
-                    .select('estado')
-                    .eq('id', ordenId)
-                    .single();
-                
-                if (ordenVerificada && ordenVerificada.estado === 'cancelado') {
-                    console.log('✅ Verificación: Orden cancelada correctamente');
-                    
-                    // Verificar también el estado en almacen_piezas
-                    const { data: piezaVerificada } = await this.supabase
-                        .from('almacen_piezas')
-                        .select('en_venta')
-                        .eq('id', orden.pieza_id)
-                        .single();
-                    
-                    if (piezaVerificada && piezaVerificada.en_venta === false) {
-                        console.log('✅ Verificación: Pieza marcada como no en venta');
-                    }
-                }
-            }, 1000);
-            
         } catch (error) {
             console.error('❌ Error cancelando venta:', error);
             this.mostrarNotificacion('❌ Error cancelando venta: ' + error.message, 'error');
+            
+            // Intentar una corrección de emergencia
+            try {
+                // Obtener la orden de nuevo para el pieza_id
+                const { data: ordenRecuperada } = await this.supabase
+                    .from('mercado')
+                    .select('pieza_id')
+                    .eq('id', ordenId)
+                    .single();
+                
+                if (ordenRecuperada) {
+                    console.log('🔄 Intentando corrección de emergencia para pieza:', ordenRecuperada.pieza_id);
+                    
+                    // Forzar actualización de en_venta
+                    await this.supabase
+                        .from('almacen_piezas')
+                        .update({ 
+                            en_venta: false,
+                            actualizada_en: new Date().toISOString()
+                        })
+                        .eq('id', ordenRecuperada.pieza_id);
+                    
+                    console.log('✅ Corrección de emergencia aplicada');
+                }
+            } catch (correccionError) {
+                console.error('❌ Error en corrección de emergencia:', correccionError);
+            }
         }
     }
 
