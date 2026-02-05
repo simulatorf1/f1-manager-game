@@ -2657,6 +2657,7 @@ class F1Manager {
                     
                     html += '<div class="produccion-slot ' + (lista ? 'produccion-lista' : 'produccion-activa') + '" ';
                     html += 'onclick="recogerPiezaSiLista(\'' + fabricacion.id + '\', ' + lista + ', ' + i + ')" ';
+                    html += 'data-slot-index="' + i + '" ';
                     html += 'title="' + nombreMostrar + ' - Mejora ' + numeroPiezaGlobal + ' de 50">';
                     html += '<div class="produccion-icon">';
                     html += (lista ? '✅' : '');
@@ -3039,9 +3040,25 @@ window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
                 clearInterval(window.f1Manager.productionUpdateTimer);
             }
             
-            setTimeout(() => {
-                window.f1Manager.updateProductionMonitor();
-            }, 500);
+            // En lugar de actualizar todo el monitor, solo actualizamos el slot específico
+            const slotElement = document.querySelector(`.produccion-slot[onclick*="${fabricacionId}"]`);
+            if (slotElement) {
+                // Convertir este slot a vacío
+                slotElement.className = 'produccion-slot';
+                slotElement.setAttribute('onclick', 'irAlTallerDesdeProduccion()');
+                slotElement.innerHTML = `
+                    <div class="slot-content">
+                        <i class="fas fa-plus"></i>
+                        <span>Departamento ${slotIndex + 1}</span>
+                        <span class="slot-disponible">Disponible</span>
+                    </div>
+                `;
+            } else {
+                // Fallback: actualizar solo si no encontramos el elemento específico
+                setTimeout(() => {
+                    window.f1Manager.updateProductionMonitor();
+                }, 500);
+            }
             
             if (window.tabManager && window.tabManager.currentTab === 'almacen') {
                 setTimeout(() => {
