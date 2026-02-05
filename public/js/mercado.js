@@ -1003,18 +1003,25 @@ class MercadoManager {
             
             const piezaOriginal = piezasOriginales[0];
     
-            // 4. TRANSFERIR la pieza al comprador y LIMPIAR FLAG EN_VENTA
+            // 4. TRANSFERIR la pieza al comprador - SOLO USAR CAMPOS QUE EXISTEN
+            const datosActualizacion = {
+                escuderia_id: this.escuderia.id,
+                en_venta: false,  // ← Si esta columna existe
+                comprada_en: new Date().toISOString(),
+                precio_compra: orden.precio
+            };
+            
+            // Solo añadir precio_venta si la columna existe
+            if (piezaOriginal.precio_venta !== undefined) {
+                datosActualizacion.precio_venta = null;
+            }
+            
+            // NO añadir comprada_mercado si no existe
+            // NO añadir vendedor_original si no existe
+            
             const { error: transferPiezaError } = await this.supabase
                 .from('almacen_piezas')
-                .update({
-                    escuderia_id: this.escuderia.id,
-                    en_venta: false,  // ← IMPORTANTE: Limpiar flag de venta
-                    precio_venta: null,  // ← Limpiar precio de venta
-                    comprada_en: new Date().toISOString(),
-                    precio_compra: orden.precio,
-                    comprada_mercado: true,  // ← Marcar como comprada en mercado
-                    vendedor_original: orden.vendedor_nombre  // ← Guardar quién la vendió
-                })
+                .update(datosActualizacion)
                 .eq('id', orden.pieza_id);
             
             if (transferPiezaError) throw transferPiezaError;
@@ -1124,13 +1131,11 @@ class MercadoManager {
             if (ordenError) throw ordenError;
             if (!orden) throw new Error('Orden no encontrada o no te pertenece');
     
-            // 2. Cancelar la venta en la tabla mercado (SIN cancelada_en)
+            // 2. Cancelar la venta en la tabla mercado
             const { error: mercadoError } = await this.supabase
                 .from('mercado')
                 .update({ 
                     estado: 'cancelado'
-                    // Elimina cancelada_en si no existe
-                    // cancelada_en: new Date().toISOString()
                 })
                 .eq('id', ordenId)
                 .eq('vendedor_id', this.escuderia.id);
@@ -1138,16 +1143,24 @@ class MercadoManager {
             if (mercadoError) throw mercadoError;
             
             // 3. Actualizar la pieza en almacen_piezas para quitar el flag en_venta
-            const { error: piezaError } = await this.supabase
-                .from('almacen_piezas')
-                .update({ 
-                    en_venta: false,
-                    precio_venta: null
-                })
-                .eq('id', orden.pieza_id)
-                .eq('escuderia_id', this.escuderia.id);
+            // Solo si la columna existe
+            const datosActualizacion = {};
+            if (orden.en_venta !== undefined) {
+                datosActualizacion.en_venta = false;
+            }
+            if (orden.precio_venta !== undefined) {
+                datosActualizacion.precio_venta = null;
+            }
             
-            if (piezaError) throw piezaError;
+            if (Object.keys(datosActualizacion).length > 0) {
+                const { error: piezaError } = await this.supabase
+                    .from('almacen_piezas')
+                    .update(datosActualizacion)
+                    .eq('id', orden.pieza_id)
+                    .eq('escuderia_id', this.escuderia.id);
+                
+                if (piezaError) throw piezaError;
+            }
             
             console.log('✅ Venta cancelada y pieza actualizada en almacén:', orden.pieza_id);
     
@@ -1578,16 +1591,25 @@ MercadoManager.prototype.procesarVentaRapida = async function(piezaId) {
         
         if (mercadoError) throw mercadoError;
         
-        // Marcar pieza como en venta - IMPORTANTE: ESTABLECER en_venta = true y precio_venta
-        const { error: updatePiezaError } = await this.supabase
-            .from('almacen_piezas')
-            .update({ 
-                en_venta: true,
-                precio_venta: precio
-            })
-            .eq('id', piezaId);
+        // Solo actualizar en_venta si la columna existe
+        const datosActualizacion = {};
+        if (pieza.en_venta !== undefined) {
+            datosActualizacion.en_venta = true;
+        }
         
-        if (updatePiezaError) throw updatePiezaError;
+        // Solo añadir precio_venta si la columna existe
+        if (pieza.precio_venta !== undefined) {
+            datosActualizacion.precio_venta = precio;
+        }
+        
+        if (Object.keys(datosActualizacion).length > 0) {
+            const { error: updatePiezaError } = await this.supabase
+                .from('almacen_piezas')
+                .update(datosActualizacion)
+                .eq('id', piezaId);
+            
+            if (updatePiezaError) throw updatePiezaError;
+        }
         
         // Cerrar modal
         if (modal) modal.remove();
