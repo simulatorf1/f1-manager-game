@@ -1467,6 +1467,69 @@ class TabManager {
             
             console.log('📦 Pieza a equipar:', piezaNueva.area, 'Nivel', piezaNueva.nivel);
             
+            // VERIFICACIÓN CRÍTICA: NO PERMITIR EQUIPAR PIEZAS EN VENTA
+            if (piezaNueva.en_venta) {
+                console.warn('❌ Intento de equipar pieza en venta:', piezaId);
+                
+                // Mostrar alerta y ofrecer opción de retirar del mercado
+                const confirmarRetiro = confirm(
+                    `⚠️ Esta pieza está actualmente en venta en el mercado por ${piezaNueva.precio_venta || '??'}€\n\n` +
+                    `¿Quieres retirarla del mercado para poder equiparla?\n\n` +
+                    `(Presiona "Aceptar" para cancelar la venta y equipar)\n` +
+                    `(Presiona "Cancelar" para mantenerla en venta)`
+                );
+                
+                if (confirmarRetiro) {
+                    // Retirar del mercado
+                    try {
+                        // Buscar la orden en mercado
+                        const { data: ordenMercado, error: mercadoError } = await supabase
+                            .from('mercado')
+                            .select('*')
+                            .eq('pieza_id', piezaId)
+                            .eq('estado', 'disponible')
+                            .maybeSingle();
+                        
+                        if (!mercadoError && ordenMercado) {
+                            // Cancelar la venta en mercado
+                            await supabase
+                                .from('mercado')
+                                .update({ 
+                                    estado: 'cancelado',
+                                    cancelada_en: new Date().toISOString()
+                                })
+                                .eq('id', ordenMercado.id);
+                            
+                            console.log('✅ Venta cancelada en mercado');
+                        }
+                        
+                        // Actualizar la pieza para quitar el flag en_venta
+                        await supabase
+                            .from('almacen_piezas')
+                            .update({ 
+                                en_venta: false,
+                                precio_venta: null
+                            })
+                            .eq('id', piezaId);
+                        
+                        console.log('✅ Pieza retirada del mercado');
+                        
+                        // Actualizar datos locales
+                        piezaNueva.en_venta = false;
+                        piezaNueva.precio_venta = null;
+                        
+                    } catch (mercadoError) {
+                        console.error('❌ Error retirando del mercado:', mercadoError);
+                        alert('Error al retirar la pieza del mercado. Intenta de nuevo.');
+                        return;
+                    }
+                } else {
+                    // Usuario decidió mantener la pieza en venta
+                    alert('La pieza permanecerá en venta en el mercado.\n\nPara equiparla, primero debes retirarla de la venta.');
+                    return;
+                }
+            }
+            
             // 2. BUSCAR PIEZA EQUIPADA ACTUAL EN LA MISMA ÁREA
             const { data: piezaEquipadaActual, error: fetchEquipadaError } = await supabase
                 .from('almacen_piezas')
@@ -1480,6 +1543,12 @@ class TabManager {
             
             // 3. SI HAY PIEZA EQUIPADA, DESEQUIPARLA PRIMERO
             if (piezaEquipadaActual) {
+                // VERIFICAR QUE LA PIEZA A DESEQUIPAR NO ESTÉ EN VENTA (por seguridad)
+                if (piezaEquipadaActual.en_venta) {
+                    alert('⚠️ No puedes desequipar una pieza que está en venta.\nRetírala primero del mercado.');
+                    return;
+                }
+                
                 console.log('🔄 Desequipando pieza anterior:', piezaEquipadaActual.id);
                 
                 // DESEQUIPAR LA ANTERIOR - SOLO CAMBIAR equipada a false
@@ -1561,7 +1630,14 @@ class TabManager {
                 }, 500);
             }
             
-            // 8. NOTIFICACIÓN
+            // 8. ACTUALIZAR MERCADO SI ESTÁ VISIBLE
+            if (window.tabManager?.currentTab === 'mercado' && window.mercadoManager?.cargarTabMercado) {
+                setTimeout(() => {
+                    window.mercadoManager.cargarTabMercado();
+                }, 500);
+            }
+            
+            // 9. NOTIFICACIÓN
             if (window.f1Manager?.showNotification) {
                 const mensaje = piezaEquipadaActual ? 
                     `🔄 ${piezaNueva.area} actualizada (+${puntosSumar} pts)` :
