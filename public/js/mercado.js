@@ -95,6 +95,95 @@ class MercadoManager {
         }
     }
 
+    async verificarEstadoVentaPieza(piezaId) {
+        try {
+            // Verificar si hay órdenes activas para esta pieza
+            const { data: ordenesActivas, error } = await this.supabase
+                .from('mercado')
+                .select('*')
+                .eq('pieza_id', piezaId)
+                .eq('estado', 'disponible');
+            
+            if (error) {
+                console.error('Error verificando estado de venta:', error);
+                return false;
+            }
+            
+            return ordenesActivas && ordenesActivas.length > 0;
+        } catch (error) {
+            console.error('Error en verificarEstadoVentaPieza:', error);
+            return false;
+        }
+    }    
+    // Agrega esta función a la clase MercadoManager
+    
+    async sincronizarEstadoVentaPieza(piezaId) {
+        try {
+            console.log('🔄 Sincronizando estado de venta para pieza:', piezaId);
+            
+            // 1. Verificar si hay órdenes activas en mercado
+            const { data: ordenesActivas, error: mercadoError } = await this.supabase
+                .from('mercado')
+                .select('*')
+                .eq('pieza_id', piezaId)
+                .eq('estado', 'disponible');
+            
+            if (mercadoError) throw mercadoError;
+            
+            const tieneOrdenesActivas = ordenesActivas && ordenesActivas.length > 0;
+            
+            // 2. Verificar el estado actual en almacen_piezas
+            const { data: pieza, error: piezaError } = await this.supabase
+                .from('almacen_piezas')
+                .select('en_venta')
+                .eq('id', piezaId)
+                .single();
+            
+            if (piezaError) throw piezaError;
+            
+            // 3. Si hay discrepancia, corregirla
+            if (pieza && 'en_venta' in pieza) {
+                const necesitaCorreccion = (tieneOrdenesActivas && !pieza.en_venta) || 
+                                          (!tieneOrdenesActivas && pieza.en_venta);
+                
+                if (necesitaCorreccion) {
+                    console.log('🔄 Corrigiendo discrepancia en pieza:', piezaId, 
+                               'Actual:', pieza.en_venta, 
+                               'Debe ser:', tieneOrdenesActivas);
+                    
+                    const { error: updateError } = await this.supabase
+                        .from('almacen_piezas')
+                        .update({ 
+                            en_venta: tieneOrdenesActivas,
+                            actualizada_en: new Date().toISOString()
+                        })
+                        .eq('id', piezaId);
+                    
+                    if (updateError) throw updateError;
+                    
+                    return {
+                        corregido: true,
+                        nuevoEstado: tieneOrdenesActivas,
+                        mensaje: `Estado corregido: ${tieneOrdenesActivas ? 'en venta' : 'no en venta'}`
+                    };
+                }
+            }
+            
+            return {
+                corregido: false,
+                mensaje: 'No se necesitó corrección'
+            };
+            
+        } catch (error) {
+            console.error('❌ Error sincronizando estado:', error);
+            return {
+                corregido: false,
+                error: error.message
+            };
+        }
+    }
+
+    
     
     // ========================
     // 3. GENERAR HTML DEL MERCADO
@@ -1135,24 +1224,44 @@ class MercadoManager {
             const { error: mercadoError } = await this.supabase
                 .from('mercado')
                 .update({ 
-                    estado: 'cancelado'
+                    estado: 'cancelado',
+                    actualizada_en: new Date().toISOString()
                 })
                 .eq('id', ordenId)
                 .eq('vendedor_id', this.escuderia.id);
             
             if (mercadoError) throw mercadoError;
             
-            // 3. Actualizar la pieza en almacen_piezas para quitar el flag en_venta
-            // Solo si la columna existe
-            const datosActualizacion = {};
-            if (orden.en_venta !== undefined) {
+            // 3. VERIFICAR EXISTENCIA DE COLUMNAS ANTES DE ACTUALIZAR
+            // Primero, obtener la estructura de la tabla almacen_piezas
+            const { data: piezaActual, error: piezaActualError } = await this.supabase
+                .from('almacen_piezas')
+                .select('*')
+                .eq('id', orden.pieza_id)
+                .eq('escuderia_id', this.escuderia.id)
+                .single();
+            
+            if (piezaActualError) {
+                console.error('Error obteniendo datos de la pieza:', piezaActualError);
+            }
+            
+            // 4. Actualizar la pieza en almacen_piezas para quitar el flag en_venta
+            const datosActualizacion = {
+                actualizada_en: new Date().toISOString()
+            };
+            
+            // Solo actualizar en_venta si sabemos que la columna existe
+            if (piezaActual && 'en_venta' in piezaActual) {
                 datosActualizacion.en_venta = false;
             }
-            if (orden.precio_venta !== undefined) {
+            
+            // Solo actualizar precio_venta si sabemos que la columna existe
+            if (piezaActual && 'precio_venta' in piezaActual) {
                 datosActualizacion.precio_venta = null;
             }
             
-            if (Object.keys(datosActualizacion).length > 0) {
+            // Solo actualizar si hay campos que actualizar
+            if (Object.keys(datosActualizacion).length > 1) { // Más de 1 porque siempre hay actualizada_en
                 const { error: piezaError } = await this.supabase
                     .from('almacen_piezas')
                     .update(datosActualizacion)
@@ -1162,22 +1271,26 @@ class MercadoManager {
                 if (piezaError) throw piezaError;
             }
             
-            console.log('✅ Venta cancelada y pieza actualizada en almacén:', orden.pieza_id);
+            console.log('✅ Venta cancelada:', {
+                ordenId,
+                piezaId: orden.pieza_id,
+                camposActualizados: datosActualizacion
+            });
     
-            // 4. Recargar el mercado
+            // 5. Recargar el mercado
             await this.cargarTabMercado();
             
-            // 5. Si estamos en la pestaña de almacén, recargarla también
+            // 6. Si estamos en la pestaña de almacén, recargarla también
             if (window.tabManager?.currentTab === 'almacen' && window.tabManager.loadAlmacenPiezas) {
                 setTimeout(() => {
                     window.tabManager.loadAlmacenPiezas();
                 }, 300);
             }
             
-            // 6. Mostrar notificación
+            // 7. Mostrar notificación
             this.mostrarNotificacion('✅ Venta cancelada. La pieza ya no está en venta.', 'success');
     
-            // 7. Registrar cancelación
+            // 8. Registrar cancelación
             try {
                 const { error: transaccionError } = await this.supabase
                     .from('transacciones')
@@ -1194,6 +1307,30 @@ class MercadoManager {
             } catch (error) {
                 console.log('⚠️ Error registrando cancelación:', error);
             }
+            
+            // 9. VERIFICACIÓN EXTRA: Verificar que la pieza ya no está disponible en el mercado
+            setTimeout(async () => {
+                const { data: ordenVerificada } = await this.supabase
+                    .from('mercado')
+                    .select('estado')
+                    .eq('id', ordenId)
+                    .single();
+                
+                if (ordenVerificada && ordenVerificada.estado === 'cancelado') {
+                    console.log('✅ Verificación: Orden cancelada correctamente');
+                    
+                    // Verificar también el estado en almacen_piezas
+                    const { data: piezaVerificada } = await this.supabase
+                        .from('almacen_piezas')
+                        .select('en_venta')
+                        .eq('id', orden.pieza_id)
+                        .single();
+                    
+                    if (piezaVerificada && piezaVerificada.en_venta === false) {
+                        console.log('✅ Verificación: Pieza marcada como no en venta');
+                    }
+                }
+            }, 1000);
             
         } catch (error) {
             console.error('❌ Error cancelando venta:', error);
@@ -1714,6 +1851,14 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
     }
     
     try {
+        // PRIMERO: Sincronizar estado para asegurar datos correctos
+        if (window.mercadoManager.sincronizarEstadoVentaPieza) {
+            const sincronizacion = await window.mercadoManager.sincronizarEstadoVentaPieza(piezaId);
+            if (sincronizacion.corregido) {
+                console.log('✅ Estado sincronizado:', sincronizacion.mensaje);
+            }
+        }
+        
         // Obtener datos de la pieza directamente
         const { data: pieza, error } = await supabase
             .from('almacen_piezas')
@@ -1729,9 +1874,49 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
             return;
         }
         
-        // Verificar que no esté ya en venta
+        // Verificar que no esté ya en venta - DOBLE VERIFICACIÓN
+        let estaEnVenta = false;
+        
+        // 1. Verificar en la tabla mercado directamente
+        const { data: ordenesActivas } = await supabase
+            .from('mercado')
+            .select('id')
+            .eq('pieza_id', piezaId)
+            .eq('estado', 'disponible')
+            .limit(1);
+        
+        if (ordenesActivas && ordenesActivas.length > 0) {
+            estaEnVenta = true;
+            console.log('⚠️ Pieza encontrada en tabla mercado como activa');
+        }
+        
+        // 2. Verificar flag en_venta en almacen_piezas
         if (pieza.en_venta) {
+            estaEnVenta = true;
+            console.log('⚠️ Pieza marcada como en_venta en almacen_piezas');
+        }
+        
+        if (estaEnVenta) {
             alert('⚠️ Esta pieza ya está en venta en el mercado');
+            
+            // Si hay discrepancia, corregirla automáticamente
+            if (pieza.en_venta && (!ordenesActivas || ordenesActivas.length === 0)) {
+                console.log('🔄 Corrigiendo discrepancia: pieza.en_venta=true pero no hay órdenes activas');
+                await supabase
+                    .from('almacen_piezas')
+                    .update({ 
+                        en_venta: false,
+                        actualizada_en: new Date().toISOString()
+                    })
+                    .eq('id', piezaId);
+                
+                // Mostrar mensaje informativo
+                setTimeout(() => {
+                    if (window.f1Manager?.showNotification) {
+                        window.f1Manager.showNotification('✅ Estado de venta corregido automáticamente', 'info');
+                    }
+                }, 500);
+            }
             return;
         }
         
@@ -1802,7 +1987,7 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
                         </p>
                     </div>
                     
-                    <button onclick="procesarVentaDesdeModal('${piezaId}')" style="
+                    <button onclick="procesarVentaDesdeModal('${piezaId}', '${pieza.componente}', '${pieza.area}', ${pieza.nivel}, '${pieza.calidad || 'Normal'}')" style="
                         width: 100%;
                         padding: 12px;
                         background: linear-gradient(135deg, #00d2be, #009688);
@@ -1823,7 +2008,7 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         
         // Crear función para procesar la venta desde el modal
-        window.procesarVentaDesdeModal = async function(piezaIdParam) {
+        window.procesarVentaDesdeModal = async function(piezaIdParam, piezaNombre, area, nivel, calidad) {
             try {
                 const precioInput = document.getElementById('precio-rapido');
                 const precio = parseInt(precioInput.value);
@@ -1834,18 +2019,55 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
                     return;
                 }
                 
-                // Verificar nuevamente que no esté en venta
+                // VERIFICACIÓN FINAL ANTES DE VENDER - Triple verificación
+                let bloqueado = false;
+                
+                // 1. Verificar en mercado
+                const { data: ordenesActivasFinal } = await supabase
+                    .from('mercado')
+                    .select('id')
+                    .eq('pieza_id', piezaIdParam)
+                    .eq('estado', 'disponible')
+                    .limit(1);
+                
+                if (ordenesActivasFinal && ordenesActivasFinal.length > 0) {
+                    bloqueado = true;
+                    console.log('❌ Bloqueado: Orden activa encontrada en mercado');
+                }
+                
+                // 2. Verificar en almacen_piezas
                 const { data: piezaCheck, error: checkError } = await supabase
                     .from('almacen_piezas')
-                    .select('en_venta')
+                    .select('en_venta, equipada')
                     .eq('id', piezaIdParam)
                     .single();
                 
                 if (checkError) throw checkError;
                 
                 if (piezaCheck.en_venta) {
-                    alert('⚠️ Esta pieza ya está en venta en el mercado');
+                    bloqueado = true;
+                    console.log('❌ Bloqueado: Pieza marcada como en_venta');
+                }
+                
+                if (piezaCheck.equipada) {
+                    bloqueado = true;
+                    console.log('❌ Bloqueado: Pieza está equipada');
+                }
+                
+                if (bloqueado) {
+                    alert('❌ Esta pieza ya no está disponible para vender');
                     if (modal) modal.remove();
+                    
+                    // Si hay discrepancia, corregirla
+                    if (piezaCheck.en_venta && (!ordenesActivasFinal || ordenesActivasFinal.length === 0)) {
+                        await supabase
+                            .from('almacen_piezas')
+                            .update({ 
+                                en_venta: false,
+                                actualizada_en: new Date().toISOString()
+                            })
+                            .eq('id', piezaIdParam);
+                    }
                     return;
                 }
                 
@@ -1856,10 +2078,10 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
                         vendedor_id: window.f1Manager.escuderia.id,
                         vendedor_nombre: window.f1Manager.escuderia.nombre,
                         pieza_id: piezaIdParam,
-                        pieza_nombre: pieza.componente,
-                        area: pieza.area,
-                        nivel: pieza.nivel,
-                        calidad: pieza.calidad || 'Normal',
+                        pieza_nombre: piezaNombre,
+                        area: area,
+                        nivel: nivel,
+                        calidad: calidad,
                         precio: precio,
                         estado: 'disponible',
                         creada_en: new Date().toISOString()
@@ -1872,11 +2094,17 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
                     .from('almacen_piezas')
                     .update({ 
                         en_venta: true,
-                        
+                        actualizada_en: new Date().toISOString()
                     })
                     .eq('id', piezaIdParam);
                 
                 if (updatePiezaError) throw updatePiezaError;
+                
+                console.log('✅ Venta creada:', {
+                    piezaId: piezaIdParam,
+                    precio: precio,
+                    vendedor: window.f1Manager.escuderia.nombre
+                });
                 
                 // Cerrar modal
                 if (modal) modal.remove();
@@ -1894,7 +2122,7 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
                             escuderia_id: window.f1Manager.escuderia.id,
                             tipo: 'ajuste',
                             cantidad: 0,
-                            descripcion: `Pieza en venta: ${window.mercadoManager.getAreaNombre(pieza.area)} Nivel ${pieza.nivel} por ${precio.toLocaleString()}€`,
+                            descripcion: `Pieza en venta: ${window.mercadoManager.getAreaNombre(area)} Nivel ${nivel} por ${precio.toLocaleString()}€`,
                             referencia: piezaIdParam,
                             fecha: new Date().toISOString(),
                             saldo_resultante: window.f1Manager.escuderia.dinero,
@@ -1917,6 +2145,10 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
             } catch (error) {
                 console.error('❌ Error en venta desde modal:', error);
                 alert('❌ Error: ' + error.message);
+                
+                // Si hay un error, asegurarse de que el modal se cierra
+                const modal = document.getElementById('modal-venta-rapido');
+                if (modal) modal.remove();
             }
         };
         
@@ -1925,6 +2157,7 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
         alert('Error al vender la pieza: ' + error.message);
     }
 };
+
 // ========================
 // FUNCIÓN PARA VERIFICAR PIEZAS DUPLICADAS
 // ========================
