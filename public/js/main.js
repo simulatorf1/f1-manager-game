@@ -2907,49 +2907,30 @@ window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
     console.log("🔧 Recogiendo pieza:", { fabricacionId, lista });
     
     if (!lista) {
-        if (window.f1Manager && window.f1Manager.showNotification) {
-            window.f1Manager.showNotification("⏳ La pieza aún está en producción", "info");
-        }
+        // Mostrar notificación temporal simple
+        const notificacion = document.createElement('div');
+        notificacion.className = 'notification info';
+        notificacion.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-hourglass-half"></i>
+                <span>Fabricación en curso<br><small>Visita el taller</small></span>
+            </div>
+        `;
+        document.body.appendChild(notificacion);
         
-        try {
-            const { data: fabricacion } = await window.supabase
-                .from('fabricacion_actual')
-                .select('*')
-                .eq('id', fabricacionId)
-                .single();
-                
-            if (fabricacion) {
-                const ahora = new Date();
-                const tiempoFin = new Date(fabricacion.tiempo_fin);
-                const tiempoRestante = tiempoFin - ahora;
-                const tiempoFormateado = tiempoRestante > 0 ? 
-                    window.f1Manager?.formatTime(tiempoRestante) : "Finalizando...";
-                
-                // Obtener número GLOBAL de la próxima pieza (no solo del nivel)
-                const { data: todasPiezasArea } = await window.supabase
-                    .from('almacen_piezas')
-                    .select('numero_global')
-                    .eq('escuderia_id', fabricacion.escuderia_id)
-                    .eq('area', fabricacion.area)
-                    .order('numero_global', { ascending: true });
-                
-                const siguienteNumeroGlobal = (todasPiezasArea?.length || 0) + 1;
-                let nombrePiezaMostrar = window.f1Manager?.getNombreArea(fabricacion.area) || fabricacion.area;
-                
-                // Usar el nombre personalizado si existe
-                if (window.f1Manager && window.f1Manager.nombresPiezas && 
-                    window.f1Manager.nombresPiezas[fabricacion.area]) {
-                    const nombresArea = window.f1Manager.nombresPiezas[fabricacion.area];
-                    if (siguienteNumeroGlobal <= nombresArea.length) {
-                        nombrePiezaMostrar = nombresArea[siguienteNumeroGlobal - 1];
-                    }
+        // Mostrar la notificación
+        setTimeout(() => notificacion.classList.add('show'), 10);
+        
+        // Eliminar después de 3 segundos
+        setTimeout(() => {
+            notificacion.classList.remove('show');
+            setTimeout(() => {
+                if (notificacion.parentNode) {
+                    notificacion.parentNode.removeChild(notificacion);
                 }
-                
-                alert('🔄 ' + nombrePiezaMostrar + '\nMejora ' + siguienteNumeroGlobal + ' de 50\nNivel ' + fabricacion.nivel + '\nTiempo restante: ' + tiempoFormateado);
-            }
-        } catch (error) {
-            console.error("Error obteniendo info:", error);
-        }
+            }, 300);
+        }, 3000);
+        
         return;
     }
     
