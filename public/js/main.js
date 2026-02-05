@@ -246,8 +246,103 @@ class F1Manager {
 
 
     // ========================
-    // MÉTODO PARA CARGAR PESTAÑA TALLER (MODIFICADO CON 50 BOTONES)
+    // RECOMPENSA LOGIN DIARIO
     // ========================
+    // Añadir después de otros métodos similares
+    async verificarRecompensaLoginDiario() {
+        try {
+            const hoy = new Date().toISOString().split('T')[0];
+            
+            if (this.escuderia.ultimo_login_dia === hoy) {
+                return;
+            }
+            
+            const nuevasEstrellas = (this.escuderia.estrellas_semana || 0) + 5;
+            
+            const { error } = await this.supabase
+                .from('escuderias')
+                .update({ 
+                    estrellas_semana: nuevasEstrellas,
+                    ultimo_login_dia: hoy
+                })
+                .eq('id', this.escuderia.id);
+            
+            if (!error) {
+                this.escuderia.estrellas_semana = nuevasEstrellas;
+                this.escuderia.ultimo_login_dia = hoy;
+                
+                const estrellasElement = document.getElementById('estrellas-value');
+                if (estrellasElement) {
+                    estrellasElement.textContent = nuevasEstrellas;
+                }
+                
+                this.showNotification('+5🌟 (bonus diario)', 'info');
+            }
+        } catch (error) {
+            console.error('Error en recompensa login:', error);
+        }
+    }
+    
+    async darEstrellasFabricacion() {
+        try {
+            const { data: escuderiaActualizada } = await this.supabase
+                .from('escuderias')
+                .select('primera_fabricacion_hoy')
+                .eq('id', this.escuderia.id)
+                .single();
+            
+            if (escuderiaActualizada && !escuderiaActualizada.primera_fabricacion_hoy) {
+                const nuevasEstrellas = (this.escuderia.estrellas_semana || 0) + 10;
+                
+                const { error } = await this.supabase
+                    .from('escuderias')
+                    .update({ 
+                        estrellas_semana: nuevasEstrellas,
+                        primera_fabricacion_hoy: true
+                    })
+                    .eq('id', this.escuderia.id);
+                
+                if (!error) {
+                    this.escuderia.estrellas_semana = nuevasEstrellas;
+                    this.escuderia.primera_fabricacion_hoy = true;
+                    
+                    const estrellasElement = document.getElementById('estrellas-value');
+                    if (estrellasElement) {
+                        estrellasElement.textContent = nuevasEstrellas;
+                    }
+                    
+                    this.showNotification('+10🌟 (primera fabricación del día)', 'info');
+                }
+            }
+        } catch (error) {
+            console.error('Error dando estrellas por fabricación:', error);
+        }
+    }
+    
+    async verificarResetDiario() {
+        try {
+            const hoy = new Date().toISOString().split('T')[0];
+            
+            if (this.escuderia.ultimo_login_dia && this.escuderia.ultimo_login_dia !== hoy) {
+                const { error } = await this.supabase
+                    .from('escuderias')
+                    .update({ 
+                        primera_fabricacion_hoy: false,
+                        primera_prueba_hoy: false
+                    })
+                    .eq('id', this.escuderia.id);
+                
+                if (!error) {
+                    this.escuderia.primera_fabricacion_hoy = false;
+                    this.escuderia.primera_prueba_hoy = false;
+                }
+            }
+        } catch (error) {
+            console.error('Error en reset diario:', error);
+        }
+    }
+
+    
     // ========================
     // MÉTODO PARA CARGAR PESTAÑA TALLER (MODIFICADO CON 50 BOTONES Y NAVEGACIÓN)
     // ========================
@@ -914,6 +1009,13 @@ class F1Manager {
             if (window.presupuestoManager && window.presupuestoManager.actualizarVistaPresupuesto) {
                 window.presupuestoManager.actualizarVistaPresupuesto();
             }
+            
+            // AÑADIR ESTO ↓ - Dar estrellas si es primera fabricación del día
+            if (!this.escuderia.primera_fabricacion_hoy) {
+                await this.darEstrellasFabricacion();
+            }
+            // AÑADIR ESTO ↑
+            
             setTimeout(() => {
                 this.updateProductionMonitor();
             }, 500);
@@ -1226,6 +1328,15 @@ class F1Manager {
             console.warn('⚠️ IngenieriaManager no disponible en window');
         }
         
+        // AÑADIR ESTO ↓ - Timer para pago dominical
+        setInterval(() => {
+            this.verificarPagoDominical();
+        }, 3600000); // 1 hora
+        
+        // Ejecutar inmediatamente al cargar
+        this.verificarPagoDominical();
+        // AÑADIR ESTO ↑
+        
         this.iniciarTimersAutomaticos();
     }
     
@@ -1507,6 +1618,10 @@ class F1Manager {
                             <i class="fas fa-coins"></i>
                             <span id="money-value">€${this.escuderia?.dinero?.toLocaleString() || '0'}</span>
                         </div>
+                        <div class="estrellas-display-compacto" title="Bonus patrocinio: se convierte en € cada domingo">
+                            <i class="fas fa-star" style="color: #FFD700;"></i>
+                            <span id="estrellas-value">${this.escuderia?.estrellas_semana || 0}</span>
+                        </div>
                     </div>
                     
                     <nav class="tabs-compactas">
@@ -1780,6 +1895,9 @@ class F1Manager {
                 await this.loadCarStatus();
                 await this.loadPilotosContratados();
                 await this.cargarProximoGP();
+                await this.verificarResetDiario();
+                await this.verificarRecompensaLoginDiario();
+                
                 
                 setTimeout(() => {
                     this.iniciarCountdownCompacto();
@@ -2705,6 +2823,53 @@ class F1Manager {
             window.tabManager.switchTab('taller');
         }
     }
+    // AÑADIR ESTE MÉTODO NUEVO ↓
+    async verificarPagoDominical() {
+        try {
+            const ahora = new Date();
+            const diaSemana = ahora.getDay(); // 0 = Domingo, 1 = Lunes...
+            const hora = ahora.getHours();
+            
+            // Si es domingo entre 23:00 y 23:59
+            if (diaSemana === 0 && hora === 23 && this.escuderia.estrellas_semana > 0) {
+                const dineroExtra = this.escuderia.estrellas_semana * 2000;
+                const nuevoDinero = (this.escuderia.dinero || 0) + dineroExtra;
+                
+                const { error } = await this.supabase
+                    .from('escuderias')
+                    .update({ 
+                        dinero: nuevoDinero,
+                        estrellas_semana: 0,
+                        primera_fabricacion_hoy: false,
+                        primera_prueba_hoy: false,
+                        ultimo_login_dia: null
+                    })
+                    .eq('id', this.escuderia.id);
+                
+                if (!error) {
+                    this.escuderia.dinero = nuevoDinero;
+                    this.escuderia.estrellas_semana = 0;
+                    this.escuderia.primera_fabricacion_hoy = false;
+                    this.escuderia.primera_prueba_hoy = false;
+                    this.escuderia.ultimo_login_dia = null;
+                    
+                    // Actualizar UI
+                    const dineroElement = document.getElementById('money-value');
+                    const estrellasElement = document.getElementById('estrellas-value');
+                    
+                    if (dineroElement) dineroElement.textContent = '€' + nuevoDinero.toLocaleString();
+                    if (estrellasElement) estrellasElement.textContent = '0';
+                    
+                    // Notificación
+                    this.showNotification(`💰 Bonus patrocinio: +€${dineroExtra.toLocaleString()}`, 'success');
+                }
+            }
+        } catch (error) {
+            console.error('Error en pago dominical:', error);
+        }
+    }
+    // AÑADIR ESTE MÉTODO NUEVO ↑
+    
 }
 
 window.tutorialManager = null;
