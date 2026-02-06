@@ -723,7 +723,7 @@ class F1Manager {
                     // Calcular nivel (cada 5 piezas es un nivel)
                     const nivel = Math.ceil(piezaNum / 5);
                     
-                    // ✅ CALCULAR COSTO PARA ESTA PIEZA
+                    // ✅ AÑADIDO: CALCULAR COSTO PARA ESTA PIEZA
                     const numeroPiezaEnNivel = ((piezaNum - 1) % 5) + 1;
                     const costoPieza = this.calcularCostoPieza(nivel, numeroPiezaEnNivel);
                     const tieneDinero = this.escuderia.dinero >= costoPieza;
@@ -772,8 +772,8 @@ class F1Manager {
                         if (esCompradaMercado) {
                             html += `<div class="mercado-badge">🛒</div>`;
                         } else {
-                            // ✅ MUESTRA EL PRECIO ORIGINAL
-                            html += `<div class="pieza-precio-50" style="color: #4CAF50;">€${costoPieza.toLocaleString()}</div>`;
+                            // ✅ AÑADIDO: MOSTRAR PRECIO
+                            html += `<div class="pieza-precio-50">€${costoPieza.toLocaleString()}</div>`;
                         }
                         html += '</button>';
                         
@@ -793,10 +793,11 @@ class F1Manager {
                         const tiempoRestante = fabricacion ? new Date(fabricacion.tiempo_fin) - new Date() : 0;
                         const minutos = Math.ceil(tiempoRestante / (1000 * 60));
                         
-                        html += `<button class="btn-pieza-50 fabricando" disabled title="${nombrePieza} - En fabricación (${minutos} min)\nCosto: €${costoPieza.toLocaleString()}">`;
+                        html += `<button class="btn-pieza-50 fabricando" disabled title="${nombrePieza} - En fabricación (${minutos} min)">`;
                         html += '<i class="fas fa-spinner fa-spin"></i>';
                         html += `<div class="pieza-nombre-50">${nombrePieza}</div>`;
-                        html += `<div class="pieza-precio-50" style="color: #FF9800;">€${costoPieza.toLocaleString()}</div>`;
+                        // ✅ AÑADIDO: MOSTRAR PRECIO
+                        html += `<div class="pieza-precio-50">€${costoPieza.toLocaleString()}</div>`;
                         html += '</button>';
                         
                     } else {
@@ -805,25 +806,19 @@ class F1Manager {
                             piezaNum === (piezasAreaFabricadasAll.length + 1);
                         
                         const puedeFabricar = fabricacionesCount < 4 && 
-                                            proximaPiezaNoFabricada &&
-                                            tieneDinero;
+                                            proximaPiezaNoFabricada;
                         
-                        const claseBoton = puedeFabricar ? 'vacio' : 'vacio sin-fondos';
-                        const tituloBoton = puedeFabricar ? 
-                            `${nombrePieza} - Costo: €${costoPieza.toLocaleString()}` :
-                            `${nombrePieza} - Costo: €${costoPieza.toLocaleString()}\n💰 Necesitas: €${costoPieza.toLocaleString()} (Tienes: €${this.escuderia.dinero.toLocaleString()})`;
-                        
-                        html += `<button class="btn-pieza-50 ${claseBoton}" `;
+                        html += '<button class="btn-pieza-50 vacio" ';
                         if (puedeFabricar) {
                             html += `onclick="iniciarFabricacionTallerDesdeBoton('${area.id}', ${nivel})"`;
                         } else {
                             html += ' disabled';
                         }
-                        html += ` title="${tituloBoton}">`;
+                        html += ` title="${nombrePieza} - Nivel ${nivel} - Costo: €${costoPieza.toLocaleString()}">`;
                         html += '<i class="fas fa-plus"></i>';
                         html += `<div class="pieza-nombre-50">${nombrePieza}</div>`;
-                        // ✅ MUESTRA EL PRECIO
-                        html += `<div class="pieza-precio-50 ${!tieneDinero ? 'precio-sin-fondos' : ''}">€${costoPieza.toLocaleString()}</div>`;
+                        // ✅ AÑADIDO: MOSTRAR PRECIO
+                        html += `<div class="pieza-precio-50">€${costoPieza.toLocaleString()}</div>`;
                         html += '</button>';
                     }
                 }
@@ -838,7 +833,6 @@ class F1Manager {
             html += '<p><i class="fas fa-info-circle"></i> Fabricaciones activas: <strong>' + fabricacionesCount + '/4</strong></p>';
             html += '<p><i class="fas fa-info-circle"></i> Fabricación secuencial: Solo puedes fabricar la siguiente pieza disponible</p>';
             html += '<p><i class="fas fa-info-circle"></i> Cada área tiene 50 mejoras progresivas</p>';
-            html += '<p><i class="fas fa-info-circle"></i> Los precios aumentan progresivamente</p>';
             html += '</div>';
             html += '</div>';
             
@@ -847,13 +841,237 @@ class F1Manager {
             // Configurar eventos de navegación
             this.configurarNavegacionAreas();
             
-            // Añadir estilos CSS para los precios si no existen
-            if (!document.querySelector('#estilos-precios-taller')) {
+            // Añadir estilos CSS para la nueva disposición
+            if (!document.querySelector('#estilos-taller-50')) {
                 const style = document.createElement('style');
-                style.id = 'estilos-precios-taller';
+                style.id = 'estilos-taller-50';
                 style.innerHTML = `
-                    .pieza-precio-50 {
+                    /* BARRA DE NAVEGACIÓN FIJA */
+                    .nav-areas-fija {
+                        position: sticky;
+                        top: 0;
+                        z-index: 100;
+                        background: rgba(10, 15, 30, 0.95);
+                        backdrop-filter: blur(10px);
+                        border-bottom: 2px solid rgba(0, 210, 190, 0.3);
+                        padding: 8px 0;
+                        margin-bottom: 15px;
+                    }
+                    
+                    .nav-areas-contenedor {
+                        display: grid;
+                        grid-template-columns: repeat(6, 1fr);
+                        gap: 6px;
+                        max-width: 100%;
+                        overflow-x: auto;
+                        padding: 0 5px;
+                    }
+                    
+                    @media (min-width: 1200px) {
+                        .nav-areas-contenedor {
+                            grid-template-columns: repeat(11, 1fr);
+                        }
+                    }
+                    
+                    @media (max-width: 1199px) and (min-width: 768px) {
+                        .nav-areas-contenedor {
+                            grid-template-columns: repeat(6, 1fr);
+                        }
+                    }
+                    
+                    @media (max-width: 767px) {
+                        .nav-areas-contenedor {
+                            grid-template-columns: repeat(4, 1fr);
+                        }
+                    }
+                    
+                    .nav-area-btn {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        background: rgba(0, 210, 190, 0.1);
+                        border: 1px solid rgba(0, 210, 190, 0.3);
+                        border-radius: 6px;
+                        padding: 8px 4px;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        min-height: 60px;
+                        color: white;
+                    }
+                    
+                    .nav-area-btn:hover {
+                        background: rgba(0, 210, 190, 0.2);
+                        border-color: #00d2be;
+                        transform: translateY(-2px);
+                    }
+                    
+                    .nav-area-btn.active {
+                        background: rgba(0, 210, 190, 0.3);
+                        border-color: #00d2be;
+                        box-shadow: 0 0 10px rgba(0, 210, 190, 0.3);
+                    }
+                    
+                    .nav-area-icon {
+                        font-size: 1.3rem;
+                        margin-bottom: 4px;
+                    }
+                    
+                    .nav-area-nombre {
                         font-size: 0.7rem;
+                        font-weight: bold;
+                        margin-bottom: 4px;
+                        text-align: center;
+                        line-height: 1.1;
+                    }
+                    
+                    .nav-area-progreso {
+                        width: 90%;
+                        height: 4px;
+                        background: rgba(255, 255, 255, 0.1);
+                        border-radius: 2px;
+                        overflow: hidden;
+                    }
+                    
+                    .nav-area-progreso-fill {
+                        height: 100%;
+                        background: linear-gradient(90deg, #00d2be, #4CAF50);
+                        border-radius: 2px;
+                        transition: width 0.3s ease;
+                    }
+                    
+                    /* CONTENEDOR DESPLAZABLE */
+                    .contenedor-areas-desplazable {
+                        max-height: calc(100vh - 200px);
+                        overflow-y: auto;
+                        padding-right: 5px;
+                    }
+                    
+                    /* ÁREAS INDIVIDUALES */
+                    .area-completa {
+                        margin-bottom: 25px;
+                        padding: 15px;
+                        background: rgba(0, 0, 0, 0.3);
+                        border-radius: 8px;
+                        border: 1px solid rgba(0, 210, 190, 0.2);
+                        scroll-margin-top: 100px; /* Para que al hacer scroll quede debajo de la barra fija */
+                    }
+                    
+                    .area-header-completa {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        margin-bottom: 15px;
+                        padding-bottom: 10px;
+                        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    }
+                    
+                    .area-icono-completa {
+                        font-size: 1.5rem;
+                    }
+                    
+                    .area-nombre-completa {
+                        font-weight: bold;
+                        color: #00d2be;
+                        font-size: 1.1rem;
+                    }
+                    
+                    .area-progreso-badge {
+                        margin-left: auto;
+                        background: rgba(0, 210, 190, 0.2);
+                        color: #00d2be;
+                        padding: 4px 8px;
+                        border-radius: 12px;
+                        font-size: 0.8rem;
+                        font-weight: bold;
+                    }
+                    
+                    .botones-area-completa {
+                        display: grid;
+                        grid-template-columns: repeat(5, 1fr);
+                        gap: 8px;
+                    }
+                    
+                    @media (max-width: 1200px) {
+                        .botones-area-completa {
+                            grid-template-columns: repeat(4, 1fr);
+                        }
+                    }
+                    
+                    @media (max-width: 900px) {
+                        .botones-area-completa {
+                            grid-template-columns: repeat(3, 1fr);
+                        }
+                    }
+                    
+                    @media (max-width: 600px) {
+                        .botones-area-completa {
+                            grid-template-columns: repeat(2, 1fr);
+                        }
+                    }
+                    
+                    .btn-pieza-50 {
+                        height: 80px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        border: 2px solid rgba(0, 210, 190, 0.3);
+                        border-radius: 6px;
+                        background: rgba(0, 0, 0, 0.5);
+                        color: white;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        padding: 8px;
+                        text-align: center;
+                        position: relative;
+                    }
+                    
+                    .btn-pieza-50:hover:not(:disabled) {
+                        border-color: #00d2be;
+                        background: rgba(0, 210, 190, 0.1);
+                        transform: translateY(-2px);
+                    }
+                    
+                    .btn-pieza-50:disabled {
+                        opacity: 0.6;
+                        cursor: not-allowed;
+                    }
+                    
+                    .btn-pieza-50.lleno {
+                        border-color: #4CAF50;
+                        background: rgba(76, 175, 80, 0.1);
+                    }
+                    
+                    .btn-pieza-50.fabricando {
+                        border-color: #FF9800;
+                        background: rgba(255, 152, 0, 0.1);
+                    }
+                    
+                    .btn-pieza-50.vacio {
+                        border-color: #666;
+                        background: rgba(100, 100, 100, 0.1);
+                    }
+                    
+                    .btn-pieza-50 i {
+                        font-size: 1.2rem;
+                        margin-bottom: 5px;
+                    }
+                    
+                    .pieza-nombre-50 {
+                        font-size: 0.7rem;
+                        line-height: 1.1;
+                        max-height: 32px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        display: -webkit-box;
+                        -webkit-line-clamp: 2;
+                        -webkit-box-orient: vertical;
+                    }
+                    
+                    /* ✅ AÑADIDO: ESTILOS PARA PRECIOS */
+                    .pieza-precio-50 {
+                        font-size: 0.65rem;
                         margin-top: 3px;
                         color: #FFD700;
                         font-weight: bold;
@@ -861,22 +1079,30 @@ class F1Manager {
                         padding: 2px 5px;
                         border-radius: 3px;
                         text-align: center;
+                        width: 100%;
                     }
                     
-                    .precio-sin-fondos {
-                        color: #F44336 !important;
-                        background: rgba(244, 67, 54, 0.1) !important;
+                    .btn-pieza-50.comprada-mercado {
+                        border-color: #FF9800; /* Naranja para piezas compradas */
+                        background: rgba(255, 152, 0, 0.1);
+                        color: #FF9800;
                     }
                     
-                    .btn-pieza-50.sin-fondos {
-                        border-color: #F44336 !important;
-                        background: rgba(244, 67, 54, 0.05) !important;
-                        opacity: 0.8;
+                    .btn-pieza-50.comprada-mercado:hover {
+                        border-color: #FFB74D;
+                        background: rgba(255, 152, 0, 0.2);
                     }
                     
-                    .btn-pieza-50.sin-fondos:hover {
-                        border-color: #F44336 !important;
-                        background: rgba(244, 67, 54, 0.1) !important;
+                    .btn-pieza-50.comprada-mercado i {
+                        color: #FF9800;
+                    }
+                    
+                    .mercado-badge {
+                        position: absolute;
+                        top: 2px;
+                        right: 2px;
+                        font-size: 0.6rem;
+                        color: #FF9800;
                     }
                 `;
                 document.head.appendChild(style);
