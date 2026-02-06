@@ -38,7 +38,24 @@ class F1Manager {
         console.log('🚗 Creando F1Manager para:', user.email);
         this.user = user;
         this.escuderia = escuderia;
-        this.escuderiaId = escuderia.id; 
+        
+        // GARANTIZAR QUE escuderiaId EXISTE Y ES STRING
+        if (escuderia && escuderia.id) {
+            this.escuderiaId = escuderia.id;
+            console.log('✅ escuderiaId guardado:', this.escuderiaId, typeof this.escuderiaId);
+        } else {
+            // Si no hay escuderia válida, usar valores por defecto pero marcar error
+            console.error('❌ ERROR CRÍTICO: escuderia inválida:', escuderia);
+            this.escuderiaId = null;
+            // Crear objeto mínimo para evitar crashes
+            this.escuderia = {
+                id: 'unknown',
+                nombre: 'Escudería no encontrada',
+                dinero: 0,
+                puntos: 0
+            };
+        }
+        
         this.supabase = supabase;
         this.pilotos = [];
         this.carStats = null;
@@ -343,7 +360,8 @@ class F1Manager {
 
 
     // ========================
-    // INICIALIZAR PRESUPUESTO MANAGER (GARANTIZADO)
+    // ========================
+    // INICIALIZAR PRESUPUESTO MANAGER (GARANTIZADO) - VERSIÓN CORREGIDA
     // ========================
     async inicializarPresupuestoManager() {
         try {
@@ -368,7 +386,24 @@ class F1Manager {
             // 4. Inicializar si no está inicializado
             if (!window.presupuestoManager.escuderiaId) {
                 console.log('🔄 Inicializando presupuestoManager...');
-                await window.presupuestoManager.inicializar(this.escuderiaId);
+                
+                // DEBUG: Verificar qué estamos pasando
+                console.log('🔍 DEBUG - this.escuderiaId:', this.escuderiaId, typeof this.escuderiaId);
+                console.log('🔍 DEBUG - this.escuderia.id:', this.escuderia.id, typeof this.escuderia.id);
+                
+                // SEGURIDAD: Usar this.escuderia.id directamente para garantizar que sea string
+                const idParaPasar = this.escuderia.id; // ¡ESTO ES UN STRING!
+                
+                if (!idParaPasar || typeof idParaPasar !== 'string') {
+                    console.error('❌ ERROR CRÍTICO: ID no es string:', idParaPasar);
+                    return;
+                }
+                
+                console.log('📤 Pasando ID a presupuestoManager:', idParaPasar);
+                
+                // PASAR SOLO EL ID STRING
+                await window.presupuestoManager.inicializar(idParaPasar);
+                
                 console.log('✅ presupuestoManager inicializado correctamente');
             } else {
                 console.log('✅ presupuestoManager ya estaba inicializado');
@@ -1543,30 +1578,53 @@ class F1Manager {
         }
 
         // ============================================
-        // NUEVO: INICIALIZAR PRESUPUESTO MANAGER
+        // NUEVO: INICIALIZAR PRESUPUESTO MANAGER (VERSIÓN CORREGIDA)
         // ============================================
-        if (window.PresupuestoManager && !window.presupuestoManager) {
-            console.log('💰 Creando presupuestoManager para escudería:', this.escuderia.id);
-            window.presupuestoManager = new window.PresupuestoManager();
+        if (window.PresupuestoManager) {
+            // 1. Obtener ID de forma segura
+            let escuderiaIdParaUsar;
             
-            try {
-                await window.presupuestoManager.inicializar(this.escuderia.id);
-                console.log('✅ presupuestoManager inicializado correctamente');
-            } catch (error) {
-                console.error('❌ Error inicializando presupuestoManager:', error);
-                // No fallar todo si presupuesto falla
+            if (this.escuderiaId && typeof this.escuderiaId === 'string') {
+                escuderiaIdParaUsar = this.escuderiaId;
+                console.log('🔑 Usando this.escuderiaId:', escuderiaIdParaUsar);
+            } else if (this.escuderia && this.escuderia.id) {
+                escuderiaIdParaUsar = String(this.escuderia.id).trim();
+                console.log('⚠️ this.escuderiaId no válido, usando this.escuderia.id:', escuderiaIdParaUsar);
+            } else {
+                console.error('❌ ERROR: No se puede obtener escuderiaId para presupuesto');
+                return;
             }
-        } else if (window.presupuestoManager && !window.presupuestoManager.escuderiaId) {
-            // Si ya existe pero no está inicializado
-            console.log('🔄 PresupuestoManager existe pero sin inicializar, inicializando...');
-            try {
-                await window.presupuestoManager.inicializar(this.escuderia.id);
-                console.log('✅ presupuestoManager inicializado tardíamente');
-            } catch (error) {
-                console.error('❌ Error inicializando presupuestoManager existente:', error);
+            
+            // 2. Verificar que el ID es válido (UUID formato)
+            if (!escuderiaIdParaUsar || escuderiaIdParaUsar.length < 10) {
+                console.error('❌ ERROR: ID de escudería inválido:', escuderiaIdParaUsar);
+                return;
             }
-        } else if (window.presupuestoManager) {
-            console.log('✅ presupuestoManager ya está inicializado');
+            
+            // 3. Crear o reutilizar instancia
+            if (!window.presupuestoManager) {
+                console.log('💰 Creando presupuestoManager para escudería:', escuderiaIdParaUsar);
+                window.presupuestoManager = new window.PresupuestoManager();
+                
+                try {
+                    await window.presupuestoManager.inicializar(escuderiaIdParaUsar);
+                    console.log('✅ presupuestoManager inicializado correctamente');
+                } catch (error) {
+                    console.error('❌ Error inicializando presupuestoManager:', error);
+                    // No fallar todo si presupuesto falla
+                }
+            } else if (window.presupuestoManager && !window.presupuestoManager.escuderiaId) {
+                // Si ya existe pero no está inicializado
+                console.log('🔄 PresupuestoManager existe pero sin inicializar, inicializando...');
+                try {
+                    await window.presupuestoManager.inicializar(escuderiaIdParaUsar);
+                    console.log('✅ presupuestoManager inicializado tardíamente');
+                } catch (error) {
+                    console.error('❌ Error inicializando presupuestoManager existente:', error);
+                }
+            } else if (window.presupuestoManager) {
+                console.log('✅ presupuestoManager ya está inicializado');
+            }
         } else {
             console.log('⚠️ PresupuestoManager no disponible en window');
         }
