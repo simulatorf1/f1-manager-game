@@ -239,6 +239,9 @@ class F1Manager {
                             9, 17, 0, 19, 10, 10, 11, 21, 0, 23, 12, 0, 13, 25, 15, 27, 14, 0,
                             15, 29, 20, 31, 16, 0, 17, 33, 0, 35, 18, 20]
         };
+        // ✅ INICIALIZAR PRESUPUESTO INMEDIATAMENTE
+        this.inicializarPresupuestoManager();
+        
 
 
         
@@ -343,7 +346,43 @@ class F1Manager {
     }
 
 
-
+    // ========================
+    // INICIALIZAR PRESUPUESTO MANAGER (GARANTIZADO)
+    // ========================
+    async inicializarPresupuestoManager() {
+        try {
+            // 1. Verificar que tenemos datos necesarios
+            if (!this.escuderia || !this.escuderia.id) {
+                console.error('❌ No se puede inicializar presupuesto: Escudería sin ID');
+                return;
+            }
+            
+            // 2. Verificar que la clase existe
+            if (!window.PresupuestoManager) {
+                console.error('❌ PresupuestoManager no está cargado');
+                return;
+            }
+            
+            // 3. Crear instancia si no existe
+            if (!window.presupuestoManager) {
+                console.log('💰 Creando presupuestoManager para escudería:', this.escuderia.id);
+                window.presupuestoManager = new window.PresupuestoManager();
+            }
+            
+            // 4. Inicializar si no está inicializado
+            if (!window.presupuestoManager.escuderiaId) {
+                console.log('🔄 Inicializando presupuestoManager...');
+                await window.presupuestoManager.inicializar(this.escuderia.id);
+                console.log('✅ presupuestoManager inicializado correctamente');
+            } else {
+                console.log('✅ presupuestoManager ya estaba inicializado');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error inicializando presupuestoManager:', error);
+            // NO lanzar error, solo loguear
+        }
+    }
     
     // ========================
     // MÉTODO PARA CARGAR Y MOSTRAR ÚLTIMO TIEMPO
@@ -1095,12 +1134,30 @@ class F1Manager {
     // ========================
     async iniciarFabricacionTaller(areaId, nivel) {
         console.log('🔧 Iniciando fabricación:', { areaId, nivel });
+        // ⚠️ VERIFICACIÓN CRÍTICA ⚠️
+        if (!this.escuderia || !this.escuderia.id) {
+            console.error('❌ ERROR CRÍTICO: No hay escudería en this.escuderia');
+            console.log('this.escuderia:', this.escuderia);
+            this.showNotification('❌ Error: No se encontró tu escudería', 'error');
+            return false;
+        }
+
+        
         // VERIFICAR PRESUPUESTO MANAGER
-        if (!window.presupuestoManager && window.PresupuestoManager && this.escuderia) {
-            console.log('💰 Creando presupuestoManager automáticamente...');
-            window.presupuestoManager = new window.PresupuestoManager();
-            await window.presupuestoManager.inicializar(this.escuderia.id);
-        }        
+        if (window.PresupuestoManager) {
+            if (!window.presupuestoManager) {
+                window.presupuestoManager = new window.PresupuestoManager();
+            }
+            
+            // Solo inicializar si tenemos escuderiaId y no está ya inicializado
+            if (this.escuderia && this.escuderia.id && !window.presupuestoManager.escuderiaId) {
+                try {
+                    await window.presupuestoManager.inicializar(this.escuderia.id);
+                } catch (error) {
+                    console.warn('⚠️ Error inicializando presupuesto, continuando sin él:', error);
+                }
+            }
+        }      
         if (!this.escuderia || !this.escuderia.id) {
             this.showNotification('❌ Error: No tienes escudería', 'error');
             return false;
@@ -1196,11 +1253,15 @@ class F1Manager {
             // ✅ AHORA SÍ PUEDES USAR nombrePiezaNotif (porque ya existe)
             // Registrar transacción de presupuesto
             try {
-                if (window.presupuestoManager && window.presupuestoManager.registrarTransaccion) {
+                // SOLO registrar si presupuestoManager está INICIALIZADO (tiene escuderiaId)
+                if (window.presupuestoManager && 
+                    window.presupuestoManager.escuderiaId && 
+                    window.presupuestoManager.registrarTransaccion) {
+                    
                     await window.presupuestoManager.registrarTransaccion(
                         'gasto',
                         costo,
-                        `Fabricación ${nombrePiezaNotif}`, // ← ¡AHORA SÍ EXISTE!
+                        `Fabricación ${nombrePiezaNotif}`,
                         'produccion',
                         { 
                             area: areaId, 
@@ -1210,6 +1271,9 @@ class F1Manager {
                         }
                     );
                     console.log('💰 Transacción registrada en presupuesto');
+                    
+                } else {
+                    console.log('ℹ️ Presupuesto no disponible, fabricación continúa sin registro');
                 }
             } catch (error) {
                 console.warn('⚠️ No se pudo registrar transacción:', error);
