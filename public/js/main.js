@@ -342,6 +342,124 @@ class F1Manager {
         }
     }
 
+
+
+    
+    // ========================
+    // MÉTODO PARA CARGAR Y MOSTRAR ÚLTIMO TIEMPO
+    // ========================
+    async cargarUltimoTiempoUI() {
+        const container = document.getElementById('ultimo-tiempo-container');
+        if (!container) {
+            console.error('❌ No se encontró #ultimo-tiempo-container');
+            return;
+        }
+        
+        try {
+            const ultimoTiempo = await this.obtenerUltimoTiempoPrueba();
+            
+            if (ultimoTiempo && ultimoTiempo.tiempo_formateado) {
+                // Obtener también el mejor tiempo histórico para comparar
+                const { data: mejorTiempoHist } = await this.supabase
+                    .from('pruebas_pista')
+                    .select('tiempo_formateado, mejor_tiempo')
+                    .eq('escuderia_id', this.escuderia.id)
+                    .not('mejor_tiempo', 'is', null)
+                    .order('mejor_tiempo', { ascending: true })
+                    .limit(1)
+                    .maybeSingle();
+                
+                const esNuevoRecord = mejorTiempoHist && 
+                                     ultimoTiempo.mejor_tiempo && 
+                                     ultimoTiempo.mejor_tiempo <= mejorTiempoHist.mejor_tiempo;
+                
+                container.innerHTML = `
+                    <div class="tiempo-f1-content ${esNuevoRecord ? 'nuevo-record' : ''}">
+                        <div class="tiempo-f1-info">
+                            <div class="tiempo-f1-label">
+                                ÚLTIMA VUELTA RÁPIDA
+                                ${esNuevoRecord ? '<span class="record-badge">NUEVO RÉCORD!</span>' : ''}
+                            </div>
+                            <div class="tiempo-f1-valor">${ultimoTiempo.tiempo_formateado}</div>
+                            <div class="tiempo-f1-pista">Simulación en pista virtual</div>
+                            
+                            <div class="tiempo-f1-detalles">
+                                <span>📊 Mejor tiempo registrado</span>
+                                <span>🏎️ ${this.escuderia.nombre || 'Tu escudería'}</span>
+                            </div>
+                        </div>
+                        
+                        <button class="tiempo-f1-boton" onclick="window.irAPruebaPista()"
+                                title="Realizar nueva prueba en pista">
+                            <i class="fas fa-stopwatch"></i>
+                            NUEVA PRUEBA
+                        </button>
+                    </div>
+                `;
+            } else {
+                // No hay tiempos registrados
+                container.innerHTML = `
+                    <div class="tiempo-sin-datos">
+                        <div class="tiempo-sin-datos-icon">⏱️</div>
+                        <div class="tiempo-sin-datos-text">
+                            No hay tiempos registrados<br>
+                            <small>Realiza tu primera prueba en pista</small>
+                        </div>
+                        <button class="tiempo-f1-boton" onclick="irAPruebaPista()">
+                            <i class="fas fa-flag-checkered"></i>
+                            PRIMERA PRUEBA
+                        </button>
+                    </div>
+                `;
+            }
+            
+        } catch (error) {
+            console.error('❌ Error cargando último tiempo:', error);
+            container.innerHTML = `
+                <div class="tiempo-sin-datos">
+                    <div class="tiempo-sin-datos-icon">⚠️</div>
+                    <div class="tiempo-sin-datos-text">
+                        Error cargando tiempos
+                    </div>
+                    <button class="tiempo-f1-boton" onclick="window.location.reload()">
+                        <i class="fas fa-redo"></i>
+                        REINTENTAR
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    
+    // ========================
+    // MÉTODO PARA OBTENER ÚLTIMO TIEMPO DE PRUEBAS
+    // ========================
+    async obtenerUltimoTiempoPrueba() {
+        try {
+            if (!this.escuderia || !this.escuderia.id) {
+                return null;
+            }
+            
+            const { data: ultimaPrueba, error } = await this.supabase
+                .from('pruebas_pista')
+                .select('tiempo_formateado, mejor_tiempo')
+                .eq('escuderia_id', this.escuderia.id)
+                .order('fecha_prueba', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+            
+            if (error) {
+                console.error('Error obteniendo último tiempo:', error);
+                return null;
+            }
+            
+            return ultimaPrueba;
+        } catch (error) {
+            console.error('Error en obtenerUltimoTiempoPrueba:', error);
+            return null;
+        }
+    }
+    
     
     // ========================
     // MÉTODO PARA CARGAR PESTAÑA TALLER (MODIFICADO CON 50 BOTONES Y NAVEGACIÓN)
@@ -1396,7 +1514,14 @@ class F1Manager {
             
             dashboard: setInterval(() => {
                 this.updateProductionMonitor();
-            }, 3000)
+            }, 3000),
+            // NUEVO: Actualizar último tiempo cada 30 segundos
+            tiempoPrueba: setInterval(() => {
+                if (this.cargarUltimoTiempoUI) {
+                    this.cargarUltimoTiempoUI();
+                }
+            }, 30000)
+            
         };
         
         console.log('⏱️ Timers automáticos iniciados');
@@ -1679,6 +1804,15 @@ class F1Manager {
                             <i class="fas fa-flask"></i> Ingeniería
                         </button>
                     </nav>
+                    <!-- ======================== -->
+                    <!-- NUEVO: ÚLTIMO TIEMPO F1 -->
+                    <!-- ======================== -->
+                    <div id="ultimo-tiempo-container" class="ultimo-tiempo-f1">
+                        <div class="tiempo-loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Cargando últimos tiempos...</span>
+                        </div>
+                    </div>                    
                 </header>
                 
                 <!-- CONTENIDO PRINCIPAL (SOLO ESTO CAMBIARÁ CON LAS PESTAÑAS) -->
@@ -1924,7 +2058,12 @@ class F1Manager {
                     await window.fabricacionManager.inicializar(this.escuderia.id);
                 }
             }
-            
+            // CARGAR ÚLTIMO TIEMPO
+            if (window.f1Manager && window.f1Manager.cargarUltimoTiempoUI) {
+                setTimeout(() => {
+                    window.f1Manager.cargarUltimoTiempoUI();
+                }, 800);
+            }            
             setTimeout(() => {
                 if (window.tabManager && window.tabManager.setup) {
                     const originalSwitchTab = window.tabManager.switchTab;
@@ -3603,6 +3742,55 @@ setTimeout(() => {
         piezaFabricando: false,
         pronosticoSeleccionado: null
     };
+
+    // ========================
+    // FUNCIÓN PARA IR A PRUEBAS DE PISTA
+    // ========================
+    window.irAPruebaPista = function() {
+        console.log('🏎️ Redirigiendo a pruebas de pista...');
+        
+        // Primero intentar usar el tabManager para ir a ingeniería
+        if (window.tabManager && window.tabManager.switchTab) {
+            window.tabManager.switchTab('ingenieria');
+            console.log('✅ Redirigido usando tabManager a ingeniería');
+            
+            // Después de un pequeño delay, intentar abrir el modal de pruebas si existe
+            setTimeout(() => {
+                if (window.ingenieriaManager && window.ingenieriaManager.iniciarPruebaPista) {
+                    console.log('🔧 Abriendo modal de prueba de pista...');
+                    window.ingenieriaManager.iniciarPruebaPista();
+                } else if (window.ingenieriaManager && window.ingenieriaManager.mostrarModalPruebas) {
+                    console.log('🔧 Abriendo modal de pruebas...');
+                    window.ingenieriaManager.mostrarModalPruebas();
+                } else {
+                    console.log('⚠️ ingenieriaManager no tiene método para iniciar pruebas');
+                    // Mostrar notificación
+                    if (window.f1Manager && window.f1Manager.showNotification) {
+                        window.f1Manager.showNotification('🔧 Busca "Pruebas en Pista" en la pestaña Ingeniería', 'info');
+                    }
+                }
+            }, 1000);
+            return;
+        }
+        
+        // Método alternativo: buscar y hacer click en la pestaña de ingeniería
+        const tabIngenieria = document.querySelector('[data-tab="ingenieria"]');
+        if (tabIngenieria) {
+            tabIngenieria.click();
+            console.log('✅ Click en pestaña ingeniería');
+            
+            // Notificación para guiar al usuario
+            setTimeout(() => {
+                if (window.f1Manager && window.f1Manager.showNotification) {
+                    window.f1Manager.showNotification('🔍 Busca la sección "Pruebas en Pista"', 'info');
+                }
+            }, 1500);
+        } else {
+            // Último recurso: mostrar mensaje
+            alert('🏎️ Para realizar pruebas en pista:\n\n1. Ve a la pestaña "INGENIERÍA"\n2. Busca la opción "Pruebas en Pista"\n3. Realiza vueltas para registrar tiempos\n\n¡Registra tu primer tiempo!');
+        }
+    };
+    
     
     window.tutorialSeleccionarEstratega = function(id) {
         if (window.tutorialManager && typeof window.tutorialManager.tutorialSeleccionarEstratega === 'function') {
@@ -4247,9 +4435,18 @@ setTimeout(() => {
         if (e.key === 'Escape') {
             window.cerrarExplicacionEstrellas();
         }
-    });
+
     // ============================================
     // FIN FUNCIÓN EXPLICACIÓN ESTRELLAS
     // ============================================
+    // Evento para actualizar último tiempo cuando se complete una prueba
+    window.addEventListener('prueba-completada', (event) => {
+        console.log('🏎️ Prueba completada, actualizando último tiempo...');
+        if (window.f1Manager && window.f1Manager.cargarUltimoTiempoUI) {
+            setTimeout(() => {
+                window.f1Manager.cargarUltimoTiempoUI();
+            }, 1000);
+        }
+    });
     
 })();
