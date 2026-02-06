@@ -375,18 +375,18 @@ class F1Manager {
                     <div class="tiempo-f1-content">
                         <div class="tiempo-f1-info">
                             <div class="tiempo-f1-label">
-                                ÚLTIMA VUELTA RÁPIDA
+                                MEJOR TIEMPO POR VUELTA
                             </div>
                             <div class="tiempo-f1-valor">${ultimoTiempo.tiempo_formateado}</div>
                             
                             <div class="tiempo-f1-detalles">
-                                <span>${fechaTexto || 'Tiempo registrado'}</span>
-                                <span>🏎️ ${this.escuderia.nombre || 'Tu escudería'}</span>
+                                <span><i class="fas fa-calendar-alt"></i> ${fechaTexto || 'Sin fecha'}</span>
+                                <span><i class="fas fa-flag-checkered"></i> RÉCORD</span>
                             </div>
                         </div>
                         
                         <button class="tiempo-f1-boton" onclick="window.irAPruebaPista()" 
-                                title="Realizar nueva prueba en pista">
+                                title="Intenta batir tu récord en una nueva prueba">
                             <i class="fas fa-stopwatch"></i>
                             NUEVA PRUEBA
                         </button>
@@ -396,14 +396,14 @@ class F1Manager {
                 // No hay tiempos registrados
                 container.innerHTML = `
                     <div class="tiempo-sin-datos">
-                        <div class="tiempo-sin-datos-icon">⏱️</div>
+                        <div class="tiempo-sin-datos-icon"><i class="fas fa-tachometer-alt"></i></div>
                         <div class="tiempo-sin-datos-text">
-                            ¡Registra tu primer tiempo!<br>
-                            <small>Realiza una prueba en pista para mostrar tu mejor vuelta aquí</small>
+                            SIN TIEMPO REGISTRADO<br>
+                            <small>Realiza tu primera vuelta cronometrada</small>
                         </div>
                         <button class="tiempo-f1-boton" onclick="window.irAPruebaPista()">
-                            <i class="fas fa-flag-checkered"></i>
-                            PRIMERA PRUEBA
+                            <i class="fas fa-play-circle"></i>
+                            INICIAR PRUEBA
                         </button>
                     </div>
                 `;
@@ -413,7 +413,7 @@ class F1Manager {
             console.error('❌ Error cargando último tiempo:', error);
             container.innerHTML = `
                 <div class="tiempo-sin-datos">
-                    <div class="tiempo-sin-datos-icon">⚠️</div>
+                    <div class="tiempo-sin-datos-icon"><i class="fas fa-exclamation-triangle"></i></div>
                     <div class="tiempo-sin-datos-text">
                         Error cargando tiempos
                     </div>
