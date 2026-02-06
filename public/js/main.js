@@ -725,7 +725,6 @@ class F1Manager {
                             piezaNum === (piezasAreaFabricadasAll.length + 1);
                         
                         const puedeFabricar = fabricacionesCount < 4 && 
-                                            this.escuderia.dinero >= 10000 &&
                                             proximaPiezaNoFabricada;
                         
                         html += '<button class="btn-pieza-50 vacio" ';
