@@ -117,13 +117,7 @@ class TabManager {
                 // SALIR del método - no hacer nada más para el taller
                 return;
             }
-            // ======================================================
-            // ¡¡PESTAÑA TALLER - NUEVO COMPORTAMIENTO!!
-            // ======================================================
-            if (tabId === 'taller') {
-                // ... código del taller ...
-                return;
-            }
+            
             // ======================================================
             // ¡¡PESTAÑA PRONÓSTICOS - NUEVO COMPORTAMIENTO!!
             // ======================================================
@@ -184,6 +178,7 @@ class TabManager {
                 // SALIR del método - no hacer nada más para pronósticos
                 return;
             }
+            
             // ======================================================
             // ¡¡PESTAÑA MERCADO - NUEVO COMPORTAMIENTO!!
             // ======================================================
@@ -227,6 +222,7 @@ class TabManager {
                 // SALIR del método - no hacer nada más para el mercado
                 return;
             }
+            
             // ======================================================
             // ¡¡PESTAÑA PRESUPUESTO - NUEVO COMPORTAMIENTO!!
             // ======================================================
@@ -250,7 +246,7 @@ class TabManager {
                                 throw new Error('No se encontró la escudería');
                             }
                             
-                            // === CORRECCIÓN: PASAR SOLO EL ID, NO EL OBJETO ===
+                            // PASAR SOLO EL ID, NO EL OBJETO
                             const escuderiaId = escuderia.id;
                             if (!escuderiaId) {
                                 throw new Error('La escudería no tiene ID');
@@ -286,12 +282,12 @@ class TabManager {
                             </div>
                         `;
                     }
-                }, 300);   
+                }, 300);
+                
+                // SALIR del método - no hacer nada más para el presupuesto
+                return;
+            }
             
-            // ======================================================
-            // Para TODAS LAS OTRAS pestañas (principal, almacen, etc.)
-            // ======================================================   
-
             // ======================================================
             // ¡¡PESTAÑA CLASIFICACIÓN - NUEVO COMPORTAMIENTO!!
             // ======================================================
@@ -329,6 +325,7 @@ class TabManager {
             // ======================================================
             // Para TODAS LAS OTRAS pestañas (principal, almacen, etc.)
             // ======================================================
+            
             // 1. Primero cargar el contenido y eventos
             this.loadTabContent(tabId);
             // 2. Luego marcar como activa
@@ -373,7 +370,6 @@ class TabManager {
             }
             
             // ======================================================
-            // ======================================================
             // ¡¡PESTAÑA ALMACÉN - VERIFICAR ACTUALIZACIÓN!!
             // ======================================================
             if (tabId === 'almacen' && window.almacenNecesitaActualizar) {
@@ -391,7 +387,7 @@ class TabManager {
                     }
                 }, 300);
             }
-        }  // <--- ¡ESTA LLAVE FALTABA!
+        }  // <--- Cierra el if (tabContent)
     }  // <--- Cierre del método switchTab
     
     loadTabContents() {
