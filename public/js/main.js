@@ -4435,7 +4435,7 @@ setTimeout(() => {
         if (e.key === 'Escape') {
             window.cerrarExplicacionEstrellas();
         }
-
+    });    
     // ============================================
     // FIN FUNCIÓN EXPLICACIÓN ESTRELLAS
     // ============================================
