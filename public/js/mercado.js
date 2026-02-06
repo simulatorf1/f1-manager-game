@@ -937,20 +937,7 @@ class MercadoManager {
                 Tu saldo actual: <strong>${this.escuderia.dinero.toLocaleString()}€</strong>
             </div>
             
-            ${this.escuderia.dinero >= orden.precio ? `
-                <button class="btn-confirmar ${tieneDuplicada ? 'con-advertencia' : ''}" 
-                        id="btn-confirmar-compra"
-                        ${tieneDuplicada ? 'title="Ya tienes una pieza similar"' : ''}>
-                    <i class="fas ${tieneDuplicada ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> 
-                    ${tieneDuplicada ? 'COMPRAR DE TODAS FORMAS' : 'CONFIRMAR COMPRA'} 
-                    (${orden.precio.toLocaleString()}€)
-                </button>
-            ` : `
-                <div class="error-saldo">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    Saldo insuficiente. Necesitas ${(orden.precio - this.escuderia.dinero).toLocaleString()}€ más.
-                </div>
-            `}
+
         `;
     
         modal.style.display = 'flex';
