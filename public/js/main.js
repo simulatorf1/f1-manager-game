@@ -1476,6 +1476,17 @@ class F1Manager {
             console.log('🔧 Creando fabricacionManager...');
             window.fabricacionManager = new window.FabricacionManager();
         }
+        // INICIALIZAR PRESUPUESTO AUTOMÁTICAMENTE
+        if (window.PresupuestoManager && !window.presupuestoManager) {
+            console.log('💰 Inicializando presupuestoManager automáticamente...');
+            window.presupuestoManager = new window.PresupuestoManager();
+            
+            if (this.escuderia && this.escuderia.id) {
+                await window.presupuestoManager.inicializar(this.escuderia.id);
+                console.log('✅ presupuestoManager inicializado automáticamente');
+            }
+        }
+
         
         if (window.fabricacionManager && typeof window.fabricacionManager.inicializar === 'function') {
             await window.fabricacionManager.inicializar(this.escuderia.id);
