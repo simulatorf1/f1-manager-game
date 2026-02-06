@@ -1804,20 +1804,22 @@ class F1Manager {
                             <i class="fas fa-flask"></i> Ingeniería
                         </button>
                     </nav>
-                    <!-- ======================== -->
-                    <!-- NUEVO: ÚLTIMO TIEMPO F1 -->
-                    <!-- ======================== -->
-                    <div id="ultimo-tiempo-container" class="ultimo-tiempo-f1">
-                        <div class="tiempo-loading">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <span>Cargando últimos tiempos...</span>
-                        </div>
-                    </div>                    
+                  
                 </header>
                 
                 <!-- CONTENIDO PRINCIPAL (SOLO ESTO CAMBIARÁ CON LAS PESTAÑAS) -->
                 <div id="main-content-area" style="flex: 1; overflow-y: auto;">
                     <div id="tab-principal" class="tab-content active">
+
+                        <!-- ======================== -->
+                        <!-- NUEVO: ÚLTIMO TIEMPO F1 (SOLO EN PRINCIPAL) -->
+                        <!-- ======================== -->
+                        <div id="ultimo-tiempo-container" class="ultimo-tiempo-f1">
+                            <div class="tiempo-loading">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Cargando últimos tiempos...</span>
+                            </div>
+                        </div>                    
                         <div class="three-columns-layout">
                             <div class="col-estrategas">
                                 <div class="section-header">
@@ -1967,6 +1969,13 @@ class F1Manager {
                         
                         e.currentTarget.classList.add('active');
                         document.getElementById('tab-' + tabId).classList.add('active');
+                        // SOLO cargar el tiempo si estamos en la pestaña principal
+                        if (tabId === 'principal' && window.f1Manager && window.f1Manager.cargarUltimoTiempoUI) {
+                            setTimeout(() => {
+                                window.f1Manager.cargarUltimoTiempoUI();
+                            }, 300);
+                        }
+                        
                         
                         if (window.tabManager && window.tabManager.switchTab) {
                             window.tabManager.switchTab(tabId);
