@@ -548,7 +548,8 @@ class F1Manager {
             const { data: piezasFabricadas, error: errorPiezas } = await this.supabase
                 .from('almacen_piezas')
                 .select('area, nivel, calidad, numero_global')
-                .eq('escuderia_id', this.escuderia.id);
+                .eq('escuderia_id', this.escuderia.id)
+                .order('numero_global', { ascending: true });  // ⬅️ ESTA ES LA LÍNEA QUE AÑADES
     
             if (errorPiezas) {
                 console.error('Error cargando piezas:', errorPiezas);
@@ -653,7 +654,7 @@ class F1Manager {
                     const nivel = Math.ceil(piezaNum / 5);
                     
                     // Verificar si esta pieza ya está fabricada
-                    const piezaFabricada = piezasAreaFabricadasAll.find(p => p.numero_global === piezaNum);
+                    const piezaFabricada = piezasAreaFabricadasAll[piezaNum - 1];
                     const yaFabricada = !!piezaFabricada;
                     
                     // Verificar si está comprada en mercado
