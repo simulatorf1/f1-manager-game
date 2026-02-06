@@ -256,6 +256,8 @@ class TabManager {
                             
                             // Inicializar el presupuesto manager CON EL ID
                             await window.presupuestoManager.inicializar(escuderiaId);
+                            // ¡¡ESTA LÍNEA FALTA Y ES CRÍTICA!!
+                            window.presupuestoManager.escuderia = escuderia;                            
                             
                             // Generar HTML del presupuesto
                             const html = window.presupuestoManager.generarHTMLPresupuesto();
