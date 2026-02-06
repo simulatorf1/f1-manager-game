@@ -1792,8 +1792,8 @@ html, body {
     background: linear-gradient(135deg, #8B0000 0%, #A00000 50%, #8B0000 100%);
     border: 2px solid #FFD700;
     border-radius: 8px;
-    margin: 8px 12px 10px 12px;
-    padding: 10px 15px;
+    margin: 6px 8px 8px 8px;
+    padding: 8px 10px;
     color: white;
     font-family: 'Orbitron', sans-serif;
     box-shadow: 
@@ -1801,7 +1801,7 @@ html, body {
         inset 0 0 15px rgba(0, 0, 0, 0.3);
     position: relative;
     overflow: hidden;
-    min-height: 70px;
+    min-height: 65px;
     display: flex;
     align-items: center;
 }
@@ -1822,13 +1822,13 @@ html, body {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    gap: 12px;
+    gap: 6px;
 }
 
 .tiempo-f1-info {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
     flex: 1;
 }
 
@@ -1862,7 +1862,7 @@ html, body {
     color: #FFD700;
     border: 1px solid #FFD700;
     border-radius: 5px;
-    padding: 6px 12px;
+    padding: 6px 8px;
     font-family: 'Orbitron', sans-serif;
     font-weight: bold;
     font-size: 0.75rem;
@@ -1872,8 +1872,11 @@ html, body {
     gap: 6px;
     transition: all 0.2s;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    height: 40px; /* Mitad del alto aproximado */
+    height: 36px; /* Mitad del alto aproximado */
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 110px; /* Ancho mínimo para "NUEVA PRUEBA" */   
     text-transform: uppercase;
 }
 
@@ -1936,8 +1939,8 @@ html, body {
 }
 
 .tiempo-f1-detalles {
-    margin-top: 6px;
-    padding-top: 6px;
+    margin-top: 4px;
+    padding-top: 4px;
     border-top: 1px solid rgba(255, 215, 0, 0.3);
     font-size: 0.7rem;
     color: rgba(255, 255, 255, 0.7);
