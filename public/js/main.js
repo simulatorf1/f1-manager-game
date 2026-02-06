@@ -4447,6 +4447,5 @@ setTimeout(() => {
                 window.f1Manager.cargarUltimoTiempoUI();
             }, 1000);
         }
-    });
-    
+    });    
 })();
