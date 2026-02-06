@@ -64,19 +64,26 @@ class PresupuestoManager {
         // Si no hay transacciones, usar valor por defecto
         return 5000000;
     }
+    // EN EL MÉTODO cargarTransacciones() - LÍNEA 75 APROX
     async cargarTransacciones(dias = 7) {
         try {
             const fechaLimite = new Date();
             fechaLimite.setDate(fechaLimite.getDate() - dias);
             
+            // VERIFICACIÓN CRÍTICA: Usar this.escuderiaId, NO this.escuderia.id
+            if (!this.escuderiaId) {
+                console.error('❌ Error: No hay escuderiaId para cargar transacciones');
+                return [];
+            }
+            
             const { data, error } = await this.supabase
                 .from('transacciones')
                 .select('*')
-                .eq('escuderia_id', this.escuderia.id)
+                .eq('escuderia_id', this.escuderiaId)  // ← CAMBIAR ESTO
                 .gte('fecha', fechaLimite.toISOString())
                 .order('fecha', { ascending: false })
                 .limit(100);
-
+    
             if (error) throw error;
             
             this.transacciones = data || [];
@@ -508,13 +515,13 @@ class PresupuestoManager {
 
     async registrarTransaccion(tipo, cantidad, descripcion, categoria = null, referencia = null) {
         try {
-            if (!this.escuderia || !this.escuderia.id) {
+            if (!this.escuderia || !this.escuderiaId) {
                 console.error('❌ No hay escudería');
                 return false;
             }
             
             const transaccion = {
-                escuderia_id: this.escuderia.id,
+                escuderia_id: this.escuderiaId,
                 tipo: tipo,
                 cantidad: cantidad,
                 descripcion: descripcion,
