@@ -1065,46 +1065,45 @@ class MercadoManager {
             if (transferPiezaError) throw transferPiezaError;
     
             // 4. TRANSFERIR DINERO
-            // Restar dinero al comprador (CORREGIDO: sin usar rpc 'decrement')
+            // 4a. Restar dinero al comprador
+            const nuevoDineroComprador = this.escuderia.dinero - orden.precio;
             const { error: updateCompradorError } = await this.supabase
                 .from('escuderias')
-                .update({ dinero: this.escuderia.dinero - orden.precio })
+                .update({ dinero: nuevoDineroComprador })
                 .eq('id', this.escuderia.id);
             
             if (updateCompradorError) throw updateCompradorError;
             
-            // Sumar dinero al vendedor (CORREGIDO: manejo correcto del rpc)
+            // 4b. Sumar dinero al vendedor (SIN RPC - UPDATE DIRECTO)
+            const { data: vendedor, error: vendedorError } = await this.supabase
+                .from('escuderias')
+                .select('dinero')
+                .eq('id', orden.vendedor_id)
+                .single();
+            
+            if (vendedorError) throw vendedorError;
+            
+            const nuevoDineroVendedor = vendedor.dinero + orden.precio;
+            const { error: updateVendedorError } = await this.supabase
+                .from('escuderias')
+                .update({ dinero: nuevoDineroVendedor })
+                .eq('id', orden.vendedor_id);
+            
+            if (updateVendedorError) throw updateVendedorError;
+            
+            // 4c. (OPCIONAL) Registrar transacción si existe la tabla 'transacciones'
             try {
-                // Intentar usar la función RPC si existe
-                const { error: rpcError } = await this.supabase.rpc('increment_dinero', {
-                    escuderia_id: orden.vendedor_id,
-                    cantidad: orden.precio
-                });
-                
-                if (rpcError) {
-                    console.warn('⚠️ RPC falló, actualizando manualmente:', rpcError);
-                    
-                    // Si falla, hacer manual
-                    const { data: vendedor, error: vendedorError } = await this.supabase
-                        .from('escuderias')
-                        .select('dinero')
-                        .eq('id', orden.vendedor_id)
-                        .single();
-                    
-                    if (vendedorError) throw vendedorError;
-                    
-                    if (vendedor) {
-                        const { error: updateError } = await this.supabase
-                            .from('escuderias')
-                            .update({ dinero: vendedor.dinero + orden.precio })
-                            .eq('id', orden.vendedor_id);
-                        
-                        if (updateError) throw updateError;
-                    }
-                }
+                await this.supabase
+                    .from('transacciones')
+                    .insert([{
+                        tipo: 'compra_pieza',
+                        escuderia_id: this.escuderia.id,
+                        monto: orden.precio,
+                        descripcion: `Compra: ${orden.pieza_nombre}`,
+                        fecha: new Date().toISOString()
+                    }]);
             } catch (error) {
-                console.error('❌ Error actualizando dinero del vendedor:', error);
-                // Continuar aunque falle esta parte
+                console.warn('⚠️ No se pudo registrar transacción (la tabla puede no existir):', error);
             }
     
             // 5. Actualizar el dinero local del comprador
