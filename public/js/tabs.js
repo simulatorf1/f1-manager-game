@@ -755,6 +755,7 @@ class TabManager {
                 </div>
                 
                 <div class="tabla-controls">
+
                     <div class="ordenamiento-buttons">
                         <button class="btn-ordenar" data-col="dinero" data-order="desc">
                             <i class="fas fa-sort-amount-down-alt"></i> Más dinero
@@ -765,6 +766,13 @@ class TabManager {
                         <button class="btn-ordenar" data-col="nombre" data-order="asc">
                             <i class="fas fa-sort-alpha-down"></i> Nombre A-Z
                         </button>
+                        <!-- AÑADIR ESTOS DOS NUEVOS BOTONES -->
+                        <button class="btn-ordenar" data-col="vuelta_rapida" data-order="asc">
+                            <i class="fas fa-stopwatch"></i> Mejor vuelta
+                        </button>
+                        <button class="btn-ordenar" data-col="vuelta_rapida" data-order="desc">
+                            <i class="fas fa-stopwatch"></i> Peor vuelta
+                        </button>
                     </div>
                     <div class="search-box">
                         <input type="text" id="buscar-escuderia" placeholder="Buscar escudería..." class="search-input">
@@ -774,6 +782,7 @@ class TabManager {
                 
                 <div class="tabla-contenedor-scroll">
                     <table class="tabla-clasificacion-simple">
+
                         <thead>
                             <tr>
                                 <th class="col-posicion">#</th>
@@ -784,6 +793,11 @@ class TabManager {
                                 <th class="col-dinero active-sort" data-sort="dinero" data-order="desc">
                                     <span>Dinero (€)</span>
                                     <i class="fas fa-sort-down sort-icon"></i>
+                                </th>
+                                <!-- AÑADIR ESTA COLUMNA -->
+                                <th class="col-vuelta" data-sort="vuelta_rapida" data-order="asc">
+                                    <span>Mejor vuelta</span>
+                                    <i class="fas fa-sort sort-icon"></i>
                                 </th>
                             </tr>
                         </thead>
@@ -822,7 +836,7 @@ class TabManager {
     
     // ===== NUEVO MÉTODO PARA CARGAR CLASIFICACIÓN =====
     async loadClasificacionData(columnaOrden = 'dinero', orden = 'desc') {
-        console.log('📊 Cargando datos de clasificación...');
+        console.log(`📊 Cargando datos de clasificación por: ${columnaOrden} ${orden}`);
         
         const tablaBody = document.getElementById('tabla-clasificacion-body');
         if (!tablaBody) return;
@@ -840,88 +854,104 @@ class TabManager {
                 </tr>
             `;
             
-            // Obtener datos de todas las escuderías desde Supabase
-            const { data: escuderias, error } = await supabase
+            let query = supabase
                 .from('escuderias')
-                .select('id, nombre, dinero, puntos')
-                .order(columnaOrden, { ascending: orden === 'asc' });
+                .select(`
+                    id, 
+                    nombre, 
+                    dinero, 
+                    puntos,
+                    pruebas_pista!inner (
+                        tiempo_formateado,
+                        creado_en
+                    )
+                `);
             
-            if (error) {
-                throw error;
-            }
-            
-            if (!escuderias || escuderias.length === 0) {
-                tablaBody.innerHTML = `
-                    <tr>
-                        <td colspan="3" style="text-align: center; padding: 40px; color: #888;">
-                            <i class="fas fa-database fa-2x"></i>
-                            <p style="margin-top: 10px;">No hay escuderías registradas</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            // Actualizar contadores
-            document.getElementById('total-escuderias').textContent = escuderias.length;
-            document.getElementById('total-filas').textContent = escuderias.length;
-            document.getElementById('filas-mostradas').textContent = escuderias.length;
-            
-            // Encontrar mi posición y datos
-            const miEscuderiaId = window.f1Manager?.escuderia?.id;
-            let miPosicion = 0;
-            let miDinero = 0;
-            
-            // Generar filas de la tabla
-            let html = '';
-            
-            escuderias.forEach((escuderia, index) => {
-                const esMiEscuderia = escuderia.id === miEscuderiaId;
-                const posicion = index + 1;
+            // Si ordenamos por vuelta rápida, necesitamos una consulta especial
+            if (columnaOrden === 'vuelta_rapida') {
+                // Primero obtener todas las escuderías con su mejor vuelta
+                const { data: todasEscuderias, error: errorEscuderias } = await supabase
+                    .from('escuderias')
+                    .select('id, nombre, dinero, puntos');
                 
-                if (esMiEscuderia) {
-                    miPosicion = posicion;
-                    miDinero = escuderia.dinero;
+                if (errorEscuderias) throw errorEscuderias;
+                
+                // Para cada escudería, obtener su mejor vuelta
+                const escuderiasConVuelta = await Promise.all(
+                    todasEscuderias.map(async (escuderia) => {
+                        // Obtener la mejor vuelta (menor tiempo) de pruebas_pista
+                        const { data: mejorVuelta, error: errorVuelta } = await supabase
+                            .from('pruebas_pista')
+                            .select('tiempo_formateado, tiempo_segundos')
+                            .eq('escuderia_id', escuderia.id)
+                            .order('tiempo_segundos', { ascending: true })
+                            .limit(1)
+                            .single();
+                        
+                        return {
+                            ...escuderia,
+                            vuelta_rapida: mejorVuelta?.tiempo_formateado || null,
+                            tiempo_segundos: mejorVuelta?.tiempo_segundos || 9999 // Valor alto si no tiene vuelta
+                        };
+                    })
+                );
+                
+                // Ordenar por tiempo de vuelta
+                escuderiasConVuelta.sort((a, b) => {
+                    if (orden === 'asc') {
+                        // Mejores vueltas primero (menor tiempo)
+                        return a.tiempo_segundos - b.tiempo_segundos;
+                    } else {
+                        // Peores vueltas primero (mayor tiempo)
+                        return b.tiempo_segundos - a.tiempo_segundos;
+                    }
+                });
+                
+                // Generar HTML con los datos
+                this.generarTablaClasificacion(tablaBody, escuderiasConVuelta, columnaOrden, orden);
+                return;
+                
+            } else {
+                // Ordenamiento normal por dinero o nombre
+                query = query.order(columnaOrden, { ascending: orden === 'asc' });
+                
+                const { data: escuderias, error } = await query;
+                
+                if (error) throw error;
+                
+                if (!escuderias || escuderias.length === 0) {
+                    tablaBody.innerHTML = `
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 40px; color: #888;">
+                                <i class="fas fa-database fa-2x"></i>
+                                <p style="margin-top: 10px;">No hay escuderías registradas</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
                 }
                 
-                // Formatear dinero con separadores de miles
-                const dineroFormateado = new Intl.NumberFormat('es-ES', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                }).format(escuderia.dinero || 0);
+                // Para cada escudería, obtener su mejor vuelta
+                const escuderiasConVuelta = await Promise.all(
+                    escuderias.map(async (escuderia) => {
+                        const { data: mejorVuelta } = await supabase
+                            .from('pruebas_pista')
+                            .select('tiempo_formateado, tiempo_segundos')
+                            .eq('escuderia_id', escuderia.id)
+                            .order('tiempo_segundos', { ascending: true })
+                            .limit(1)
+                            .single();
+                        
+                        return {
+                            ...escuderia,
+                            vuelta_rapida: mejorVuelta?.tiempo_formateado || 'Sin vuelta',
+                            tiempo_segundos: mejorVuelta?.tiempo_segundos || 9999
+                        };
+                    })
+                );
                 
-                // Clases CSS
-                const claseFila = esMiEscuderia ? 'mi-escuderia' : '';
-                const clasePosicion = posicion <= 3 ? `top-${posicion}` : '';
-                
-                html += `
-                    <tr class="${claseFila}">
-                        <td class="celda-posicion ${clasePosicion}">
-                            <span class="numero-posicion">${posicion}</span>
-                        </td>
-                        <td class="celda-nombre">
-                            ${esMiEscuderia ? '<i class="fas fa-user" style="color: #4CAF50; margin-right: 8px;"></i>' : ''}
-                            ${escuderia.nombre || 'Sin nombre'}
-                        </td>
-                        <td class="celda-dinero">
-                            <span class="valor-dinero">€${dineroFormateado}</span>
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            tablaBody.innerHTML = html;
-            
-            // Actualizar mi información
-            document.getElementById('mi-dinero-actual').textContent = `€${new Intl.NumberFormat('es-ES').format(miDinero)}`;
-            document.getElementById('mi-posicion-actual').textContent = `#${miPosicion}`;
-            
-            // Actualizar timestamp
-            const ahora = new Date();
-            document.getElementById('ultima-actualizacion').textContent = 
-                `Actualizado a las ${ahora.getHours().toString().padStart(2, '0')}:${ahora.getMinutes().toString().padStart(2, '0')}`;
-            
-            console.log('✅ Clasificación cargada correctamente');
+                this.generarTablaClasificacion(tablaBody, escuderiasConVuelta, columnaOrden, orden);
+            }
             
         } catch (error) {
             console.error('❌ Error cargando clasificación:', error);
@@ -940,6 +970,97 @@ class TabManager {
             `;
         }
     }
+    // Añadir este método después de loadClasificacionData()
+    generarTablaClasificacion(tablaBody, escuderias, columnaOrden, orden) {
+        // Actualizar contadores
+        document.getElementById('total-escuderias').textContent = escuderias.length;
+        document.getElementById('total-filas').textContent = escuderias.length;
+        document.getElementById('filas-mostradas').textContent = escuderias.length;
+        
+        // Encontrar mi posición y datos
+        const miEscuderiaId = window.f1Manager?.escuderia?.id;
+        let miPosicion = 0;
+        let miDinero = 0;
+        let miVuelta = 'Sin vuelta';
+        
+        // Generar filas de la tabla
+        let html = '';
+        
+        escuderias.forEach((escuderia, index) => {
+            const esMiEscuderia = escuderia.id === miEscuderiaId;
+            const posicion = index + 1;
+            
+            if (esMiEscuderia) {
+                miPosicion = posicion;
+                miDinero = escuderia.dinero;
+                miVuelta = escuderia.vuelta_rapida;
+            }
+            
+            // Formatear dinero
+            const dineroFormateado = new Intl.NumberFormat('es-ES', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(escuderia.dinero || 0);
+            
+            // Clases CSS
+            const claseFila = esMiEscuderia ? 'mi-escuderia' : '';
+            const clasePosicion = posicion <= 3 ? `top-${posicion}` : '';
+            
+            // Decidir qué columna mostrar según el ordenamiento
+            const valorMostrar = columnaOrden === 'vuelta_rapida' 
+                ? escuderia.vuelta_rapida || 'Sin vuelta'
+                : `€${dineroFormateado}`;
+            
+            html += `
+                <tr class="${claseFila}">
+                    <td class="celda-posicion ${clasePosicion}">
+                        <span class="numero-posicion">${posicion}</span>
+                    </td>
+                    <td class="celda-nombre">
+                        ${esMiEscuderia ? '<i class="fas fa-user" style="color: #4CAF50; margin-right: 8px;"></i>' : ''}
+                        ${escuderia.nombre || 'Sin nombre'}
+                    </td>
+                    <td class="${columnaOrden === 'vuelta_rapida' ? 'celda-vuelta' : 'celda-dinero'}">
+                        <span class="valor-${columnaOrden === 'vuelta_rapida' ? 'vuelta' : 'dinero'}">
+                            ${valorMostrar}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tablaBody.innerHTML = html;
+        
+        // Actualizar mi información en la barra superior
+        document.getElementById('mi-dinero-actual').textContent = `€${new Intl.NumberFormat('es-ES').format(miDinero)}`;
+        document.getElementById('mi-posicion-actual').textContent = `#${miPosicion}`;
+        
+        // Añadir información de vuelta si estamos ordenando por vuelta
+        if (columnaOrden === 'vuelta_rapida') {
+            const infoBar = document.querySelector('.clasificacion-info-bar');
+            if (infoBar && !document.getElementById('mi-vuelta-actual')) {
+                const vueltaItem = document.createElement('div');
+                vueltaItem.className = 'info-item';
+                vueltaItem.id = 'mi-vuelta-actual-container';
+                vueltaItem.innerHTML = `
+                    <i class="fas fa-stopwatch" style="color: #9C27B0;"></i>
+                    <div>
+                        <span class="info-label">Tu mejor vuelta</span>
+                        <span class="info-value" id="mi-vuelta-actual">${miVuelta}</span>
+                    </div>
+                `;
+                infoBar.appendChild(vueltaItem);
+            } else if (document.getElementById('mi-vuelta-actual')) {
+                document.getElementById('mi-vuelta-actual').textContent = miVuelta;
+            }
+        }
+        
+        // Actualizar timestamp
+        const ahora = new Date();
+        document.getElementById('ultima-actualizacion').textContent = 
+            `Actualizado a las ${ahora.getHours().toString().padStart(2, '0')}:${ahora.getMinutes().toString().padStart(2, '0')}`;
+    }
+    
     
     // ===== NUEVO MÉTODO PARA CONFIGURAR EVENTOS DE CLASIFICACIÓN =====
     setupClasificacionEvents() {
