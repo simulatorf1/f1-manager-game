@@ -741,29 +741,7 @@ class TabManager {
                     </div>
                 </div>
                 
-                <div class="clasificacion-info-bar">
-                    <div class="info-item">
-                        <i class="fas fa-coins" style="color: #FFD700;"></i>
-                        <div>
-                            <span class="info-label" id="titulo-metrica">Tu dinero actual</span>
-                            <span class="info-value" id="mi-metrica-actual">Cargando...</span>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-trophy" style="color: #FF9800;"></i>
-                        <div>
-                            <span class="info-label">Tu posición</span>
-                            <span class="info-value" id="mi-posicion-actual">Cargando...</span>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-users" style="color: #2196F3;"></i>
-                        <div>
-                            <span class="info-label">Total escuderías</span>
-                            <span class="info-value" id="total-escuderias">Cargando...</span>
-                        </div>
-                    </div>
-                </div>
+                <!-- Eliminada la sección clasificacion-info-bar -->
                 
                 <div class="tabla-controls">
                     <div class="ordenamiento-buttons">
@@ -959,8 +937,7 @@ class TabManager {
     }
     // Añadir este método después de loadClasificacionData()
     generarTablaClasificacion(tablaBody, escuderias, tipo, orden) {
-        // Actualizar contadores
-        document.getElementById('total-escuderias').textContent = escuderias.length;
+        // Solo mantener los contadores que aún se usan en el footer
         document.getElementById('total-filas').textContent = escuderias.length;
         document.getElementById('filas-mostradas').textContent = escuderias.length;
         
@@ -972,16 +949,8 @@ class TabManager {
                 : '<span>Mejor Vuelta</span>';
         }
         
-        // Actualizar título en info bar
-        const tituloInfo = document.getElementById('titulo-metrica');
-        if (tituloInfo) {
-            tituloInfo.textContent = tipo === 'dinero' ? 'Tu dinero actual' : 'Tu mejor vuelta';
-        }
-        
-        // Encontrar mi posición y datos
+        // Encontrar mi escudería si existe
         const miEscuderiaId = window.f1Manager?.escuderia?.id;
-        let miPosicion = 0;
-        let miMetrica = tipo === 'dinero' ? 0 : 'Sin vuelta';
         
         // Generar filas de la tabla
         let html = '';
@@ -989,15 +958,6 @@ class TabManager {
         escuderias.forEach((escuderia, index) => {
             const esMiEscuderia = escuderia.id === miEscuderiaId;
             const posicion = index + 1;
-            
-            if (esMiEscuderia) {
-                miPosicion = posicion;
-                if (tipo === 'dinero') {
-                    miMetrica = `€${new Intl.NumberFormat('es-ES').format(escuderia.dinero)}`;
-                } else {
-                    miMetrica = escuderia.vuelta_rapida;
-                }
-            }
             
             // Formatear valor a mostrar
             let valorMostrar;
@@ -1033,10 +993,6 @@ class TabManager {
         });
         
         tablaBody.innerHTML = html;
-        
-        // Actualizar mi información
-        document.getElementById('mi-metrica-actual').textContent = miMetrica;
-        document.getElementById('mi-posicion-actual').textContent = `#${miPosicion}`;
         
         // Actualizar timestamp
         const ahora = new Date();
