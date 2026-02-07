@@ -1027,10 +1027,16 @@ class TabManager {
             const claseFila = esMiEscuderia ? 'mi-escuderia' : '';
             const clasePosicion = posicion <= 3 ? `top-${posicion}` : '';
             
-            // Decidir qué columna mostrar según el ordenamiento
-            const valorMostrar = columnaOrden === 'vuelta_rapida' 
-                ? escuderia.vuelta_rapida || 'Sin vuelta'
-                : `€${dineroFormateado}`;
+            // Decidir qué valor mostrar según el ordenamiento
+            let valorMostrar, claseCelda;
+            
+            if (columnaOrden === 'vuelta_rapida') {
+                valorMostrar = escuderia.vuelta_rapida;
+                claseCelda = 'celda-vuelta';
+            } else {
+                valorMostrar = `€${dineroFormateado}`;
+                claseCelda = 'celda-dinero';
+            }
             
             html += `
                 <tr class="${claseFila}">
@@ -1041,8 +1047,8 @@ class TabManager {
                         ${esMiEscuderia ? '<i class="fas fa-user" style="color: #4CAF50; margin-right: 8px;"></i>' : ''}
                         ${escuderia.nombre || 'Sin nombre'}
                     </td>
-                    <td class="${columnaOrden === 'vuelta_rapida' ? 'celda-vuelta' : 'celda-dinero'}">
-                        <span class="valor-${columnaOrden === 'vuelta_rapida' ? 'vuelta' : 'dinero'}">
+                    <td class="${claseCelda}">
+                        <span class="${columnaOrden === 'vuelta_rapida' ? 'valor-vuelta' : 'valor-dinero'}">
                             ${valorMostrar}
                         </span>
                     </td>
@@ -1052,15 +1058,17 @@ class TabManager {
         
         tablaBody.innerHTML = html;
         
-        // Actualizar mi información en la barra superior
+        // Actualizar mi información
         document.getElementById('mi-dinero-actual').textContent = `€${new Intl.NumberFormat('es-ES').format(miDinero)}`;
         document.getElementById('mi-posicion-actual').textContent = `#${miPosicion}`;
         
         // Añadir información de vuelta si estamos ordenando por vuelta
         if (columnaOrden === 'vuelta_rapida') {
             const infoBar = document.querySelector('.clasificacion-info-bar');
-            if (infoBar && !document.getElementById('mi-vuelta-actual')) {
-                const vueltaItem = document.createElement('div');
+            let vueltaItem = document.getElementById('mi-vuelta-actual-container');
+            
+            if (!vueltaItem && infoBar) {
+                vueltaItem = document.createElement('div');
                 vueltaItem.className = 'info-item';
                 vueltaItem.id = 'mi-vuelta-actual-container';
                 vueltaItem.innerHTML = `
@@ -1071,7 +1079,7 @@ class TabManager {
                     </div>
                 `;
                 infoBar.appendChild(vueltaItem);
-            } else if (document.getElementById('mi-vuelta-actual')) {
+            } else if (vueltaItem) {
                 document.getElementById('mi-vuelta-actual').textContent = miVuelta;
             }
         }
