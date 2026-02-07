@@ -2265,47 +2265,58 @@ class F1Manager {
                             <div id="tab-clasificacion" class="tab-content"></div>
                         </div>
                         
-                        <!-- FOOTER FIJO - SIEMPRE VISIBLE -->
 
+
+                        <!-- FOOTER FIJO - SIEMPRE VISIBLE -->
                         <footer class="dashboard-footer" style="
                             position: sticky;
                             bottom: 0;
                             background: #1a1a2e;
                             border-top: 1px solid rgba(0, 210, 190, 0.3);
                             z-index: 1000;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            padding: 8px 15px;
                         ">
-
                             
-                            <!-- 4 PESTAÑAS ABAJO - USANDO LA MISMA CLASE QUE ARRIBA -->
-                            <nav class="tabs-compactas" style="flex: 1; justify-content: center; margin: 0 10px;">
-                                <button class="tab-btn-compacto" data-tab="mercado">
-                                    <i class="fas fa-shopping-cart"></i> Mercado
+                            <!-- CONTENEDOR DE LAS PESTAÑAS INFERIORES (AHORA INCLUYE EL BOTÓN SALIR) -->
+                            <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
+                                <!-- 4 PESTAÑAS ABAJO -->
+                                <nav class="tabs-compactas" style="flex: 1; justify-content: center;">
+                                    <button class="tab-btn-compacto" data-tab="mercado">
+                                        <i class="fas fa-shopping-cart"></i> Mercado
+                                    </button>
+                                    <button class="tab-btn-compacto" data-tab="pronosticos">
+                                        <i class="fas fa-chart-line"></i> Pronósticos
+                                    </button>
+                                    <button class="tab-btn-compacto" data-tab="presupuesto">
+                                        <i class="fas fa-chart-pie"></i> Presupuesto
+                                    </button>
+                                    <button class="tab-btn-compacto" data-tab="clasificacion">
+                                        <i class="fas fa-medal"></i> Clasificación
+                                    </button>
+                                </nav>
+                                
+                                <!-- BOTÓN SALIR A CONTINUACIÓN DE LAS PESTAÑAS -->
+                                <button class="logout-btn-compacto" id="logout-btn-visible" title="Cerrar sesión" style="
+                                    background: rgba(225, 6, 0, 0.1);
+                                    border: 1px solid rgba(225, 6, 0, 0.3);
+                                    color: #e10600;
+                                    padding: 5px 12px;
+                                    border-radius: 8px;
+                                    font-size: 0.8rem;
+                                    cursor: pointer;
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 5px;
+                                    white-space: nowrap;
+                                    flex-shrink: 0;
+                                    height: fit-content;
+                                ">
+                                    <i class="fas fa-sign-out-alt"></i> Salir
                                 </button>
-                                <button class="tab-btn-compacto" data-tab="pronosticos">
-                                    <i class="fas fa-chart-line"></i> Pronósticos
-                                </button>
-                                <button class="tab-btn-compacto" data-tab="presupuesto">
-                                    <i class="fas fa-chart-pie"></i> Presupuesto
-                                </button>
-                                <button class="tab-btn-compacto" data-tab="clasificacion">
-                                    <i class="fas fa-medal"></i> Clasificación
-                                </button>
-                            </nav>
-                            
-                            <button class="logout-btn-compacto" id="logout-btn-visible" title="Cerrar sesión" style="
-                                background: rgba(225, 6, 0, 0.1);
-                                border: 1px solid rgba(225, 6, 0, 0.3);
-                                color: #e10600;
-                                padding: 4px 10px;
-                                border-radius: 8px;
-                                font-size: 0.8rem;
-                                cursor: pointer;
-                                display: flex;
-                                align-items: center;
-                                gap: 5px;
-                            ">
-                                <i class="fas fa-sign-out-alt"></i> Salir
-                            </button>
+                            </div>
                         </footer>
                     </div>
                 </div>
