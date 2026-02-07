@@ -1661,8 +1661,6 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
                     
                     <div style="margin-bottom: 20px;">
                         <p><strong>Pieza:</strong> ${window.mercadoManager.getAreaNombre(pieza.area)}</p>
-                        <p><strong>Nivel:</strong> ${pieza.nivel}</p>
-                        <p><strong>Calidad:</strong> ${pieza.calidad || 'Normal'}</p>
                     </div>
                     
                     <div style="margin-bottom: 15px;">
