@@ -873,21 +873,29 @@ class TabManager {
                 return;
             }
             
+            console.log(`🏁 Encontradas ${todasEscuderias.length} escuderías`);
+            
             // 2. PARA CADA ESCUDERÍA, OBTENER SU MEJOR VUELTA
             const escuderiasConVuelta = await Promise.all(
                 todasEscuderias.map(async (escuderia) => {
                     try {
-                        // Obtener la mejor vuelta (tiempo más bajo)
-                        const { data: mejorVuelta, error: errorVuelta } = await supabase
-                            .from('pruebas_pista')
-                            .select('tiempo_formateado, tiempo_vuelta')  // <-- CAMBIADO A tiempo_vuelta
-                            .eq('escuderia_id', escuderia.id)
-                            .order('tiempo_vuelta', { ascending: true }) // <-- CAMBIADO A tiempo_vuelta
-                            .limit(1)
-                            .single();
+                        console.log(`🔍 Buscando vuelta para: ${escuderia.nombre} (${escuderia.id})`);
                         
-                        // Si hay error o no hay vuelta, usar valores por defecto
-                        if (errorVuelta || !mejorVuelta) {
+                        // Obtener la mejor vuelta (tiempo más bajo)
+                        const { data: resultados, error: errorVuelta } = await supabase
+                            .from('pruebas_pista')
+                            .select('tiempo_formateado, tiempo_vuelta')
+                            .eq('escuderia_id', escuderia.id)
+                            .order('tiempo_vuelta', { ascending: true })
+                            .limit(1);
+                        
+                        if (errorVuelta) {
+                            console.warn(`⚠️ Error en consulta para ${escuderia.nombre}:`, errorVuelta);
+                        }
+                        
+                        // Verificar si hay resultados
+                        if (!resultados || resultados.length === 0) {
+                            console.log(`ℹ️ ${escuderia.nombre}: Sin vuelta registrada`);
                             return {
                                 ...escuderia,
                                 vuelta_rapida: 'Sin vuelta',
@@ -895,34 +903,42 @@ class TabManager {
                             };
                         }
                         
+                        // Sí hay vuelta registrada
+                        const mejorVuelta = resultados[0];
+                        console.log(`✅ ${escuderia.nombre}: Vuelta ${mejorVuelta.tiempo_formateado} (${mejorVuelta.tiempo_vuelta}s)`);
+                        
                         return {
                             ...escuderia,
                             vuelta_rapida: mejorVuelta.tiempo_formateado || 'Sin vuelta',
-                            tiempo_vuelta: mejorVuelta.tiempo_vuelta || 999999  // <-- CAMBIADO
+                            tiempo_vuelta: mejorVuelta.tiempo_vuelta || 999999
                         };
                         
                     } catch (error) {
-                        console.warn(`⚠️ Error obteniendo vuelta para ${escuderia.nombre}:`, error);
+                        console.error(`❌ Error procesando ${escuderia.nombre}:`, error);
                         return {
                             ...escuderia,
                             vuelta_rapida: 'Sin vuelta',
-                            tiempo_vuelta: 999999  // <-- CAMBIADO
+                            tiempo_vuelta: 999999
                         };
                     }
                 })
             );
+            
+            console.log('📊 Procesadas todas las escuderías:', escuderiasConVuelta.length);
             
             // 3. ORDENAR SEGÚN EL CRITERIO
             let escuderiasOrdenadas;
             
             switch(columnaOrden) {
                 case 'dinero':
+                    console.log('💰 Ordenando por dinero...');
                     escuderiasOrdenadas = escuderiasConVuelta.sort((a, b) => {
                         return orden === 'desc' ? b.dinero - a.dinero : a.dinero - b.dinero;
                     });
                     break;
                     
                 case 'nombre':
+                    console.log('📛 Ordenando por nombre...');
                     escuderiasOrdenadas = escuderiasConVuelta.sort((a, b) => {
                         const nombreA = a.nombre || '';
                         const nombreB = b.nombre || '';
@@ -933,24 +949,30 @@ class TabManager {
                     break;
                     
                 case 'vuelta_rapida':
+                    console.log('⏱️ Ordenando por vuelta rápida...');
                     escuderiasOrdenadas = escuderiasConVuelta.sort((a, b) => {
                         if (orden === 'asc') {
                             // Mejores vueltas primero (tiempo más bajo)
-                            return a.tiempo_vuelta - b.tiempo_vuelta;  // <-- CAMBIADO
+                            // Las que tienen 999999 (Sin vuelta) van al final
+                            return a.tiempo_vuelta - b.tiempo_vuelta;
                         } else {
                             // Peores vueltas primero (tiempo más alto)
-                            return b.tiempo_vuelta - a.tiempo_vuelta;  // <-- CAMBIADO
+                            // Las que tienen 999999 (Sin vuelta) van al principio
+                            return b.tiempo_vuelta - a.tiempo_vuelta;
                         }
                     });
                     break;
                     
                 default:
-                    // Por defecto: ordenar por dinero descendente
+                    console.log('🔀 Ordenando por defecto (dinero desc)...');
                     escuderiasOrdenadas = escuderiasConVuelta.sort((a, b) => b.dinero - a.dinero);
             }
             
             // 4. GENERAR LA TABLA
+            console.log('🖨️ Generando tabla...');
             this.generarTablaClasificacion(tablaBody, escuderiasOrdenadas, columnaOrden, orden);
+            
+            console.log('✅ Clasificación cargada correctamente');
             
         } catch (error) {
             console.error('❌ Error cargando clasificación:', error);
