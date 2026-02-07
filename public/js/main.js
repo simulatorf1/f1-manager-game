@@ -266,23 +266,24 @@ class F1Manager {
     // ========================
     // Añadir después de otros métodos similares
     async verificarRecompensaLoginDiario() {
+        console.log('🌟 [LOGIN] Ejecutando verificarRecompensaLoginDiario');
+        
         try {
-            console.log('🔔 DEBUG: Ejecutando verificarRecompensaLoginDiario');
             const hoy = new Date().toISOString().split('T')[0];
-            
             console.log('📅 Hoy:', hoy, 'Último login:', this.escuderia.ultimo_login_dia);
             
-            // PRUEBA: Forzar notificación SIEMPRE para debug
-            this.showNotification('🔔 TEST: verificarRecompensaLoginDiario ejecutado', 'info');
-            
+            // Verificar si ya recibió estrellas hoy
             if (this.escuderia.ultimo_login_dia === hoy) {
                 console.log('ℹ️ Ya recibiste estrellas hoy');
+                // Mostrar notificación informativa de todos modos
+                this.showNotification('✅ Ya conectaste hoy', 'info');
                 return;
             }
             
-            console.log('💰 Dando +5 estrellas por login...');
+            console.log('🎯 Dando +5 estrellas por login diario');
             const nuevasEstrellas = (this.escuderia.estrellas_semana || 0) + 5;
             
+            // Actualizar en la base de datos
             const { error } = await this.supabase
                 .from('escuderias')
                 .update({ 
@@ -291,49 +292,59 @@ class F1Manager {
                 })
                 .eq('id', this.escuderia.id);
             
-            if (!error) {
-                console.log('✅ Estrellas actualizadas:', nuevasEstrellas);
-                this.escuderia.estrellas_semana = nuevasEstrellas;
-                this.escuderia.ultimo_login_dia = hoy;
-                
-                const estrellasElement = document.getElementById('estrellas-value');
-                if (estrellasElement) {
-                    estrellasElement.textContent = nuevasEstrellas;
-                }
-                
-                // ↓↓↓ ¡¡¡ESTA ES LA NOTIFICACIÓN QUE QUIERES!!! ↓↓↓
-                console.log('🔔 Mostrando notificación de +5 estrellas');
-                this.showNotification('🌟 +5 estrellas (bonus diario)', 'info');
-            } else {
-                console.error('❌ Error actualizando estrellas:', error);
+            if (error) {
+                console.error('❌ Error actualizando estrellas de login:', error);
+                this.showNotification('❌ Error dando estrellas de login', 'error');
+                return;
             }
+            
+            // Actualizar en memoria
+            this.escuderia.estrellas_semana = nuevasEstrellas;
+            this.escuderia.ultimo_login_dia = hoy;
+            
+            // Actualizar UI
+            const estrellasElement = document.getElementById('estrellas-value');
+            if (estrellasElement) {
+                estrellasElement.textContent = nuevasEstrellas;
+            }
+            
+            // ✅✅✅ ¡¡¡NOTIFICACIÓN OBLIGATORIA!!!
+            console.log('🔔 Mostrando notificación de +5 estrellas');
+            this.showNotification('🌟 +5🌟 (bonus diario)', 'info');
+            
         } catch (error) {
-            console.error('❌ Error en recompensa login:', error);
-            // Notificar el error
-            this.showNotification('❌ Error dando estrellas', 'error');
+            console.error('❌ Error en verificarRecompensaLoginDiario:', error);
+            this.showNotification('❌ Error verificando login', 'error');
         }
     }
     
     async darEstrellasFabricacion() {
+        console.log('💰 [ESTRELLAS] Ejecutando darEstrellasFabricacion');
+        
         try {
-            console.log('🔔 DEBUG: Ejecutando darEstrellasFabricacion');
-            
-            // PRUEBA: Notificación de debug SIEMPRE
-            this.showNotification('🔔 TEST: darEstrellasFabricacion ejecutado', 'info');
-            
-            const { data: escuderiaActualizada } = await this.supabase
+            // Obtener datos actualizados de la escudería
+            const { data: escuderiaActualizada, error } = await this.supabase
                 .from('escuderias')
                 .select('primera_fabricacion_hoy, estrellas_semana')
                 .eq('id', this.escuderia.id)
                 .single();
             
+            if (error) {
+                console.error('❌ Error obteniendo datos de escudería:', error);
+                this.showNotification('❌ Error verificando estrellas', 'error');
+                return;
+            }
+            
             console.log('📊 Estado escudería:', escuderiaActualizada);
             
+            // Verificar si es primera fabricación del día
             if (escuderiaActualizada && !escuderiaActualizada.primera_fabricacion_hoy) {
-                console.log('💰 Es primera fabricación del día, dando +10 estrellas');
-                const nuevasEstrellas = (this.escuderia.estrellas_semana || 0) + 10;
+                console.log('🎯 Es primera fabricación del día, dando +10 estrellas');
                 
-                const { error } = await this.supabase
+                const nuevasEstrellas = (escuderiaActualizada.estrellas_semana || 0) + 10;
+                
+                // Actualizar en la base de datos
+                const { error: updateError } = await this.supabase
                     .from('escuderias')
                     .update({ 
                         estrellas_semana: nuevasEstrellas,
@@ -341,30 +352,35 @@ class F1Manager {
                     })
                     .eq('id', this.escuderia.id);
                 
-                if (!error) {
-                    console.log('✅ Estrellas actualizadas:', nuevasEstrellas);
-                    this.escuderia.estrellas_semana = nuevasEstrellas;
-                    this.escuderia.primera_fabricacion_hoy = true;
-                    
-                    const estrellasElement = document.getElementById('estrellas-value');
-                    if (estrellasElement) {
-                        estrellasElement.textContent = nuevasEstrellas;
-                    }
-                    
-                    // ↓↓↓ ¡¡¡ESTA ES LA NOTIFICACIÓN QUE QUIERES!!! ↓↓↓
-                    console.log('🔔 Mostrando notificación de +10 estrellas');
-                    this.showNotification('💰 +10🌟 (primera fabricación del día)', 'info');
-                } else {
-                    console.error('❌ Error dando estrellas por fabricación:', error);
-                    this.showNotification('❌ Error dando estrellas', 'error');
+                if (updateError) {
+                    console.error('❌ Error actualizando estrellas:', updateError);
+                    this.showNotification('❌ Error actualizando estrellas', 'error');
+                    return;
                 }
+                
+                // Actualizar en memoria
+                this.escuderia.estrellas_semana = nuevasEstrellas;
+                this.escuderia.primera_fabricacion_hoy = true;
+                
+                // Actualizar UI
+                const estrellasElement = document.getElementById('estrellas-value');
+                if (estrellasElement) {
+                    estrellasElement.textContent = nuevasEstrellas;
+                }
+                
+                // ✅✅✅ ¡¡¡NOTIFICACIÓN OBLIGATORIA!!!
+                console.log('🔔 Mostrando notificación de +10 estrellas');
+                this.showNotification('💰 +10🌟 (primera fabricación del día)', 'info');
+                
             } else {
-                console.log('ℹ️ No es primera fabricación del día o error en datos');
-                this.showNotification('ℹ️ Ya fabricaste hoy', 'info');
+                console.log('ℹ️ No es primera fabricación del día o ya recibió estrellas');
+                // Mostrar notificación informativa de todos modos
+                this.showNotification('📅 Ya recibiste estrellas por fabricar hoy', 'info');
             }
+            
         } catch (error) {
-            console.error('❌ Error dando estrellas por fabricación:', error);
-            this.showNotification('❌ Error en fabricación', 'error');
+            console.error('❌ Error en darEstrellasFabricacion:', error);
+            this.showNotification('❌ Error dando estrellas', 'error');
         }
     }
     
@@ -2981,141 +2997,52 @@ class F1Manager {
     }
 
     showNotification(mensaje, tipo = 'success') {
-        console.log(`🔔 [SHOWNOTIFICATION-CORREGIDA] "${mensaje}" (${tipo})`);
+        console.log(`🔔 [NOTIFICACIÓN] "${mensaje}" (${tipo})`);
         
-        // 1. Verificar que estamos en el contexto correcto
-        if (!this || !this.escuderia) {
-            console.error('❌ ERROR: Contexto incorrecto en showNotification');
-            console.log('this:', this);
-            // Forzar contexto correcto
-            return window.f1Manager.showNotification.call(window.f1Manager, mensaje, tipo);
-        }
-        
-        // 2. COLOR según tipo
-        let colorBorde, colorFondo, icono;
-        
-        switch(tipo) {
-            case 'success':
-                colorBorde = '#4CAF50';
-                colorFondo = 'rgba(76, 175, 80, 0.1)';
-                icono = '✅';
-                break;
-            case 'error':
-                colorBorde = '#e10600';
-                colorFondo = 'rgba(225, 6, 0, 0.1)';
-                icono = '❌';
-                break;
-            case 'info':
-                colorBorde = '#2196F3';
-                colorFondo = 'rgba(33, 150, 243, 0.1)';
-                icono = 'ℹ️';
-                break;
-            case 'warning':
-                colorBorde = '#FF9800';
-                colorFondo = 'rgba(255, 152, 0, 0.1)';
-                icono = '⚠️';
-                break;
-            default:
-                colorBorde = '#00d2be';
-                colorFondo = 'rgba(0, 210, 190, 0.1)';
-                icono = '🔔';
-        }
-        
-        // 3. Crear elemento - ESTILOS DIRECTOS Y SIMPLES
-        const notifId = 'f1-notif-' + Date.now();
+        // Crear elemento
         const notification = document.createElement('div');
-        notification.id = notifId;
         
-        // APLICAR ESTILOS UNO POR UNO (más confiable que cssText)
+        // ESTILOS DIRECTOS E INMEDIATOS
         notification.style.position = 'fixed';
         notification.style.top = '20px';
         notification.style.left = '20px';
         notification.style.background = '#1a1a2e';
-        notification.style.borderLeft = `5px solid ${colorBorde}`;
+        notification.style.borderLeft = `4px solid ${tipo === 'success' ? '#4CAF50' : tipo === 'error' ? '#e10600' : tipo === 'info' ? '#2196F3' : '#FF9800'}`;
         notification.style.color = 'white';
-        notification.style.padding = '15px 20px';
-        notification.style.borderRadius = '8px';
-        notification.style.boxShadow = '0 5px 20px rgba(0,0,0,0.7)';
-        notification.style.zIndex = '2147483647';
-        notification.style.fontFamily = 'Arial, sans-serif';
-        notification.style.fontSize = '14px';
-        notification.style.maxWidth = '350px';
-        notification.style.minWidth = '250px';
+        notification.style.padding = '12px 16px';
+        notification.style.borderRadius = '6px';
+        notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
         notification.style.display = 'flex';
         notification.style.alignItems = 'center';
-        notification.style.gap = '12px';
+        notification.style.gap = '10px';
+        notification.style.zIndex = '2147483647';
+        notification.style.maxWidth = '300px';
+        notification.style.fontFamily = 'Arial, sans-serif';
         
-        // 4. Contenido HTML simple
-        notification.innerHTML = `
-            <div style="font-size: 24px;">${icono}</div>
-            <div style="flex: 1;">
-                <div style="font-weight: bold; margin-bottom: 5px; color: ${colorBorde}">
-                    ${tipo.toUpperCase()}
-                </div>
-                <div>${mensaje}</div>
-            </div>
-            <div style="cursor: pointer; font-size: 18px; opacity: 0.7;" 
-                 onclick="document.getElementById('${notifId}').remove()">
-                ×
-            </div>
-        `;
+        // Icono
+        let icono = '🔔';
+        if (tipo === 'success') icono = '✅';
+        if (tipo === 'error') icono = '❌';
+        if (tipo === 'info') icono = 'ℹ️';
+        if (tipo === 'warning') icono = '⚠️';
         
-        // 5. AÑADIR AL DOM DE FORMA SEGURA
-        try {
-            // Usar appendChild que es más confiable
-            document.body.appendChild(notification);
-            console.log(`✅ Notificación ${notifId} añadida al DOM`);
-            
-            // Forzar reflow para asegurar visibilidad
-            notification.offsetHeight;
-            
-        } catch (error) {
-            console.error('❌ Error añadiendo notificación:', error);
-            // Fallback: usar alert
-            alert(`${icono} ${mensaje}`);
-            return null;
-        }
+        notification.innerHTML = `<div style="font-size: 18px;">${icono}</div><div>${mensaje}</div>`;
         
-        // 6. HACER SONIDO
-        try {
-            // Beep simple
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = tipo === 'success' ? 1000 : 800;
-            oscillator.type = 'sine';
-            
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.1);
-        } catch (e) {
-            // Silencio si no funciona
-        }
+        // Añadir al body
+        document.body.appendChild(notification);
         
-        // 7. Auto-eliminar después de 3 segundos
+        // Eliminar después de 3 segundos
         setTimeout(() => {
-            const elem = document.getElementById(notifId);
-            if (elem && elem.parentNode) {
-                elem.style.opacity = '0';
-                elem.style.transition = 'opacity 0.3s';
+            if (notification.parentNode) {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.5s';
                 setTimeout(() => {
-                    if (elem.parentNode) {
-                        elem.parentNode.removeChild(elem);
-                        console.log(`🗑️ Notificación ${notifId} eliminada`);
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
                     }
-                }, 300);
+                }, 500);
             }
         }, 3000);
-        
-        // 8. También loguear en consola
-        console.log(`%c📢 NOTIFICACIÓN: ${mensaje}`, 
-            `background: ${colorBorde}; color: white; padding: 5px; border-radius: 3px; font-weight: bold;`);
         
         return notification;
     }
