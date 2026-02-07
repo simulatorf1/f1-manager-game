@@ -276,7 +276,7 @@ class F1Manager {
             if (this.escuderia.ultimo_login_dia === hoy) {
                 console.log('ℹ️ Ya conectó hoy - Mostrar bienvenida');
                 // CAMBIADO: En lugar de "Ya conectaste hoy"
-                this.showNotification('🏎️ ¡Bienvenido a la escudería, jefe!', 'info');
+                this.showNotification('¡Bienvenido a la escudería, jefe!');
                 return;
             }
             
