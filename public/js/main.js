@@ -4108,56 +4108,65 @@ window.addEventListener('auth-completado', async (evento) => {
         
         window.f1Manager = new F1Manager(user, escuderia, supabase);
         
-        if (window.IngenieriaManager && !window.ingenieriaManager) {
-            console.log('🔧 Creando ingenieriaManager...');
-            try {
-                window.ingenieriaManager = new window.IngenieriaManager(window.f1Manager);
-                // Inicializar pero no esperar (se hará async)
-                window.ingenieriaManager.inicializar().then(() => {
+        try {
+            // Inicializar ingenieriaManager si está disponible
+            if (window.IngenieriaManager && !window.ingenieriaManager) {
+                console.log('🔧 Creando ingenieriaManager...');
+                try {
+                    window.ingenieriaManager = new window.IngenieriaManager(window.f1Manager);
+                    await window.ingenieriaManager.inicializar();
                     console.log('✅ ingenieriaManager inicializado');
-                }).catch(error => {
+                } catch (error) {
                     console.error('❌ Error inicializando ingenieriaManager:', error);
-                });
-            } catch (error) {
-                console.error('❌ Error creando ingenieriaManager:', error);
+                }
             }
-        }
-        
-        
-        if (window.MercadoManager) {
-            console.log('🔧 Inicializando mercadoManager con escudería:', escuderia.id);
-            if (!window.mercadoManager) {
-                window.mercadoManager = new window.MercadoManager();
+            
+            // Inicializar mercadoManager si está disponible
+            if (window.MercadoManager) {
+                console.log('🔧 Inicializando mercadoManager con escudería:', escuderia.id);
+                if (!window.mercadoManager) {
+                    window.mercadoManager = new window.MercadoManager();
+                }
+                await window.mercadoManager.inicializar(escuderia);
+                console.log('✅ mercadoManager inicializado');
             }
-            await window.mercadoManager.inicializar(escuderia);
-            console.log('✅ mercadoManager inicializado');
-        } else {
-            console.error('❌ MercadoManager no está disponible');
-        }
-        
-        if (!escuderia.tutorial_completado) {
-            console.log('📚 Mostrando tutorial...');
-            window.tutorialManager = new TutorialManager(window.f1Manager);
-            window.tutorialManager.iniciar();
-        } else {
-            console.log('✅ Tutorial ya completado, cargando dashboard...');
-            // Simular progreso de carga
-            actualizarProgresoCarga(30, "Cargando escudería...");
-            await new Promise(resolve => setTimeout(resolve, 800));
             
-            actualizarProgresoCarga(60, "Preparando dashboard...");
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
-            actualizarProgresoCarga(90, "Inicializando sistemas...");
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
-            actualizarProgresoCarga(100, "¡Listo!");
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Ocultar pantalla de carga antes de cargar el dashboard
-            ocultarPantallaCarga();
-            
-            await window.f1Manager.cargarDashboardCompleto();
+            if (!escuderia.tutorial_completado) {
+                console.log('📚 Mostrando tutorial...');
+                window.tutorialManager = new TutorialManager(window.f1Manager);
+                window.tutorialManager.iniciar();
+            } else {
+                console.log('✅ Tutorial ya completado, cargando dashboard...');
+                // Simular progreso de carga
+                actualizarProgresoCarga(30, "Cargando escudería...");
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                actualizarProgresoCarga(60, "Preparando dashboard...");
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                actualizarProgresoCarga(90, "Inicializando sistemas...");
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                actualizarProgresoCarga(100, "¡Listo!");
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Ocultar pantalla de carga antes de cargar el dashboard
+                ocultarPantallaCarga();
+                
+                await window.f1Manager.cargarDashboardCompleto();
+            }
+        } catch (error) {
+            console.error('❌ Error durante la inicialización:', error);
+            // Mostrar error al usuario
+            document.body.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: black; color: white; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                    <h1 style="color: #e10600;">❌ Error de Inicialización</h1>
+                    <p>${error.message}</p>
+                    <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #e10600; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Reintentar
+                    </button>
+                </div>
+            `;
         }
     }
 });
