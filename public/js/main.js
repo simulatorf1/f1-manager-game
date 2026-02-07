@@ -2268,6 +2268,9 @@ class F1Manager {
 
 
                         <!-- FOOTER FIJO - SIEMPRE VISIBLE -->
+                        // REEMPLAZA EL FOOTER COMPLETO (~línea 2800-2900) CON ESTA VERSIÓN:
+                        
+                        <!-- FOOTER FIJO - SIEMPRE VISIBLE -->
                         <footer class="dashboard-footer" style="
                             position: sticky;
                             bottom: 0;
@@ -2275,49 +2278,73 @@ class F1Manager {
                             border-top: 1px solid rgba(0, 210, 190, 0.3);
                             z-index: 1000;
                             display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            padding: 8px 15px;
+                            justify-content: center;
+                            padding: 8px 10px;
                         ">
                             
-                            <!-- CONTENEDOR DE LAS PESTAÑAS INFERIORES (AHORA INCLUYE EL BOTÓN SALIR) -->
-                            <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
-                                <!-- 4 PESTAÑAS ABAJO -->
-                                <nav class="tabs-compactas" style="flex: 1; justify-content: center;">
-                                    <button class="tab-btn-compacto" data-tab="mercado">
-                                        <i class="fas fa-shopping-cart"></i> Mercado
-                                    </button>
-                                    <button class="tab-btn-compacto" data-tab="pronosticos">
-                                        <i class="fas fa-chart-line"></i> Pronósticos
-                                    </button>
-                                    <button class="tab-btn-compacto" data-tab="presupuesto">
-                                        <i class="fas fa-chart-pie"></i> Presupuesto
-                                    </button>
-                                    <button class="tab-btn-compacto" data-tab="clasificacion">
-                                        <i class="fas fa-medal"></i> Clasificación
-                                    </button>
-                                </nav>
+                            <!-- 5 PESTAÑAS ABAJO (AHORA SALIR ES UNA PESTAÑA MÁS) -->
+                            <nav class="tabs-compactas" style="
+                                display: flex;
+                                justify-content: center;
+                                gap: 8px;
+                                width: 100%;
+                                max-width: 600px;
+                            ">
+                                <button class="tab-btn-compacto" data-tab="mercado">
+                                    <i class="fas fa-shopping-cart"></i> Mercado
+                                </button>
+                                <button class="tab-btn-compacto" data-tab="pronosticos">
+                                    <i class="fas fa-chart-line"></i> Pronósticos
+                                </button>
+                                <button class="tab-btn-compacto" data-tab="presupuesto">
+                                    <i class="fas fa-chart-pie"></i> Presupuesto
+                                </button>
+                                <button class="tab-btn-compacto" data-tab="clasificacion">
+                                    <i class="fas fa-medal"></i> Clasificación
+                                </button>
                                 
-                                <!-- BOTÓN SALIR A CONTINUACIÓN DE LAS PESTAÑAS -->
-                                <button class="logout-btn-compacto" id="logout-btn-visible" title="Cerrar sesión" style="
-                                    background: rgba(225, 6, 0, 0.1);
-                                    border: 1px solid rgba(225, 6, 0, 0.3);
-                                    color: #e10600;
-                                    padding: 5px 12px;
-                                    border-radius: 8px;
-                                    font-size: 0.8rem;
-                                    cursor: pointer;
-                                    display: flex;
-                                    align-items: center;
-                                    gap: 5px;
-                                    white-space: nowrap;
-                                    flex-shrink: 0;
-                                    height: fit-content;
-                                ">
+                                <!-- NUEVA PESTAÑA "SALIR" EN ROJO -->
+                                <button class="tab-btn-compacto tab-btn-salir" id="logout-btn-visible" title="Cerrar sesión">
                                     <i class="fas fa-sign-out-alt"></i> Salir
                                 </button>
-                            </div>
+                            </nav>
                         </footer>
+                        
+                        <script>
+                            // AÑADE ESTOS ESTILOS PARA LA PESTAÑA DE SALIR
+                            if (!document.querySelector('#estilo-tab-salir')) {
+                                const style = document.createElement('style');
+                                style.id = 'estilo-tab-salir';
+                                style.innerHTML = `
+                                    .tab-btn-salir {
+                                        background: rgba(225, 6, 0, 0.15) !important;
+                                        border: 1px solid rgba(225, 6, 0, 0.4) !important;
+                                        color: #e10600 !important;
+                                    }
+                                    
+                                    .tab-btn-salir:hover {
+                                        background: rgba(225, 6, 0, 0.25) !important;
+                                        border-color: #e10600 !important;
+                                    }
+                                    
+                                    .tab-btn-salir.active {
+                                        background: rgba(225, 6, 0, 0.3) !important;
+                                        border-color: #e10600 !important;
+                                        box-shadow: 0 0 10px rgba(225, 6, 0, 0.3);
+                                    }
+                                    
+                                    /* Asegurar que todas las pestañas tengan el mismo tamaño */
+                                    .tabs-compactas button {
+                                        flex: 1;
+                                        min-width: 0;
+                                        max-width: 110px;
+                                        padding: 6px 4px;
+                                        font-size: 0.75rem;
+                                    }
+                                `;
+                                document.head.appendChild(style);
+                            }
+                        </script>
                     </div>
                 </div>
             </div>
