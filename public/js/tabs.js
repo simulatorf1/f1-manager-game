@@ -727,15 +727,26 @@ class TabManager {
             <div class="clasificacion-container">
                 <div class="clasificacion-header">
                     <h2><i class="fas fa-medal"></i> Clasificación Global</h2>
-                    <p class="clasificacion-subtitle">Ranking de todas las escuderías por dinero</p>
+                    <p class="clasificacion-subtitle">Ranking de todas las escuderías</p>
+                </div>
+                
+                <div class="clasificacion-selector">
+                    <div class="selector-buttons">
+                        <button class="btn-selector-tipo active" data-tipo="dinero">
+                            <i class="fas fa-coins"></i> Por Dinero
+                        </button>
+                        <button class="btn-selector-tipo" data-tipo="vuelta">
+                            <i class="fas fa-stopwatch"></i> Por Vuelta Rápida
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="clasificacion-info-bar">
                     <div class="info-item">
                         <i class="fas fa-coins" style="color: #FFD700;"></i>
                         <div>
-                            <span class="info-label">Tu dinero actual</span>
-                            <span class="info-value" id="mi-dinero-actual">Cargando...</span>
+                            <span class="info-label" id="titulo-metrica">Tu dinero actual</span>
+                            <span class="info-value" id="mi-metrica-actual">Cargando...</span>
                         </div>
                     </div>
                     <div class="info-item">
@@ -755,23 +766,15 @@ class TabManager {
                 </div>
                 
                 <div class="tabla-controls">
-
                     <div class="ordenamiento-buttons">
-                        <button class="btn-ordenar" data-col="dinero" data-order="desc">
-                            <i class="fas fa-sort-amount-down-alt"></i> Más dinero
+                        <button class="btn-ordenar active" data-order="desc" id="btn-desc">
+                            <i class="fas fa-sort-amount-down-alt"></i> Mayor a menor
                         </button>
-                        <button class="btn-ordenar" data-col="dinero" data-order="asc">
-                            <i class="fas fa-sort-amount-up"></i> Menos dinero
+                        <button class="btn-ordenar" data-order="asc" id="btn-asc">
+                            <i class="fas fa-sort-amount-up"></i> Menor a mayor
                         </button>
-                        <button class="btn-ordenar" data-col="nombre" data-order="asc">
+                        <button class="btn-ordenar" data-order="nombre" id="btn-nombre">
                             <i class="fas fa-sort-alpha-down"></i> Nombre A-Z
-                        </button>
-                        <!-- AÑADIR ESTOS DOS NUEVOS BOTONES -->
-                        <button class="btn-ordenar" data-col="vuelta_rapida" data-order="asc">
-                            <i class="fas fa-stopwatch"></i> Mejor vuelta
-                        </button>
-                        <button class="btn-ordenar" data-col="vuelta_rapida" data-order="desc">
-                            <i class="fas fa-stopwatch"></i> Peor vuelta
                         </button>
                     </div>
                     <div class="search-box">
@@ -782,22 +785,14 @@ class TabManager {
                 
                 <div class="tabla-contenedor-scroll">
                     <table class="tabla-clasificacion-simple">
-
                         <thead>
                             <tr>
                                 <th class="col-posicion">#</th>
-                                <th class="col-nombre" data-sort="nombre">
+                                <th class="col-nombre">
                                     <span>Escudería</span>
-                                    <i class="fas fa-sort sort-icon"></i>
                                 </th>
-                                <th class="col-dinero active-sort" data-sort="dinero" data-order="desc">
+                                <th class="col-metrica" id="columna-metrica-titulo">
                                     <span>Dinero (€)</span>
-                                    <i class="fas fa-sort-down sort-icon"></i>
-                                </th>
-                                <!-- AÑADIR ESTA COLUMNA -->
-                                <th class="col-vuelta" data-sort="vuelta_rapida" data-order="asc">
-                                    <span>Mejor vuelta</span>
-                                    <i class="fas fa-sort sort-icon"></i>
                                 </th>
                             </tr>
                         </thead>
@@ -831,12 +826,12 @@ class TabManager {
                 </div>
             </div>
         `;
-    }    
+    }
     
     
     // ===== NUEVO MÉTODO PARA CARGAR CLASIFICACIÓN =====
-    async loadClasificacionData(columnaOrden = 'dinero', orden = 'desc') {
-        console.log(`📊 Cargando datos de clasificación por: ${columnaOrden} ${orden}`);
+    async loadClasificacionData(tipo = 'dinero', orden = 'desc') {
+        console.log(`📊 Cargando clasificación: ${tipo} - ${orden}`);
         
         const tablaBody = document.getElementById('tabla-clasificacion-body');
         if (!tablaBody) return;
@@ -845,10 +840,10 @@ class TabManager {
             // Mostrar estado de carga
             tablaBody.innerHTML = `
                 <tr class="loading-row">
-                    <td colspan="4" style="text-align: center; padding: 30px;">
+                    <td colspan="3" style="text-align: center; padding: 30px;">
                         <div class="cargando-clasificacion">
                             <i class="fas fa-spinner fa-spin fa-lg"></i>
-                            <p>Consultando base de datos...</p>
+                            <p>Cargando datos...</p>
                         </div>
                     </td>
                 </tr>
@@ -864,7 +859,7 @@ class TabManager {
             if (!todasEscuderias || todasEscuderias.length === 0) {
                 tablaBody.innerHTML = `
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 40px; color: #888;">
+                        <td colspan="3" style="text-align: center; padding: 40px; color: #888;">
                             <i class="fas fa-database fa-2x"></i>
                             <p style="margin-top: 10px;">No hay escuderías registradas</p>
                         </td>
@@ -875,102 +870,74 @@ class TabManager {
             
             console.log(`🏁 Encontradas ${todasEscuderias.length} escuderías`);
             
-            // 2. PARA CADA ESCUDERÍA, OBTENER SU MEJOR VUELTA
-            const escuderiasConVuelta = await Promise.all(
-                todasEscuderias.map(async (escuderia) => {
-                    try {
-                        console.log(`🔍 Buscando vuelta para: ${escuderia.nombre} (${escuderia.id})`);
-                        
-                        // Obtener la mejor vuelta (tiempo más bajo)
-                        const { data: resultados, error: errorVuelta } = await supabase
-                            .from('pruebas_pista')
-                            .select('tiempo_formateado, tiempo_vuelta')
-                            .eq('escuderia_id', escuderia.id)
-                            .order('tiempo_vuelta', { ascending: true })
-                            .limit(1);
-                        
-                        if (errorVuelta) {
-                            console.warn(`⚠️ Error en consulta para ${escuderia.nombre}:`, errorVuelta);
-                        }
-                        
-                        // Verificar si hay resultados
-                        if (!resultados || resultados.length === 0) {
-                            console.log(`ℹ️ ${escuderia.nombre}: Sin vuelta registrada`);
+            // 2. SI ES POR VUELTA, OBTENER VUELTAS
+            let escuderiasConDatos = todasEscuderias;
+            
+            if (tipo === 'vuelta') {
+                // Obtener mejor vuelta de cada escudería
+                escuderiasConDatos = await Promise.all(
+                    todasEscuderias.map(async (escuderia) => {
+                        try {
+                            const { data: resultados } = await supabase
+                                .from('pruebas_pista')
+                                .select('tiempo_formateado, tiempo_vuelta')
+                                .eq('escuderia_id', escuderia.id)
+                                .order('tiempo_vuelta', { ascending: true })
+                                .limit(1);
+                            
+                            const mejorVuelta = resultados && resultados.length > 0 ? resultados[0] : null;
+                            
+                            return {
+                                ...escuderia,
+                                vuelta_rapida: mejorVuelta?.tiempo_formateado || 'Sin vuelta',
+                                tiempo_vuelta: mejorVuelta?.tiempo_vuelta || 999999
+                            };
+                            
+                        } catch (error) {
                             return {
                                 ...escuderia,
                                 vuelta_rapida: 'Sin vuelta',
-                                tiempo_vuelta: 999999 // Valor muy alto para ordenar al final
+                                tiempo_vuelta: 999999
                             };
                         }
-                        
-                        // Sí hay vuelta registrada
-                        const mejorVuelta = resultados[0];
-                        console.log(`✅ ${escuderia.nombre}: Vuelta ${mejorVuelta.tiempo_formateado} (${mejorVuelta.tiempo_vuelta}s)`);
-                        
-                        return {
-                            ...escuderia,
-                            vuelta_rapida: mejorVuelta.tiempo_formateado || 'Sin vuelta',
-                            tiempo_vuelta: mejorVuelta.tiempo_vuelta || 999999
-                        };
-                        
-                    } catch (error) {
-                        console.error(`❌ Error procesando ${escuderia.nombre}:`, error);
-                        return {
-                            ...escuderia,
-                            vuelta_rapida: 'Sin vuelta',
-                            tiempo_vuelta: 999999
-                        };
-                    }
-                })
-            );
-            
-            console.log('📊 Procesadas todas las escuderías:', escuderiasConVuelta.length);
-            
-            // 3. ORDENAR SEGÚN EL CRITERIO
-            let escuderiasOrdenadas;
-            
-            switch(columnaOrden) {
-                case 'dinero':
-                    console.log('💰 Ordenando por dinero...');
-                    escuderiasOrdenadas = escuderiasConVuelta.sort((a, b) => {
-                        return orden === 'desc' ? b.dinero - a.dinero : a.dinero - b.dinero;
-                    });
-                    break;
-                    
-                case 'nombre':
-                    console.log('📛 Ordenando por nombre...');
-                    escuderiasOrdenadas = escuderiasConVuelta.sort((a, b) => {
-                        const nombreA = a.nombre || '';
-                        const nombreB = b.nombre || '';
-                        return orden === 'asc' 
-                            ? nombreA.localeCompare(nombreB)
-                            : nombreB.localeCompare(nombreA);
-                    });
-                    break;
-                    
-                case 'vuelta_rapida':
-                    console.log('⏱️ Ordenando por vuelta rápida...');
-                    escuderiasOrdenadas = escuderiasConVuelta.sort((a, b) => {
-                        if (orden === 'asc') {
-                            // Mejores vueltas primero (tiempo más bajo)
-                            // Las que tienen 999999 (Sin vuelta) van al final
-                            return a.tiempo_vuelta - b.tiempo_vuelta;
-                        } else {
-                            // Peores vueltas primero (tiempo más alto)
-                            // Las que tienen 999999 (Sin vuelta) van al principio
-                            return b.tiempo_vuelta - a.tiempo_vuelta;
-                        }
-                    });
-                    break;
-                    
-                default:
-                    console.log('🔀 Ordenando por defecto (dinero desc)...');
-                    escuderiasOrdenadas = escuderiasConVuelta.sort((a, b) => b.dinero - a.dinero);
+                    })
+                );
             }
             
-            // 4. GENERAR LA TABLA
-            console.log('🖨️ Generando tabla...');
-            this.generarTablaClasificacion(tablaBody, escuderiasOrdenadas, columnaOrden, orden);
+            // 3. ORDENAR SEGÚN TIPO Y ORDEN
+            let escuderiasOrdenadas;
+            
+            if (tipo === 'dinero') {
+                if (orden === 'nombre') {
+                    escuderiasOrdenadas = escuderiasConDatos.sort((a, b) => 
+                        (a.nombre || '').localeCompare(b.nombre || '')
+                    );
+                } else {
+                    escuderiasOrdenadas = escuderiasConDatos.sort((a, b) => 
+                        orden === 'desc' ? b.dinero - a.dinero : a.dinero - b.dinero
+                    );
+                }
+            } 
+            else if (tipo === 'vuelta') {
+                if (orden === 'nombre') {
+                    escuderiasOrdenadas = escuderiasConDatos.sort((a, b) => 
+                        (a.nombre || '').localeCompare(b.nombre || '')
+                    );
+                } else {
+                    escuderiasOrdenadas = escuderiasConDatos.sort((a, b) => {
+                        if (orden === 'desc') {
+                            // Peores vueltas primero (mayor tiempo)
+                            return b.tiempo_vuelta - a.tiempo_vuelta;
+                        } else {
+                            // Mejores vueltas primero (menor tiempo)
+                            return a.tiempo_vuelta - b.tiempo_vuelta;
+                        }
+                    });
+                }
+            }
+            
+            // 4. GENERAR TABLA
+            this.generarTablaClasificacion(tablaBody, escuderiasOrdenadas, tipo, orden);
             
             console.log('✅ Clasificación cargada correctamente');
             
@@ -978,11 +945,10 @@ class TabManager {
             console.error('❌ Error cargando clasificación:', error);
             tablaBody.innerHTML = `
                 <tr class="error-row">
-                    <td colspan="4" style="text-align: center; padding: 40px; color: #f44336;">
+                    <td colspan="3" style="text-align: center; padding: 40px; color: #f44336;">
                         <i class="fas fa-exclamation-triangle fa-2x"></i>
                         <p style="margin-top: 10px;">Error al cargar la clasificación</p>
-                        <p style="font-size: 0.9em; margin-top: 5px;">${error.message || 'Intenta de nuevo más tarde'}</p>
-                        <button onclick="window.tabManager.loadClasificacionData()" 
+                        <button onclick="window.tabManager.loadClasificacionData('dinero', 'desc')" 
                                 style="margin-top: 15px; padding: 8px 16px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">
                             Reintentar
                         </button>
@@ -992,17 +958,30 @@ class TabManager {
         }
     }
     // Añadir este método después de loadClasificacionData()
-    generarTablaClasificacion(tablaBody, escuderias, columnaOrden, orden) {
+    generarTablaClasificacion(tablaBody, escuderias, tipo, orden) {
         // Actualizar contadores
         document.getElementById('total-escuderias').textContent = escuderias.length;
         document.getElementById('total-filas').textContent = escuderias.length;
         document.getElementById('filas-mostradas').textContent = escuderias.length;
         
+        // Actualizar título de columna según tipo
+        const tituloMetrica = document.getElementById('columna-metrica-titulo');
+        if (tituloMetrica) {
+            tituloMetrica.innerHTML = tipo === 'dinero' 
+                ? '<span>Dinero (€)</span>' 
+                : '<span>Mejor Vuelta</span>';
+        }
+        
+        // Actualizar título en info bar
+        const tituloInfo = document.getElementById('titulo-metrica');
+        if (tituloInfo) {
+            tituloInfo.textContent = tipo === 'dinero' ? 'Tu dinero actual' : 'Tu mejor vuelta';
+        }
+        
         // Encontrar mi posición y datos
         const miEscuderiaId = window.f1Manager?.escuderia?.id;
         let miPosicion = 0;
-        let miDinero = 0;
-        let miVuelta = 'Sin vuelta';
+        let miMetrica = tipo === 'dinero' ? 0 : 'Sin vuelta';
         
         // Generar filas de la tabla
         let html = '';
@@ -1013,30 +992,27 @@ class TabManager {
             
             if (esMiEscuderia) {
                 miPosicion = posicion;
-                miDinero = escuderia.dinero;
-                miVuelta = escuderia.vuelta_rapida;
+                if (tipo === 'dinero') {
+                    miMetrica = `€${new Intl.NumberFormat('es-ES').format(escuderia.dinero)}`;
+                } else {
+                    miMetrica = escuderia.vuelta_rapida;
+                }
             }
             
-            // Formatear dinero
-            const dineroFormateado = new Intl.NumberFormat('es-ES', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }).format(escuderia.dinero || 0);
+            // Formatear valor a mostrar
+            let valorMostrar;
+            if (tipo === 'dinero') {
+                valorMostrar = `€${new Intl.NumberFormat('es-ES', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(escuderia.dinero || 0)}`;
+            } else {
+                valorMostrar = escuderia.vuelta_rapida;
+            }
             
             // Clases CSS
             const claseFila = esMiEscuderia ? 'mi-escuderia' : '';
             const clasePosicion = posicion <= 3 ? `top-${posicion}` : '';
-            
-            // Decidir qué valor mostrar según el ordenamiento
-            let valorMostrar, claseCelda;
-            
-            if (columnaOrden === 'vuelta_rapida') {
-                valorMostrar = escuderia.vuelta_rapida;
-                claseCelda = 'celda-vuelta';
-            } else {
-                valorMostrar = `€${dineroFormateado}`;
-                claseCelda = 'celda-dinero';
-            }
             
             html += `
                 <tr class="${claseFila}">
@@ -1047,8 +1023,8 @@ class TabManager {
                         ${esMiEscuderia ? '<i class="fas fa-user" style="color: #4CAF50; margin-right: 8px;"></i>' : ''}
                         ${escuderia.nombre || 'Sin nombre'}
                     </td>
-                    <td class="${claseCelda}">
-                        <span class="${columnaOrden === 'vuelta_rapida' ? 'valor-vuelta' : 'valor-dinero'}">
+                    <td class="${tipo === 'dinero' ? 'celda-dinero' : 'celda-vuelta'}">
+                        <span class="${tipo === 'dinero' ? 'valor-dinero' : 'valor-vuelta'}">
                             ${valorMostrar}
                         </span>
                     </td>
@@ -1059,30 +1035,8 @@ class TabManager {
         tablaBody.innerHTML = html;
         
         // Actualizar mi información
-        document.getElementById('mi-dinero-actual').textContent = `€${new Intl.NumberFormat('es-ES').format(miDinero)}`;
+        document.getElementById('mi-metrica-actual').textContent = miMetrica;
         document.getElementById('mi-posicion-actual').textContent = `#${miPosicion}`;
-        
-        // Añadir información de vuelta si estamos ordenando por vuelta
-        if (columnaOrden === 'vuelta_rapida') {
-            const infoBar = document.querySelector('.clasificacion-info-bar');
-            let vueltaItem = document.getElementById('mi-vuelta-actual-container');
-            
-            if (!vueltaItem && infoBar) {
-                vueltaItem = document.createElement('div');
-                vueltaItem.className = 'info-item';
-                vueltaItem.id = 'mi-vuelta-actual-container';
-                vueltaItem.innerHTML = `
-                    <i class="fas fa-stopwatch" style="color: #9C27B0;"></i>
-                    <div>
-                        <span class="info-label">Tu mejor vuelta</span>
-                        <span class="info-value" id="mi-vuelta-actual">${miVuelta}</span>
-                    </div>
-                `;
-                infoBar.appendChild(vueltaItem);
-            } else if (vueltaItem) {
-                document.getElementById('mi-vuelta-actual').textContent = miVuelta;
-            }
-        }
         
         // Actualizar timestamp
         const ahora = new Date();
@@ -1095,50 +1049,46 @@ class TabManager {
     setupClasificacionEvents() {
         console.log('🔧 Configurando eventos de clasificación...');
         
+        // Variables para estado actual
+        let tipoActual = 'dinero';
+        let ordenActual = 'desc';
+        
         // Botón actualizar
         document.getElementById('btn-actualizar-clasificacion')?.addEventListener('click', () => {
-            this.loadClasificacionData();
+            this.loadClasificacionData(tipoActual, ordenActual);
+        });
+        
+        // Selector de tipo (Dinero / Vuelta)
+        document.querySelectorAll('.btn-selector-tipo').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const nuevoTipo = e.currentTarget.dataset.tipo;
+                
+                // Actualizar botones activos
+                document.querySelectorAll('.btn-selector-tipo').forEach(b => 
+                    b.classList.remove('active')
+                );
+                e.currentTarget.classList.add('active');
+                
+                // Actualizar y cargar
+                tipoActual = nuevoTipo;
+                this.loadClasificacionData(tipoActual, ordenActual);
+            });
         });
         
         // Botones de ordenamiento
         document.querySelectorAll('.btn-ordenar').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const columna = e.currentTarget.dataset.col;
-                const orden = e.currentTarget.dataset.order;
-                this.loadClasificacionData(columna, orden);
+                const nuevoOrden = e.currentTarget.dataset.order;
                 
-                // Actualizar estado activo
-                document.querySelectorAll('.btn-ordenar').forEach(b => b.classList.remove('active'));
+                // Actualizar botones activos
+                document.querySelectorAll('.btn-ordenar').forEach(b => 
+                    b.classList.remove('active')
+                );
                 e.currentTarget.classList.add('active');
-            });
-        });
-        
-        // Ordenar al hacer clic en encabezados de tabla
-        document.querySelectorAll('th[data-sort]').forEach(th => {
-            th.addEventListener('click', () => {
-                const columna = th.dataset.sort;
-                const ordenActual = th.dataset.order || 'desc';
-                const nuevoOrden = ordenActual === 'desc' ? 'asc' : 'desc';
                 
-                // Actualizar iconos
-                document.querySelectorAll('.sort-icon').forEach(icon => {
-                    icon.className = 'fas fa-sort sort-icon';
-                });
-                
-                const icono = th.querySelector('.sort-icon');
-                if (icono) {
-                    icono.className = `fas fa-sort-${nuevoOrden === 'desc' ? 'down' : 'up'} sort-icon`;
-                }
-                
-                // Actualizar atributos
-                document.querySelectorAll('th[data-sort]').forEach(h => {
-                    h.classList.remove('active-sort');
-                });
-                th.classList.add('active-sort');
-                th.dataset.order = nuevoOrden;
-                
-                // Cargar datos con nuevo orden
-                this.loadClasificacionData(columna, nuevoOrden);
+                // Actualizar y cargar
+                ordenActual = nuevoOrden;
+                this.loadClasificacionData(tipoActual, ordenActual);
             });
         });
         
@@ -1164,6 +1114,11 @@ class TabManager {
                 document.getElementById('filas-mostradas').textContent = filasVisibles;
             });
         }
+        
+        // Cargar datos iniciales
+        setTimeout(() => {
+            this.loadClasificacionData(tipoActual, ordenActual);
+        }, 100);
     }
     
     // ===== ACTUALIZAR EL MÉTODO setupTabEvents =====
