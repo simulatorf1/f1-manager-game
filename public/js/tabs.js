@@ -885,17 +885,19 @@ class TabManager {
             // 3. ORDENAR SEGÚN TIPO Y ORDEN
             let escuderiasOrdenadas;
             
+            // En la parte de ordenamiento del método loadClasificacionData:
             if (tipo === 'dinero') {
                 if (orden === 'nombre') {
                     escuderiasOrdenadas = escuderiasConDatos.sort((a, b) => 
                         (a.nombre || '').localeCompare(b.nombre || '')
                     );
                 } else {
+                    // CORREGIDO: 'desc' = mayor dinero primero, 'asc' = menor dinero primero
                     escuderiasOrdenadas = escuderiasConDatos.sort((a, b) => 
                         orden === 'desc' ? b.dinero - a.dinero : a.dinero - b.dinero
                     );
                 }
-            } else if (tipo === 'vuelta') {  // ← QUITA UNA LLAVE DE CIERRE AQUÍ
+            } else if (tipo === 'vuelta') {
                 if (orden === 'nombre') {
                     escuderiasOrdenadas = escuderiasConDatos.sort((a, b) => 
                         (a.nombre || '').localeCompare(b.nombre || '')
@@ -903,11 +905,11 @@ class TabManager {
                 } else {
                     escuderiasOrdenadas = escuderiasConDatos.sort((a, b) => {
                         if (orden === 'desc') {
-                            // Mejores vueltas primero (menor tiempo)
-                            return a.tiempo_vuelta - b.tiempo_vuelta;
-                        } else {
-                            // Peores vueltas primero (mayor tiempo)
+                            // 'desc' para vueltas = peores tiempos primero (mayor número)
                             return b.tiempo_vuelta - a.tiempo_vuelta;
+                        } else {
+                            // 'asc' para vueltas = mejores tiempos primero (menor número)
+                            return a.tiempo_vuelta - b.tiempo_vuelta;
                         }
                     });
                 }
@@ -1003,12 +1005,13 @@ class TabManager {
     
     
     // ===== NUEVO MÉTODO PARA CONFIGURAR EVENTOS DE CLASIFICACIÓN =====
+    // ===== NUEVO MÉTODO PARA CONFIGURAR EVENTOS DE CLASIFICACIÓN =====
     setupClasificacionEvents() {
         console.log('🔧 Configurando eventos de clasificación...');
         
-        // Variables para estado actual
+        // Variables para estado actual - CORREGIDAS
         let tipoActual = 'dinero';
-        let ordenActual = 'asc';
+        let ordenActual = 'desc'; // Cambiado de 'asc' a 'desc'
         
         // Botón actualizar
         document.getElementById('btn-actualizar-clasificacion')?.addEventListener('click', () => {
@@ -1026,8 +1029,10 @@ class TabManager {
                 );
                 e.currentTarget.classList.add('active');
                 
-                // Actualizar y cargar
+                // Actualizar y cargar - CON ORDEN CORRECTO
                 tipoActual = nuevoTipo;
+                // Para dinero: mayor primero (desc), para vuelta: mejor tiempo primero (asc)
+                ordenActual = nuevoTipo === 'dinero' ? 'desc' : 'asc';
                 this.loadClasificacionData(tipoActual, ordenActual);
             });
         });
@@ -1072,9 +1077,10 @@ class TabManager {
             });
         }
         
-        // Cargar datos iniciales
+        // Cargar datos iniciales - CON ORDEN CORRECTO
         setTimeout(() => {
-            this.loadClasificacionData(tipoActual, ordenActual);
+            // Dinero: mayor primero (desc), Vuelta: mejor tiempo primero (asc)
+            this.loadClasificacionData('dinero', 'desc');
         }, 100);
     }
     
