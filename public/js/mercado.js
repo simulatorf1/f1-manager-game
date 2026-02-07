@@ -1711,7 +1711,7 @@ window.venderPiezaDesdeAlmacen = async function(piezaId) {
                         vendedor_id: window.f1Manager.escuderia.id,
                         vendedor_nombre: window.f1Manager.escuderia.nombre,
                         pieza_id: piezaIdParam,
-                        pieza_nombre: `${window.mercadoManager.getAreaNombre(pieza.area)} Nivel ${pieza.nivel}`,
+                        pieza_nombre: pieza.componente,
                         area: pieza.area,
                         nivel: pieza.nivel,
                         calidad: pieza.calidad || 'Normal',
