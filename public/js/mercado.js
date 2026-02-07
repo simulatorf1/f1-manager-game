@@ -437,7 +437,7 @@ class MercadoManager {
                         font-weight: bold;
                         width: 1%; /* Se ajusta al contenido */
                         white-space: nowrap;
-                        text-align: right; /* Alinear precios a la derecha */
+                        text-align: center !important;
                     }
                     
                     .accion-col {
