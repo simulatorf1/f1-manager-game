@@ -1051,7 +1051,7 @@ class TabManager {
         
         // Variables para estado actual
         let tipoActual = 'dinero';
-        let ordenActual = 'desc';
+        let ordenActual = 'asc';
         
         // Botón actualizar
         document.getElementById('btn-actualizar-clasificacion')?.addEventListener('click', () => {
