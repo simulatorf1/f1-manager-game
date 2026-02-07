@@ -2981,127 +2981,104 @@ class F1Manager {
     }
 
     showNotification(mensaje, tipo = 'success') {
-        console.log(`🔔 NOTIFICACIÓN: "${mensaje}" (${tipo})`);
+        console.log(`🔔 [SHOWNOTIFICATION-CORREGIDA] "${mensaje}" (${tipo})`);
         
-        // Crear el elemento
-        const notification = document.createElement('div');
-        
-        // TODOS LOS ESTILOS DIRECTAMENTE AQUÍ - CSS COMPLETO
-        notification.style.cssText = `
-            /* POSICIÓN */
-            position: fixed !important;
-            top: 20px !important;
-            left: 20px !important;
-            
-            /* COLORES Y FONDO */
-            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%) !important;
-            color: white !important;
-            border-left: 5px solid ${tipo === 'success' ? '#4CAF50' : 
-                                   tipo === 'error' ? '#e10600' : 
-                                   tipo === 'info' ? '#2196F3' : '#FF9800'} !important;
-            
-            /* TAMAÑO Y ESPACIADO */
-            padding: 15px 20px !important;
-            border-radius: 8px !important;
-            max-width: 350px !important;
-            min-width: 250px !important;
-            
-            /* TEXTO */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-            font-size: 14px !important;
-            line-height: 1.4 !important;
-            
-            /* SOMBRA Y EFECTOS */
-            box-shadow: 0 5px 20px rgba(0,0,0,0.7) !important;
-            backdrop-filter: blur(10px) !important;
-            
-            /* Z-INDEX MÁXIMO */
-            z-index: 2147483647 !important;
-            
-            /* DISPLAY */
-            display: flex !important;
-            align-items: center !important;
-            gap: 12px !important;
-            
-            /* ANIMACIÓN DE ENTRADA */
-            animation: slideIn 0.3s ease forwards !important;
-            
-            /* ASEGURAR VISIBILIDAD */
-            opacity: 1 !important;
-            visibility: visible !important;
-        `;
-        
-        // Añadir animación CSS si no existe
-        if (!document.querySelector('#notif-animations')) {
-            const style = document.createElement('style');
-            style.id = 'notif-animations';
-            style.textContent = `
-                @keyframes slideIn {
-                    from {
-                        transform: translateX(-100%);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                }
-                @keyframes slideOut {
-                    from {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                    to {
-                        transform: translateX(-100%);
-                        opacity: 0;
-                    }
-                }
-            `;
-            document.head.appendChild(style);
+        // 1. Verificar que estamos en el contexto correcto
+        if (!this || !this.escuderia) {
+            console.error('❌ ERROR: Contexto incorrecto en showNotification');
+            console.log('this:', this);
+            // Forzar contexto correcto
+            return window.f1Manager.showNotification.call(window.f1Manager, mensaje, tipo);
         }
         
-        // Icono según tipo
-        let icono = 'ℹ️';
-        if (tipo === 'success') icono = '✅';
-        if (tipo === 'error') icono = '❌';
-        if (tipo === 'warning') icono = '⚠️';
+        // 2. COLOR según tipo
+        let colorBorde, colorFondo, icono;
         
-        // Contenido HTML
+        switch(tipo) {
+            case 'success':
+                colorBorde = '#4CAF50';
+                colorFondo = 'rgba(76, 175, 80, 0.1)';
+                icono = '✅';
+                break;
+            case 'error':
+                colorBorde = '#e10600';
+                colorFondo = 'rgba(225, 6, 0, 0.1)';
+                icono = '❌';
+                break;
+            case 'info':
+                colorBorde = '#2196F3';
+                colorFondo = 'rgba(33, 150, 243, 0.1)';
+                icono = 'ℹ️';
+                break;
+            case 'warning':
+                colorBorde = '#FF9800';
+                colorFondo = 'rgba(255, 152, 0, 0.1)';
+                icono = '⚠️';
+                break;
+            default:
+                colorBorde = '#00d2be';
+                colorFondo = 'rgba(0, 210, 190, 0.1)';
+                icono = '🔔';
+        }
+        
+        // 3. Crear elemento - ESTILOS DIRECTOS Y SIMPLES
+        const notifId = 'f1-notif-' + Date.now();
+        const notification = document.createElement('div');
+        notification.id = notifId;
+        
+        // APLICAR ESTILOS UNO POR UNO (más confiable que cssText)
+        notification.style.position = 'fixed';
+        notification.style.top = '20px';
+        notification.style.left = '20px';
+        notification.style.background = '#1a1a2e';
+        notification.style.borderLeft = `5px solid ${colorBorde}`;
+        notification.style.color = 'white';
+        notification.style.padding = '15px 20px';
+        notification.style.borderRadius = '8px';
+        notification.style.boxShadow = '0 5px 20px rgba(0,0,0,0.7)';
+        notification.style.zIndex = '2147483647';
+        notification.style.fontFamily = 'Arial, sans-serif';
+        notification.style.fontSize = '14px';
+        notification.style.maxWidth = '350px';
+        notification.style.minWidth = '250px';
+        notification.style.display = 'flex';
+        notification.style.alignItems = 'center';
+        notification.style.gap = '12px';
+        
+        // 4. Contenido HTML simple
         notification.innerHTML = `
-            <div style="font-size: 24px; flex-shrink: 0;">${icono}</div>
+            <div style="font-size: 24px;">${icono}</div>
             <div style="flex: 1;">
-                <div style="font-weight: bold; margin-bottom: 4px; color: ${tipo === 'success' ? '#4CAF50' : 
-                                                                           tipo === 'error' ? '#e10600' : 
-                                                                           tipo === 'info' ? '#2196F3' : '#FF9800'}">
+                <div style="font-weight: bold; margin-bottom: 5px; color: ${colorBorde}">
                     ${tipo.toUpperCase()}
                 </div>
                 <div>${mensaje}</div>
             </div>
-            <div style="cursor: pointer; font-size: 18px; padding: 0 5px; opacity: 0.7;"
-                 onclick="this.parentElement.style.animation='slideOut 0.3s ease forwards'; 
-                          setTimeout(()=>this.parentElement.remove(), 300)">
+            <div style="cursor: pointer; font-size: 18px; opacity: 0.7;" 
+                 onclick="document.getElementById('${notifId}').remove()">
                 ×
             </div>
         `;
         
-        // Añadir al DOM
-        document.body.appendChild(notification);
-        console.log(`✅ Notificación creada en: top:20px, left:20px`);
-        
-        // Auto-eliminar después de 3 segundos
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.style.animation = 'slideOut 0.3s ease forwards';
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 300);
-            }
-        }, 3000);
-        
-        // Sonido de notificación (opcional)
+        // 5. AÑADIR AL DOM DE FORMA SEGURA
         try {
+            // Usar appendChild que es más confiable
+            document.body.appendChild(notification);
+            console.log(`✅ Notificación ${notifId} añadida al DOM`);
+            
+            // Forzar reflow para asegurar visibilidad
+            notification.offsetHeight;
+            
+        } catch (error) {
+            console.error('❌ Error añadiendo notificación:', error);
+            // Fallback: usar alert
+            alert(`${icono} ${mensaje}`);
+            return null;
+        }
+        
+        // 6. HACER SONIDO
+        try {
+            // Beep simple
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
@@ -3109,17 +3086,36 @@ class F1Manager {
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
             
-            oscillator.frequency.value = 800;
+            oscillator.frequency.value = tipo === 'success' ? 1000 : 800;
             oscillator.type = 'sine';
             
-            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
             
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + 0.1);
         } catch (e) {
-            // Silencio si falla
+            // Silencio si no funciona
         }
+        
+        // 7. Auto-eliminar después de 3 segundos
+        setTimeout(() => {
+            const elem = document.getElementById(notifId);
+            if (elem && elem.parentNode) {
+                elem.style.opacity = '0';
+                elem.style.transition = 'opacity 0.3s';
+                setTimeout(() => {
+                    if (elem.parentNode) {
+                        elem.parentNode.removeChild(elem);
+                        console.log(`🗑️ Notificación ${notifId} eliminada`);
+                    }
+                }, 300);
+            }
+        }, 3000);
+        
+        // 8. También loguear en consola
+        console.log(`%c📢 NOTIFICACIÓN: ${mensaje}`, 
+            `background: ${colorBorde}; color: white; padding: 5px; border-radius: 3px; font-weight: bold;`);
         
         return notification;
     }
