@@ -1091,19 +1091,44 @@ class MercadoManager {
             
             if (updateVendedorError) throw updateVendedorError;
             
-            // 4c. (OPCIONAL) Registrar transacción si existe la tabla 'transacciones'
+            // 4c. Registrar transacción (VERSIÓN CORRECTA para tu tabla)
             try {
+                // Para el COMPRADOR: es un GASTO
                 await this.supabase
                     .from('transacciones')
                     .insert([{
-                        tipo: 'compra_pieza',
                         escuderia_id: this.escuderia.id,
-                        monto: orden.precio,
-                        descripcion: `Compra: ${orden.pieza_nombre}`,
-                        fecha: new Date().toISOString()
+                        tipo: 'gasto',
+                        cantidad: orden.precio,
+                        descripcion: `Compra pieza: ${orden.pieza_nombre} a ${orden.vendedor_nombre}`,
+                        referencia: `mercado_orden_${orden.id}`,
+                        saldo_resultante: this.escuderia.dinero - orden.precio,
+                        categoria: 'mercado'
                     }]);
+            
+                // Para el VENDEDOR: es un INGRESO (necesitamos su ID y saldo)
+                const { data: vendedor } = await this.supabase
+                    .from('escuderias')
+                    .select('dinero')
+                    .eq('id', orden.vendedor_id)
+                    .single();
+                
+                if (vendedor) {
+                    await this.supabase
+                        .from('transacciones')
+                        .insert([{
+                            escuderia_id: orden.vendedor_id,
+                            tipo: 'ingreso',
+                            cantidad: orden.precio,
+                            descripcion: `Venta pieza: ${orden.pieza_nombre} a ${this.escuderia.nombre}`,
+                            referencia: `mercado_orden_${orden.id}`,
+                            saldo_resultante: vendedor.dinero + orden.precio,
+                            categoria: 'mercado'
+                        }]);
+                }
             } catch (error) {
-                console.warn('⚠️ No se pudo registrar transacción (la tabla puede no existir):', error);
+                console.warn('⚠️ Error registrando transacción:', error);
+                // Continuar aunque falle el registro de transacción
             }
     
             // 5. Actualizar el dinero local del comprador
