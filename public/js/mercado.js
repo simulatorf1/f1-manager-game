@@ -252,7 +252,65 @@ class MercadoManager {
                     
                     .btn-confirmar.con-advertencia:hover {
                         background: linear-gradient(135deg, #FFB74D, #FF9800);
-                    }                    
+                    } 
+                    /* Botones del modal */
+                    .modal-buttons {
+                        display: flex;
+                        gap: 10px;
+                        margin-top: 20px;
+                        justify-content: space-between;
+                    }
+                    
+                    .btn-cerrar {
+                        background: rgba(255, 255, 255, 0.1);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        color: white;
+                        padding: 10px 20px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        flex: 1;
+                    }
+                    
+                    .btn-confirmar {
+                        background: linear-gradient(135deg, #4CAF50, #388E3C);
+                        border: none;
+                        color: white;
+                        padding: 10px 20px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-weight: bold;
+                        flex: 1;
+                    }
+                    
+                    .btn-confirmar:hover {
+                        background: linear-gradient(135deg, #66BB6A, #4CAF50);
+                    }
+                    
+                    .btn-cerrar:hover {
+                        background: rgba(255, 255, 255, 0.2);
+                    }
+                    
+                    /* Estilos adicionales para el contenido del modal */
+                    .compra-info .info-item {
+                        margin-bottom: 8px;
+                        padding-bottom: 8px;
+                        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    }
+                    
+                    .precio-final {
+                        color: #FFD700;
+                        font-size: 1.1rem;
+                        font-weight: bold;
+                    }
+                    
+                    .saldo-info {
+                        margin-top: 15px;
+                        padding: 10px;
+                        background: rgba(0, 210, 190, 0.1);
+                        border-radius: 6px;
+                        text-align: center;
+                    }
+                    
                     /* Stats compactos */
                     .mercado-stats-horizontal {
                         display: flex;
@@ -1006,47 +1064,53 @@ class MercadoManager {
             
             if (transferPiezaError) throw transferPiezaError;
     
-            // 4. TRANSFERIR DINERO (usando función supabase si existe, sino hacer manual)
-            // Primero restar dinero al comprador
+            // 4. TRANSFERIR DINERO
+            // Restar dinero al comprador (CORREGIDO: sin usar rpc 'decrement')
             const { error: updateCompradorError } = await this.supabase
                 .from('escuderias')
-                .update({ dinero: this.supabase.rpc('decrement', { 
-                    x: this.escuderia.dinero - orden.precio 
-                }) })
+                .update({ dinero: this.escuderia.dinero - orden.precio })
                 .eq('id', this.escuderia.id);
             
-            if (updateCompradorError) {
-                // Si falla el RPC, hacerlo manualmente
-                await this.supabase
-                    .from('escuderias')
-                    .update({ dinero: this.escuderia.dinero - orden.precio })
-                    .eq('id', this.escuderia.id);
-            }
+            if (updateCompradorError) throw updateCompradorError;
             
-            // Sumar dinero al vendedor
-            await this.supabase.rpc('increment_dinero', {
-                escuderia_id: orden.vendedor_id,
-                cantidad: orden.precio
-            }).catch(async () => {
-                // Si falla, hacer manual
-                const { data: vendedor } = await this.supabase
-                    .from('escuderias')
-                    .select('dinero')
-                    .eq('id', orden.vendedor_id)
-                    .single();
+            // Sumar dinero al vendedor (CORREGIDO: manejo correcto del rpc)
+            try {
+                // Intentar usar la función RPC si existe
+                const { error: rpcError } = await this.supabase.rpc('increment_dinero', {
+                    escuderia_id: orden.vendedor_id,
+                    cantidad: orden.precio
+                });
                 
-                if (vendedor) {
-                    await this.supabase
+                if (rpcError) {
+                    console.warn('⚠️ RPC falló, actualizando manualmente:', rpcError);
+                    
+                    // Si falla, hacer manual
+                    const { data: vendedor, error: vendedorError } = await this.supabase
                         .from('escuderias')
-                        .update({ dinero: vendedor.dinero + orden.precio })
-                        .eq('id', orden.vendedor_id);
+                        .select('dinero')
+                        .eq('id', orden.vendedor_id)
+                        .single();
+                    
+                    if (vendedorError) throw vendedorError;
+                    
+                    if (vendedor) {
+                        const { error: updateError } = await this.supabase
+                            .from('escuderias')
+                            .update({ dinero: vendedor.dinero + orden.precio })
+                            .eq('id', orden.vendedor_id);
+                        
+                        if (updateError) throw updateError;
+                    }
                 }
-            });
+            } catch (error) {
+                console.error('❌ Error actualizando dinero del vendedor:', error);
+                // Continuar aunque falle esta parte
+            }
     
             // 5. Actualizar el dinero local del comprador
             this.escuderia.dinero -= orden.precio;
     
-            // 6. Marcar orden como vendida en la tabla MERCADO (solo usar columnas que existen)
+            // 6. Marcar orden como vendida en la tabla MERCADO
             const { error: updateError } = await this.supabase
                 .from('mercado')
                 .update({
