@@ -1312,8 +1312,7 @@ class F1Manager {
                 }
             }
             
-            // ✅ NOTIFICACIÓN 1: "🔧 Preparando fabricación..." (LA QUE QUIERES)
-            this.showNotification('🔧 Preparando fabricación...', 'info');
+
             
             const ahora = new Date();
             const tiempoFin = new Date(ahora.getTime() + tiempoMilisegundos);
