@@ -895,8 +895,7 @@ class TabManager {
                         orden === 'desc' ? b.dinero - a.dinero : a.dinero - b.dinero
                     );
                 }
-            } 
-            } else if (tipo === 'vuelta') {
+            } else if (tipo === 'vuelta') {  // ← QUITA UNA LLAVE DE CIERRE AQUÍ
                 if (orden === 'nombre') {
                     escuderiasOrdenadas = escuderiasConDatos.sort((a, b) => 
                         (a.nombre || '').localeCompare(b.nombre || '')
@@ -913,6 +912,8 @@ class TabManager {
                     });
                 }
             }
+            
+
             
             // 4. GENERAR TABLA
             this.generarTablaClasificacion(tablaBody, escuderiasOrdenadas, tipo, orden);
