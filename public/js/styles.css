@@ -203,6 +203,63 @@ html, body {
 .success-message.show {
     display: block;
 }
+/* Clasificación Selector */
+.clasificacion-selector {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(20, 25, 35, 0.7);
+    border-radius: 10px;
+    border: 1px solid rgba(100, 100, 120, 0.3);
+}
+
+.selector-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.btn-selector-tipo {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(40, 45, 60, 0.9), rgba(30, 35, 50, 0.9));
+    color: #aaa;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    min-width: 160px;
+    justify-content: center;
+}
+
+.btn-selector-tipo:hover {
+    background: linear-gradient(135deg, rgba(50, 55, 70, 0.9), rgba(40, 45, 60, 0.9));
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.btn-selector-tipo.active {
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    color: white;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+/* Columna de vuelta */
+.celda-vuelta {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #00BCD4;
+    font-size: 1.1em;
+}
+
+.valor-vuelta {
+    font-family: 'Courier New', monospace;
+}
+
+
 
 /* ========================
    3. ESTILOS DE REGISTRO
