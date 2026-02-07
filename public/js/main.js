@@ -3590,7 +3590,7 @@ window.recogerPiezaSiLista = async function(fabricacionId, lista, slotIndex) {
         }
         
         if (window.f1Manager && window.f1Manager.showNotification) {
-            window.f1Manager.showNotification('✅ ' + nombrePiezaNotif + ' recogida\n+' + puntosTotales + ' puntos técnicos', 'success');
+            window.f1Manager.showNotification('✅ ' + nombrePiezaNotif + ' recogida', 'success');
         }
         
         if (window.f1Manager) {
